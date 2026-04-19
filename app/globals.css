@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "../tokens/debbie.css";
+
+/* Reset baseline (minimal — Tailwind handles most) */
+html, body {
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  cursor: none;  /* replaced by CustomCursor, fallback with cursor-enabled for a11y */
+}
+
+@media (pointer: coarse) {
+  body { cursor: auto; }
+}
+
+/* Scrollbar discreet */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-line-strong); border-radius: var(--radius-pill); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-faint); }
+
+/* Text selection */
+::selection { background: var(--color-accent); color: var(--color-canvas); }
+
+/* Focus visible (accessibility) */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}

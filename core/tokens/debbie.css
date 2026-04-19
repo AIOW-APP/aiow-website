@@ -1,0 +1,153 @@
+/* Debbie Design Tokens — v1
+ *
+ * Inspired by FWA-grade references (Jam3, Lacoste, Mew, Viktor Oddy).
+ * Use as foundation for all Team Handsome web/app projects.
+ *
+ * Principle: spatial, editorial, confident. Dark-first with vibrant accent.
+ */
+
+@theme {
+  /* ===== PALETTE — semantic ===== */
+
+  /* Canvas */
+  --color-canvas:           #0A0A0B;   /* near-black, not pure black */
+  --color-canvas-subtle:    #111113;
+  --color-canvas-elevated:  #18181B;
+
+  /* Ink (text on dark) */
+  --color-ink:              #FAFAFA;
+  --color-ink-muted:        #A1A1AA;
+  --color-ink-faint:        #52525B;
+
+  /* Accent — per brand rotate */
+  --color-accent:           #C6FF3D;   /* Viktor lime (crypto) */
+  --color-accent-aiow:      #00D9FF;   /* AIOW cyan */
+  --color-accent-h3alth:    #FF4D6D;   /* H3ALTH rouge */
+  --color-accent-mew:       #FF6B35;   /* Mew orange */
+  --color-accent-debbie:    #E91E63;   /* Debbie hot pink (Latina vibe) */
+
+  /* Status */
+  --color-success:          #10B981;
+  --color-warning:          #F59E0B;
+  --color-danger:           #EF4444;
+
+  /* Lines & Tints */
+  --color-line:             rgba(250, 250, 250, 0.08);
+  --color-line-strong:      rgba(250, 250, 250, 0.18);
+  --color-tint-glow:        radial-gradient(ellipse at top, rgba(198, 255, 61, 0.15), transparent 60%);
+
+  /* ===== TYPOGRAPHY ===== */
+
+  --font-display: "Satoshi", "Inter", system-ui, sans-serif;
+  --font-body:    "Geist Sans", system-ui, sans-serif;
+  --font-mono:    "Geist Mono", ui-monospace, monospace;
+  --font-serif:   "Instrument Serif", "Times New Roman", serif;  /* editorial accents */
+
+  /* Scale (fluid, clamp-based) */
+  --text-xs:   clamp(0.75rem, 0.7rem + 0.2vw, 0.85rem);
+  --text-sm:   clamp(0.875rem, 0.8rem + 0.3vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.4vw, 1.125rem);
+  --text-lg:   clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-xl:   clamp(1.75rem, 1.5rem + 1vw, 2.25rem);
+  --text-2xl:  clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  --text-3xl:  clamp(3.5rem, 2.5rem + 4vw, 5.5rem);     /* hero */
+  --text-mega: clamp(4.5rem, 3rem + 6vw, 8rem);          /* display */
+
+  --tracking-tight:  -0.03em;
+  --tracking-display: -0.04em;  /* big type needs tighter */
+  --tracking-wide:   0.08em;
+
+  --leading-none:    1;
+  --leading-tight:   1.1;
+  --leading-snug:    1.25;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.7;
+
+  /* ===== SPACING — 8px rhythm, fluid at top end ===== */
+  --space-1:  0.25rem;     /*  4 */
+  --space-2:  0.5rem;      /*  8 */
+  --space-3:  0.75rem;     /* 12 */
+  --space-4:  1rem;        /* 16 */
+  --space-5:  1.5rem;      /* 24 */
+  --space-6:  2rem;        /* 32 */
+  --space-7:  3rem;        /* 48 */
+  --space-8:  clamp(3rem, 5vw, 5rem);     /* section-small */
+  --space-9:  clamp(5rem, 8vw, 8rem);     /* section-default */
+  --space-10: clamp(8rem, 12vw, 12rem);   /* section-large */
+
+  /* Container widths */
+  --container-narrow: 56rem;   /*  896 */
+  --container-normal: 72rem;   /* 1152 */
+  --container-wide:   84rem;   /* 1344 */
+  --container-full:   100%;
+  --page-padding:     clamp(1rem, 4vw, 2.5rem);
+
+  /* ===== RADII ===== */
+  --radius-xs:   2px;
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-pill: 9999px;
+
+  /* ===== SHADOWS & FX ===== */
+  --shadow-sm:      0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg:      0 24px 48px rgba(0,0,0,0.4);
+  --shadow-glow:    0 0 40px var(--color-accent);
+
+  /* ===== MOTION ===== */
+  --ease-out:      cubic-bezier(0.22, 1, 0.36, 1);     /* snappy */
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);  /* overshoot */
+  --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-linear:   linear;
+
+  --dur-fast:      150ms;
+  --dur-default:   300ms;
+  --dur-slow:      600ms;
+  --dur-epic:      1200ms;
+
+  /* ===== Z-INDEX ===== */
+  --z-below:    -1;
+  --z-base:      0;
+  --z-content:   10;
+  --z-overlay:   20;
+  --z-modal:     30;
+  --z-cursor:    40;
+  --z-notif:     50;
+}
+
+/* Brand overrides — swap the accent */
+[data-brand="aiow"]    { --color-accent: var(--color-accent-aiow); }
+[data-brand="h3alth"]  { --color-accent: var(--color-accent-h3alth); }
+[data-brand="mew"]     { --color-accent: var(--color-accent-mew); }
+[data-brand="debbie"]  { --color-accent: var(--color-accent-debbie); }
+
+/* Default body */
+:root, html {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-feature-settings: "ss01", "cv11";
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+body {
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-canvas);
+}
+
+/* Reduced-motion respect */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
