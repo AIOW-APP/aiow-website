@@ -4,8 +4,6 @@ import { JourneyV2 } from "@/components/v2/JourneyV2";
 import { SectorsV2 } from "@/components/v2/SectorsV2";
 import { ScanV2 } from "@/components/v2/ScanV2";
 import { SpunkyMorph } from "@/components/v2/SpunkyMorph";
-import { Portfolio } from "@/components/Portfolio";
-import { Fleet } from "@/components/Fleet";
 import { Footer } from "@/components/Footer";
 
 export default function Home() {
@@ -16,8 +14,6 @@ export default function Home() {
       <MomentV2 />
       <JourneyV2 />
       <SectorsV2 />
-      <Portfolio />
-      <Fleet />
       <ScanV2 />
       <FinalCtaV2 />
       <Footer />
