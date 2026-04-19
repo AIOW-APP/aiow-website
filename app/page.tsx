@@ -5,7 +5,7 @@ import { Journey } from "@/components/Journey";
 import { Sectors } from "@/components/Sectors";
 import { Portfolio } from "@/components/Portfolio";
 import { Fleet } from "@/components/Fleet";
-import { Contact } from "@/components/Contact";
+import { ScanSection } from "@/components/ScanSection";
 import { Footer } from "@/components/Footer";
 
 export default function Home() {
@@ -18,7 +18,7 @@ export default function Home() {
       <Sectors />
       <Portfolio />
       <Fleet />
-      <Contact />
+      <ScanSection />
       <Footer />
     </main>
   );
