@@ -9,7 +9,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-family"
 
 export const metadata: Metadata = {
   title: {
-    default: "AIOW — AI-transformatie voor MKB",
+    default: "AIOW — Spunky kent jouw bedrijf",
     template: "%s · AIOW",
   },
   description:
@@ -22,14 +22,14 @@ export const metadata: Metadata = {
     locale: "nl_NL",
     url: "https://aiow.io",
     siteName: "AIOW",
-    title: "AIOW — AI-transformatie voor MKB",
+    title: "AIOW — Spunky kent jouw bedrijf",
     description:
       "Wij maken je bedrijf AI-native. Scan, strategie, implementatie, training, groei. 30+ SaaS-producten live.",
   },
   twitter: {
     card: "summary_large_image",
     creator: "@handsomebstrd",
-    title: "AIOW — AI-transformatie voor MKB",
+    title: "AIOW — Spunky kent jouw bedrijf",
     description: "Van A tot Z geregeld. Scan, strategie, implementatie.",
   },
   robots: { index: true, follow: true },
