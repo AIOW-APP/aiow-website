@@ -157,7 +157,7 @@ export function HeroDebbie() {
             <video
               ref={videoRef}
               src="/debbie/hero-talking.mp4"
-              poster="/debbie/hero-poster.webp"
+              poster="/debbie/cozy-hero.webp"
               playsInline
               loop
               preload="auto"

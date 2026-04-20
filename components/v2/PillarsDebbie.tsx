@@ -11,7 +11,7 @@ const PILLARS = [
     title: "Ik leer je bedrijf kennen",
     subtitle: "Vijf minuten. Eén gesprek.",
     body: "Geen formulier, geen intake-meeting. We chatten. Ik vraag wat ertoe doet, analyseer met vier AI-modellen, en geef je drie concrete kansen. Gratis.",
-    img: "/debbie/thinking.webp",
+    img: "/debbie/cozy-thinking.webp",
     accent: "#FFB820",
   },
   {
@@ -19,7 +19,7 @@ const PILLARS = [
     title: "We maken een plan",
     subtitle: "Twee uur, mensen, geen deck.",
     body: "Na de scan zetten we samen met mijn team prioriteiten. Wat nu, wat later, wat nooit. Eerlijk advies. Je betaalt alleen als je door wil.",
-    img: "/debbie/pointing.webp",
+    img: "/debbie/cozy-pointing.webp",
     accent: "#FF4FD8",
   },
   {
@@ -141,7 +141,7 @@ export function FinalCtaDebbie() {
           className="max-w-2xl mx-auto"
         >
           <div className="relative w-32 h-40 mx-auto mb-8 rounded-2xl overflow-hidden border border-white/10">
-            <Image src="/debbie/wave.webp" alt="Debbie waves" fill sizes="128px" className="object-cover" />
+            <Image src="/debbie/cozy-wave.webp" alt="Debbie waves" fill sizes="128px" className="object-cover" />
           </div>
           <p className="font-mono text-[10px] md:text-xs uppercase tracking-[0.35em] text-[#FFB820] mb-6">
             · Start vandaag
