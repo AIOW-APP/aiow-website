@@ -31,8 +31,20 @@ export function ScanDebbie() {
   const [report, setReport] = useState("");
   const chatEnd = useRef<HTMLDivElement>(null);
 
+  const firstRenderRef = useRef(true);
   useEffect(() => {
-    chatEnd.current?.scrollIntoView({ behavior: "smooth" });
+    // Skip initial mount to avoid page-jump when section mounts off-screen.
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false;
+      return;
+    }
+    // Scroll the chat container, not the window.
+    const el = chatEnd.current;
+    if (!el) return;
+    const scrollParent = el.closest("[data-chat-scroll]") as HTMLElement | null;
+    if (scrollParent) {
+      scrollParent.scrollTo({ top: scrollParent.scrollHeight, behavior: "smooth" });
+    }
   }, [messages, report]);
 
   useEffect(() => {
@@ -224,7 +236,7 @@ export function ScanDebbie() {
               </span>
             </div>
 
-            <div className="h-96 overflow-y-auto px-5 py-4 flex flex-col gap-3">
+            <div data-chat-scroll data-lenis-prevent className="h-96 overflow-y-auto px-5 py-4 flex flex-col gap-3">
               <AnimatePresence initial={false}>
                 {messages.map((m, i) => (
                   <motion.div
@@ -293,8 +305,7 @@ export function ScanDebbie() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder={stage === "verify" ? "6-cijferige code" : "Typ je antwoord..."}
-                      autoFocus
-                      className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-white placeholder-white/30 focus:border-[#FFB820] focus:outline-none text-sm"
+                                            className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-white placeholder-white/30 focus:border-[#FFB820] focus:outline-none text-sm"
                       maxLength={stage === "verify" ? 6 : 200}
                       inputMode={stage === "verify" ? "numeric" : "text"}
                     />

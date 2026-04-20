@@ -22,11 +22,26 @@ export function SmoothScroll() {
     }
     rafId = requestAnimationFrame(raf);
 
+    // Intercept anchor clicks to use Lenis scrollTo (otherwise browser jumps)
+    function onAnchorClick(e: MouseEvent) {
+      const a = (e.target as HTMLElement)?.closest?.("a[href^='#']") as HTMLAnchorElement | null;
+      if (!a) return;
+      const hash = a.getAttribute("href");
+      if (!hash || hash === "#") return;
+      const tgt = document.querySelector(hash);
+      if (!tgt) return;
+      e.preventDefault();
+      lenis.scrollTo(tgt as HTMLElement, { duration: 1.8, offset: -40 });
+      history.replaceState(null, "", hash);
+    }
+    document.addEventListener("click", onAnchorClick);
+
     // Expose for other components
     (window as any).__lenis = lenis;
 
     return () => {
       cancelAnimationFrame(rafId);
+      document.removeEventListener("click", onAnchorClick);
       lenis.destroy();
       delete (window as any).__lenis;
     };
