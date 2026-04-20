@@ -1,18 +1,18 @@
-import HeroPro from "@/components/v2/Hero3DLoader";
-import { PillarsV3, ManifestoV3, FinalCtaV3 } from "@/components/v2/PillarsV3";
+import { HeroDebbie } from "@/components/v2/HeroDebbie";
+import { PillarsDebbie, ManifestoDebbie, FinalCtaDebbie } from "@/components/v2/PillarsDebbie";
 import { SectorsV3 } from "@/components/v2/SectorsV3";
-import { ScanV2 } from "@/components/v2/ScanV2";
+import { ScanDebbie } from "@/components/v2/ScanDebbie";
 import { Footer } from "@/components/Footer";
 
 export default function Home() {
   return (
     <main className="relative">
-      <HeroPro />
-      <PillarsV3 />
+      <HeroDebbie />
+      <PillarsDebbie />
       <SectorsV3 />
-      <ManifestoV3 />
-      <ScanV2 />
-      <FinalCtaV3 />
+      <ManifestoDebbie />
+      <ScanDebbie />
+      <FinalCtaDebbie />
       <Footer />
     </main>
   );
