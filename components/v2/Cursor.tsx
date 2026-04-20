@@ -55,7 +55,7 @@ export function Cursor() {
     <>
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 w-2 h-2 rounded-full pointer-events-none z-[9999] mix-blend-difference"
+        className="cursor-dot fixed top-0 left-0 w-2 h-2 rounded-full pointer-events-none z-[9999] mix-blend-difference"
         style={{ background: "#FFB820" }}
       />
       <div
@@ -72,7 +72,12 @@ export function Cursor() {
           background: rgba(255, 184, 32, 0.1);
           backdrop-filter: blur(4px);
         }
-        @media (pointer: coarse) { .cursor-ring, .cursor-ring + div { display: none !important; } }
+        @media (pointer: coarse), (hover: none) {
+          .cursor-ring,
+          .cursor-dot {
+            display: none !important;
+          }
+        }
       `}</style>
     </>
   );

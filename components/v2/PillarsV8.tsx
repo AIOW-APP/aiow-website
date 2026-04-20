@@ -48,9 +48,9 @@ function Pillar({ p, idx }: { p: (typeof PILLARS)[0]; idx: number }) {
   return (
     <div
       ref={ref}
-      className="relative min-h-screen flex items-center py-20"
+      className="relative min-h-[80vh] md:min-h-screen flex items-center py-12 md:py-20"
     >
-      <div className="container-wide w-full grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+      <div className="container-wide w-full grid md:grid-cols-2 gap-8 md:gap-20 items-center">
         {/* Huge number */}
         <motion.div style={{ y, opacity }} className="relative">
           <div

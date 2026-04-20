@@ -30,12 +30,26 @@ export function HeroV8() {
     setBubble(false);
   };
 
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) {
+      v.muted = false;
+      v.play().catch(() => {});
+      setMuted(false);
+      setBubble(false);
+    } else {
+      v.muted = true;
+      setMuted(true);
+    }
+  };
+
   return (
     <section
       className="relative min-h-screen flex items-center"
       style={{ zIndex: 10 }}
     >
-      <div className="container-wide w-full grid md:grid-cols-[1.2fr_1fr] gap-10 md:gap-16 items-center py-24 md:py-0">
+      <div className="container-wide w-full grid md:grid-cols-[1.2fr_1fr] gap-10 md:gap-16 items-center py-28 md:py-24 lg:py-0">
         {/* LEFT — editorial copy */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -213,6 +227,17 @@ export function HeroV8() {
                   Debbie · Live
                 </span>
               </div>
+
+              {/* Persistent mute/unmute toggle */}
+              <button
+                onClick={toggleMute}
+                className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/60 backdrop-blur hover:bg-black/80 transition-colors border border-white/10"
+                data-cursor
+                aria-label={muted ? "Geluid aan" : "Geluid uit"}
+                title={muted ? "Geluid aan" : "Geluid uit"}
+              >
+                <span className="text-sm">{muted ? "🔇" : "🔊"}</span>
+              </button>
 
               {/* Speech bubble */}
               <AnimatePresence>
