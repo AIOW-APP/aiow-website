@@ -1,19 +1,27 @@
-import { HeroDebbie } from "@/components/v2/HeroDebbie";
-import { PillarsDebbie, ManifestoDebbie, FinalCtaDebbie } from "@/components/v2/PillarsDebbie";
-import { SectorsV3 } from "@/components/v2/SectorsV3";
+import { BackgroundCanvas, Cursor, SmoothScroll } from "@/components/v2/ExperienceLayer";
+import { HeroV8 } from "@/components/v2/HeroV8";
+import { PillarsV8 } from "@/components/v2/PillarsV8";
+import { SectorsV8 } from "@/components/v2/SectorsV8";
+import { ManifestoV8 } from "@/components/v2/ManifestoV8";
 import { ScanDebbie } from "@/components/v2/ScanDebbie";
+import { FinalV8 } from "@/components/v2/FinalV8";
 import { Footer } from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main className="relative">
-      <HeroDebbie />
-      <PillarsDebbie />
-      <SectorsV3 />
-      <ManifestoDebbie />
-      <ScanDebbie />
-      <FinalCtaDebbie />
-      <Footer />
-    </main>
+    <>
+      <SmoothScroll />
+      <Cursor />
+      <BackgroundCanvas />
+      <main className="relative">
+        <HeroV8 />
+        <PillarsV8 />
+        <SectorsV8 />
+        <ManifestoV8 />
+        <ScanDebbie />
+        <FinalV8 />
+        <Footer />
+      </main>
+    </>
   );
 }

@@ -198,7 +198,7 @@ export function ScanDebbie() {
               style={{ background: "radial-gradient(circle, #FFB820 0%, #FF4FD8 50%, transparent 80%)" }} />
             <div className="absolute inset-0 rounded-3xl overflow-hidden border border-white/10">
               <Image
-                src="/debbie/cozy-laptop.webp"
+                src="/debbie/chat-avatar.jpg"
                 alt="Debbie"
                 fill
                 sizes="256px"
