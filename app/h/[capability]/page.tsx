@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import BuildingV11 from "@/components/v11/BuildingV11";
-import AmbientAudio from "@/components/v11/AmbientAudio";
+import { LangProvider } from "@/components/v12/LangContext";
+import BuildingV12 from "@/components/v12/BuildingV12";
+import AmbientAudio from "@/components/v12/AmbientAudio";
 import { CAPABILITIES, getCapability } from "@/core/content/capabilities";
 
 export function generateStaticParams() {
@@ -11,8 +12,8 @@ export async function generateMetadata({ params }: { params: Promise<{ capabilit
   const { capability } = await params;
   const cap = getCapability(capability);
   return {
-    title: cap ? `${cap.label} — AIOW` : "AIOW",
-    description: cap?.tagline,
+    title: cap ? `${cap.label.nl} — AIOW` : "AIOW",
+    description: cap?.tagline.nl,
   };
 }
 
@@ -21,9 +22,9 @@ export default async function CapabilityPage({ params }: { params: Promise<{ cap
   const cap = getCapability(capability);
   if (!cap) notFound();
   return (
-    <>
-      <BuildingV11 cap={cap} />
+    <LangProvider>
+      <BuildingV12 cap={cap} />
       <AmbientAudio src="/audio/ambient-building.mp3" />
-    </>
+    </LangProvider>
   );
 }

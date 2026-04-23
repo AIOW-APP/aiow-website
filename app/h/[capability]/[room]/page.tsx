@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import RoomV11 from "@/components/v11/RoomV11";
-import AmbientAudio from "@/components/v11/AmbientAudio";
+import { LangProvider } from "@/components/v12/LangContext";
+import RoomV12 from "@/components/v12/RoomV12";
+import AmbientAudio from "@/components/v12/AmbientAudio";
 import { CAPABILITIES, getCapability, getRoom } from "@/core/content/capabilities";
 
 export function generateStaticParams() {
@@ -14,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ capabilit
   const room = getRoom(capability, roomId);
   const cap = getCapability(capability);
   return {
-    title: room ? `${room.title} — ${cap?.label} — AIOW` : "AIOW",
-    description: room?.subtitle,
+    title: room ? `${room.title.nl} — ${cap?.label.nl} — AIOW` : "AIOW",
+    description: room?.subtitle.nl,
   };
 }
 
@@ -25,9 +26,9 @@ export default async function RoomPage({ params }: { params: Promise<{ capabilit
   const room = getRoom(capability, roomId);
   if (!cap || !room) notFound();
   return (
-    <>
-      <RoomV11 cap={cap} room={room} />
+    <LangProvider>
+      <RoomV12 cap={cap} room={room} />
       <AmbientAudio src="/audio/ambient-room.mp3" />
-    </>
+    </LangProvider>
   );
 }

@@ -1,16 +1,15 @@
-import IntroV11 from "@/components/v11/IntroV11";
-import AmbientAudio from "@/components/v11/AmbientAudio";
+"use client";
+import dynamic from "next/dynamic";
+import { LangProvider } from "@/components/v12/LangContext";
+import AmbientAudio from "@/components/v12/AmbientAudio";
 
-export const metadata = {
-  title: "AIOW — AI voor jouw bedrijf",
-  description: "Acht huizen vol AI-capabilities. Stap een kamer binnen en zie wat AIOW voor jouw bedrijf kan doen.",
-};
+const Campus3D = dynamic(() => import("@/components/v12/Campus3D"), { ssr: false });
 
 export default function Home() {
   return (
-    <>
-      <IntroV11 />
+    <LangProvider>
+      <Campus3D />
       <AmbientAudio src="/audio/ambient-campus.mp3" />
-    </>
+    </LangProvider>
   );
 }
