@@ -1,14 +1,16 @@
-import { IntroV10 } from "@/components/v10/IntroV10";
-import { Cursor, SmoothScroll } from "@/components/v2/ExperienceLayer";
+import IntroV11 from "@/components/v11/IntroV11";
+import AmbientAudio from "@/components/v11/AmbientAudio";
+
+export const metadata = {
+  title: "AIOW — AI voor jouw bedrijf",
+  description: "Acht huizen vol AI-capabilities. Stap een kamer binnen en zie wat AIOW voor jouw bedrijf kan doen.",
+};
 
 export default function Home() {
   return (
     <>
-      <SmoothScroll />
-      <Cursor />
-      <main className="relative">
-        <IntroV10 />
-      </main>
+      <IntroV11 />
+      <AmbientAudio src="/audio/ambient-campus.mp3" />
     </>
   );
 }
