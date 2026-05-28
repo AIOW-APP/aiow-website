@@ -5,10 +5,9 @@ const config: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },
-  experimental: {
-    // reactCompiler: true,   // requires babel-plugin-react-compiler, enable per-project
-    optimizePackageImports: ["framer-motion", "lucide-react", "@react-three/drei"],
-  },
+  // Pre-launch note: `experimental.optimizePackageImports` was removed because
+  // Next 15.5 production preview threw `TypeError: a[d] is not a function`
+  // on the /en and /nl homepage routes when it touched unused packages.
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

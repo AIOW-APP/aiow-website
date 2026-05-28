@@ -1,5 +1,9 @@
 node_modules/
 .next/
+# Next/build backup folders created during local recovery and preview work
+.next.*
+.next*.bak*
+.next.bak-*
 .env
 .env*.local
 .DS_Store

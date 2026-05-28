@@ -7,10 +7,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "audit": "lighthouse http://localhost:3000 --only-categories=performance,accessibility,best-practices,seo"
+    "lint": "eslint .",
+    "audit": "lighthouse http://localhost:3000 --only-categories=performance,accessibility,best-practices,seo",
+    "voice:gpt": "node scripts/generate-gpt-voice-briefing.mjs"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.19.3",
     "@gsap/react": "^2.1.1",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",
@@ -31,15 +33,15 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
+    "@tailwindcss/postcss": "^4.0.0-beta.1",
     "@types/node": "^22.8.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.169.0",
-    "tailwindcss": "^4.0.0-beta.1",
-    "@tailwindcss/postcss": "^4.0.0-beta.1",
-    "postcss": "^8.4.47",
     "eslint": "^9.13.0",
-    "eslint-config-next": "^15.3.0"
+    "eslint-config-next": "^15.3.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^4.0.0-beta.1",
+    "typescript": "^5.6.3"
   }
 }
