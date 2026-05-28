@@ -1,0 +1,13 @@
+AIOW bouwt een veilige AI-werklaag voor je bedrijf.
+
+Niet nog een losse chatbot, maar één beheersbaar systeem voor processen, data, agents en approvals.
+
+We beginnen klein: één proces waar AI direct waarde kan leveren. Bijvoorbeeld klantcontact, offertes, planning, finance of documenten.
+
+Daarna bepalen we de datagrens. Wat blijft lokaal? Wat mag naar cloudmodellen? En waar moet een mens eerst akkoord geven?
+
+Vervolgens bouwen we agents die werk uitvoeren binnen die regels. Ze lezen, routeren, schrijven en dragen over, maar blijven controleerbaar.
+
+De AI-systeemscan is de eerste stap. Je krijgt een concrete route: welke usecase eerst, welke risico’s zitten erin, welke infrastructuur past, en hoe je veilig start zonder chaos.
+
+Wil je dat we meekijken? Start de intake en stuur je context via WhatsApp.

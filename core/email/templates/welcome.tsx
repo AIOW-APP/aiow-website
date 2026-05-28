@@ -27,15 +27,15 @@ const BRAND_ACCENTS = {
 
 export default function WelcomeEmail({
   name,
-  brand = "debbie",
-  productName = "Debbie",
-  ctaUrl = "https://example.com",
+  brand = "aiow",
+  productName = "AIOW",
+  ctaUrl = "https://aiow.ai/nl",
 }: WelcomeEmailProps) {
   const accent = BRAND_ACCENTS[brand];
   return (
     <Html>
       <Head />
-      <Preview>Welcome, {name} — let's get you set up.</Preview>
+      <Preview>Welcome, {name} — let’s get you set up.</Preview>
       <Tailwind>
         <Body style={{ backgroundColor: "#0A0A0B", color: "#FAFAFA", fontFamily: "-apple-system, system-ui, sans-serif" }}>
           <Container style={{ maxWidth: "480px", margin: "0 auto", padding: "40px 20px" }}>
@@ -48,7 +48,7 @@ export default function WelcomeEmail({
             </Heading>
 
             <Text style={{ fontSize: 16, lineHeight: 1.6, color: "#A1A1AA", marginBottom: 28 }}>
-              You're in. Here's what happens next:
+              You’re in. Here’s what happens next:
             </Text>
 
             <Text style={{ fontSize: 15, lineHeight: 1.6, color: "#FAFAFA", marginBottom: 12 }}>

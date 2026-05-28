@@ -25,7 +25,7 @@ export function Sectors() {
             <span className="text-[var(--color-ink-muted)]">Maar de aanpak schaalt.</span>
           </h2>
           <p className="mt-6 text-lg text-[var(--color-ink-soft)] leading-relaxed">
-            We hebben AI-transformaties geleid in zes sectoren. Elke sector heeft z'n eigen patronen — wij kennen ze.
+            We hebben AI-transformaties geleid in zes sectoren. Elke sector heeft z’n eigen patronen — wij kennen ze.
           </p>
         </motion.div>
 

@@ -8,6 +8,7 @@ html, body {
 }
 
 body {
+  margin: 0;
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-body);
@@ -126,6 +127,7 @@ body {
 html, body { margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
+  margin: 0;
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-body);
@@ -238,6 +240,7 @@ section { position: relative; }
 
 /* V8 — cinematic experience layer */
 html, body {
+  margin: 0;
   background: #050210;
   color: #fff;
 }

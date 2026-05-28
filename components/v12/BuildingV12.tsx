@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Capability } from "@/core/content/capabilities";
 import { useLang, LangToggle } from "@/components/v12/LangContext";
 
@@ -46,7 +47,7 @@ export default function BuildingV12({ cap }: { cap: Capability }) {
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 mt-4">
         <div className={`relative aspect-[3/2] rounded-2xl overflow-hidden ring-1 ring-white/10 transition-all duration-700 ${mounted ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-          <img src={cap.buildingImage} alt={cap.label[lang]} className="w-full h-full object-cover"
+          <Image src={cap.buildingImage} alt={cap.label[lang]} fill sizes="(max-width: 768px) 100vw, 896px" className="object-cover"
                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A0618] via-transparent to-transparent" />
         </div>
@@ -65,8 +66,8 @@ export default function BuildingV12({ cap }: { cap: Capability }) {
               style={{ transitionDelay: `${i * 80}ms` }}
             >
               <div className="aspect-[4/3] relative overflow-hidden">
-                <img src={room.image} alt={room.title[lang]}
-                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                <Image src={room.image} alt={room.title[lang]}
+                     fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-700"
                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A0618] via-[#0A0618]/30 to-transparent" />
               </div>

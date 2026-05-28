@@ -1,12 +1,71 @@
 import type { MetadataRoute } from "next";
 import { generateSitemap } from "@/core/seo/sitemap";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aiow.ai";
+
+const nlSeoRoutes = [
+  "/nl/werkwijze-ai-implementatie",
+  "/nl/veiligheid-governance-ai",
+  "/nl/sectoren",
+  "/nl/regios",
+  "/nl/vergelijkingen",
+  "/nl/regio/haarlem",
+  "/nl/regio/leiden",
+  "/nl/regio/amersfoort",
+  "/nl/regio/zwolle",
+  "/nl/regio/nijmegen",
+  "/nl/regio/tilburg",
+  "/nl/regio/den-bosch",
+  "/nl/regio/maastricht",
+  "/nl/regio/enschede",
+  "/nl/regio/almere",
+  "/nl/sector/zorg",
+  "/nl/sector/marketing-agencies",
+  "/nl/sector/klantcontact-support",
+  "/nl/sector/hr-recruitment",
+  "/nl/sector/ecommerce-retail",
+  "/nl/vergelijking/private-ai-vs-cloud-ai",
+  "/nl/vergelijking/ai-agent-vs-chatbot",
+  "/nl/sector/installatiebedrijven",
+  "/nl/sector/finance-administratie",
+  "/nl/sector/legal-zakelijke-dienstverlening",
+  "/nl/sector/bouw-vastgoed",
+  "/nl/vergelijking/ai-installateur-vs-ai-consultant",
+  "/nl/vergelijking/lokale-ai-vs-chatgpt",
+  "/nl/regio/den-haag",
+  "/nl/regio/breda",
+  "/nl/regio/groningen",
+  "/nl/regio/arnhem",
+  "/nl/ai-installateur-nederland",
+  "/nl/ai-oplossingen-bedrijven",
+  "/nl/ai-agents-bedrijven",
+  "/nl/ai-implementatie-bedrijf",
+  "/nl/ai-integratie-mkb",
+  "/nl/ai-automatisering-logistiek-transport",
+  "/nl/lokale-private-ai",
+  "/nl/ai-systeemscan",
+  "/nl/regio/amsterdam",
+  "/nl/regio/rotterdam",
+  "/nl/regio/schiphol-haarlemmermeer",
+  "/nl/regio/utrecht",
+  "/nl/regio/eindhoven-brainport",
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return generateSitemap(SITE_URL, [
-    { path: "/",          priority: 1.0, changeFreq: "weekly" },
-    { path: "/privacy",   priority: 0.3, changeFreq: "yearly" },
-    { path: "/terms",     priority: 0.3, changeFreq: "yearly" },
+    { path: "/", priority: 1.0, changeFreq: "weekly" },
+    { path: "/aiow-nl-authority.md", priority: 0.72, changeFreq: "weekly" },
+    ...nlSeoRoutes.map((path, index) => ({
+      path,
+      priority: path.includes("ai-systeemscan") ? 0.9 : 0.82,
+      changeFreq: "weekly" as const,
+    })),
+    { path: "/en", priority: 0.45, changeFreq: "monthly" },
+    { path: "/nl/privacy", priority: 0.35, changeFreq: "yearly" },
+    { path: "/nl/cookies", priority: 0.3, changeFreq: "yearly" },
+    { path: "/nl/terms", priority: 0.3, changeFreq: "yearly" },
+    { path: "/en/privacy", priority: 0.2, changeFreq: "yearly" },
+    { path: "/en/cookies", priority: 0.2, changeFreq: "yearly" },
+    { path: "/en/terms", priority: 0.2, changeFreq: "yearly" },
   ]);
 }

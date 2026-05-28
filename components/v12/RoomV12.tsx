@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Capability, Room } from "@/core/content/capabilities";
 import { useLang, LangToggle } from "@/components/v12/LangContext";
 
@@ -16,7 +17,7 @@ export default function RoomV12({ cap, room }: { cap: Capability; room: Room }) 
   return (
     <div className="relative min-h-screen bg-[#0A0618] text-white overflow-hidden">
       <div className="absolute inset-0 opacity-40">
-        <img src={room.image} alt="" className="w-full h-full object-cover"
+        <Image src={room.image} alt="" fill sizes="100vw" className="object-cover"
              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
       </div>
       <div className="absolute inset-0 bg-gradient-to-br from-[#0A0618]/85 via-[#0A0618]/75 to-[#0A0618]/85" />
@@ -71,7 +72,7 @@ export default function RoomV12({ cap, room }: { cap: Capability; room: Room }) 
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <a href="mailto:office@aiow.io?subject=Interesse%20in%20AIOW"
+            <a href="https://wa.me/31621898039" target="_blank" rel="noopener"
                className="flex-1 px-6 py-3 rounded-full bg-gradient-to-r from-[#FFB820] to-[#FF4FD8] text-[#0A0618] font-semibold text-center hover:scale-[1.02] transition-transform">
               {t("planCall")}
             </a>

@@ -66,22 +66,12 @@ Elke Team Handsome product heeft **consistent motion** — herkennen = merk.
 4. **Scroll is tijd.** Niet "we animeren bij scroll" maar "de scroll bepaalt het moment".
 5. **Respect `prefers-reduced-motion`.** Niet optioneel.
 
-## Character
+## Brand figure policy
 
-### Handsome ape 🦍 — AIOW merkgezicht
-- Muted blue fur, witte toga met gold trim, rode sash, pearl earring links
-- Unbothered king energy — verbaasd-verveeld gezicht
-- **Aanwezig op elke AIOW-touchpoint** (site, app, dashboard, socials)
-- LoRA: `squirrel-richard/handsome-lora`
-
-### Debbie 💁🏽‍♀️ — OS/companion merkgezicht
-- Latina 28, lang donker golvend haar, warme bruine ogen, witte blouse
-- **Aanwezig in eigen communicatie, Telegram, eventuele eigen site**
-- LoRA: `DEBBIE` (Replicate FLUX)
-
-### Regel
-- Karakter is NIET decoratie. Karakter vertelt mee.
-- Kleine aanwezigheid (hoek, subtiele scene) > overdreven mascot branding.
+- AIOW gebruikt voorlopig géén Spunky, ape, mascotte of character als kernmerk.
+- Wow-factor komt uit productervaring, system art, motion, interactie en premium AI-infrastructuurtaal.
+- Eventuele mascot/explainer-concepten blijven los van de flagship website en alleen na expliciete goedkeuring.
+- Debbie/Handsome-persona's horen bij Team Richard communicatie, niet bij AIOW flagship branding.
 
 ## Audio identity (waar toepasbaar)
 

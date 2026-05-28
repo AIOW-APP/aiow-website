@@ -5,6 +5,7 @@
  */
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { type Industry, type Door } from "@/core/content/industries";
 
 export function RoomV10({ industry, door }: { industry: Industry; door: Door }) {
@@ -29,10 +30,12 @@ export function RoomV10({ industry, door }: { industry: Industry; door: Door }) 
             className="w-full h-full object-cover opacity-40"
           />
         ) : (
-          <img
+          <Image
             src={industry.heroImage}
             alt={industry.buildingName}
-            className="w-full h-full object-cover opacity-25 blur-sm scale-105"
+            fill
+            sizes="100vw"
+            className="object-cover opacity-25 blur-sm scale-105"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/buildings/hero_campus.webp";
             }}

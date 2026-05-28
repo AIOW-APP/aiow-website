@@ -1,0 +1,436 @@
+.webgpuCore {
+  position: relative;
+  min-height: clamp(26rem, 44vw, 40rem);
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 23rem),
+    radial-gradient(circle at 20% 14%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 18rem),
+    var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  isolation: isolate;
+}
+
+.webgpuCore::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.18), transparent 36%, rgba(0,0,0,.12)),
+    radial-gradient(circle at 50% 100%, rgba(0,0,0,.16), transparent 42%);
+  opacity: .58;
+  mix-blend-mode: soft-light;
+}
+
+.stage,
+.webgpuCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.webgpuCore figcaption {
+  position: absolute;
+  z-index: 2;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: grid;
+  gap: .28rem;
+  max-width: 28rem;
+  padding: .85rem .95rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 1rem;
+  background: rgba(8,9,8,.42);
+  color: rgba(255,255,255,.78);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.webgpuCore figcaption span {
+  color: #d8bd72;
+  font: 900 .66rem var(--font-mono-family, ui-monospace, monospace);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.webgpuCore figcaption strong {
+  color: #fff7e8;
+  font-size: clamp(1.2rem, 2vw, 1.75rem);
+  letter-spacing: -.045em;
+  line-height: .95;
+}
+
+.webgpuCore figcaption small {
+  color: rgba(255,255,255,.66);
+  font-size: .82rem;
+  line-height: 1.35;
+}
+
+.webgpuCore figcaption em {
+  width: fit-content;
+  margin-top: .2rem;
+  padding: .34rem .5rem;
+  border: 1px solid rgba(216,189,114,.24);
+  border-radius: 999px;
+  color: rgba(255,247,232,.84);
+  background: rgba(216,189,114,.10);
+  font-style: normal;
+  font-size: .74rem;
+  font-weight: 850;
+}
+
+@media (max-width: 760px) {
+  .webgpuCore {
+    min-height: 28rem;
+    border-radius: 1.25rem;
+  }
+  .webgpuCore figcaption {
+    left: .75rem;
+    right: .75rem;
+    bottom: .75rem;
+    padding: .72rem .78rem;
+  }
+}
+
+
+/* Pass 17: calm premium WebGPU frame. */
+.webgpuCore {
+  min-height: clamp(22rem, 36vw, 34rem);
+  border-color: color-mix(in srgb, var(--accent-2) 18%, var(--line));
+  background:
+    radial-gradient(circle at 52% 44%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 19rem),
+    radial-gradient(circle at 75% 18%, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 15rem),
+    linear-gradient(145deg, color-mix(in srgb, var(--surface) 92%, #000 4%), color-mix(in srgb, var(--surface) 76%, #000 14%));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent), 0 26px 80px color-mix(in srgb, #000 16%, transparent);
+}
+.webgpuCore figcaption {
+  left: 1.15rem;
+  right: auto;
+  bottom: 1.15rem;
+  max-width: min(25rem, calc(100% - 2.3rem));
+  background: color-mix(in srgb, #050605 48%, transparent);
+}
+.webgpuCore figcaption span { color: #d8bd72; letter-spacing: .08em; }
+.webgpuCore figcaption strong { font-size: clamp(1.35rem, 2.4vw, 2.15rem); }
+@media (max-width: 760px) {
+  .webgpuCore { min-height: 22rem; border-radius: 1rem; }
+  .webgpuCore figcaption { left: .65rem; right: .65rem; bottom: .65rem; max-width: none; }
+  .webgpuCore figcaption small { display: none; }
+}
+
+
+/* Pass 19: make the control layer feel intentional while WebGPU/fallback initializes. */
+.webgpuCore::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 16%, transparent);
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-2) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent-2) 8%, transparent) 1px, transparent 1px);
+  background-size: 5.5rem 5.5rem;
+  opacity: .18;
+  pointer-events: none;
+  mask-image: radial-gradient(circle at 50% 50%, #000, transparent 76%);
+}
+.webgpuCanvas { z-index: 1; }
+.webgpuCore figcaption { z-index: 3; }
+.webgpuCore figcaption em {
+  color: #fff7e8;
+  background: rgba(216,189,114,.14);
+}
+@media (max-width: 760px) {
+  .webgpuCore::before { inset: .75rem; border-radius: .85rem; background-size: 3.8rem 3.8rem; }
+}
+
+
+/* Pass 20: enterprise HTML fallback for Safari/headless/no-adapter paths. */
+.fallbackCore .stage {
+  display: grid;
+  place-items: center;
+  padding: clamp(1.2rem, 3vw, 2rem);
+}
+.fallbackMap {
+  position: relative;
+  width: min(92%, 42rem);
+  aspect-ratio: 1.8 / 1;
+  transform: translateY(-4%);
+}
+.fallbackBoundary {
+  position: absolute;
+  inset: 12% 8% 18%;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 32%, transparent);
+  border-radius: 1.4rem;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-2) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent-2) 8%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--surface) 78%, transparent);
+  background-size: 4.5rem 4.5rem;
+  box-shadow: inset 0 0 42px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.fallbackRoute {
+  position: absolute;
+  left: 13%; right: 13%; top: 46%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-2) 54%, transparent), #d8bd72, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent-2) 24%, transparent);
+}
+.fallbackNode {
+  position: absolute;
+  z-index: 2;
+  min-width: 5.9rem;
+  padding: .58rem .78rem;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 26%, transparent);
+  border-radius: .95rem;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  color: color-mix(in srgb, var(--ink) 86%, transparent);
+  text-align: center;
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+  box-shadow: 0 18px 44px color-mix(in srgb, #000 14%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent);
+}
+.fallbackNode::before {
+  content: "";
+  display: inline-block;
+  width: .42rem;
+  height: .42rem;
+  margin-right: .42rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-2) 70%, #d8bd72);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-2) 45%, transparent);
+  vertical-align: .05em;
+}
+.fallbackNode[data-active="true"] {
+  border-color: color-mix(in srgb, #d8bd72 56%, transparent);
+  background: color-mix(in srgb, #d8bd72 13%, var(--surface));
+  color: var(--ink);
+  transform: translateY(-.16rem);
+}
+.fallbackNode:nth-of-type(1) { left: 4%; top: 17%; }
+.fallbackNode:nth-of-type(2) { left: 24%; top: 39%; }
+.fallbackNode:nth-of-type(3) { left: 43%; top: 27%; }
+.fallbackNode:nth-of-type(4) { right: 24%; top: 39%; }
+.fallbackNode:nth-of-type(5) { right: 4%; top: 58%; }
+@media (max-width: 760px) {
+  .fallbackMap { width: 98%; aspect-ratio: .92 / 1; transform: translateY(-11%); }
+  .fallbackBoundary { inset: 8% 10% 20%; border-radius: 1rem; background-size: 3rem 3rem; }
+  .fallbackRoute { left: 50%; right: auto; top: 12%; bottom: 24%; width: 2px; height: auto; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent-2) 54%, transparent), #d8bd72, transparent); }
+  .fallbackNode { min-width: 5.2rem; padding: .5rem .62rem; font-size: .68rem; }
+  .fallbackNode:nth-of-type(1) { left: 8%; top: 8%; }
+  .fallbackNode:nth-of-type(2) { right: 8%; left: auto; top: 23%; }
+  .fallbackNode:nth-of-type(3) { left: 50%; top: 39%; transform: translateX(-50%); }
+  .fallbackNode:nth-of-type(3)[data-active="true"] { transform: translateX(-50%) translateY(-.16rem); }
+  .fallbackNode:nth-of-type(4) { left: 8%; right: auto; top: 55%; }
+  .fallbackNode:nth-of-type(5) { right: 8%; top: 70%; }
+}
+
+
+/* Pass 35: make the Control Room visibly live, including fallback browsers. */
+.webgpuCore {
+  --ptr-x: 0;
+  --ptr-y: 0;
+}
+.webgpuCore figcaption b {
+  width: fit-content;
+  margin-top: .08rem;
+  padding: .32rem .5rem;
+  border: 1px solid rgba(119,217,170,.24);
+  border-radius: 999px;
+  color: rgba(255,247,232,.78);
+  background: rgba(119,217,170,.10);
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+.fallbackCore .fallbackMap {
+  transition: transform .22s ease;
+  transform:
+    translateY(-4%)
+    rotateX(calc(var(--ptr-y) * -4deg))
+    rotateY(calc(var(--ptr-x) * 5deg));
+  transform-style: preserve-3d;
+}
+.fallbackCore[data-pointer="true"] .fallbackMap {
+  filter: saturate(1.08) contrast(1.03);
+}
+.fallbackBoundary::before,
+.fallbackBoundary::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  opacity: .34;
+  animation: controlPing 2.8s ease-in-out infinite;
+}
+.fallbackBoundary::after {
+  inset: 24%;
+  animation-delay: .9s;
+  border-color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+}
+.fallbackRoute::before,
+.fallbackRoute::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: #d8bd72;
+  box-shadow: 0 0 24px rgba(216,189,114,.72);
+  transform: translate(-50%, -50%);
+  animation: routePacket 2.4s linear infinite;
+}
+.fallbackRoute::after { animation-delay: 1.2s; }
+.fallbackNode {
+  transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease;
+}
+.fallbackNode:nth-of-type(3),
+.fallbackNode:nth-of-type(5) {
+  transform: translate3d(calc(var(--ptr-x) * 7px), calc(var(--ptr-y) * 5px), 0);
+}
+.fallbackNode:nth-of-type(4),
+.fallbackNode:nth-of-type(6) {
+  transform: translate3d(calc(var(--ptr-x) * -5px), calc(var(--ptr-y) * -4px), 0);
+}
+.fallbackNode[data-active="true"] {
+  box-shadow:
+    0 24px 54px color-mix(in srgb, #000 18%, transparent),
+    0 0 34px color-mix(in srgb, var(--accent-2) 24%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent);
+}
+.webgpuCore[data-pointer="true"]::before {
+  opacity: .28;
+  background-position:
+    calc(var(--ptr-x) * 1.2rem) calc(var(--ptr-y) * 1.2rem),
+    calc(var(--ptr-x) * -1rem) calc(var(--ptr-y) * -1rem);
+}
+@keyframes routePacket {
+  0% { left: 8%; opacity: 0; scale: .72; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { left: 92%; opacity: 0; scale: 1.18; }
+}
+@keyframes controlPing {
+  0%,100% { transform: scale(.96); opacity: .16; }
+  50% { transform: scale(1.04); opacity: .42; }
+}
+@media (max-width: 760px) {
+  .webgpuCore figcaption b { display: none; }
+  .fallbackCore .fallbackMap { transform: translateY(-11%); }
+  .fallbackRoute::before,
+  .fallbackRoute::after {
+    left: 50%;
+    top: 8%;
+    animation-name: routePacketMobile;
+  }
+}
+@keyframes routePacketMobile {
+  0% { top: 8%; opacity: 0; scale: .72; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 92%; opacity: 0; scale: 1.18; }
+}
+
+/* Pass 36: calm desktop Control Room — fewer competing details. */
+@media (min-width: 981px) {
+  .webgpuCore {
+    min-height: clamp(24rem, 31vw, 32rem);
+    border-radius: 1.6rem;
+    background:
+      radial-gradient(circle at 54% 42%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 18rem),
+      radial-gradient(circle at 78% 16%, color-mix(in srgb, var(--accent-2) 8%, transparent), transparent 14rem),
+      linear-gradient(145deg, color-mix(in srgb, var(--surface) 94%, #000 3%), color-mix(in srgb, var(--surface) 82%, #000 10%));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent), 0 22px 68px color-mix(in srgb, #000 13%, transparent);
+  }
+
+  .webgpuCore::before {
+    inset: 1.2rem;
+    border-radius: 1.1rem;
+    background-size: 6.5rem 6.5rem;
+    opacity: .10;
+  }
+
+  .webgpuCore::after {
+    opacity: .36;
+  }
+
+  .webgpuCore figcaption {
+    left: 1.05rem;
+    bottom: 1.05rem;
+    max-width: 21rem;
+    gap: .22rem;
+    padding: .72rem .78rem;
+    border-radius: .9rem;
+    background: rgba(8,9,8,.36);
+  }
+
+  .webgpuCore figcaption strong {
+    font-size: clamp(1.1rem, 1.5vw, 1.45rem);
+  }
+
+  .webgpuCore figcaption small {
+    display: none;
+  }
+
+  .webgpuCore figcaption em {
+    margin-top: .1rem;
+    font-size: .66rem;
+    padding: .26rem .42rem;
+  }
+
+  .webgpuCore figcaption b {
+    display: none;
+  }
+
+  .fallbackMap {
+    width: min(88%, 36rem);
+    opacity: .9;
+  }
+
+  .fallbackNode {
+    min-width: 5.35rem;
+    padding: .46rem .62rem;
+    font-size: .68rem;
+    border-radius: .75rem;
+    box-shadow: 0 12px 28px color-mix(in srgb, #000 10%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
+  }
+
+  .fallbackBoundary::before,
+  .fallbackBoundary::after {
+    opacity: .18;
+    animation-duration: 4.6s;
+  }
+
+  .fallbackRoute::before,
+  .fallbackRoute::after {
+    width: .38rem;
+    height: .38rem;
+    opacity: .8;
+    animation-duration: 3.8s;
+  }
+}
+
+/* Pass 37: make the chosen premium stack visible without turning it into a tech demo. */
+@media (min-width: 981px) {
+  .webgpuCore {
+    min-height: clamp(27rem, 34vw, 36rem);
+  }
+  .webgpuCore figcaption span {
+    color: #f0d58e;
+  }
+  .webgpuCore figcaption small {
+    display: block;
+    max-width: 20rem;
+    color: rgba(255,255,255,.58);
+  }
+}

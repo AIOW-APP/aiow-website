@@ -9,3 +9,7 @@ node_modules/
 .DS_Store
 *.log
 .vercel
+
+# Python cache
+__pycache__/
+*.py[cod]

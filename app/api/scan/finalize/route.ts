@@ -5,6 +5,10 @@ import { verifySession } from "@/lib/scan/store";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  if (process.env.NEXT_PUBLIC_AIOW_ENABLE_FORMS !== "true") {
+    return NextResponse.json({ error: "AIOW scan form disabled; use WhatsApp" }, { status: 503 });
+  }
+
   try {
     const { session, name, company, sector, email, report } = await req.json();
     const sess = await verifySession(session || "");
@@ -17,7 +21,7 @@ export async function POST(req: Request) {
     const reportHtml = mdToHtml(String(report || ""));
 
     const userPayload = {
-      from: "AIOW <scan@aiow.io>",
+      from: "AIOW <scan@aiow.ai>",
       to: [targetEmail],
       subject: `Jouw AIOW AI-scan voor ${company}`,
       html: `
@@ -28,21 +32,21 @@ export async function POST(req: Request) {
           <div style="color:#D1D1D8;line-height:1.7;font-size:15px">${reportHtml}</div>
           <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:32px 0">
           <p style="color:#D1D1D8;line-height:1.7;font-size:14px">
-            Dit is een geautomatiseerde scan. Wil je deze bevindingen omzetten in actie? Plan een <strong>gratis 2-uur strategie-call</strong>:
+            Dit is een geautomatiseerde conceptscan. Wil je deze bevindingen omzetten in actie? Bespreek eerst de scope en privacygrenzen via WhatsApp:
           </p>
-          <a href="https://cal.com/handsomebstrd/aiow-scan" style="display:inline-block;background:#00F0FF;color:#0A0A0B;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:500;margin-top:16px">
-            Plan 2-uur strategie-call →
+          <a href="https://wa.me/31621898039" style="display:inline-block;background:#00F0FF;color:#0A0A0B;padding:14px 28px;border-radius:999px;text-decoration:none;font-weight:500;margin-top:16px">
+            Stuur WhatsApp →
           </a>
           <p style="color:#8A8A94;font-size:12px;margin:40px 0 0">
-            AIOW BV · <a style="color:#00F0FF" href="https://aiow.io">aiow.io</a> · Gegenereerd door Debbie AI fleet
+            AIOW BV · <a style="color:#00F0FF" href="https://aiow.ai">aiow.ai</a> · Concept — finale juridische review aanbevolen
           </p>
         </div>
       `,
     };
 
     const teamPayload = {
-      from: "AIOW Scan <scan@aiow.io>",
-      to: ["info@aiow.io"],
+      from: "AIOW Scan <scan@aiow.ai>",
+      to: ["hello@aiow.ai"],
       reply_to: targetEmail,
       subject: `🎯 Nieuwe scan: ${company} (${sector})`,
       html: `<div style="font-family:-apple-system,sans-serif;padding:24px;background:#0A0A0B;color:#F8F8FA;max-width:640px;margin:0 auto">

@@ -17,6 +17,8 @@ export interface AnalyticsEnv {
 
 export function getEnv(): AnalyticsEnv {
   if (typeof process === "undefined") return {};
+  // Launch safety: analytics are prepared but inert until Plausible/access is explicitly configured.
+  if (process.env.NEXT_PUBLIC_AIOW_ENABLE_ANALYTICS !== "true") return {};
   return {
     plausibleDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
     plausibleHost: process.env.NEXT_PUBLIC_PLAUSIBLE_HOST || "https://plausible.io",

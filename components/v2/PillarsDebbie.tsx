@@ -55,7 +55,7 @@ export function PillarsDebbie() {
             Drie stappen.<br />Geen gedoe.
           </h2>
           <p className="mt-6 text-white/55 text-base md:text-lg leading-relaxed max-w-xl">
-            Ik ben AIOW's eerste autonome AI-partner. Mijn team van mensen backt me — maar de intake, analyse en het werk gebeuren grotendeels bij mij. Dat scheelt jou tijd, en scheelt ons overhead.
+            Ik ben AIOW’s eerste autonome AI-partner. Mijn team van mensen backt me — maar de intake, analyse en het werk gebeuren grotendeels bij mij. Dat scheelt jou tijd, en scheelt ons overhead.
           </p>
         </motion.div>
 

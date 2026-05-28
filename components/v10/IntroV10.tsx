@@ -5,6 +5,7 @@
  */
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { INDUSTRIES } from "@/core/content/industries";
 
 export function IntroV10() {
@@ -12,10 +13,13 @@ export function IntroV10() {
     <section className="relative min-h-screen w-full overflow-hidden bg-[#0A0618]">
       {/* Hero campus background */}
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
           src="/buildings/hero_campus.webp"
           alt="AIOW Campus"
-          className="w-full h-full object-cover opacity-50"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-50"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0618]/40 via-[#0A0618]/20 to-[#0A0618]" />
       </div>

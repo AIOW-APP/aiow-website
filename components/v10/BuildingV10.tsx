@@ -5,6 +5,7 @@
  */
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { type Industry } from "@/core/content/industries";
 
 export function BuildingV10({ industry }: { industry: Industry }) {
@@ -12,10 +13,12 @@ export function BuildingV10({ industry }: { industry: Industry }) {
     <section className="relative min-h-screen w-full overflow-hidden bg-[#0A0618]">
       {/* Building hero background */}
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
           src={industry.heroImage}
           alt={industry.buildingName}
-          className="w-full h-full object-cover opacity-60"
+          fill
+          sizes="100vw"
+          className="object-cover opacity-60"
           onError={(e) => {
             (e.target as HTMLImageElement).src = "/buildings/hero_campus.webp";
           }}
