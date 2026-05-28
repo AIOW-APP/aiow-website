@@ -35,8 +35,8 @@ const scenes: Scene[] = [
     body: "The key turns scattered input into owned, routed work.",
     proof: "The intake slot turns. Channels fold into one queue.",
     state: "listening",
-    desktop: "/aiow/story-v416/proofs/intake-true-keyhole-insertion-v4.png",
-    mobile: "/aiow/story-v416/proofs/mobile/mobile-02-intake-keyhole-insertion-v1.png",
+    desktop: "/aiow/story-v415/desktop/02-intake-hub.png",
+    mobile: "/aiow/story-v415/mobile/02-intake-hub.png",
     nativeLock: true,
     theme: "light",
   },
@@ -47,9 +47,8 @@ const scenes: Scene[] = [
     body: "AIOW decides what runs local, masked or cloud-safe.",
     proof: "The boundary lock opens. Safe routes light up inside the layer.",
     state: "locked",
-    desktop: "/aiow/story-v416/proofs/scene-set-v2-mixed-shots/03-privacy-boundary-wide-room-person-unlock-v1.png",
-    mobile: "/aiow/story-v416/proofs/mobile/mobile-03-privacy-boundary-room-person-v2.png",
-    motionDesktop: "/aiow/story-v416/proofs/motion/lock-first-v2-repair/privacy-boundary-physical-slot-safe-routes-v2.mp4",
+    desktop: "/aiow/story-v415/desktop/03-private-boundary.png",
+    mobile: "/aiow/story-v415/mobile/03-private-boundary.png",
     nativeLock: true,
     theme: "dark",
   },
@@ -60,9 +59,8 @@ const scenes: Scene[] = [
     body: "Private jobs can land on hardware you actually own.",
     proof: "The hardware lock turns. Work drops into the local lane.",
     state: "hardware",
-    desktop: "/aiow/story-v416/proofs/local-compute-rack-lock-v3/local-compute-rack-lock-quarter-turn-v3d-dormant.png",
-    mobile: "/aiow/story-v416/proofs/mobile/mobile-04-local-compute-hardware-bay-v1.png",
-    motionDesktop: "/aiow/story-v416/proofs/motion/local-compute-v3d/local-compute-dormant-rack-lock-click-local-lane-v3d.mp4",
+    desktop: "/aiow/story-v415/desktop/04-local-hardware-dock.png",
+    mobile: "/aiow/story-v415/mobile/04-local-hardware-dock.png",
     nativeLock: true,
     theme: "light",
   },
@@ -73,9 +71,8 @@ const scenes: Scene[] = [
     body: "Risk, context and capability decide the lane before work moves.",
     proof: "The router lock turns. One model lane activates.",
     state: "routing",
-    desktop: "/aiow/story-v416/proofs/scene-set-v3-mixed-shots/02-model-router-secure-hardware-bay-v3.png",
-    mobile: "/aiow/story-v416/proofs/mobile/mobile-05-model-router-hardware-bay-v2.png",
-    motionDesktop: "/aiow/story-v416/proofs/motion/lock-first-v2/model-router-slot-turn-layer-routes-v1.mp4",
+    desktop: "/aiow/story-v415/desktop/05-model-router.png",
+    mobile: "/aiow/story-v415/mobile/05-model-router.png",
     nativeLock: true,
     theme: "dark",
   },
@@ -86,8 +83,8 @@ const scenes: Scene[] = [
     body: "Research, build, QA and ops receive owned work, context and limits.",
     proof: "The role lock clicks. Work lanes assign to the right agent.",
     state: "dispatch",
-    desktop: "/aiow/story-v416/proofs/scene-set-v2-mixed-shots/06-debbie-operating-room-full-person-unlock-v1.png",
-    mobile: "/aiow/story-v416/proofs/mobile/mobile-06-operator-room-unlock-v3.png",
+    desktop: "/aiow/story-v415/desktop/06-business-agents.png",
+    mobile: "/aiow/story-v415/mobile/06-business-agents.png",
     nativeLock: true,
     theme: "light",
   },
@@ -153,8 +150,8 @@ const scenes: Scene[] = [
     body: "Models can change. Ownership, routing and proof stay installed.",
     proof: "The final lock seats. The operating layer comes online.",
     state: "installed",
-    desktop: "/aiow/story-v416/proofs/scene-set-v3-mixed-shots/08-final-aiow-control-room-foreground-lock-v2.png",
-    mobile: "/aiow/story-v416/proofs/mobile/mobile-final-aiow-control-room-foreground-lock-v2-clean.png",
+    desktop: "/aiow/story-v415/desktop/12-final-installation.png",
+    mobile: "/aiow/story-v415/mobile/12-final-installation.png",
     nativeLock: true,
     theme: "light",
   },
@@ -284,7 +281,7 @@ export default function OryzoCloneExperience() {
 
       <section id="top" className="aiow-hero" data-testid="aiow-oryzo-hero">
         <div className="aiow-hero__media" aria-hidden="true">
-          <video src="/aiow/story-v416/proofs/motion/final-aiow-control-room-foreground-lock-v2-quarterturn-kling-v1.mp4" autoPlay muted loop playsInline poster="/aiow/story-v416/proofs/scene-set-v3-mixed-shots/08-final-aiow-control-room-foreground-lock-v2.png" />
+          <div className="aiow-hero__fallback" />
           <div className="aiow-hero__vignette" />
         </div>
         <div className="aiow-hero__topline">
@@ -484,6 +481,7 @@ export default function OryzoCloneExperience() {
         .aiow-hero { min-height: 100vh; position: relative; display: grid; align-items: end; padding: 92px var(--aiow-grid) var(--aiow-grid); overflow: hidden; isolation: isolate; }
         .aiow-hero__media { position: absolute; inset: 0; z-index: -2; }
         .aiow-hero__media video { width: 100%; height: 100%; object-fit: cover; filter: saturate(.9) contrast(1.05) brightness(.72); transform: scale(1.02); }
+        .aiow-hero__fallback { position: absolute; inset: 0; background: url('/aiow/story-v415/final/final-center-master.png') center / cover no-repeat; filter: saturate(.9) contrast(1.05) brightness(.72); transform: scale(1.02); }
         .aiow-hero__vignette, .story-scrim { position: absolute; inset: 0; background: radial-gradient(circle at 58% 42%, transparent 0 22%, rgba(16,9,4,.2) 42%, rgba(16,9,4,.88) 100%), linear-gradient(90deg, rgba(16,9,4,.85), rgba(16,9,4,.12) 55%, rgba(16,9,4,.65)); }
         .aiow-hero__topline { position: absolute; top: 86px; left: var(--aiow-grid); right: var(--aiow-grid); display: flex; justify-content: space-between; gap: 20px; font-size: 12px; text-transform: uppercase; letter-spacing: .16em; color: rgba(255,237,215,.78); }
         .aiow-hero__copy { max-width: min(780px, 92vw); z-index: 4; }
