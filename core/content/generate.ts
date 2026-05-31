@@ -13,6 +13,8 @@
  * ~/debbie/scripts/ollama_route (ssh bigmac) or Replicate API.
  */
 
+import type { VideoProvider } from '../media/video-provider';
+
 export type Platform = "x" | "linkedin" | "instagram" | "tiktok";
 export type Tone = "editorial" | "playful" | "technical" | "announcement";
 
@@ -23,6 +25,7 @@ export interface ContentBrief {
   character?: "handsome" | "debbie" | "none";
   callToAction?: string;        // "Try now" / "Read more" / null
   assetType?: "image" | "video" | "both";
+  videoProvider?: VideoProvider;  // default: grok, fallback: kling
   brand: "debbie" | "aiow" | "h3alth" | "mew" | "handsome";
   // Platform constraints
   maxLength?: number;           // X: 280, LinkedIn: 3000, IG caption: 2200, TikTok: 300
@@ -105,5 +108,8 @@ export function parseDraftResponse(raw: string, brief: ContentBrief): ContentDra
         ? `${characterTrigger}, scene: ${brief.topic}, cinematic 4-second loop, smooth camera, dramatic mood`
         : undefined,
     },
+    notes: brief.assetType === "video" || brief.assetType === "both"
+      ? `videoProvider=${brief.videoProvider || "grok"}; fallbackProvider=kling`
+      : undefined,
   };
 }
