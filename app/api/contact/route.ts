@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 // POST /api/contact — receive AI-scan form, send via Resend.
 export async function POST(req: Request) {
+  if (process.env.NEXT_PUBLIC_AIOW_ENABLE_FORMS !== "true") {
+    return NextResponse.json({ error: "AIOW contact form disabled; use WhatsApp" }, { status: 503 });
+  }
+
   try {
     const body = await req.json();
     const { name, company, email, phone, sector, message } = body;
@@ -18,8 +22,8 @@ export async function POST(req: Request) {
 
     // Email to AIOW team
     const teamPayload = {
-      from: "AIOW Scan <scan@aiow.io>",
-      to: ["info@aiow.io"],
+      from: "AIOW Scan <scan@aiow.ai>",
+      to: ["hello@aiow.ai"],
       reply_to: email,
       subject: `[AI-scan aanvraag] ${company} · ${sector}`,
       html: `
@@ -41,14 +45,14 @@ export async function POST(req: Request) {
           </div>
           ` : ""}
 
-          <p style="margin-top: 32px; color: #8A8A94; font-size: 12px;">Verstuurd via aiow.io — binnen 24u reageren.</p>
+          <p style="margin-top: 32px; color: #8A8A94; font-size: 12px;">Verstuurd via aiow.ai — contactformulier veilig geconfigureerd.</p>
         </div>
       `,
     };
 
     // Confirmation email to sender
     const userPayload = {
-      from: "AIOW <info@aiow.io>",
+      from: "AIOW <hello@aiow.ai>",
       to: [email],
       subject: "Je AI-scan aanvraag is binnen — we reageren binnen 24 uur",
       html: `
@@ -57,22 +61,22 @@ export async function POST(req: Request) {
           <h1 style="font-size: 32px; margin: 0 0 24px; letter-spacing: -0.02em; line-height: 1.05;">Bedankt, ${escapeHtml(name)}.</h1>
 
           <p style="color: #D1D1D8; line-height: 1.6; margin: 0 0 20px;">
-            Je AI-scan aanvraag voor <strong style="color:#F8F8FA">${escapeHtml(company)}</strong> is binnen. We reageren binnen 24 uur met beschikbare tijden voor een 2-uurs video-call.
+            Je AI-scan aanvraag voor <strong style="color:#F8F8FA">${escapeHtml(company)}</strong> is binnen. Opvolging loopt via WhatsApp/contact zodra de intakebestemming is bevestigd.
           </p>
 
           <div style="margin: 32px 0; padding: 20px; background: #111114; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;">
             <p style="color: #8A8A94; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 16px;">Wat je krijgt</p>
             <ul style="margin: 0; padding-left: 20px; color: #D1D1D8; line-height: 1.8;">
-              <li>2 uur video-call met onze consultants</li>
-              <li>Concreet PDF rapport van je AI-opportunity's</li>
-              <li>3 prioritaire use cases met ROI-berekening</li>
-              <li>Budget- en roadmap-indicatie</li>
+              <li>Inventarisatie van processen, data en privacygrenzen</li>
+              <li>Concept-roadmap voor een eerste veilige AI-pilot</li>
+              <li>3 prioritaire use cases als hypothese, zonder harde ROI-claim</li>
+              <li>Budget- en roadmap-indicatie na scope-check</li>
               <li><strong style="color:#00E6A8">Volledig gratis, geen verplichtingen</strong></li>
             </ul>
           </div>
 
           <p style="color: #D1D1D8; line-height: 1.6; margin: 0 0 16px;">
-            In de tussentijd: wil je een indruk van ons werk? Bekijk <a style="color:#00F0FF" href="https://aiow.io#portfolio">ons portfolio van 30+ AI-native SaaS-producten</a>.
+            In de tussentijd: wil je een indruk van ons werk? Stuur direct een WhatsApp via <a style="color:#00F0FF" href="https://wa.me/31621898039">+31 6 21 89 80 39</a> als je sneller wilt schakelen.
           </p>
 
           <p style="color: #8A8A94; font-size: 13px; margin: 32px 0 0;">— Team AIOW</p>

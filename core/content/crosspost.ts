@@ -11,7 +11,7 @@
  * Brand rules (from core/brand/language.md):
  *   - English only
  *   - Video preferred (Kling/Runway-generated)
- *   - Handsome ape / Debbie persona aanwezig
+ *   - No Spunky/ape/mascot in AIOW flagship brand materials unless explicitly approved
  *   - Short, no "revolutionary" hype-words
  */
 

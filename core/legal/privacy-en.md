@@ -1,98 +1,69 @@
 ---
-# Template — replace placeholders [IN_BRACKETS] before publishing.
-# Reviewed for: GDPR (EU), AVG (NL), basic CCPA safe-harbor.
-# Still recommended: legal review before go-live on regulated products.
+# AIOW BV — English privacy/cookie draft.
+# Prelaunch: not legally final. Publication requires explicit go-live + legal/privacy review.
 ---
 
-# Privacy Policy
+# Privacy Policy Draft
 
-_Last updated: [YYYY-MM-DD]_
+_Last updated: 2026-05-04_
 
 ## 1. Who we are
 
-[COMPANY_NAME] ("we", "our", "us") operates [WEBSITE_URL] and any related applications. We are registered in [COUNTRY] under [COMPANY_REGISTRATION].
+AIOW BV ("we", "our", "us") is the prepared operator of https://aiow.ai and related AI system scan/intake flows.
 
-Contact: [PRIVACY_EMAIL]
+- Legal entity: AIOW BV
+- Dutch Chamber of Commerce / KvK: 71887466
+- Address: Bijlmermeerstraat 30, 2131HC Hoofddorp, Netherlands
+- Contact: WhatsApp +31 6 21 89 80 39 / https://wa.me/31621898039
 
-## 2. What we collect
+## 2. Prelaunch status
 
-We collect only what we need to operate the service:
+This text is a draft. Forms, analytics, marketing/product analytics cookies, public deployment and final legal publication remain disabled until Richard explicitly approves go-live.
 
-- **Account data** — name, email, hashed password (if you create an account)
-- **Usage data** — pages visited, clicks, device type (anonymized via Plausible; IP not stored)
-- **Optional analytics** — behavioral telemetry via PostHog (only identified if you explicitly log in)
-- **Payment data** — handled entirely by [Stripe / iDEAL provider], we never see card details
-- **Wallet addresses** — only public blockchain addresses you provide; we never have access to private keys
+## 3. Data we may collect after activation
 
-We do NOT sell, rent, or trade your personal data.
+We collect only what is needed for intake and follow-up:
 
-## 3. Why we process it
+- Contact data: name, company name, email address, phone number or WhatsApp number.
+- Intake data: sector, processes, bottlenecks and voluntarily shared context for an AI system scan.
+- Technical logs: only for security, debugging and abuse prevention.
+- Analytics: Plausible is prepared as a cookieless, privacy-friendly analytics option; not active without approval.
 
-- To provide and maintain the service
-- To respond to support requests
-- To prevent fraud and abuse
-- To comply with legal obligations (tax, AML)
+We do not sell, rent or trade personal data.
 
-Legal bases (GDPR Art. 6):
-- Consent (analytics cookies, marketing)
-- Contract (account and service delivery)
-- Legitimate interest (security, fraud prevention)
+## 4. Why we process data
 
-## 4. How long we keep it
+- To prepare and follow up on an AI system scan or contact request.
+- To maintain security, prevent abuse and keep the site working.
+- To comply with legal obligations when service delivery actually starts.
 
-- Account data: until you delete your account, plus 7 years for required tax/legal records
-- Analytics: anonymized; 24 months
-- Logs: 90 days for security, then purged
+Possible GDPR legal bases: consent, contract/pre-contract steps, legitimate interest and legal obligation.
 
-## 5. Your rights (GDPR)
+## 5. Retention
 
-You have the right to:
-
-- Access your data
-- Correct inaccurate data
-- Delete your data ("right to be forgotten")
-- Restrict processing
-- Port your data elsewhere
-- Object to processing
-- Withdraw consent at any time
-- File a complaint with your national data protection authority (in NL: Autoriteit Persoonsgegevens)
-
-Email [PRIVACY_EMAIL] to exercise these rights. We respond within 30 days.
+Final retention periods must be confirmed before go-live. Prelaunch guideline: keep intake data no longer than needed for follow-up and decision-making; keep technical logs short and purpose-bound.
 
 ## 6. Cookies
 
-We use:
+Prelaunch cookie stance:
 
-- **Strictly necessary** cookies (session, CSRF) — no consent required
-- **Analytics** (Plausible, cookieless by default) — no consent needed
-- **Product analytics** (PostHog) — consent-based; opt in via the cookie banner
+- Strictly necessary cookies only where technically required.
+- Plausible cookieless analytics prepared, but not activated.
+- No advertising cookies.
+- No PostHog/product analytics without explicit approval and an appropriate cookie choice.
 
-No advertising cookies.
+## 7. AI, privacy and human approval
 
-## 7. Third parties
+AIOW designs per process which data may be handled locally, privately or via approved cloud models. External, public, destructive or sensitive actions stay behind human approval. No absolute privacy claims are made without technical review.
 
-We share data only with processors strictly needed to run the service:
+## 8. Third parties / processors
 
-- Vercel (hosting) — EU/US
-- Stripe (payments) — EU/US with SCC
-- Plausible (analytics) — EU
-- PostHog (product analytics) — EU (eu.posthog.com)
-- Supabase (database) — EU
+Final processors must be confirmed before publication. Prepared categories may include hosting, email processing, analytics and intake tooling. Required processors should be covered by data processing agreements.
 
-All processors have Data Processing Agreements in place.
+## 9. Rights
 
-## 8. International transfers
+Under GDPR, data subjects have rights including access, correction, deletion, restriction, portability, objection and withdrawal of consent. Requests can be submitted via the prepared contact route.
 
-Where data leaves the EU, we rely on Standard Contractual Clauses and adequacy decisions.
+## 10. No testimonials or unsupported claims
 
-## 9. Children
-
-The service is not intended for users under 18. We do not knowingly collect data from minors.
-
-## 10. Changes
-
-We'll post updates here and, for material changes, notify active users by email at least 30 days before effect.
-
----
-
-_This policy is written to be readable. If you spot something unclear, [PRIVACY_EMAIL] — we'll clarify and likely improve the text for everyone._
+Pilot examples remain anonymized and low-claim. AIOW does not publish invented testimonials, client claims, savings or benchmarks.

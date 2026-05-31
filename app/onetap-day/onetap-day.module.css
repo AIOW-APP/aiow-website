@@ -1,0 +1,380 @@
+.pageShell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255, 184, 64, 0.28), transparent 30rem),
+    radial-gradient(circle at 80% 12%, rgba(0, 240, 255, 0.18), transparent 28rem),
+    linear-gradient(135deg, #100904 0%, #1a120c 48%, #f2e7d5 48.2%, #f8f2e8 100%);
+  color: #fff8ec;
+  padding: clamp(1rem, 2vw, 2rem);
+  font-family: var(--font-body, Inter, system-ui, sans-serif);
+}
+
+.nav {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.brandLink,
+.navCta,
+.primaryAction,
+.secondaryAction,
+.mailAction,
+.paymentAction,
+.mailActionDisabled {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.brandLink,
+.navCta {
+  padding: 0.7rem 0.95rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+}
+
+.hero {
+  width: min(1180px, 100%);
+  margin: clamp(3rem, 8vw, 7rem) auto clamp(2rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  gap: clamp(1rem, 4vw, 3rem);
+  align-items: stretch;
+}
+
+.heroCopy h1 {
+  max-width: 860px;
+  margin: 0;
+  font-size: clamp(3.2rem, 9vw, 8.4rem);
+  line-height: 0.82;
+  letter-spacing: -0.085em;
+}
+
+.eyebrow,
+.cardLabel {
+  margin: 0 0 0.9rem;
+  color: #ffb840;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 950;
+}
+
+.lede {
+  max-width: 740px;
+  color: rgba(255, 248, 236, 0.78);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.52;
+}
+
+.heroActions,
+.boundaryList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.primaryAction,
+.secondaryAction,
+.submitButton,
+.mailAction,
+.paymentAction,
+.mailActionDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.85rem 1.15rem;
+  border: 0;
+  font-size: 0.95rem;
+}
+
+.primaryAction,
+.submitButton,
+.mailAction,
+.paymentAction {
+  background: #15130f;
+  color: #fff8ec;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.18);
+}
+
+.secondaryAction {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 248, 236, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.mailActionDisabled {
+  background: rgba(21, 19, 15, 0.08);
+  color: rgba(21, 19, 15, 0.58);
+  border: 1px solid rgba(21, 19, 15, 0.16);
+  cursor: not-allowed;
+}
+
+.offerCard,
+.intakeForm,
+.interestForm,
+.foundingPanel,
+.resultPanel,
+.boundarySection,
+.proofGrid p {
+  border: 1px solid rgba(21, 19, 15, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: #15130f;
+  box-shadow: 0 28px 110px rgba(51, 31, 9, 0.13);
+  backdrop-filter: blur(18px);
+}
+
+.offerCard {
+  border-radius: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.offerCard strong {
+  display: block;
+  font-size: clamp(4rem, 9vw, 7rem);
+  letter-spacing: -0.09em;
+  line-height: 0.85;
+}
+
+.offerCard p,
+.offerCard li,
+.boundarySection p,
+.resultPanel p {
+  color: #5e5144;
+  line-height: 1.55;
+}
+
+.intakeIntro p {
+  color: rgba(255, 248, 236, 0.84);
+  line-height: 1.58;
+}
+
+.proofGrid {
+  width: min(1180px, 100%);
+  margin: 0 auto clamp(2rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.proofGrid p {
+  margin: 0;
+  border-radius: 1.1rem;
+  padding: 0.95rem;
+  font-size: 0.92rem;
+  font-weight: 850;
+}
+
+.intakeSection {
+  width: min(1180px, 100%);
+  margin: 0 auto clamp(2rem, 5vw, 4rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.76fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.intakeIntro {
+  grid-column: 1 / -1;
+  max-width: 780px;
+}
+
+.intakeIntro h2,
+.boundarySection h2,
+.resultPanel h3 {
+  margin: 0;
+  color: #fff8ec;
+  font-size: clamp(2rem, 4.4vw, 4.8rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+}
+
+.boundarySection h2,
+.resultPanel h3 {
+  color: #15130f;
+  font-size: clamp(1.7rem, 3.8vw, 3.9rem);
+}
+
+.intakeForm,
+.interestForm,
+.resultPanel,
+.boundarySection {
+  border-radius: 1.6rem;
+  padding: clamp(1rem, 2.5vw, 1.6rem);
+}
+
+.intakeForm,
+.interestForm {
+  display: grid;
+  gap: 1rem;
+}
+
+.foundingPanel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(320px, 1fr);
+  gap: 1rem;
+  align-items: start;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 184, 64, 0.16));
+}
+
+.foundingPanel h3 {
+  margin: 0 0 1rem;
+  color: #15130f;
+  font-size: clamp(1.8rem, 3.8vw, 4.2rem);
+  line-height: 0.92;
+  letter-spacing: -0.07em;
+}
+
+.foundingPanel p,
+.foundingPanel li {
+  color: #5e5144;
+  line-height: 1.55;
+}
+
+.foundingPanel ul {
+  margin: 1rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.intakeForm label,
+.interestForm label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 850;
+}
+
+.intakeForm input,
+.intakeForm textarea,
+.interestForm input,
+.interestForm textarea,
+.interestForm select,
+.summaryBox {
+  width: 100%;
+  border: 1px solid rgba(21, 19, 15, 0.16);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  color: #15130f;
+  padding: 0.85rem 0.95rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 0.72fr;
+  gap: 0.75rem;
+}
+
+.consentBox {
+  grid-template-columns: auto 1fr !important;
+  align-items: start;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: rgba(255, 184, 64, 0.14);
+  border: 1px solid rgba(255, 184, 64, 0.35);
+}
+
+.consentBox input {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.15rem;
+}
+
+.validationNote,
+.savedStamp,
+.errorNote {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 184, 64, 0.18);
+  color: #5b3410;
+  font-weight: 850;
+}
+
+.errorNote {
+  background: rgba(194, 47, 47, 0.12);
+  color: #8f1f1f;
+}
+
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.submitButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.resultPanel {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.summaryBox {
+  min-height: 16rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.82rem;
+  background: #fffaf1;
+}
+
+.paymentAction {
+  background: linear-gradient(135deg, #635bff 0%, #15130f 100%);
+}
+
+.paymentNote {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #6a5945;
+}
+
+.boundarySection {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.boundaryList span {
+  padding: 0.65rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(21, 19, 15, 0.14);
+  background: rgba(255, 255, 255, 0.58);
+  font-weight: 900;
+}
+
+@media (max-width: 880px) {
+  .hero,
+  .intakeSection,
+  .foundingPanel,
+  .proofGrid,
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .resultPanel {
+    position: static;
+  }
+
+  .nav {
+    align-items: stretch;
+  }
+
+  .brandLink,
+  .navCta {
+    text-align: center;
+  }
+}

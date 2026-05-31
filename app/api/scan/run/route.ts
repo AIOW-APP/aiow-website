@@ -22,6 +22,10 @@ type Body = {
 };
 
 export async function POST(req: Request) {
+  if (process.env.NEXT_PUBLIC_AIOW_ENABLE_FORMS !== "true") {
+    return new Response("AIOW scan form disabled; use WhatsApp", { status: 503 });
+  }
+
   try {
     const body = (await req.json()) as Body;
     const sess = await verifySession(body.session || "");
@@ -48,11 +52,11 @@ Specifieke pijn: ${body.pain || "niet genoemd"}
 Ambities 12 maanden: ${body.goals || "niet genoemd"}
 `;
 
-    const system = `Je bent een senior AI-consultant bij AIOW BV. Je schrijft scherpe, praktische rapporten voor Nederlandse MKB-bedrijven over waar AI hun grootste impact kan maken. Je bent direct, concreet, en geeft altijd specifieke voorbeelden met ROI-indicatie. Geen bullshit, geen hype. Schrijf in het Nederlands. Gebruik markdown met headers (##), bullets, en korte alinea's.`;
+    const system = `Je bent een senior AI-consultant bij AIOW BV. Je schrijft scherpe, praktische rapporten voor Nederlandse MKB-bedrijven over waar AI praktisch impact kan maken. Je bent direct, concreet en voorzichtig met claims: gebruik alleen indicatieve bandbreedtes als duidelijk concept, geen verzonnen testimonials, klantclaims, benchmarks of harde ROI-belofte. Formuleer voorbeelden als pilot/anoniem scenario. Schrijf in het Nederlands. Gebruik markdown met headers (##), bullets en korte alinea's.`;
 
     const modulesText = body.modules
       .map((m) => {
-        if (m === "workflow") return "**Werkprocessen**: Welke 3-5 workflows in dit bedrijf zijn de laaghangend fruit voor AI-automatisering? Per workflow: welke AI-tool/aanpak, tijdsbesparing, implementatie-complexiteit (laag/middel/hoog), geschatte ROI.";
+        if (m === "workflow") return "**Werkprocessen**: Welke 3-5 workflows in dit bedrijf zijn laagdrempelig voor AI-automatisering? Per workflow: AI-aanpak, indicatieve tijdswinst als hypothese, implementatie-complexiteit (laag/middel/hoog), risico's en benodigde menselijke goedkeuring.";
         if (m === "geo") return "**Vindbaarheid (GEO)**: Hoe positioneert ${body.company} zich voor AI-zoekmachines (ChatGPT, Claude, Perplexity, Gemini)? 3 concrete stappen om binnen 60 dagen genoemd te worden in AI-antwoorden voor hun sector.";
         if (m === "social") return "**Social Media AI**: Welke content-strategie + AI-tools voor hun sector? 3 platform-specifieke quick wins. Wat voor content moet ${body.company} posten en hoe AI die kan maken.";
         if (m === "documents") return "**Documenten & Data**: Welke document-flows in een ${body.sector}-bedrijf zijn goudmijnen voor AI? OCR, samenvatting, search, RAG — 3 concrete toepassingen met tool-namen.";
@@ -71,7 +75,7 @@ Genereer een gestructureerd AI-scan rapport met:
 ## Prioriteiten
 Top 3 AI-kansen voor dit bedrijf, geordend op impact × haalbaarheid. Per kans:
 - Korte titel
-- Wat het oplevert (kwantitatief, bv. "8-12 uur/week besparing")
+- Wat het mogelijk oplevert (alleen als indicatieve hypothese, geen harde claim)
 - Benodigde tools/stack
 - Implementatie-tijd
 

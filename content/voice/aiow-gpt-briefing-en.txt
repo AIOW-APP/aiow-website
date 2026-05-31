@@ -1,0 +1,13 @@
+AIOW builds a secure AI worklayer for your company.
+
+Not another separate chatbot, but one controlled system for processes, data, agents and approvals.
+
+We start small: one process where AI can create immediate value. For example customer contact, quotes, planning, finance or documents.
+
+Then we define the data boundary. What stays local? What may use cloud models? And where should a human approve first?
+
+After that, we build agents that execute work inside those rules. They read, route, write and hand off, but stay controllable.
+
+The AI system scan is the first step. You get a concrete route: which use case to start with, which risks matter, which infrastructure fits, and how to start safely without chaos.
+
+Want us to take a look? Start the intake and send your context through WhatsApp.

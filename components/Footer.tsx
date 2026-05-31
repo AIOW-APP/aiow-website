@@ -47,8 +47,8 @@ export function Footer() {
             </p>
             <ul className="flex flex-col gap-2 text-sm text-[var(--color-ink-soft)]">
               <li>
-                <a href="mailto:info@aiow.io" className="hover:text-[var(--color-accent)] transition-colors">
-                  info@aiow.io
+                <a href="https://wa.me/31621898039" target="_blank" rel="noopener" className="hover:text-[var(--color-accent)] transition-colors">
+                  +31 6 21 89 80 39 · WhatsApp
                 </a>
               </li>
               <li>
@@ -57,7 +57,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#scan" className="hover:text-[var(--color-accent)] transition-colors">
+                <a href="https://wa.me/31621898039" target="_blank" rel="noopener" className="hover:text-[var(--color-accent)] transition-colors">
                   Plan een AI-scan
                 </a>
               </li>

@@ -5,7 +5,7 @@
  *   import { sendEmail } from "@/core/email/send";
  *   import WelcomeEmail from "@/core/email/templates/welcome";
  *   await sendEmail({
- *     to: "user@example.com",
+ *     to: "naam@bedrijf.nl",
  *     subject: "Welcome to AIOW",
  *     react: WelcomeEmail({ name: "Richard" }),
  *     brand: "aiow",

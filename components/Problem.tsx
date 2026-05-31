@@ -23,7 +23,7 @@ export function Problem() {
             Impact <span className="text-[var(--color-accent-alt)]">nergens.</span>
           </h2>
           <p className="mt-6 text-lg text-[var(--color-ink-soft)] leading-relaxed">
-            Je bedrijf hoort overal dat "AI de game verandert". En intern? Chaos. Stagiairs experimenteren, boekhouders zijn bang, directie wil visie. Resultaat: stilstand.
+            Je bedrijf hoort overal dat “AI de game verandert”. En intern? Chaos. Stagiairs experimenteren, boekhouders zijn bang, directie wil visie. Resultaat: stilstand.
           </p>
         </motion.div>
 

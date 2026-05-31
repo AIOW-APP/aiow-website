@@ -1,99 +1,69 @@
 ---
-# Template — vervang [TUSSEN_HAKEN] voor publicatie.
-# Voldoet aan: AVG/GDPR, basale Nederlandse eisen (AP).
-# Juridische review aan te raden vóór live gaan op gereguleerde producten.
+# AIOW BV — Dutch-first privacy/cookie concept.
+# Prelaunch: niet juridisch definitief. Publicatie vereist expliciete go-live + legal/privacy review.
 ---
 
-# Privacybeleid
+# Privacybeleid concept
 
-_Laatst bijgewerkt: [JJJJ-MM-DD]_
+_Laatst bijgewerkt: 2026-05-04_
 
 ## 1. Wie zijn wij
 
-[BEDRIJFSNAAM] ("wij", "ons") is de beheerder van [WEBSITE_URL] en bijbehorende applicaties. Wij zijn ingeschreven in [LAND] onder KvK [KVK_NUMMER].
+AIOW BV ("wij", "ons") is de voorbereide beheerder van https://aiow.ai en bijbehorende AI-systeemscan/intakeflows.
 
-Contact: [PRIVACY_EMAIL]
+- Legal entity: AIOW BV
+- KvK: 71887466
+- Adres: Bijlmermeerstraat 30, 2131HC Hoofddorp, Nederland
+- Contact: WhatsApp +31 6 21 89 80 39 / https://wa.me/31621898039
 
-## 2. Wat wij verzamelen
+## 2. Prelaunch-status
 
-Wij verzamelen alleen wat nodig is om de dienst te leveren:
+Deze tekst is een concept. Formulieren, analytics, cookies voor marketing/product analytics, publieke deploy en finale juridische publicatie blijven uitgeschakeld tot Richard expliciet go-live goedkeurt.
 
-- **Accountgegevens** — naam, e-mail, gehashed wachtwoord (als je een account maakt)
-- **Gebruiksgegevens** — bezochte pagina's, kliks, apparaattype (geanonimiseerd via Plausible; IP wordt niet opgeslagen)
-- **Optionele analytics** — gedragsdata via PostHog (alleen herleidbaar na expliciet inloggen)
-- **Betaalgegevens** — volledig afgehandeld door [Stripe / iDEAL]; wij zien nooit kaartgegevens
-- **Wallet-adressen** — alleen publieke blockchain-adressen die jij zelf deelt; wij hebben nooit toegang tot private keys
+## 3. Welke gegevens kunnen wij verzamelen na activatie
 
-Wij verkopen, verhuren of verhandelen jouw persoonsgegevens **niet**.
+Wij verzamelen alleen wat nodig is voor intake en opvolging:
 
-## 3. Waarom wij het verwerken
+- Contactgegevens: naam, bedrijfsnaam, e-mailadres, telefoonnummer of WhatsApp-nummer.
+- Intake-informatie: sector, processen, knelpunten en vrijwillig gedeelde context voor een AI-systeemscan.
+- Technische logs: alleen voor veiligheid, foutopsporing en misbruikpreventie.
+- Analytics: Plausible is voorbereid als cookieless, privacyvriendelijke analytics-optie; niet actief zonder goedkeuring.
 
-- Om de dienst te leveren en te onderhouden
-- Om support te geven
-- Om fraude en misbruik te voorkomen
-- Om te voldoen aan wettelijke verplichtingen (belasting, AML)
+Wij verkopen, verhuren of verhandelen persoonsgegevens niet.
 
-Rechtsgrond (AVG art. 6):
+## 4. Waarom wij gegevens verwerken
 
-- Toestemming (analytics-cookies, marketing)
-- Uitvoering overeenkomst (account + dienstverlening)
-- Gerechtvaardigd belang (veiligheid, fraudepreventie)
+- Om een AI-systeemscan of contactverzoek te kunnen voorbereiden en opvolgen.
+- Om veiligheid, misbruikpreventie en technische werking te waarborgen.
+- Om te voldoen aan wettelijke verplichtingen wanneer dienstverlening daadwerkelijk start.
 
-## 4. Hoe lang wij het bewaren
+Mogelijke AVG-grondslagen: toestemming, uitvoering van een overeenkomst/voorfase, gerechtvaardigd belang en wettelijke verplichting.
 
-- Accountgegevens: tot jij je account verwijdert, plus 7 jaar voor wettelijke bewaartermijn (belasting)
-- Analytics: geanonimiseerd; 24 maanden
-- Logs: 90 dagen voor veiligheid, daarna verwijderd
+## 5. Bewaartermijnen
 
-## 5. Jouw rechten (AVG)
-
-Jij hebt het recht om:
-
-- Inzage in je gegevens
-- Onjuiste gegevens te laten corrigeren
-- Je gegevens te laten verwijderen ("recht om vergeten te worden")
-- Verwerking te beperken
-- Je gegevens mee te nemen (dataportabiliteit)
-- Bezwaar te maken tegen verwerking
-- Toestemming op elk moment in te trekken
-- Klacht in te dienen bij de Autoriteit Persoonsgegevens
-
-Mail [PRIVACY_EMAIL] om deze rechten uit te oefenen. Wij reageren binnen 30 dagen.
+Definitieve bewaartermijnen moeten vóór livegang worden vastgesteld. Prelaunch-richtlijn: intakegegevens niet langer bewaren dan nodig voor opvolging en besluitvorming; technische logs kort en doelgebonden bewaren.
 
 ## 6. Cookies
 
-Wij gebruiken:
+Voor de prelaunch-site is het uitgangspunt:
 
-- **Strikt noodzakelijke** cookies (sessie, CSRF) — geen toestemming nodig
-- **Analytics** (Plausible, standaard cookieless) — geen toestemming nodig
-- **Product-analytics** (PostHog) — op basis van toestemming via cookiebanner
+- Strikt noodzakelijke cookies alleen waar technisch nodig.
+- Plausible cookieless analytics voorbereid, maar niet geactiveerd.
+- Geen advertentiecookies.
+- Geen PostHog/product analytics zonder expliciete goedkeuring en passende cookiekeuze.
 
-Geen advertentiecookies.
+## 7. AI, privacy en menselijke goedkeuring
 
-## 7. Derde partijen
+AIOW ontwerpt per proces welke data lokaal, private of via goedgekeurde cloudmodellen verwerkt mag worden. Externe, publieke, destructieve of gevoelige acties blijven achter menselijke goedkeuring. Er worden geen absolute privacyclaims gedaan zonder technische review.
 
-Wij delen gegevens alleen met verwerkers die strikt nodig zijn:
+## 8. Derde partijen / verwerkers
 
-- Vercel (hosting) — EU/VS
-- Stripe (betalingen) — EU/VS met SCC
-- Plausible (analytics) — EU
-- PostHog (product-analytics) — EU
-- Supabase (database) — EU
+Definitieve verwerkers moeten vóór publicatie worden bevestigd. Mogelijke voorbereide partijen zijn hosting, e-mailverwerking, analytics en eventuele intake tooling. Met noodzakelijke verwerkers hoort een verwerkersovereenkomst te worden gesloten.
 
-Met alle verwerkers hebben wij een verwerkersovereenkomst.
+## 9. Rechten
 
-## 8. Internationale doorgifte
+Betrokkenen hebben onder de AVG onder meer recht op inzage, correctie, verwijdering, beperking, dataportabiliteit, bezwaar en intrekking van toestemming. Verzoeken kunnen via de voorbereide contactroute worden ingediend.
 
-Als gegevens de EU verlaten, baseren wij ons op Standard Contractual Clauses en adequaatheidsbesluiten.
+## 10. Geen testimonials of claims
 
-## 9. Minderjarigen
-
-De dienst is niet bedoeld voor gebruikers jonger dan 18. Wij verzamelen niet bewust gegevens van minderjarigen.
-
-## 10. Wijzigingen
-
-Belangrijke wijzigingen publiceren wij hier en melden wij actieve gebruikers minimaal 30 dagen vooraf per e-mail.
-
----
-
-_Dit beleid is geschreven om leesbaar te zijn. Als iets onduidelijk is → [PRIVACY_EMAIL], we passen het aan en iedereen heeft er profijt van._
+Pilotvoorbeelden blijven anoniem en claim-arm. AIOW publiceert geen verzonnen testimonials, klantclaims, besparingen of benchmarks.

@@ -43,7 +43,7 @@ const MAX_LENGTH_BY_PLATFORM: Record<Platform, number> = {
 };
 
 const CHARACTER_TRIGGER: Record<string, string> = {
-  handsome: "HANDSOME blue ape in white toga with gold trim, red sash, pearl earring, unbothered king energy",
+  handsome: "", // Internal Team Richard persona disabled for AIOW flagship generation unless explicitly reapproved.
   debbie: "DEBBIE Latina 28, long dark wavy hair, warm brown eyes, natural makeup, white blouse, confident",
   none: "",
 };
@@ -91,7 +91,7 @@ export function parseDraftResponse(raw: string, brief: ContentBrief): ContentDra
   const tagsLine = raw.match(/TAGS:\s*(.+?)$/s)?.[1]?.trim() || "";
   const tags = tagsLine.split(",").map((t) => t.trim().replace(/^#/, "")).filter(Boolean);
 
-  const character = brief.character || "handsome";
+  const character = brief.character || "none";
   const characterTrigger = CHARACTER_TRIGGER[character] || "";
 
   return {

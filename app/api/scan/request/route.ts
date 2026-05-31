@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { generateCode } from "@/lib/scan/store";
 
 export async function POST(req: Request) {
+  if (process.env.NEXT_PUBLIC_AIOW_ENABLE_FORMS !== "true") {
+    return NextResponse.json({ error: "AIOW scan form disabled; use WhatsApp" }, { status: 503 });
+  }
+
   try {
     const { email, name, company } = await req.json();
     if (!email || !name || !company) {
@@ -18,7 +22,7 @@ export async function POST(req: Request) {
     const apiKey = process.env.RESEND_API_KEY;
     if (apiKey) {
       const payload = {
-        from: "AIOW Scan <scan@aiow.io>",
+        from: "AIOW Scan <scan@aiow.ai>",
         to: [email],
         subject: `Je AIOW scan code: ${code}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;max-width:500px;margin:0 auto;padding:32px;background:#0A0A0B;color:#F8F8FA;border-radius:16px">

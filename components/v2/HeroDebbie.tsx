@@ -99,7 +99,7 @@ export function HeroDebbie() {
             </span>
           </h1>
           <p className="mt-6 text-white/70 text-lg md:text-xl max-w-lg leading-relaxed">
-            AIOW's eerste autonome AI-partner. In 5 minuten weet ik wat jouw bedrijf nodig heeft — en help ik je het te krijgen.
+            AIOW’s eerste autonome AI-partner. In 5 minuten weet ik wat jouw bedrijf nodig heeft — en help ik je het te krijgen.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
