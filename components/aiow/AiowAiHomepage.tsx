@@ -105,6 +105,7 @@ export function AiowAiHomepage() {
   const [sessionId, setSessionId] = useState("");
   const [memoryStatus, setMemoryStatus] = useState<MemoryStatus>("temporary");
   const [dealCardTitle, setDealCardTitle] = useState("");
+  const [portalUrl, setPortalUrl] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { id: "m0", role: "ai", text: firstMessage, time: "nu" },
   ]);
@@ -194,10 +195,11 @@ export function AiowAiHomepage() {
           transcript: messages.map((message) => `${message.role}: ${message.text}`).join("\n"),
         }),
       });
-      const data = (await response.json()) as { ok?: boolean; dealCard?: { title?: string } };
+      const data = (await response.json()) as { ok?: boolean; portalUrl?: string; dealCard?: { title?: string } };
       if (response.ok && data.ok) {
         setMemoryStatus("linked");
         setDealCardTitle(data.dealCard?.title || "Deal Card aangemaakt");
+        setPortalUrl(data.portalUrl || "");
       }
     } catch {
       setDealCardTitle("Deal Card lokaal voorbereid");
@@ -213,7 +215,7 @@ export function AiowAiHomepage() {
       {
         id: crypto.randomUUID(),
         role: "ai",
-        text: `Je Venture Memory is gekoppeld. ${dealCardTitle || "Ik heb een eerste Deal Card voorbereid"}. Team AIOW kan nu beoordelen of dit een scan, proof sprint, fixed build, growth partner of venture review wordt.`,
+        text: `Je Venture Memory is gekoppeld. ${dealCardTitle || "Ik heb een eerste Deal Card voorbereid"}. Open je project workspace om extra context te delen. Als alles compleet is, maakt Team AIOW een voorstel. Na ondertekening kan de bouwfase starten.`,
         time: "nu",
       },
     ]);
@@ -418,6 +420,7 @@ export function AiowAiHomepage() {
               <span>AIOW mag deze context opslaan en mij gericht mailen over deze kans.</span>
             </label>
             <button type="submit" disabled={!contact.name.trim() || !contact.email.trim() || !contact.consent}>Maak private intake</button>
+            {portalUrl ? <a href={portalUrl}>Open project workspace</a> : null}
           </form>
         </section>
       ) : null}

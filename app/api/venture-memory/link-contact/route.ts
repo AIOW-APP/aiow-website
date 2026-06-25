@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildVentureDealCard, captureVentureMemoryEvent, normalizeEmail } from "@/lib/aiow-venture-memory";
 import { captureAiowLead, validLeadEmail, type AiowLeadCaptureInput } from "@/lib/aiow-lead-capture";
+import { createOrUpdateVentureAccount } from "@/lib/aiow-venture-accounts";
 
 type LinkContactPayload = {
   sessionId?: unknown;
@@ -76,11 +77,23 @@ export async function POST(req: Request) {
     };
 
     const leadCapture = await captureAiowLead(leadInput, "LOCAL_CAPTURED");
+    const account = await createOrUpdateVentureAccount({
+      sessionId,
+      email,
+      name,
+      company,
+      leadId: leadCapture.id,
+      dealCard,
+    });
 
     return NextResponse.json({
       ok: true,
       memorySessionId: sessionId,
       leadId: leadCapture.id,
+      accountId: account.accountId,
+      portalUrl: account.portalUrl,
+      accessToken: account.accessToken,
+      status: account.status,
       followUp: leadCapture.record.followUp,
       dealCard,
       privacy: {
