@@ -125,7 +125,9 @@ export function AiowAiHomepage() {
     const nextSessionId = stored || `aiow_session_${crypto.randomUUID()}`;
     window.localStorage.setItem("aiow:ventureSessionId", nextSessionId);
     setSessionId(nextSessionId);
-    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    if (window.matchMedia("(min-width: 881px)").matches) {
+      requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    }
   }, []);
 
   function onInput(event: ChangeEvent<HTMLTextAreaElement>) {
