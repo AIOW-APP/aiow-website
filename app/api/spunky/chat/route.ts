@@ -9,6 +9,13 @@ type SpunkyChatPayload = {
   page?: unknown;
   sessionId?: unknown;
   canvas?: unknown;
+  relationshipStage?: unknown;
+  phase?: unknown;
+  accountStage?: unknown;
+  accountId?: unknown;
+  memoryLinked?: unknown;
+  signedAt?: unknown;
+  proposalSigned?: unknown;
 };
 
 const RATE_LIMIT = { windowMs: 60 * 1000, maxAttempts: 18 };
@@ -28,6 +35,7 @@ export async function POST(req: Request) {
     const transcript = clamp(asText(payload.transcript), 3000);
     const sessionId = clamp(asText(payload.sessionId) || `aiow_session_${crypto.randomUUID()}`, 160);
     const canvas = isRecord(payload.canvas) ? payload.canvas : undefined;
+    const relationshipStage = normalizeRelationshipStage(payload);
     if (!message) return NextResponse.json({ error: "message required" }, { status: 400 });
 
     await captureVentureMemoryEvent({
@@ -55,6 +63,13 @@ export async function POST(req: Request) {
             sessionId,
             canvas,
             transcript,
+            relationshipStage,
+            phase: relationshipStage,
+            accountStage: relationshipStage,
+            accountId: asText(payload.accountId) || undefined,
+            memoryLinked: Boolean(payload.memoryLinked),
+            signedAt: asText(payload.signedAt) || undefined,
+            proposalSigned: Boolean(payload.proposalSigned),
             page: asText(payload.page) || "aiow.ai/",
             boundary:
               "Answer as Spunky for AIOW.ai. Give useful intake guidance, but do not promise production work, legal conclusions, payments, or a final deal before AIOW review.",
@@ -89,6 +104,16 @@ export async function POST(req: Request) {
     console.error("[spunky-chat] POST error", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+}
+
+
+function normalizeRelationshipStage(payload: SpunkyChatPayload): "anonymous" | "account" | "signed" {
+  const raw = (asText(payload.relationshipStage) || asText(payload.phase) || asText(payload.accountStage)).toLowerCase();
+  if (["signed", "contract_signed", "proposal_signed", "build_ready"].includes(raw)) return "signed";
+  if (["account", "logged_in", "workspace", "portal"].includes(raw)) return "account";
+  if (asText(payload.signedAt) || Boolean(payload.proposalSigned)) return "signed";
+  if (asText(payload.accountId) || Boolean(payload.memoryLinked)) return "account";
+  return "anonymous";
 }
 
 function buildBoundedSpunkyReply(message: string, mode: "idea" | "company", count: number, transcript: string): string {
