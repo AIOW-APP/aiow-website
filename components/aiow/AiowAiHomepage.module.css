@@ -1063,17 +1063,11 @@
     display: none;
   }
   .mobileTypingMode .mobileTypingHint {
-    position: absolute;
-    left: 2px;
-    right: 2px;
-    bottom: 62px;
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
+    display: none !important;
   }
   .mobileTypingMode .mobileTypingHint span {
     height: 24px;
-    display: inline-flex;
+    display: none;
     align-items: center;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 999px;
@@ -1108,5 +1102,30 @@
   }
   .mobileTypingMode .mobileComposer button:last-child {
     box-shadow: 0 8px 22px rgba(91, 36, 255, 0.34);
+  }
+}
+
+
+/* Mobile touch cleanup: no cursor, no tap ring, no status dot overlay */
+@media (max-width: 880px) {
+  .mobileOs,
+  .mobileOs *,
+  .mobileOs *::before,
+  .mobileOs *::after {
+    cursor: none !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+    -webkit-touch-callout: none;
+  }
+  .mobileOs *:focus,
+  .mobileOs *:focus-visible,
+  .mobileOs *:active {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .mobilePresence .liveDot {
+    display: none !important;
+  }
+  .mobilePresence {
+    padding-left: 2px;
   }
 }
