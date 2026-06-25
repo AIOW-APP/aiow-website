@@ -231,13 +231,16 @@ export function AiowAiHomepage() {
 
       <section className={styles.frame} aria-label="AIOW AI Venture Interface">
         <aside className={styles.leftRail} aria-label="AIOW status">
-          <Link href="/" className={styles.brand} aria-label="AIOW home">
-            <span className={styles.logo}>A</span>
-            <span>
-              <strong>AIOW.ai</strong>
-              <em>AI Venture Partner</em>
-            </span>
-          </Link>
+          <div className={styles.railTopbar}>
+            <Link href="/" className={styles.brand} aria-label="AIOW home">
+              <span className={styles.logo}>A</span>
+              <span>
+                <strong>AIOW.ai</strong>
+                <em>AI Venture Partner</em>
+              </span>
+            </Link>
+            <TopbarActions />
+          </div>
 
           <div className={styles.mission}>
             <p>THE AI IS THE HOMEPAGE</p>
@@ -286,6 +289,7 @@ export function AiowAiHomepage() {
               <span className={styles.avatars}><b /> <b /> <b /></span>
               <span>{aiTeam.length}</span>
               <button type="button">Deel gesprek +</button>
+              <TopbarActions compact />
             </div>
           </div>
           <div className={styles.aiState}>
@@ -332,7 +336,7 @@ export function AiowAiHomepage() {
               onChange={onInput}
               onKeyDown={onComposerKeyDown}
               placeholder="Vertel me wat je wilt bouwen..."
-              rows={2}
+              rows={1}
             />
             <div className={styles.composerActions} aria-label="Input opties">
               <button type="button" title="Tools">+</button>
@@ -426,6 +430,17 @@ export function AiowAiHomepage() {
         </section>
       ) : null}
     </main>
+  );
+}
+
+
+function TopbarActions({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={compact ? `${styles.topbarActions} ${styles.topbarActionsCompact}` : styles.topbarActions} aria-label="Account en taal">
+      <Link href="/portal" aria-label="Log in" title="Log in">👤</Link>
+      <Link href="/?lang=nl" aria-label="Nederlands" title="Nederlands">🇳🇱</Link>
+      <Link href="/?lang=en" aria-label="English" title="English">🇬🇧</Link>
+    </div>
   );
 }
 

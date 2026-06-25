@@ -108,6 +108,53 @@
 .brand strong { font-size: 15px; letter-spacing: 0.01em; }
 .brand em { margin-top: 2px; color: rgba(248, 251, 255, 0.46); font-size: 10px; font-style: normal; text-transform: uppercase; letter-spacing: 0.08em; }
 
+
+.railTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.topbarActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.topbarActions a,
+.topbarActions button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.065);
+  text-decoration: none;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.topbarActions a:hover,
+.topbarActions button:hover {
+  border-color: rgba(0, 229, 255, 0.42);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.railTopbar .topbarActions { display: none; }
+
+.topbarActionsCompact a,
+.topbarActionsCompact button {
+  width: 32px;
+  height: 32px;
+}
+
 .mission {
   padding: 22px 0 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
@@ -475,9 +522,9 @@
     box-shadow: none;
   }
   .leftRail {
-    height: 64px;
-    min-height: 64px;
-    padding: 12px 14px;
+    height: 62px;
+    min-height: 62px;
+    padding: 10px 14px;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -493,37 +540,43 @@
   .metricCard,
   .railNav,
   .statusStack .statusLine:not(:first-child) { display: none; }
-  .statusStack { padding: 0; }
+  .statusStack { display: none; }
   .statusLine { font-size: 11px; }
+  .railTopbar { width: 100%; }
+  .railTopbar .topbarActions { display: inline-flex; }
+  .topbarActions { gap: 5px; }
+  .topbarActions a,
+  .topbarActions button { width: 32px; height: 32px; font-size: 14px; }
   .workspace {
-    height: calc(100svh - 64px);
-    min-height: 620px;
-    padding: 0 14px 16px;
+    height: calc(100svh - 62px);
+    min-height: 560px;
+    padding: 0 14px 12px;
   }
   .workspaceTop { display: none; }
-  .aiState { top: 12px; }
-  .wave { top: 42px; width: 82%; height: 76px; }
-  .thread { left: 16px; right: 16px; top: 108px; height: calc(100dvh - 458px); max-height: none; justify-content: flex-end; }
+  .aiState { top: 10px; font-size: 11px; }
+  .wave { top: 36px; width: 76%; height: 46px; opacity: 0.5; }
+  .thread { left: 16px; right: 16px; top: 86px; height: calc(100dvh - 422px); max-height: none; justify-content: flex-start; gap: 9px; }
   .aiBubble,
   .userBubble,
-  .thinkingCard { max-width: 94%; padding: 14px 15px; }
-  .quickActions { left: 14px; right: 14px; bottom: calc(152px + env(safe-area-inset-bottom)); justify-content: flex-start; overflow-x: auto; min-height: 36px; height: auto; mask-image: none; }
-  .quickActions button { flex: 0 0 auto; max-width: 168px; }
+  .thinkingCard { max-width: 94%; padding: 12px 14px; border-radius: 16px; }
+  .quickActions { left: 14px; right: 14px; bottom: calc(106px + env(safe-area-inset-bottom)); justify-content: flex-start; overflow-x: auto; min-height: 30px; height: auto; mask-image: none; }
+  .quickActions button { flex: 0 0 auto; max-width: 156px; height: 30px; padding: 0 10px; }
   .quickActions button:nth-child(n + 3) { display: none; }
-  .composer { left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); min-height: 102px; }
-  .composerActions { flex-wrap: nowrap; overflow-x: auto; }
-  .composerActions button { white-space: nowrap; }
+  .composer { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); min-height: 76px; padding: 7px 8px; border-radius: 19px; }
+  .composer textarea { min-height: 30px; max-height: 54px; padding: 5px 9px; }
+  .composerActions { flex-wrap: nowrap; overflow-x: auto; gap: 5px; }
+  .composerActions button { white-space: nowrap; padding: 5px 8px; font-size: 10px; }
   .canvas { display: none; }
   .mobileCards {
     position: absolute;
     left: 14px;
     right: 14px;
-    bottom: calc(198px + env(safe-area-inset-bottom));
+    bottom: calc(146px + env(safe-area-inset-bottom));
     z-index: 4;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
-    max-height: 104px;
+    max-height: 88px;
     overflow: auto;
     padding: 0;
     scrollbar-width: none;
@@ -539,12 +592,12 @@
   }
   .mobileCard[open] { grid-column: 1 / -1; }
   .mobileCard summary {
-    min-height: 42px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 11px 12px;
+    padding: 9px 10px;
     list-style: none;
     cursor: pointer;
   }
@@ -557,8 +610,8 @@
   .mobileCard[open] summary::after { content: "−"; }
   .mobileCard span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b38cff; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
   .mobileCard strong { margin-left: auto; color: #fff; font-size: 11px; }
-  .mobileCard h3 { margin: 0; padding: 0 14px 6px; font-size: 15px; line-height: 1.08; letter-spacing: -0.035em; }
-  .mobileCard p { margin: 0; padding: 0 14px 12px; color: rgba(248, 251, 255, 0.62); font-size: 11px; line-height: 1.36; }
+  .mobileCard h3 { margin: 0; padding: 0 12px 5px; font-size: 14px; line-height: 1.08; letter-spacing: -0.035em; }
+  .mobileCard p { margin: 0; padding: 0 12px 10px; color: rgba(248, 251, 255, 0.62); font-size: 11px; line-height: 1.32; }
   .thinkingDock { display: none; }
   .contactGate { grid-template-columns: 1fr; margin: 12px 14px 24px; width: auto; }
 }
@@ -568,8 +621,8 @@
   .logo { width: 34px; height: 34px; border-radius: 12px; }
   .aiBubble p,
   .userBubble p { font-size: 14px; }
-  .composer { border-radius: 22px; }
-  .send { width: 44px; height: 44px; }
+  .composer { border-radius: 20px; }
+  .send { width: 38px; height: 38px; font-size: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
