@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AiowAiHomepage.module.css";
 
 type IntakeState = "idle" | "typing" | "thinking" | "briefing" | "consent" | "review";
+type MemoryStatus = "temporary" | "linked";
 type Role = "ai" | "user";
 
 type Message = {
@@ -101,6 +102,9 @@ export function AiowAiHomepage() {
   const [input, setInput] = useState("");
   const [canvas, setCanvas] = useState<Canvas>(initialCanvas);
   const [contact, setContact] = useState({ name: "", email: "", company: "", consent: false });
+  const [sessionId, setSessionId] = useState("");
+  const [memoryStatus, setMemoryStatus] = useState<MemoryStatus>("temporary");
+  const [dealCardTitle, setDealCardTitle] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { id: "m0", role: "ai", text: firstMessage, time: "nu" },
   ]);
@@ -113,6 +117,10 @@ export function AiowAiHomepage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const stored = window.localStorage.getItem("aiow:ventureSessionId");
+    const nextSessionId = stored || `aiow_session_${crypto.randomUUID()}`;
+    window.localStorage.setItem("aiow:ventureSessionId", nextSessionId);
+    setSessionId(nextSessionId);
     requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   }, []);
 
@@ -120,6 +128,12 @@ export function AiowAiHomepage() {
     setInput(event.target.value);
     if (event.target.value.trim()) setState("typing");
     if (!event.target.value.trim() && userCount === 0) setState("idle");
+  }
+
+  function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    submitPrompt();
   }
 
   async function submitPrompt(prompt?: string) {
@@ -143,13 +157,16 @@ export function AiowAiHomepage() {
           message: text,
           mode: text.toLowerCase().includes("bedrijf") ? "company" : "idea",
           visitorMessageCount: userCount + 1,
+          sessionId,
+          canvas: nextCanvas,
           transcript: nextMessages.map((message) => `${message.role}: ${message.text}`).join("\n"),
-          page: "aiow-v2-ai-homepage",
+          page: "aiow-v4-ai-venture-experience",
         }),
       });
-      const data = (await response.json()) as { reply?: string; leadGate?: boolean };
+      const data = (await response.json()) as { reply?: string; leadGate?: boolean; memorySessionId?: string };
       const reply = refineReply(data.reply, text, userCount + 1);
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "ai", text: reply, time: "nu" }]);
+      if (data.memorySessionId && data.memorySessionId !== sessionId) setSessionId(data.memorySessionId);
       setState(data.leadGate || userCount >= 2 ? "consent" : "briefing");
     } catch {
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "ai", text: localReply(text, userCount + 1), time: "nu" }]);
@@ -157,10 +174,34 @@ export function AiowAiHomepage() {
     }
   }
 
-  function submitContact(event: FormEvent<HTMLFormElement>) {
+  async function submitContact(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!contact.name.trim() || !contact.email.trim() || !contact.consent) return;
     setState("review");
+    try {
+      const response = await fetch("/api/venture-memory/link-contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          name: contact.name,
+          email: contact.email,
+          company: contact.company,
+          consentAccepted: contact.consent,
+          consentText: "AIOW mag deze Venture Memory koppelen aan mijn account en mij persoonlijk e-mailen over deze kans.",
+          consentVersion: "aiow-venture-memory-v1",
+          canvas: activeCanvas,
+          transcript: messages.map((message) => `${message.role}: ${message.text}`).join("\n"),
+        }),
+      });
+      const data = (await response.json()) as { ok?: boolean; dealCard?: { title?: string } };
+      if (response.ok && data.ok) {
+        setMemoryStatus("linked");
+        setDealCardTitle(data.dealCard?.title || "Deal Card aangemaakt");
+      }
+    } catch {
+      setDealCardTitle("Deal Card lokaal voorbereid");
+    }
     setCanvas((current) => ({
       ...current,
       founder: contact.name.trim(),
@@ -172,7 +213,7 @@ export function AiowAiHomepage() {
       {
         id: crypto.randomUUID(),
         role: "ai",
-        text: "Je intake is voorbereid. Ik heb geen deal goedgekeurd. Team AIOW kan nu beoordelen of dit een scan, proof sprint, fixed build, growth partner of venture review wordt.",
+        text: `Je Venture Memory is gekoppeld. ${dealCardTitle || "Ik heb een eerste Deal Card voorbereid"}. Team AIOW kan nu beoordelen of dit een scan, proof sprint, fixed build, growth partner of venture review wordt.`,
         time: "nu",
       },
     ]);
@@ -247,7 +288,7 @@ export function AiowAiHomepage() {
           </div>
           <div className={styles.aiState}>
             <span className={styles.liveDot} />
-            <span>{state === "thinking" ? "AI denkt mee" : state === "typing" ? "AI luistert" : "AI Venture Partner online"}</span>
+            <span>{state === "thinking" ? "AI denkt mee" : state === "typing" ? "AI luistert" : memoryStatus === "linked" ? "Venture Memory gekoppeld" : "Tijdelijke Venture Memory actief"}</span>
           </div>
 
           <div className={styles.wave} aria-hidden="true">
@@ -266,7 +307,7 @@ export function AiowAiHomepage() {
             {state === "thinking" ? <ThinkingCard progress={thinkingProgress} /> : null}
           </div>
 
-          <div className={styles.quickActions}>
+          <div className={styles.quickActions} aria-label="Slimme vervolgstappen">
             {quickActions.map((action) => (
               <button key={action} type="button" onClick={() => submitPrompt(action)}>
                 {action}
@@ -280,14 +321,13 @@ export function AiowAiHomepage() {
               aria-label="Vertel AIOW waar je aan wilt bouwen"
               value={input}
               onChange={onInput}
+              onKeyDown={onComposerKeyDown}
               placeholder="Vertel me wat je wilt bouwen..."
               rows={2}
             />
             <div className={styles.composerActions} aria-label="Input opties">
-              <button type="button" title="Typen">Typen</button>
-              <button type="button" title="Voice input">Praten</button>
-              <button type="button" title="Foto of screenshot">Foto</button>
-              <button type="button" title="Bestand toevoegen">Bestand</button>
+              <button type="button" title="Tools">+</button>
+              <button type="button" title="Voice input">Praat</button>
               <button type="button" title="Website analyseren">Website</button>
               <button type="button" title="Pitchdeck uploaden">Pitchdeck</button>
             </div>
@@ -367,7 +407,7 @@ export function AiowAiHomepage() {
           <div>
             <p>Magic link account</p>
             <h2>Wil je dat AIOW deze venture intake bewaart?</h2>
-            <span>Na maximaal drie vragen maken we dit privé en kan Team AIOW gericht beoordelen.</span>
+            <span>Je tijdelijke Venture Memory wordt gekoppeld aan je account. We mailen alleen persoonlijk over deze kans als jij toestemming geeft.</span>
           </div>
           <form onSubmit={submitContact}>
             <input aria-label="Naam" placeholder="Naam" value={contact.name} onChange={(event) => setContact({ ...contact, name: event.target.value })} />
@@ -507,11 +547,12 @@ function refineReply(reply: string | undefined, text: string, count: number): st
 
 function localReply(text: string, count: number): string {
   const lower = text.toLowerCase();
-  if (count >= 3) return "Ik heb genoeg context voor een eerste route. Dit moet nu privé worden zodat AIOW de kans serieus kan beoordelen. Wil je dat ik een private intake voorbereid?";
+  if (isGreeting(lower)) return greetingReply();
+  if (count >= 3) return "Ik heb genoeg context voor een eerste route. Als je wilt, koppel ik nu naam en e-mail zodat je Venture Memory niet verloren gaat en Team AIOW dit serieus kan beoordelen.";
   if (includesAny(lower, ["lead", "offerte", "sales"])) return "Interessant. De kans zit waarschijnlijk in capture, scoring en opvolging. Mijn vraag: waar valt de meeste waarde weg, bij binnenkomst, offerte of opvolging?";
   if (includesAny(lower, ["bedrijf", "proces", "automatis"])) return "Ik hoor een operationele kans. Mijn vraag: welk proces kost vandaag het meeste tijd en wat zou er binnen 30 dagen meetbaar beter moeten zijn?";
   if (includesAny(lower, ["startup", "idee", "app"])) return "Ik hoor een mogelijke venture. Mijn vraag: welk bewijs heb je al dat klanten dit probleem urgent genoeg vinden?";
-  return "Ik luister. De belangrijkste vraag is niet wat we kunnen bouwen, maar waar digitale leverage echte waarde creëert. Waar zit de grootste frictie?";
+  return "Ik ben bij je. Dump je idee gerust rommelig: bedrijf, probleem, website, screenshot of gewoon één zin. Ik haal er markt, risico, AI-kans en de slimste vervolgvraag uit.";
 }
 
 function includesAny(value: string, terms: string[]) {
@@ -525,4 +566,18 @@ function extractAudience(lower: string) {
   if (lower.includes("zorg")) return "Zorgorganisaties";
   if (lower.includes("agency")) return "Agencies en consultants";
   return "B2B markt";
+}
+
+
+function isGreeting(lower: string): boolean {
+  return /^(hey|hi|hoi|hallo|yo|hello|goeie|goedemorgen|goedemiddag|goedenavond)[!.\s]*$/i.test(lower.trim());
+}
+
+function greetingReply(): string {
+  const replies = [
+    "Hey, vertel. Wat wil je bouwen, automatiseren of laten groeien? Je mag rommelig beginnen, ik structureer het voor je.",
+    "Hey. Geef me één zin over je idee of bedrijf, dan bouw ik meteen je eerste Venture Memory op.",
+    "Hey, ik luister. Waar zit de kans: meer leads, minder handwerk, een nieuw product of iets dat nog vaag is?",
+  ];
+  return replies[Math.floor(Math.random() * replies.length)];
 }
