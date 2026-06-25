@@ -1,3 +1,7 @@
+.page * {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .page {
   -webkit-tap-highlight-color: transparent;
   min-height: 100svh;
@@ -841,6 +845,7 @@
     box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.08), 0 18px 60px rgba(0, 0, 0, 0.34);
   }
   .mobileComposer textarea {
+    caret-color: rgba(255, 255, 255, 0.9);
     min-width: 0;
     min-height: 34px;
     max-height: 58px;
@@ -957,5 +962,107 @@
     color: #fff;
     background: linear-gradient(135deg, #7931ff, #ff38d6);
     box-shadow: 0 14px 38px rgba(121, 49, 255, 0.42);
+  }
+}
+
+/* AIOW v5 Telegram-style mobile typing mode */
+@media (max-width: 880px) {
+  .mobileTypingMode {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  .mobileTypingMode .mobileTopbar {
+    height: 44px;
+    min-height: 44px;
+    opacity: 0.88;
+  }
+  .mobileTypingMode .mobileTopbar .logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 11px;
+  }
+  .mobileTypingMode .mobileTopbar .brand strong {
+    font-size: 13px;
+  }
+  .mobileTypingMode .mobileTopbar .brand em {
+    max-width: 180px;
+    color: rgba(248, 251, 255, 0.58);
+  }
+  .mobileTypingMode .mobileTopbar .topbarActions,
+  .mobileTypingMode .mobileMemoryStrip,
+  .mobileTypingMode .mobileQuickActions,
+  .mobileTypingMode .mobileBottomNav {
+    display: none;
+  }
+  .mobileTypingMode .mobilePresence {
+    height: 28px;
+    font-size: 11px;
+    color: rgba(248, 251, 255, 0.56);
+  }
+  .mobileTypingMode .mobileThread {
+    top: 30px;
+    bottom: 64px;
+    gap: 8px;
+    padding-top: 4px;
+    padding-bottom: 8px;
+  }
+  .mobileTypingMode .mobileThread .aiBubble,
+  .mobileTypingMode .mobileThread .userBubble {
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+  .mobileTypingMode .mobileThread .aiBubble p,
+  .mobileTypingMode .mobileThread .userBubble p {
+    font-size: 14px;
+    line-height: 1.38;
+  }
+  .mobileTypingHint {
+    display: none;
+  }
+  .mobileTypingMode .mobileTypingHint {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 62px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .mobileTypingMode .mobileTypingHint span {
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: rgba(248, 251, 255, 0.48);
+    background: rgba(5, 7, 17, 0.62);
+    padding: 0 10px;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+  .mobileTypingMode .mobileComposer {
+    min-height: 54px;
+    height: 54px;
+    grid-template-columns: 34px 1fr 36px;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 19px;
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(8, 11, 24, 0.96);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .mobileTypingMode .mobileComposer textarea {
+    min-height: 30px;
+    max-height: 40px;
+    font-size: 15px;
+  }
+  .mobileTypingMode .mobileComposer button {
+    height: 34px;
+  }
+  .mobileTypingMode .mobileComposer button:first-child {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(248, 251, 255, 0.78);
+  }
+  .mobileTypingMode .mobileComposer button:last-child {
+    box-shadow: 0 8px 22px rgba(91, 36, 255, 0.34);
   }
 }

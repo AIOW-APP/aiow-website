@@ -108,6 +108,7 @@ export function AiowAiHomepage() {
   const [dealCardTitle, setDealCardTitle] = useState("");
   const [portalUrl, setPortalUrl] = useState("");
   const [mobileTab, setMobileTab] = useState<MobileTab>("home");
+  const [mobileTypingMode, setMobileTypingMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: "m0", role: "ai", text: firstMessage, time: "nu" },
   ]);
@@ -245,6 +246,8 @@ export function AiowAiHomepage() {
         submitPrompt={submitPrompt}
         memoryStatus={memoryStatus}
         contactLinked={Boolean(portalUrl) || memoryStatus === "linked"}
+        mobileTypingMode={mobileTypingMode}
+        setMobileTypingMode={setMobileTypingMode}
       />
 
       <section className={styles.frame} aria-label="AIOW AI Venture Interface">
@@ -475,6 +478,8 @@ function MobileVentureOs({
   submitPrompt,
   memoryStatus,
   contactLinked,
+  mobileTypingMode,
+  setMobileTypingMode,
 }: {
   activeTab: MobileTab;
   setActiveTab: (tab: MobileTab) => void;
@@ -489,10 +494,13 @@ function MobileVentureOs({
   submitPrompt: (prompt?: string) => void;
   memoryStatus: MemoryStatus;
   contactLinked: boolean;
+  mobileTypingMode: boolean;
+  setMobileTypingMode: (value: boolean) => void;
 }) {
   const knownItems = canvasLabels.filter((item) => hasCanvasValue(activeCanvas[item.key])).slice(0, 4);
+  const isChatTyping = activeTab === "chat" && mobileTypingMode;
   return (
-    <section className={styles.mobileOs} aria-label="AIOW mobile app shell" data-mobile-tab={activeTab}>
+    <section className={`${styles.mobileOs} ${isChatTyping ? styles.mobileTypingMode : ""}`} aria-label="AIOW mobile app shell" data-mobile-tab={activeTab} data-typing-mode={isChatTyping ? "true" : "false"}>
       <header className={styles.mobileTopbar}>
         <Link href="/" className={styles.brand} aria-label="AIOW home">
           <span className={styles.logo}>A</span>
@@ -564,6 +572,9 @@ function MobileVentureOs({
             <button type="button" onClick={() => setActiveTab("team")}>Team</button>
             <button type="button" onClick={() => setActiveTab("account")}>Privacy</button>
           </div>
+          <div className={styles.mobileTypingHint} aria-hidden={!isChatTyping}>
+            <span>{knownItems.length ? "Memory actief" : "Ik luister"}</span>
+          </div>
           <div className={styles.mobileQuickActions}>
             {quickActions.slice(0, 3).map((action) => <button key={action} type="button" onClick={() => submitPrompt(action)}>{action}</button>)}
           </div>
@@ -575,6 +586,8 @@ function MobileVentureOs({
               value={input}
               onChange={onInput}
               onKeyDown={onComposerKeyDown}
+              onFocus={() => setMobileTypingMode(true)}
+              onBlur={() => window.setTimeout(() => setMobileTypingMode(false), 140)}
               placeholder="Typ één zin..."
               rows={1}
             />

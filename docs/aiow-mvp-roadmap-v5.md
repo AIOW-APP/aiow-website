@@ -152,3 +152,61 @@ Event-backed offline work only:
 ## Immediate execution decision
 
 Start with Step 1 and Step 2 now. Do not wait for full Supabase or full proposal flow to make the product feel right. The first visible shift must be mobile app-shell plus desktop AI-first shell.
+
+## Mobile chat interaction correction, shipped next
+
+Telegram feels calmer because typing mode removes everything that is not reading or writing. AIOW must follow the same interaction principle while keeping the Venture OS available outside typing mode.
+
+### Typing mode rules
+
+When the mobile chat textarea is focused:
+
+1. Hide bottom navigation.
+2. Hide quick-reply carousel.
+3. Hide Memory, Team and Privacy chips.
+4. Reduce composer height to one compact row.
+5. Keep only a small status pill such as Memory actief or Ik luister.
+6. Expand the message thread down to the composer.
+7. Keep Enter-to-send behavior on desktop and mobile hardware keyboards, with Shift Enter for newline.
+
+When focus leaves the composer:
+
+1. Restore bottom navigation.
+2. Restore quick replies.
+3. Restore memory controls.
+4. Return to OS mode.
+
+### Next page steps after interaction fix
+
+#### Phase A, Product feel
+
+- Make the opening message more adaptive by visitor state: new visitor, returning visitor, linked account.
+- Convert quick replies into shorter Telegram-style smart replies.
+- Add inline Memory updated cards inside the thread after useful user messages.
+- Add a bottom sheet for Venture Memory details instead of separate rows above composer.
+
+#### Phase B, Lead and memory engine
+
+- Persist sessions, messages, Venture Memory and consent in Supabase.
+- Create a real Deal Card after enough signal.
+- Create admin review queue with human decision status.
+- Add explicit next-day follow-up draft generation.
+
+#### Phase C, Commercial conversion
+
+- Add Deal Fit routing: paid diagnostic, AI Venture Sprint, strategic partnership review, reject politely.
+- Add missing proof checklist.
+- Add clear mutual commitment language so AIOW never implies free building.
+
+#### Phase D, AI and follow-up
+
+- Replace local heuristic replies with Spunky-backed structured AI responses.
+- Store extracted facts, assumptions, risks and open questions separately.
+- Generate follow-up e-mails only when consent exists and admin approval is not required or has been given.
+
+#### Phase E, premium OS depth
+
+- Add evidence-backed Insights.
+- Add Activity Timeline for real AI work only.
+- Add Team statuses only when agent tasks are real.
+- Add Workspace cards as focused/swipeable objects on mobile.
