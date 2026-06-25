@@ -1,5 +1,5 @@
-import { AiowNativeMotionPage } from "@/components/aiow/AiowNativeMotionPage";
+import { AiowAiHomepage } from "@/components/aiow/AiowAiHomepage";
 
 export default function Home() {
-  return <AiowNativeMotionPage />;
+  return <AiowAiHomepage />;
 }
