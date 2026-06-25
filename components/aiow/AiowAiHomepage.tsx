@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AiowAiHomepage.module.css";
 
 type IntakeState = "idle" | "typing" | "thinking" | "briefing" | "consent" | "review";
 type MemoryStatus = "temporary" | "linked";
 type Role = "ai" | "user";
+type MobileTab = "home" | "workspace" | "chat" | "team" | "account";
 
 type Message = {
   id: string;
@@ -106,6 +107,7 @@ export function AiowAiHomepage() {
   const [memoryStatus, setMemoryStatus] = useState<MemoryStatus>("temporary");
   const [dealCardTitle, setDealCardTitle] = useState("");
   const [portalUrl, setPortalUrl] = useState("");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("home");
   const [messages, setMessages] = useState<Message[]>([
     { id: "m0", role: "ai", text: firstMessage, time: "nu" },
   ]);
@@ -222,12 +224,28 @@ export function AiowAiHomepage() {
   }
 
   return (
-    <main className={styles.page} data-aiow-homepage="ai-is-the-homepage-v2">
+    <main className={styles.page} data-aiow-homepage="aiow-venture-os-v5">
       <div className={styles.ambient} aria-hidden="true">
         <span />
         <span />
         <span />
       </div>
+
+      <MobileVentureOs
+        activeTab={mobileTab}
+        setActiveTab={setMobileTab}
+        messages={messages}
+        state={state}
+        activeCanvas={activeCanvas}
+        quickActions={quickActions}
+        input={input}
+        inputRef={inputRef}
+        onInput={onInput}
+        onComposerKeyDown={onComposerKeyDown}
+        submitPrompt={submitPrompt}
+        memoryStatus={memoryStatus}
+        contactLinked={Boolean(portalUrl) || memoryStatus === "linked"}
+      />
 
       <section className={styles.frame} aria-label="AIOW AI Venture Interface">
         <aside className={styles.leftRail} aria-label="AIOW status">
@@ -243,9 +261,9 @@ export function AiowAiHomepage() {
           </div>
 
           <div className={styles.mission}>
-            <p>THE AI IS THE HOMEPAGE</p>
-            <h1>Vertel wat je wilt bouwen.</h1>
-            <span>Wij bouwen de digitale toekomst met je mee.</span>
+            <p>AI Venture Operating System</p>
+            <h1>Ontmoet je digitale venture partner.</h1>
+            <span>Geen softwarelaag. Een gesprek dat Venture Memory, Deal Card en menselijke review opbouwt.</span>
           </div>
 
           <div className={styles.presencePanel} aria-label="AI Presence">
@@ -264,10 +282,9 @@ export function AiowAiHomepage() {
           </div>
 
           <div className={styles.statusStack}>
-            <StatusLine label="AI online" value="Live" active />
-            <StatusLine label="Context actief" value={`${Math.max(8, activeCanvas.confidence)}%`} />
-            <MetricCard label="Actieve analyses" value="24" />
-            <MetricCard label="Deals in behandeling" value="7" />
+            <StatusLine label="AI Presence" value={state === "thinking" ? "Thinking" : state === "typing" ? "Listening" : "Observing"} active />
+            <StatusLine label="Memory" value={memoryStatus === "linked" ? "Linked" : "Temporary"} />
+            <StatusLine label="Human review" value="Required" />
           </div>
 
           <nav className={styles.railNav} aria-label="AIOW menu">
@@ -369,9 +386,17 @@ export function AiowAiHomepage() {
           </div>
 
           <div className={styles.canvasList}>
-            {canvasLabels.map((item) => (
-              <CanvasRow key={String(item.key)} icon={item.icon} label={item.label} value={activeCanvas[item.key]} />
-            ))}
+            {canvasLabels
+              .filter((item) => hasCanvasValue(activeCanvas[item.key]))
+              .map((item) => (
+                <CanvasRow key={String(item.key)} icon={item.icon} label={item.label} value={activeCanvas[item.key]} />
+              ))}
+            {!canvasLabels.some((item) => hasCanvasValue(activeCanvas[item.key])) ? (
+              <div className={styles.emptyCanvas}>
+                <strong>Venture Memory wacht op je eerste signaal.</strong>
+                <p>Typ één rommelige zin. AIOW haalt er opportunity, risico, missing proof en beste volgende vraag uit.</p>
+              </div>
+            ) : null}
           </div>
 
           <div className={styles.confidence}>
@@ -399,15 +424,17 @@ export function AiowAiHomepage() {
       </section>
 
 
-      <section className={styles.thinkingDock} aria-label="AI thinking analyse">
-        {thinkingSteps.map((step, index) => (
-          <div key={step} className={styles.thinkingTile}>
-            <span>{step}</span>
-            <div><i style={{ width: `${thinkingProgress[index]}%` }} /></div>
-            <strong>{thinkingProgress[index]}%</strong>
-          </div>
-        ))}
-      </section>
+      {userCount > 0 || state === "typing" || state === "thinking" ? (
+        <section className={styles.thinkingDock} aria-label="AI thinking analyse">
+          {thinkingSteps.map((step, index) => (
+            <div key={step} className={styles.thinkingTile}>
+              <span>{step}</span>
+              <div><i style={{ width: `${thinkingProgress[index]}%` }} /></div>
+              <strong>{thinkingProgress[index]}%</strong>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       {showContact ? (
         <section className={styles.contactGate} aria-label="Magic link account">
@@ -430,6 +457,181 @@ export function AiowAiHomepage() {
         </section>
       ) : null}
     </main>
+  );
+}
+
+
+function MobileVentureOs({
+  activeTab,
+  setActiveTab,
+  messages,
+  state,
+  activeCanvas,
+  quickActions,
+  input,
+  inputRef,
+  onInput,
+  onComposerKeyDown,
+  submitPrompt,
+  memoryStatus,
+  contactLinked,
+}: {
+  activeTab: MobileTab;
+  setActiveTab: (tab: MobileTab) => void;
+  messages: Message[];
+  state: IntakeState;
+  activeCanvas: Canvas;
+  quickActions: string[];
+  input: string;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+  onInput: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onComposerKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
+  submitPrompt: (prompt?: string) => void;
+  memoryStatus: MemoryStatus;
+  contactLinked: boolean;
+}) {
+  const knownItems = canvasLabels.filter((item) => hasCanvasValue(activeCanvas[item.key])).slice(0, 4);
+  return (
+    <section className={styles.mobileOs} aria-label="AIOW mobile app shell" data-mobile-tab={activeTab}>
+      <header className={styles.mobileTopbar}>
+        <Link href="/" className={styles.brand} aria-label="AIOW home">
+          <span className={styles.logo}>A</span>
+          <span>
+            <strong>AIOW.ai</strong>
+            <em>{state === "thinking" ? "Thinking" : state === "typing" ? "Listening" : "AI Venture OS"}</em>
+          </span>
+        </Link>
+        <TopbarActions />
+      </header>
+
+      {activeTab === "home" ? (
+        <section className={styles.mobileScreen} aria-label="AIOW Home">
+          <p className={styles.mobileKicker}>Welkom.</p>
+          <h1>Laten we vandaag samen bouwen.</h1>
+          <div className={styles.mobileBriefingCard}>
+            <span>AI briefing</span>
+            <strong>{messages.length > 1 ? "Ik heb je eerste signalen verwerkt." : "Vertel me wat je wilt bouwen, automatiseren of laten groeien."}</strong>
+            <p>{messages.length > 1 ? "Open Chat om door te gaan of bekijk Workspace voor de eerste Venture Memory." : "Eén rommelige zin is genoeg. AIOW structureert het naar opportunity, risico en volgende stap."}</p>
+            <button type="button" onClick={() => setActiveTab("chat")}>Open mijn AI</button>
+          </div>
+          <div className={styles.mobileDecisionGrid}>
+            <MobileDecision title="Memory" value={memoryStatus === "linked" ? "Gekoppeld" : "Tijdelijk"} />
+            <MobileDecision title="Review" value="Mens beslist" />
+            <MobileDecision title="Deal Card" value={activeCanvas.confidence > 55 ? "In opbouw" : "Nog niet klaar"} />
+            <MobileDecision title="Next step" value={activeCanvas.confidence > 55 ? "Missing proof" : "Eerste signaal"} />
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "workspace" ? (
+        <section className={styles.mobileScreen} aria-label="Workspace">
+          <p className={styles.mobileKicker}>Workspace</p>
+          <h1>Venture Memory</h1>
+          <div className={styles.mobileCardStack}>
+            {knownItems.length ? knownItems.map((item) => (
+              <article key={String(item.key)} className={styles.mobileVentureCard}>
+                <span>{item.label}</span>
+                <strong>{formatCanvasValue(activeCanvas[item.key])}</strong>
+                <p>{item.key === "collaboration" ? "AI adviseert. Team AIOW beslist." : "Afgeleid uit het gesprek, nog te valideren met bewijs."}</p>
+              </article>
+            )) : (
+              <article className={styles.mobileVentureCard}>
+                <span>Nog leeg</span>
+                <strong>Je workspace ontstaat vanuit het gesprek.</strong>
+                <p>Open Chat en vertel wat je wilt bouwen. We tonen hier alleen wat AIOW weet.</p>
+              </article>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "chat" ? (
+        <section className={styles.mobileChatScreen} aria-label="Fullscreen AI chat">
+          <div className={styles.mobilePresence}>
+            <span className={styles.liveDot} />
+            <span>{state === "thinking" ? "Reasoning" : state === "typing" ? "Listening" : contactLinked ? "Memory linked" : "Temporary memory"}</span>
+          </div>
+          <div className={styles.mobileThread} aria-live="polite">
+            {messages.map((message) => (
+              <article key={message.id} className={message.role === "ai" ? styles.aiBubble : styles.userBubble}>
+                <p>{message.text}</p>
+                <time>{message.time}</time>
+              </article>
+            ))}
+          </div>
+          <div className={styles.mobileMemoryStrip}>
+            <button type="button" onClick={() => setActiveTab("workspace")}>Memory {knownItems.length || 0}</button>
+            <button type="button" onClick={() => setActiveTab("team")}>Team</button>
+            <button type="button" onClick={() => setActiveTab("account")}>Privacy</button>
+          </div>
+          <div className={styles.mobileQuickActions}>
+            {quickActions.slice(0, 3).map((action) => <button key={action} type="button" onClick={() => submitPrompt(action)}>{action}</button>)}
+          </div>
+          <form className={styles.mobileComposer} onSubmit={(event) => { event.preventDefault(); submitPrompt(); }}>
+            <button type="button" aria-label="Open tools">+</button>
+            <textarea
+              ref={inputRef}
+              aria-label="Vertel AIOW waar je aan wilt bouwen"
+              value={input}
+              onChange={onInput}
+              onKeyDown={onComposerKeyDown}
+              placeholder="Typ één zin..."
+              rows={1}
+            />
+            <button type="submit" disabled={!input.trim()} aria-label="Stuur bericht">➤</button>
+          </form>
+        </section>
+      ) : null}
+
+      {activeTab === "team" ? (
+        <section className={styles.mobileScreen} aria-label="AI Team">
+          <p className={styles.mobileKicker}>AI Team</p>
+          <h1>Experts werken vanuit dezelfde memory.</h1>
+          <div className={styles.mobileAgentList}>
+            {aiTeam.map((agent, index) => (
+              <article key={agent.name}>
+                <span>{agent.icon}</span>
+                <div>
+                  <strong>{agent.name}</strong>
+                  <p>{index < 2 && activeCanvas.confidence > 30 ? agent.task : "Waiting for enough context"}</p>
+                </div>
+                <em>{index < 2 && activeCanvas.confidence > 30 ? "Active" : "Waiting"}</em>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "account" ? (
+        <section className={styles.mobileScreen} aria-label="Account">
+          <p className={styles.mobileKicker}>Account</p>
+          <h1>Controle over memory en privacy.</h1>
+          <div className={styles.mobileSettingsList}>
+            <Link href="/portal">Log in met magic link</Link>
+            <button type="button">Bekijk Venture Memory</button>
+            <button type="button">Gegevens exporteren</button>
+            <button type="button">Privacy beheren</button>
+          </div>
+        </section>
+      ) : null}
+
+      <nav className={styles.mobileBottomNav} aria-label="Mobiele navigatie">
+        <button type="button" className={activeTab === "home" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("home")}>⌂<span>Home</span></button>
+        <button type="button" className={activeTab === "workspace" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("workspace")}>◈<span>Workspace</span></button>
+        <button type="button" className={`${styles.mobileChatAction} ${activeTab === "chat" ? styles.mobileNavActive : ""}`} onClick={() => setActiveTab("chat")}>✦<span>Chat</span></button>
+        <button type="button" className={activeTab === "team" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("team")}>◎<span>Team</span></button>
+        <button type="button" className={activeTab === "account" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("account")}>●<span>Account</span></button>
+      </nav>
+    </section>
+  );
+}
+
+function MobileDecision({ title, value }: { title: string; value: string }) {
+  return (
+    <article>
+      <span>{title}</span>
+      <strong>{value}</strong>
+    </article>
   );
 }
 
@@ -480,7 +682,7 @@ function CanvasRow({ icon, label, value }: { icon: string; label: string; value:
       <span>{icon}</span>
       <div>
         <strong>{label}</strong>
-        <p>{display || "Nog niet gevuld"}</p>
+        <p>{display}</p>
       </div>
     </div>
   );
@@ -515,6 +717,7 @@ function MobileCard({ title, value, detail, score, defaultOpen = false }: { titl
 }
 
 function mergeCanvas(current: Canvas, text: string, committed = false): Canvas {
+  if (!text.trim()) return current;
   const lower = text.toLowerCase();
   const hasCompany = includesAny(lower, ["bedrijf", "kantoor", "klanten", "omzet", "b2b", "mkb"]);
   const hasIdea = includesAny(lower, ["startup", "idee", "app", "platform", "product"]);
@@ -575,6 +778,19 @@ function localReply(text: string, count: number): string {
   if (includesAny(lower, ["bedrijf", "proces", "automatis"])) return "Ik hoor een operationele kans. Mijn vraag: welk proces kost vandaag het meeste tijd en wat zou er binnen 30 dagen meetbaar beter moeten zijn?";
   if (includesAny(lower, ["startup", "idee", "app"])) return "Ik hoor een mogelijke venture. Mijn vraag: welk bewijs heb je al dat klanten dit probleem urgent genoeg vinden?";
   return "Ik ben bij je. Dump je idee gerust rommelig: bedrijf, probleem, website, screenshot of gewoon één zin. Ik haal er markt, risico, AI-kans en de slimste vervolgvraag uit.";
+}
+
+
+function hasCanvasValue(value: string | number): boolean {
+  if (typeof value === "number") return value > 0;
+  if (!value) return false;
+  const lower = value.toLowerCase();
+  return !lower.includes("nog niet") && !lower.includes("nog te weinig");
+}
+
+function formatCanvasValue(value: string | number): string {
+  if (typeof value === "number") return value > 10 ? `${value}%` : `${value}/10`;
+  return value;
 }
 
 function includesAny(value: string, terms: string[]) {
