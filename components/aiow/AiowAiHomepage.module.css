@@ -652,6 +652,11 @@
   .frame,
   .thinkingDock { display: none; }
   .page { min-height: 100svh; overflow: hidden; }
+
+  .mobileOs,
+  .mobileOs * {
+    cursor: none !important;
+  }
   .mobileOs {
     position: relative;
     z-index: 3;
@@ -661,7 +666,14 @@
     min-height: 100svh;
     height: 100svh;
     overflow: hidden;
-    padding: 0 14px calc(86px + env(safe-area-inset-bottom));
+    padding: 0 14px calc(68px + env(safe-area-inset-bottom));
+  }
+
+  .mobileOs button,
+  .mobileOs a,
+  .mobileOs summary {
+    touch-action: manipulation;
+    cursor: default;
   }
   .mobileTopbar {
     height: 62px;
@@ -908,36 +920,39 @@
   }
   .mobileBottomNav {
     position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 18px;
+    right: 18px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
     z-index: 30;
-    height: 66px;
+    height: 56px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1.25fr 1fr 1fr;
-    gap: 6px;
+    grid-template-columns: 1fr 1fr 1.14fr 1fr 1fr;
+    gap: 3px;
     align-items: center;
-    padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 28px;
-    background: rgba(7, 10, 24, 0.84);
-    backdrop-filter: blur(28px);
-    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    border-radius: 23px;
+    background: rgba(7, 10, 24, 0.88);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 14px 48px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.075);
   }
   .mobileBottomNav button {
     min-width: 0;
-    height: 48px;
+    height: 40px;
     border: 0;
-    border-radius: 18px;
+    border-radius: 15px;
     display: grid;
     place-items: center;
-    gap: 1px;
-    color: rgba(248, 251, 255, 0.54);
+    gap: 0;
+    color: rgba(248, 251, 255, 0.52);
     background: transparent;
     font: inherit;
-    font-size: 18px;
+    font-size: 15px;
+    touch-action: manipulation;
+    cursor: default;
+    user-select: none;
   }
-  .mobileBottomNav span { font-size: 9px; }
+  .mobileBottomNav span { font-size: 8px; line-height: 1; }
   .mobileBottomNav .mobileNavActive { color: #fff; background: rgba(255, 255, 255, 0.08); }
 
   .mobileBottomNav button:focus,
@@ -953,15 +968,15 @@
   }
   .mobileBottomNav .mobileChatAction:focus,
   .mobileBottomNav .mobileChatAction:focus-visible {
-    box-shadow: 0 14px 38px rgba(121, 49, 255, 0.42);
+    box-shadow: 0 9px 26px rgba(121, 49, 255, 0.34);
   }
   .mobileBottomNav .mobileChatAction {
-    height: 56px;
-    transform: translateY(-10px);
-    border-radius: 22px;
+    height: 46px;
+    transform: translateY(-5px);
+    border-radius: 18px;
     color: #fff;
     background: linear-gradient(135deg, #7931ff, #ff38d6);
-    box-shadow: 0 14px 38px rgba(121, 49, 255, 0.42);
+    box-shadow: 0 9px 26px rgba(121, 49, 255, 0.34);
   }
 }
 
