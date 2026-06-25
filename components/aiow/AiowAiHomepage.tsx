@@ -647,13 +647,55 @@ function MobileVentureOs({
       ) : null}
 
       <nav className={styles.mobileBottomNav} aria-label="Mobiele navigatie">
-        <button type="button" aria-label="Home" title="Home" className={activeTab === "home" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("home")}>⌂</button>
-        <button type="button" aria-label="Workspace" title="Workspace" className={activeTab === "workspace" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("workspace")}>◈</button>
-        <button type="button" aria-label="Chat" title="Chat" className={`${styles.mobileChatAction} ${activeTab === "chat" ? styles.mobileNavActive : ""}`} onClick={() => setActiveTab("chat")}>✦</button>
-        <button type="button" aria-label="Team" title="Team" className={activeTab === "team" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("team")}>◎</button>
-        <button type="button" aria-label="Account" title="Account" className={activeTab === "account" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("account")}>●</button>
+        <button type="button" aria-label="Home" title="Home" className={activeTab === "home" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("home")}><MobileNavIcon type="home" /></button>
+        <button type="button" aria-label="Workspace" title="Workspace" className={activeTab === "workspace" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("workspace")}><MobileNavIcon type="workspace" /></button>
+        <button type="button" aria-label="Chat" title="Chat" className={`${styles.mobileChatAction} ${activeTab === "chat" ? styles.mobileNavActive : ""}`} onClick={() => setActiveTab("chat")}><MobileNavIcon type="chat" /></button>
+        <button type="button" aria-label="Team" title="Team" className={activeTab === "team" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("team")}><MobileNavIcon type="team" /></button>
+        <button type="button" aria-label="Account" title="Account" className={activeTab === "account" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("account")}><MobileNavIcon type="account" /></button>
       </nav>
     </section>
+  );
+}
+
+
+function MobileNavIcon({ type }: { type: "home" | "workspace" | "chat" | "team" | "account" }) {
+  if (type === "home") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4.5 10.8 12 4.6l7.5 6.2v8.1a1.6 1.6 0 0 1-1.6 1.6h-3.7v-5.6H9.8v5.6H6.1a1.6 1.6 0 0 1-1.6-1.6v-8.1Z" />
+      </svg>
+    );
+  }
+  if (type === "workspace") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3.7 20.3 12 12 20.3 3.7 12 12 3.7Z" />
+        <path d="M12 8.1 15.9 12 12 15.9 8.1 12 12 8.1Z" />
+      </svg>
+    );
+  }
+  if (type === "chat") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 6.4A3.4 3.4 0 0 1 8.4 3h7.2A3.4 3.4 0 0 1 19 6.4v5.3a3.4 3.4 0 0 1-3.4 3.4h-3.9l-4.3 4.1v-4.1A3.4 3.4 0 0 1 5 11.7V6.4Z" />
+        <path d="M8.8 8.4h6.4M8.8 11.2h4.6" />
+      </svg>
+    );
+  }
+  if (type === "team") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 12.1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+        <path d="M5.7 19.4c.8-3 3-4.8 6.3-4.8s5.5 1.8 6.3 4.8" />
+        <path d="M5.3 12.8a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8ZM18.7 12.8a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z" />
+      <path d="M4.9 20c.9-3.4 3.4-5.4 7.1-5.4s6.2 2 7.1 5.4" />
+    </svg>
   );
 }
 

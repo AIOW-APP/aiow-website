@@ -925,40 +925,62 @@
   }
   .mobileBottomNav {
     position: fixed;
-    left: 18px;
-    right: 18px;
+    left: 16px;
+    right: 16px;
     bottom: calc(8px + env(safe-area-inset-bottom));
     z-index: 30;
-    height: 50px;
+    height: 58px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1.08fr 1fr 1fr;
-    gap: 3px;
+    grid-template-columns: 1fr 1fr 1.18fr 1fr 1fr;
+    gap: 5px;
     align-items: center;
-    padding: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.105);
-    border-radius: 21px;
-    background: rgba(7, 10, 24, 0.88);
-    backdrop-filter: blur(24px);
-    box-shadow: 0 14px 48px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.075);
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0.1), rgba(7, 10, 24, 0.82) 42%, rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(26px) saturate(140%);
+    box-shadow: 0 16px 54px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
   .mobileBottomNav button {
     min-width: 0;
-    height: 36px;
+    height: 42px;
     border: 0;
-    border-radius: 14px;
+    border-radius: 999px;
     display: grid;
     place-items: center;
     gap: 0;
-    color: rgba(248, 251, 255, 0.52);
+    color: rgba(248, 251, 255, 0.62);
     background: transparent;
     font: inherit;
-    font-size: 18px;
     touch-action: manipulation;
     cursor: default;
     user-select: none;
+    transition: background 160ms ease, color 160ms ease, transform 160ms ease;
   }
   .mobileBottomNav span { display: none; }
-  .mobileBottomNav .mobileNavActive { color: #fff; background: rgba(255, 255, 255, 0.08); }
+  .mobileBottomNav svg {
+    width: 23px;
+    height: 23px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.35;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .mobileBottomNav svg path:first-child {
+    fill: currentColor;
+    fill-opacity: 0.08;
+  }
+  .mobileBottomNav .mobileChatAction svg {
+    width: 25px;
+    height: 25px;
+    stroke-width: 2.2;
+  }
+  .mobileBottomNav .mobileChatAction svg path:first-child {
+    fill: rgba(255, 255, 255, 0.16);
+  }
+  .mobileBottomNav .mobileNavActive { color: #fff; background: rgba(255, 255, 255, 0.12); }
 
   .mobileBottomNav button:focus,
   .mobileBottomNav button:focus-visible,
@@ -976,13 +998,12 @@
     box-shadow: 0 9px 26px rgba(121, 49, 255, 0.34);
   }
   .mobileBottomNav .mobileChatAction {
-    height: 42px;
-    transform: translateY(-4px);
-    border-radius: 17px;
-    font-size: 19px;
+    height: 46px;
+    transform: translateY(-5px);
+    border-radius: 999px;
     color: #fff;
-    background: linear-gradient(135deg, #7931ff, #ff38d6);
-    box-shadow: 0 9px 26px rgba(121, 49, 255, 0.34);
+    background: linear-gradient(135deg, #7931ff 0%, #c229ff 52%, #ff38d6 100%);
+    box-shadow: 0 11px 30px rgba(121, 49, 255, 0.42), 0 0 28px rgba(255, 56, 214, 0.24);
   }
 }
 
