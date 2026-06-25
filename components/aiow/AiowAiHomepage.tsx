@@ -499,6 +499,20 @@ function MobileVentureOs({
 }) {
   const knownItems = canvasLabels.filter((item) => hasCanvasValue(activeCanvas[item.key])).slice(0, 4);
   const isChatTyping = activeTab === "chat" && mobileTypingMode;
+  const mobileThreadRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (activeTab !== "chat") return;
+    const thread = mobileThreadRef.current;
+    if (!thread) return;
+    const scrollToLatest = () => {
+      thread.scrollTop = thread.scrollHeight;
+    };
+    requestAnimationFrame(scrollToLatest);
+    const timer = window.setTimeout(scrollToLatest, 180);
+    return () => window.clearTimeout(timer);
+  }, [activeTab, messages.length, state, mobileTypingMode]);
+
   return (
     <section className={`${styles.mobileOs} ${isChatTyping ? styles.mobileTypingMode : ""}`} aria-label="AIOW mobile app shell" data-mobile-tab={activeTab} data-typing-mode={isChatTyping ? "true" : "false"}>
       <header className={styles.mobileTopbar}>
@@ -559,13 +573,15 @@ function MobileVentureOs({
             <span className={styles.liveDot} />
             <span>{state === "thinking" ? "Reasoning" : state === "typing" ? "Listening" : contactLinked ? "Memory linked" : "Temporary memory"}</span>
           </div>
-          <div className={styles.mobileThread} aria-live="polite">
-            {messages.map((message) => (
-              <article key={message.id} className={message.role === "ai" ? styles.aiBubble : styles.userBubble}>
-                <p>{message.text}</p>
-                <time>{message.time}</time>
-              </article>
-            ))}
+          <div ref={mobileThreadRef} className={styles.mobileThread} aria-live="polite">
+            <div className={styles.mobileThreadInner}>
+              {messages.map((message) => (
+                <article key={message.id} className={message.role === "ai" ? styles.aiBubble : styles.userBubble}>
+                  <p>{message.text}</p>
+                  <time>{message.time}</time>
+                </article>
+              ))}
+            </div>
           </div>
           <div className={styles.mobileMemoryStrip}>
             <button type="button" onClick={() => setActiveTab("workspace")}>Memory {knownItems.length || 0}</button>
@@ -629,11 +645,11 @@ function MobileVentureOs({
       ) : null}
 
       <nav className={styles.mobileBottomNav} aria-label="Mobiele navigatie">
-        <button type="button" className={activeTab === "home" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("home")}>⌂<span>Home</span></button>
-        <button type="button" className={activeTab === "workspace" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("workspace")}>◈<span>Workspace</span></button>
-        <button type="button" className={`${styles.mobileChatAction} ${activeTab === "chat" ? styles.mobileNavActive : ""}`} onClick={() => setActiveTab("chat")}>✦<span>Chat</span></button>
-        <button type="button" className={activeTab === "team" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("team")}>◎<span>Team</span></button>
-        <button type="button" className={activeTab === "account" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("account")}>●<span>Account</span></button>
+        <button type="button" aria-label="Home" title="Home" className={activeTab === "home" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("home")}>⌂</button>
+        <button type="button" aria-label="Workspace" title="Workspace" className={activeTab === "workspace" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("workspace")}>◈</button>
+        <button type="button" aria-label="Chat" title="Chat" className={`${styles.mobileChatAction} ${activeTab === "chat" ? styles.mobileNavActive : ""}`} onClick={() => setActiveTab("chat")}>✦</button>
+        <button type="button" aria-label="Team" title="Team" className={activeTab === "team" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("team")}>◎</button>
+        <button type="button" aria-label="Account" title="Account" className={activeTab === "account" ? styles.mobileNavActive : ""} onClick={() => setActiveTab("account")}>●</button>
       </nav>
     </section>
   );
