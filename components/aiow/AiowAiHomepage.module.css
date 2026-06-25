@@ -1129,3 +1129,15 @@
     padding-left: 2px;
   }
 }
+
+
+/* Mobile root-level cursor suppression for Safari/embedded browsers */
+@media (max-width: 880px), (hover: none), (pointer: coarse) {
+  html:has(.mobileOs),
+  body:has(.mobileOs),
+  html:has(.mobileOs) *,
+  body:has(.mobileOs) * {
+    cursor: none !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  }
+}
