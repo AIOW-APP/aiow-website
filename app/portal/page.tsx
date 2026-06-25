@@ -29,7 +29,7 @@ export default function PortalPage() {
               <Step n="4" title="Tekenen" text="Na akkoord en digitale ondertekening staat het project klaar voor build-start." />
             </div>
             <p className={styles.notice}>Nog geen project? Start op de homepage met AIOW. Na naam, e-mail en toestemming maken we automatisch je workspace klaar.</p>
-            <div className={styles.actions}><Link className={styles.secondaryButton} href="/">Start met AIOW</Link></div>
+            <div className={styles.actions}><Link className={styles.secondaryButton} href="/">Start met AIOW</Link><Link className={styles.secondaryButton} href="/portal/admin">Team Richard admin</Link></div>
           </aside>
         </div>
       </section>

@@ -503,7 +503,7 @@
   .workspaceTop { display: none; }
   .aiState { top: 12px; }
   .wave { top: 42px; width: 82%; height: 76px; }
-  .thread { left: 16px; right: 16px; top: 108px; height: calc(100dvh - 372px); max-height: none; justify-content: flex-end; }
+  .thread { left: 16px; right: 16px; top: 108px; height: calc(100dvh - 458px); max-height: none; justify-content: flex-end; }
   .aiBubble,
   .userBubble,
   .thinkingCard { max-width: 94%; padding: 14px 15px; }
@@ -514,12 +514,51 @@
   .composerActions { flex-wrap: nowrap; overflow-x: auto; }
   .composerActions button { white-space: nowrap; }
   .canvas { display: none; }
-  .mobileCards { position: relative; z-index: 3; display: flex; gap: 14px; overflow-x: auto; padding: 12px 14px 24px; scroll-snap-type: x mandatory; }
-  .mobileCard { min-width: 82%; scroll-snap-align: start; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 18px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.045)); }
-  .mobileCard span { color: #b38cff; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
-  .mobileCard h3 { margin: 14px 0 10px; font-size: 24px; line-height: 1; letter-spacing: -0.05em; }
-  .mobileCard p { color: rgba(248, 251, 255, 0.62); font-size: 13px; line-height: 1.45; }
-  .mobileCard strong { display: inline-flex; margin-top: 8px; color: #fff; }
+  .mobileCards {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: calc(198px + env(safe-area-inset-bottom));
+    z-index: 4;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    max-height: 104px;
+    overflow: auto;
+    padding: 0;
+    scrollbar-width: none;
+  }
+  .mobileCards::-webkit-scrollbar { display: none; }
+  .mobileCard {
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
+    overflow: hidden;
+  }
+  .mobileCard[open] { grid-column: 1 / -1; }
+  .mobileCard summary {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 11px 12px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .mobileCard summary::-webkit-details-marker { display: none; }
+  .mobileCard summary::after {
+    content: "+";
+    color: rgba(248, 251, 255, 0.48);
+    font-weight: 900;
+  }
+  .mobileCard[open] summary::after { content: "−"; }
+  .mobileCard span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b38cff; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
+  .mobileCard strong { margin-left: auto; color: #fff; font-size: 11px; }
+  .mobileCard h3 { margin: 0; padding: 0 14px 6px; font-size: 15px; line-height: 1.08; letter-spacing: -0.035em; }
+  .mobileCard p { margin: 0; padding: 0 14px 12px; color: rgba(248, 251, 255, 0.62); font-size: 11px; line-height: 1.36; }
   .thinkingDock { display: none; }
   .contactGate { grid-template-columns: 1fr; margin: 12px 14px 24px; width: auto; }
 }

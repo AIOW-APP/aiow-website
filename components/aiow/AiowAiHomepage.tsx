@@ -309,6 +309,13 @@ export function AiowAiHomepage() {
             {state === "thinking" ? <ThinkingCard progress={thinkingProgress} /> : null}
           </div>
 
+          <section className={styles.mobileCards} aria-label="Inklapbare Venture Memory">
+            <MobileCard title="Business" value={activeCanvas.project} detail={activeCanvas.businessModel} score={activeCanvas.confidence} />
+            <MobileCard title="Probleem" value={activeCanvas.problem} detail={activeCanvas.solution} score={activeCanvas.marketScore} />
+            <MobileCard title="AI kans" value={activeCanvas.aiOpportunities} detail={activeCanvas.automation} score={activeCanvas.aiScore} />
+            <MobileCard title="Risico" value={activeCanvas.risk} detail={activeCanvas.collaboration} score={activeCanvas.riskScore} />
+          </section>
+
           <div className={styles.quickActions} aria-label="Slimme vervolgstappen">
             {quickActions.map((action) => (
               <button key={action} type="button" onClick={() => submitPrompt(action)}>
@@ -387,12 +394,6 @@ export function AiowAiHomepage() {
         </aside>
       </section>
 
-      <section className={styles.mobileCards} aria-label="Swipeable Venture Canvas">
-        <MobileCard title="Business" value={activeCanvas.project} detail={activeCanvas.businessModel} score={activeCanvas.confidence} />
-        <MobileCard title="Probleem" value={activeCanvas.problem} detail={activeCanvas.solution} score={activeCanvas.marketScore} />
-        <MobileCard title="AI kansen" value={activeCanvas.aiOpportunities} detail={activeCanvas.automation} score={activeCanvas.aiScore} />
-        <MobileCard title="Risico" value={activeCanvas.risk} detail={activeCanvas.collaboration} score={activeCanvas.riskScore} />
-      </section>
 
       <section className={styles.thinkingDock} aria-label="AI thinking analyse">
         {thinkingSteps.map((step, index) => (
@@ -484,14 +485,17 @@ function ThinkingCard({ progress }: { progress: number[] }) {
   );
 }
 
-function MobileCard({ title, value, detail, score }: { title: string; value: string; detail: string; score: number }) {
+function MobileCard({ title, value, detail, score, defaultOpen = false }: { title: string; value: string; detail: string; score: number; defaultOpen?: boolean }) {
+  const shownScore = score > 10 ? `${score}%` : score ? `${score}/10` : "nieuw";
   return (
-    <article className={styles.mobileCard}>
-      <span>{title}</span>
+    <details className={styles.mobileCard} open={defaultOpen}>
+      <summary>
+        <span>{title}</span>
+        <strong>{shownScore}</strong>
+      </summary>
       <h3>{value}</h3>
       <p>{detail}</p>
-      <strong>{score}/100</strong>
-    </article>
+    </details>
   );
 }
 
