@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { captureVentureMemoryEvent } from "@/lib/aiow-venture-memory";
 
 type SpunkyChatPayload = {
   message?: unknown;
@@ -6,6 +7,8 @@ type SpunkyChatPayload = {
   visitorMessageCount?: unknown;
   transcript?: unknown;
   page?: unknown;
+  sessionId?: unknown;
+  canvas?: unknown;
 };
 
 const RATE_LIMIT = { windowMs: 60 * 1000, maxAttempts: 18 };
@@ -23,7 +26,18 @@ export async function POST(req: Request) {
     const mode = asText(payload.mode) === "company" ? "company" : "idea";
     const visitorMessageCount = Math.max(1, Math.min(20, Number(payload.visitorMessageCount) || 1));
     const transcript = clamp(asText(payload.transcript), 3000);
+    const sessionId = clamp(asText(payload.sessionId) || `aiow_session_${crypto.randomUUID()}`, 160);
+    const canvas = isRecord(payload.canvas) ? payload.canvas : undefined;
     if (!message) return NextResponse.json({ error: "message required" }, { status: 400 });
+
+    await captureVentureMemoryEvent({
+      sessionId,
+      role: "user",
+      type: "message",
+      content: message,
+      canvas,
+      metadata: { mode, page: asText(payload.page) || "aiow.ai/", visitorMessageCount },
+    });
 
     const webhook = process.env.SPUNKY_CHAT_WEBHOOK_URL || process.env.AIOW_SPUNKY_CHAT_WEBHOOK_URL;
     if (webhook) {
@@ -38,6 +52,8 @@ export async function POST(req: Request) {
             message,
             mode,
             visitorMessageCount,
+            sessionId,
+            canvas,
             transcript,
             page: asText(payload.page) || "aiow.ai/",
             boundary:
@@ -49,7 +65,8 @@ export async function POST(req: Request) {
           const data = (await response.json()) as { reply?: unknown; answer?: unknown; message?: unknown; handoff?: unknown };
           const reply = clamp(asText(data.reply) || asText(data.answer) || asText(data.message), 1100);
           if (reply) {
-            return NextResponse.json({ ok: true, source: "spunky-webhook", reply, leadGate: visitorMessageCount >= 2, handoff: data.handoff ?? null });
+            await captureVentureMemoryEvent({ sessionId, role: "ai", type: "message", content: reply, canvas, metadata: { source: "spunky-webhook" } });
+            return NextResponse.json({ ok: true, source: "spunky-webhook", reply, leadGate: visitorMessageCount >= 3, memorySessionId: sessionId, handoff: data.handoff ?? null });
           }
         }
       } catch (error) {
@@ -57,11 +74,16 @@ export async function POST(req: Request) {
       }
     }
 
+    const reply = buildBoundedSpunkyReply(message, mode, visitorMessageCount, transcript);
+    await captureVentureMemoryEvent({ sessionId, role: "ai", type: "message", content: reply, canvas, metadata: { source: "bounded-aiow-fallback" } });
+
     return NextResponse.json({
       ok: true,
       source: "bounded-aiow-fallback",
-      reply: buildBoundedSpunkyReply(message, mode, visitorMessageCount, transcript),
-      leadGate: visitorMessageCount >= 2,
+      reply,
+      leadGate: visitorMessageCount >= 3,
+      memorySessionId: sessionId,
+      requiredConsentText: "AIOW mag deze Venture Memory koppelen aan mijn account en mij persoonlijk e-mailen over deze kans.",
     });
   } catch (error) {
     console.error("[spunky-chat] POST error", error);
@@ -71,8 +93,9 @@ export async function POST(req: Request) {
 
 function buildBoundedSpunkyReply(message: string, mode: "idea" | "company", count: number, transcript: string): string {
   const lower = message.toLowerCase();
-  if (count >= 2) {
-    return "Helder. Ik heb genoeg eerste context om dit niet te verliezen. Voordat we verder gaan wil ik je naam, e-mail en eventueel bedrijfsnaam. Dan maak ik je AIOW-account aan, bewaren we deze chat en kan Team Richard gericht beoordelen welke AI-workflow, sprint en dealroute klopt.";
+  if (isGreeting(lower)) return greetingReply();
+  if (count >= 3) {
+    return "Helder. Ik heb genoeg eerste context om dit niet te verliezen. Geef je naam en e-mail als je wilt dat ik deze Venture Memory koppel aan een private intake. Dan hoeft Team AIOW je niet opnieuw alles te vragen.";
   }
   if (lower.includes("prijs") || lower.includes("kosten") || lower.includes("budget") || lower.includes("revenue") || lower.includes("share")) {
     return "We kiezen pas een model na de intake: proof sprint, retainer/growth partner, revenue share, profit share of participatie. De eerste stap is bepalen waar AI aantoonbaar waarde maakt en welk bewijs nog ontbreekt.";
@@ -89,7 +112,24 @@ function buildBoundedSpunkyReply(message: string, mode: "idea" | "company", coun
   if (transcript.length > 500) {
     return "Ik zie genoeg richting. Laten we dit nu vastleggen zodat AIOW je context niet kwijt raakt en we daarna gericht kunnen doorvragen in je account.";
   }
-  return "Ja. Vertel in één zin wat je wilt bouwen, automatiseren of groeien. Ik vertaal het meteen naar AIOW-kansen, risico’s en de eerste slimme vervolgvraag.";
+  return "Ik ben bij je. Vertel rommelig of scherp wat je wilt bouwen, automatiseren of laten groeien. Ik maak er meteen een eerste Venture Memory van met kans, risico en volgende vraag.";
+}
+
+function isGreeting(lower: string): boolean {
+  return /^(hey|hi|hoi|hallo|yo|hello|goeie|goedemorgen|goedemiddag|goedenavond)[!.\s]*$/i.test(lower.trim());
+}
+
+function greetingReply(): string {
+  const replies = [
+    "Hey, vertel. Wat wil je bouwen, automatiseren of laten groeien? Je mag rommelig beginnen, ik structureer het voor je.",
+    "Hey. Geef me één zin over je idee of bedrijf, dan bouw ik meteen je eerste Venture Memory op.",
+    "Hey, ik luister. Waar zit de kans: meer leads, minder handwerk, een nieuw product of iets dat nog vaag is?",
+  ];
+  return replies[Math.floor(Math.random() * replies.length)];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function asText(value: unknown): string {

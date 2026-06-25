@@ -310,11 +310,14 @@
   left: 42px;
   right: 42px;
   top: 130px;
-  height: 210px;
+  height: calc(100% - 330px);
+  max-height: 250px;
   z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: auto;
+  padding-bottom: 6px;
   gap: 14px;
 }
 
@@ -344,16 +347,19 @@
   position: absolute;
   left: 24px;
   right: 24px;
-  bottom: 126px;
-  z-index: 3;
-  height: 42px;
+  bottom: 154px;
+  z-index: 5;
+  min-height: 34px;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 9px;
-  overflow: hidden;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 0 2px 4px;
+  mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
 }
-.quickActions button { height: 34px; border: 1px solid rgba(255, 255, 255, 0.11); border-radius: 999px; color: rgba(248, 251, 255, 0.75); background: rgba(255, 255, 255, 0.055); padding: 0 13px; font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; transition: transform 180ms ease, border-color 180ms ease, color 180ms ease; }
+.quickActions button { flex: 0 1 auto; max-width: 210px; height: 32px; border: 1px solid rgba(255, 255, 255, 0.11); border-radius: 999px; color: rgba(248, 251, 255, 0.78); background: rgba(255, 255, 255, 0.07); padding: 0 12px; font: inherit; font-size: 11px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; backdrop-filter: blur(18px); transition: transform 180ms ease, border-color 180ms ease, color 180ms ease; }
 .quickActions button:hover { transform: translateY(-1px); color: #fff; border-color: rgba(0, 229, 255, 0.44); }
 
 .composer {
@@ -361,25 +367,26 @@
   left: 24px;
   right: 24px;
   bottom: 16px;
-  z-index: 4;
-  min-height: 102px;
+  z-index: 6;
+  min-height: 92px;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: stretch;
-  gap: 8px 10px;
+  gap: 6px 10px;
   padding: 10px;
   border: 1px solid rgba(121, 49, 255, 0.45);
   border-radius: 24px;
   background: rgba(5, 7, 17, 0.82);
   box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.08), 0 0 42px rgba(121, 49, 255, 0.22);
 }
-.composer textarea { width: 100%; min-height: 48px; resize: none; border: 0; outline: none; color: #fff; background: transparent; font: inherit; padding: 10px 12px; }
+.composer textarea { width: 100%; min-height: 44px; max-height: 92px; resize: none; border: 0; outline: none; color: #fff; background: transparent; font: inherit; padding: 10px 12px; line-height: 1.35; }
 .composer textarea::placeholder,
 .contactGate input::placeholder { color: rgba(248, 251, 255, 0.36); }
-.composerActions { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 8px; flex-wrap: wrap; padding-left: 3px; }
+.composerActions { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 7px; flex-wrap: nowrap; min-width: 0; overflow-x: auto; padding-left: 3px; scrollbar-width: none; }
+.composerActions::-webkit-scrollbar { display: none; }
 .composerActions button,
 .send { border: 0; border-radius: 999px; cursor: pointer; color: rgba(248, 251, 255, 0.7); background: rgba(255, 255, 255, 0.07); }
-.composerActions button { padding: 7px 10px; font-size: 11px; }
+.composerActions button { flex: 0 0 auto; padding: 7px 10px; font-size: 11px; }
 .send { grid-column: 2; grid-row: 1; align-self: center; width: 46px; height: 46px; color: #fff; font-size: 20px; background: radial-gradient(circle at 30% 20%, #ffffff, #8b5cff 30%, #5b24ff 70%, #281186); box-shadow: 0 12px 34px rgba(91, 36, 255, 0.48); }
 .send:disabled { opacity: 0.42; cursor: not-allowed; }
 
@@ -496,13 +503,14 @@
   .workspaceTop { display: none; }
   .aiState { top: 12px; }
   .wave { top: 42px; width: 82%; height: 76px; }
-  .thread { left: 16px; right: 16px; top: 112px; height: calc(100% - 310px); }
+  .thread { left: 16px; right: 16px; top: 108px; height: calc(100dvh - 372px); max-height: none; justify-content: flex-end; }
   .aiBubble,
   .userBubble,
   .thinkingCard { max-width: 94%; padding: 14px 15px; }
-  .quickActions { left: 14px; right: 14px; bottom: 140px; justify-content: flex-start; overflow-x: auto; height: 42px; }
-  .quickActions button { flex: 0 0 auto; }
-  .composer { left: 14px; right: 14px; bottom: 18px; min-height: 112px; }
+  .quickActions { left: 14px; right: 14px; bottom: calc(152px + env(safe-area-inset-bottom)); justify-content: flex-start; overflow-x: auto; min-height: 36px; height: auto; mask-image: none; }
+  .quickActions button { flex: 0 0 auto; max-width: 168px; }
+  .quickActions button:nth-child(n + 3) { display: none; }
+  .composer { left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); min-height: 102px; }
   .composerActions { flex-wrap: nowrap; overflow-x: auto; }
   .composerActions button { white-space: nowrap; }
   .canvas { display: none; }
