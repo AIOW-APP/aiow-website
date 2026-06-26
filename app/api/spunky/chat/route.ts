@@ -14,6 +14,8 @@ type SpunkyChatPayload = {
   sessionId?: unknown;
   canvas?: unknown;
   contact?: unknown;
+  conversationMode?: unknown;
+  intentMode?: unknown;
   name?: unknown;
   email?: unknown;
   company?: unknown;
@@ -41,6 +43,7 @@ export async function POST(req: Request) {
     const relationshipStage = normalizeRelationshipStage(asText(payload.relationshipStage) || asText(payload.stage));
     const visitorMessageCount = Math.max(1, Math.min(20, Number(payload.visitorMessageCount) || 1));
     const transcript = clamp(asText(payload.transcript), 3000);
+    const conversationMode = classifyConversationMode(message, asText(payload.conversationMode) || asText(payload.intentMode), transcript);
     const sessionId = clamp(asText(payload.sessionId) || `aiow_session_${crypto.randomUUID()}`, 160);
     const canvas = isRecord(payload.canvas) ? payload.canvas : undefined;
     if (!message) return NextResponse.json({ error: "message required" }, { status: 400 });
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
       type: "message",
       content: message,
       canvas,
-      metadata: { mode, relationshipStage, page: asText(payload.page) || "aiow.ai/", visitorMessageCount },
+      metadata: { mode, conversationMode, relationshipStage, page: asText(payload.page) || "aiow.ai/", visitorMessageCount },
     });
 
     const contact = extractContact(payload);
@@ -69,6 +72,7 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             message,
             mode,
+            conversationMode,
             relationshipStage,
             visitorMessageCount,
             sessionId,
@@ -89,6 +93,8 @@ export async function POST(req: Request) {
               ok: true,
               source: "spunky-webhook",
               reply,
+              conversationMode,
+              relationshipStage,
               leadGate: visitorMessageCount >= 3 && !linkedContact,
               memorySessionId: sessionId,
               storageMode: aiowDurableStoreMode(),
@@ -104,13 +110,15 @@ export async function POST(req: Request) {
       }
     }
 
-    const reply = buildBoundedSpunkyReply(message, mode, visitorMessageCount, transcript);
+    const reply = buildBoundedSpunkyReply(message, mode, conversationMode, relationshipStage, visitorMessageCount, transcript);
     await captureVentureMemoryEvent({ sessionId, role: "ai", type: "message", content: reply, canvas, metadata: { source: "bounded-aiow-fallback" } });
 
     return NextResponse.json({
       ok: true,
       source: "bounded-aiow-fallback",
       reply,
+      conversationMode,
+      relationshipStage,
       leadGate: visitorMessageCount >= 3 && !linkedContact,
       memorySessionId: sessionId,
       storageMode: aiowDurableStoreMode(),
@@ -125,28 +133,67 @@ export async function POST(req: Request) {
   }
 }
 
-function buildBoundedSpunkyReply(message: string, mode: "idea" | "company", count: number, transcript: string): string {
+function buildBoundedSpunkyReply(
+  message: string,
+  mode: "idea" | "company",
+  conversationMode: SpunkyConversationMode,
+  relationshipStage: "anonymous" | "account" | "signed",
+  count: number,
+  transcript: string,
+): string {
   const lower = message.toLowerCase();
+  if (relationshipStage === "signed") {
+    return "Ik pak dit als ondertekende samenwerking op: binnen scope, met focus op uitvoering, blockers en de eerste sprint. Wat moet volgens jou als eerste bewijsbaar af zijn?";
+  }
+  if (relationshipStage === "account") {
+    return "Ik zie dit als accountfase. Dan ga ik niet opnieuw breed verkopen, maar je Venture Memory aanscherpen richting Deal Card review. Welke info mist nog: website, doelgroep, data, budget of timeline?";
+  }
   if (isGreeting(lower)) return greetingReply();
   if (count >= 3) {
-    return "Helder. Ik heb genoeg eerste context om dit niet te verliezen. Geef je naam en e-mail als je wilt dat ik deze Venture Memory koppel aan een private intake. Dan hoeft Team AIOW je niet opnieuw alles te vragen.";
+    return "Dit is genoeg voor een eerste Venture Memory. Wil je dat AIOW dit bewaart en persoonlijk opvolgt? Geef dan je naam en e-mail met toestemming. Geen nieuwsbrief, wel contextvaste opvolging.";
   }
-  if (lower.includes("prijs") || lower.includes("kosten") || lower.includes("budget") || lower.includes("revenue") || lower.includes("share")) {
-    return "We kiezen pas een model na de intake: proof sprint, retainer/growth partner, revenue share, profit share of participatie. De eerste stap is bepalen waar AI aantoonbaar waarde maakt en welk bewijs nog ontbreekt.";
+  if (conversationMode === "pricing_model") {
+    return "Het juiste model hangt af van bewijs en scope: scan, proof sprint, vaste build, growth partner, revenue share of participatie. Welke route wil je vooral onderzoeken?";
   }
-  if (lower.includes("lead") || lower.includes("sales") || lower.includes("opvolg") || lower.includes("mail")) {
-    return "Dan zit de eerste hefboom waarschijnlijk in lead capture + opvolging: websitechat, CRM, persoonlijke follow-up, score op intentie en een dashboard dat laat zien wie terug moet worden benaderd. Welke leads mis je nu vooral: websitebezoekers, bestaande klanten of koude prospects?";
+  if (conversationMode === "team_access") {
+    return "Voor dit soort werk pakt Handsome de centrale bouw en waarheid, Spunky de AIOW intake en klantcontext, Book strategie en UX-redteam, Mini buitenwereld en growth-signalen. Welke uitkomst moet dit team nu forceren?";
   }
-  if (mode === "company" || lower.includes("bedrijf") || lower.includes("proces") || lower.includes("automatis")) {
-    return "Voor een bestaand bedrijf zoek ik eerst de workflow met de meeste tijdverlies of omzetlekkage: klantcontact, sales, planning, administratie, support of data. Noem één proces dat nu traag of rommelig is, dan vertaal ik het naar een AI-sprint.";
+  if (conversationMode === "lead_machine") {
+    return "Dan zit de eerste hefboom in lead capture, intent scoring en persoonlijke opvolging. Waar lekt nu de meeste waarde: websitebezoek, intake, offerte of opvolging?";
   }
-  if (lower.includes("startup") || lower.includes("idee") || lower.includes("app")) {
-    return "Voor een nieuw idee kijk ik naar doelgroep, bewijs van vraag, distributie en AI-moat. Vertel: voor wie is het, welk probleem lost het op en heb je al klanten/contacten/data?";
+  if (conversationMode === "workflow_scan" || mode === "company" || lower.includes("bedrijf") || lower.includes("proces") || lower.includes("automatis")) {
+    return "Voor een bestaand bedrijf zoek ik de workflow met de meeste tijdverlies of omzetlekkage: klantcontact, sales, planning, administratie, support of data. Welk proces moet binnen 30 dagen meetbaar beter zijn?";
+  }
+  if (conversationMode === "new_venture" || lower.includes("startup") || lower.includes("idee") || lower.includes("app")) {
+    return "Voor een nieuw idee kijk ik naar doelgroep, urgentie, bewijs en AI-moat. Voor wie is dit, welk probleem lost het op en welk bewijs heb je al?";
   }
   if (transcript.length > 500) {
     return "Ik zie genoeg richting. Laten we dit nu vastleggen zodat AIOW je context niet kwijt raakt en we daarna gericht kunnen doorvragen in je account.";
   }
   return "Ik ben bij je. Vertel rommelig of scherp wat je wilt bouwen, automatiseren of laten groeien. Ik maak er meteen een eerste Venture Memory van met kans, risico en volgende vraag.";
+}
+
+type SpunkyConversationMode = "greeting" | "lead_machine" | "workflow_scan" | "new_venture" | "pricing_model" | "team_access" | "general_intake";
+
+function classifyConversationMode(message: string, explicit: string, transcript: string): SpunkyConversationMode {
+  const normalized = explicit.toLowerCase().replace(/-/g, "_").trim();
+  if (isSpunkyConversationMode(normalized)) return normalized;
+  const lower = `${message}\n${transcript}`.toLowerCase();
+  if (isGreeting(message.toLowerCase())) return "greeting";
+  if (includesAny(lower, ["lead", "leads", "sales", "opvolg", "follow-up", "follow up", "mail", "crm", "offerte", "afspraak"])) return "lead_machine";
+  if (includesAny(lower, ["proces", "workflow", "automatis", "administratie", "support", "planning", "operatie", "handwerk"])) return "workflow_scan";
+  if (includesAny(lower, ["startup", "idee", "app", "platform", "product", "venture", "bouwen"])) return "new_venture";
+  if (includesAny(lower, ["prijs", "kosten", "budget", "revenue", "share", "participatie", "equity", "dealmodel", "retainer"])) return "pricing_model";
+  if (includesAny(lower, ["team", "mini", "book", "handsome", "spunky", "toegang", "mac mini", "agent"])) return "team_access";
+  return "general_intake";
+}
+
+function isSpunkyConversationMode(value: string): value is SpunkyConversationMode {
+  return ["greeting", "lead_machine", "workflow_scan", "new_venture", "pricing_model", "team_access", "general_intake"].includes(value);
+}
+
+function includesAny(value: string, terms: string[]): boolean {
+  return terms.some((term) => value.includes(term));
 }
 
 function isGreeting(lower: string): boolean {

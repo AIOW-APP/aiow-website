@@ -94,7 +94,7 @@ const memorySteps = [
 ];
 
 const firstMessage =
-  "Welkom. Ik ben je AI Venture Partner. Vertel me waar je aan wilt bouwen.";
+  "Hey, ik ben Spunky. Vertel wat je wilt bouwen, automatiseren of laten groeien. Je mag rommelig beginnen, ik maak er structuur van.";
 
 export function AiowAiHomepage() {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -147,6 +147,7 @@ export function AiowAiHomepage() {
 
     const userMessage: Message = { id: crypto.randomUUID(), role: "user", text, time: "nu" };
     const nextMessages = [...messages, userMessage];
+    const conversationMode = classifyConversationMode(text, nextMessages.map((message) => `${message.role}: ${message.text}`).join("\n"));
     setMessages(nextMessages);
 
     try {
@@ -155,7 +156,9 @@ export function AiowAiHomepage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           message: text,
-          mode: text.toLowerCase().includes("bedrijf") ? "company" : "idea",
+          mode: conversationMode === "workflow_scan" || conversationMode === "lead_machine" ? "company" : "idea",
+          conversationMode,
+          relationshipStage: memoryStatus === "linked" ? "account" : "anonymous",
           visitorMessageCount: userCount + 1,
           sessionId,
           canvas: nextCanvas,
@@ -545,17 +548,31 @@ function getThinkingProgress(canvas: Canvas, state: IntakeState, input: string):
 }
 
 function refineReply(reply: string | undefined, text: string, count: number): string {
-  if (reply?.trim()) return reply.trim();
+  if (reply?.trim()) return reply.trim().replace(/\u2014/g, ", ").replace(/\u2013/g, "-");
   return localReply(text, count);
+}
+
+function classifyConversationMode(text: string, transcript = "") {
+  const lower = `${text}\n${transcript}`.toLowerCase();
+  if (isGreeting(text.toLowerCase())) return "greeting";
+  if (includesAny(lower, ["lead", "leads", "sales", "opvolg", "follow-up", "follow up", "mail", "crm", "offerte", "afspraak"])) return "lead_machine";
+  if (includesAny(lower, ["proces", "workflow", "automatis", "administratie", "support", "planning", "operatie", "handwerk"])) return "workflow_scan";
+  if (includesAny(lower, ["startup", "idee", "app", "platform", "product", "venture", "bouwen"])) return "new_venture";
+  if (includesAny(lower, ["prijs", "kosten", "budget", "revenue", "share", "participatie", "equity", "dealmodel", "retainer"])) return "pricing_model";
+  if (includesAny(lower, ["team", "mini", "book", "handsome", "spunky", "toegang", "mac mini", "agent"])) return "team_access";
+  return "general_intake";
 }
 
 function localReply(text: string, count: number): string {
   const lower = text.toLowerCase();
+  const conversationMode = classifyConversationMode(text);
   if (isGreeting(lower)) return greetingReply();
-  if (count >= 3) return "Ik heb genoeg context voor een eerste route. Als je wilt, koppel ik nu naam en e-mail zodat je Venture Memory niet verloren gaat en Team AIOW dit serieus kan beoordelen.";
-  if (includesAny(lower, ["lead", "offerte", "sales"])) return "Interessant. De kans zit waarschijnlijk in capture, scoring en opvolging. Mijn vraag: waar valt de meeste waarde weg, bij binnenkomst, offerte of opvolging?";
-  if (includesAny(lower, ["bedrijf", "proces", "automatis"])) return "Ik hoor een operationele kans. Mijn vraag: welk proces kost vandaag het meeste tijd en wat zou er binnen 30 dagen meetbaar beter moeten zijn?";
-  if (includesAny(lower, ["startup", "idee", "app"])) return "Ik hoor een mogelijke venture. Mijn vraag: welk bewijs heb je al dat klanten dit probleem urgent genoeg vinden?";
+  if (count >= 3) return "Dit is genoeg voor een eerste Venture Memory. Wil je dat AIOW dit bewaart en persoonlijk opvolgt? Geef dan je naam en e-mail met toestemming. Geen nieuwsbrief, wel contextvaste opvolging.";
+  if (conversationMode === "pricing_model") return "Het juiste model hangt af van bewijs en scope: scan, proof sprint, vaste build, growth partner, revenue share of participatie. Welke route wil je vooral onderzoeken?";
+  if (conversationMode === "team_access") return "Handsome pakt de centrale bouw en waarheid, Spunky de AIOW intake en klantcontext, Book strategie en UX-redteam, Mini buitenwereld en growth-signalen. Welke uitkomst moet dit team nu forceren?";
+  if (conversationMode === "lead_machine") return "Interessant. De kans zit waarschijnlijk in capture, scoring en opvolging. Waar valt de meeste waarde weg: websitebezoek, intake, offerte of opvolging?";
+  if (conversationMode === "workflow_scan") return "Ik hoor een operationele kans. Welk proces kost vandaag het meeste tijd en wat moet binnen 30 dagen meetbaar beter zijn?";
+  if (conversationMode === "new_venture") return "Ik hoor een mogelijke venture. Voor wie is dit urgent en welk bewijs heb je al dat klanten dit probleem echt willen oplossen?";
   return "Ik ben bij je. Dump je idee gerust rommelig: bedrijf, probleem, website, screenshot of gewoon één zin. Ik haal er markt, risico, AI-kans en de slimste vervolgvraag uit.";
 }
 
