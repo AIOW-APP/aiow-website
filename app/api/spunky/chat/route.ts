@@ -4,6 +4,8 @@ import { captureVentureMemoryEvent } from "@/lib/aiow-venture-memory";
 type SpunkyChatPayload = {
   message?: unknown;
   mode?: unknown;
+  relationshipStage?: unknown;
+  stage?: unknown;
   visitorMessageCount?: unknown;
   transcript?: unknown;
   page?: unknown;
@@ -24,6 +26,7 @@ export async function POST(req: Request) {
     const payload = (await req.json()) as SpunkyChatPayload;
     const message = clamp(asText(payload.message), 900);
     const mode = asText(payload.mode) === "company" ? "company" : "idea";
+    const relationshipStage = normalizeRelationshipStage(asText(payload.relationshipStage) || asText(payload.stage));
     const visitorMessageCount = Math.max(1, Math.min(20, Number(payload.visitorMessageCount) || 1));
     const transcript = clamp(asText(payload.transcript), 3000);
     const sessionId = clamp(asText(payload.sessionId) || `aiow_session_${crypto.randomUUID()}`, 160);
@@ -36,7 +39,7 @@ export async function POST(req: Request) {
       type: "message",
       content: message,
       canvas,
-      metadata: { mode, page: asText(payload.page) || "aiow.ai/", visitorMessageCount },
+      metadata: { mode, relationshipStage, page: asText(payload.page) || "aiow.ai/", visitorMessageCount },
     });
 
     const webhook = process.env.SPUNKY_CHAT_WEBHOOK_URL || process.env.AIOW_SPUNKY_CHAT_WEBHOOK_URL;
@@ -51,6 +54,7 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             message,
             mode,
+            relationshipStage,
             visitorMessageCount,
             sessionId,
             canvas,
@@ -130,6 +134,13 @@ function greetingReply(): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeRelationshipStage(value: string): "anonymous" | "account" | "signed" {
+  const normalized = value.toLowerCase().trim();
+  if (["signed", "contract", "contracted", "agreement", "afspraak", "ondertekend"].includes(normalized)) return "signed";
+  if (["account", "logged-in", "logged_in", "customer", "client", "klant"].includes(normalized)) return "account";
+  return "anonymous";
 }
 
 function asText(value: unknown): string {
