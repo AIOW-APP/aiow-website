@@ -140,6 +140,36 @@ export async function buildVentureDealCard(sessionId: string, canvas?: Record<st
     canvas,
   });
 
+  if (aiowDurableStoreMode() === "supabase") {
+    try {
+      await supabaseInsert("aiow_deal_cards", {
+        session_id: card.sessionId,
+        lead_id: null,
+        title: card.title,
+        founder: card.founder,
+        company: card.company,
+        problem: card.problem,
+        opportunity: card.opportunity,
+        likely_route: card.likelyRoute,
+        missing: card.missing,
+        next_step: card.nextStep,
+        confidence: card.confidence,
+        payload: card,
+        created_at: card.updatedAt,
+        updated_at: card.updatedAt,
+      });
+      await supabaseInsert("aiow_admin_events", {
+        event_type: "deal_card_created",
+        subject_type: "venture_session",
+        subject_id: card.sessionId,
+        event_payload: { title: card.title, company: card.company, confidence: card.confidence, missing: card.missing },
+        created_at: card.updatedAt,
+      });
+    } catch (error) {
+      console.warn("[aiow-venture-memory] Supabase deal card/admin event insert failed", error);
+    }
+  }
+
   return card;
 }
 

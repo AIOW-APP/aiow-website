@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildVentureDealCard, captureVentureMemoryEvent, normalizeEmail } from "@/lib/aiow-venture-memory";
+import { aiowDurableStoreMode } from "@/lib/aiow-durable-store";
 import { captureAiowLead, validLeadEmail, type AiowLeadCaptureInput } from "@/lib/aiow-lead-capture";
 
 type LinkContactPayload = {
@@ -81,6 +82,8 @@ export async function POST(req: Request) {
       ok: true,
       memorySessionId: sessionId,
       leadId: leadCapture.id,
+      storageMode: aiowDurableStoreMode(),
+      leadCapturePath: leadCapture.path,
       followUp: leadCapture.record.followUp,
       dealCard,
       privacy: {

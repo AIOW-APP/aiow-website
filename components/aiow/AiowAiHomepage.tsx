@@ -178,6 +178,7 @@ export function AiowAiHomepage() {
     event.preventDefault();
     if (!contact.name.trim() || !contact.email.trim() || !contact.consent) return;
     setState("review");
+    let finalDealCardTitle = "Ik heb een eerste Deal Card voorbereid";
     try {
       const response = await fetch("/api/venture-memory/link-contact", {
         method: "POST",
@@ -195,12 +196,15 @@ export function AiowAiHomepage() {
         }),
       });
       const data = (await response.json()) as { ok?: boolean; dealCard?: { title?: string } };
+      const nextDealCardTitle = data.dealCard?.title || "Deal Card aangemaakt";
       if (response.ok && data.ok) {
+        finalDealCardTitle = nextDealCardTitle;
         setMemoryStatus("linked");
-        setDealCardTitle(data.dealCard?.title || "Deal Card aangemaakt");
+        setDealCardTitle(nextDealCardTitle);
       }
     } catch {
-      setDealCardTitle("Deal Card lokaal voorbereid");
+      finalDealCardTitle = "Deal Card lokaal voorbereid";
+      setDealCardTitle(finalDealCardTitle);
     }
     setCanvas((current) => ({
       ...current,
@@ -213,7 +217,7 @@ export function AiowAiHomepage() {
       {
         id: crypto.randomUUID(),
         role: "ai",
-        text: `Je Venture Memory is gekoppeld. ${dealCardTitle || "Ik heb een eerste Deal Card voorbereid"}. Team AIOW kan nu beoordelen of dit een scan, proof sprint, fixed build, growth partner of venture review wordt.`,
+        text: `Je Venture Memory is gekoppeld. ${finalDealCardTitle}. Team AIOW kan nu beoordelen of dit een scan, proof sprint, fixed build, growth partner of venture review wordt.`,
         time: "nu",
       },
     ]);

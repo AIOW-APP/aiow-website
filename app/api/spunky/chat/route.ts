@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { captureVentureMemoryEvent } from "@/lib/aiow-venture-memory";
+import { buildVentureDealCard, captureVentureMemoryEvent, normalizeEmail } from "@/lib/aiow-venture-memory";
+import { aiowDurableStoreMode } from "@/lib/aiow-durable-store";
+import { captureAiowLead, validLeadEmail, type AiowLeadCaptureInput } from "@/lib/aiow-lead-capture";
 
 type SpunkyChatPayload = {
   message?: unknown;
@@ -11,10 +13,20 @@ type SpunkyChatPayload = {
   page?: unknown;
   sessionId?: unknown;
   canvas?: unknown;
+  contact?: unknown;
+  name?: unknown;
+  email?: unknown;
+  company?: unknown;
+  consentAccepted?: unknown;
+  consentText?: unknown;
+  consentVersion?: unknown;
 };
 
 const RATE_LIMIT = { windowMs: 60 * 1000, maxAttempts: 18 };
 const buckets = new Map<string, { count: number; resetAt: number }>();
+const DEFAULT_CONSENT_TEXT =
+  "AIOW mag deze Venture Memory koppelen aan mijn account en mij persoonlijk e-mailen over deze kans. Geen nieuwsbrief of generieke marketing zonder aparte toestemming.";
+const DEFAULT_CONSENT_VERSION = "aiow-venture-memory-v1";
 
 export async function POST(req: Request) {
   try {
@@ -41,6 +53,9 @@ export async function POST(req: Request) {
       canvas,
       metadata: { mode, relationshipStage, page: asText(payload.page) || "aiow.ai/", visitorMessageCount },
     });
+
+    const contact = extractContact(payload);
+    const linkedContact = contact.consentAccepted ? await linkContactToVentureMemory({ sessionId, contact, transcript, canvas, mode }) : null;
 
     const webhook = process.env.SPUNKY_CHAT_WEBHOOK_URL || process.env.AIOW_SPUNKY_CHAT_WEBHOOK_URL;
     if (webhook) {
@@ -70,7 +85,18 @@ export async function POST(req: Request) {
           const reply = clamp(asText(data.reply) || asText(data.answer) || asText(data.message), 1100);
           if (reply) {
             await captureVentureMemoryEvent({ sessionId, role: "ai", type: "message", content: reply, canvas, metadata: { source: "spunky-webhook" } });
-            return NextResponse.json({ ok: true, source: "spunky-webhook", reply, leadGate: visitorMessageCount >= 3, memorySessionId: sessionId, handoff: data.handoff ?? null });
+            return NextResponse.json({
+              ok: true,
+              source: "spunky-webhook",
+              reply,
+              leadGate: visitorMessageCount >= 3 && !linkedContact,
+              memorySessionId: sessionId,
+              storageMode: aiowDurableStoreMode(),
+              contactRequired: visitorMessageCount >= 3 && !linkedContact,
+              leadCapture: linkedContact?.leadCapture ?? null,
+              dealCard: linkedContact?.dealCard ?? null,
+              handoff: data.handoff ?? null,
+            });
           }
         }
       } catch (error) {
@@ -85,9 +111,13 @@ export async function POST(req: Request) {
       ok: true,
       source: "bounded-aiow-fallback",
       reply,
-      leadGate: visitorMessageCount >= 3,
+      leadGate: visitorMessageCount >= 3 && !linkedContact,
       memorySessionId: sessionId,
-      requiredConsentText: "AIOW mag deze Venture Memory koppelen aan mijn account en mij persoonlijk e-mailen over deze kans.",
+      storageMode: aiowDurableStoreMode(),
+      contactRequired: visitorMessageCount >= 3 && !linkedContact,
+      leadCapture: linkedContact?.leadCapture ?? null,
+      dealCard: linkedContact?.dealCard ?? null,
+      requiredConsentText: DEFAULT_CONSENT_TEXT,
     });
   } catch (error) {
     console.error("[spunky-chat] POST error", error);
@@ -130,6 +160,78 @@ function greetingReply(): string {
     "Hey, ik luister. Waar zit de kans: meer leads, minder handwerk, een nieuw product of iets dat nog vaag is?",
   ];
   return replies[Math.floor(Math.random() * replies.length)];
+}
+
+type SpunkyContact = {
+  name: string;
+  email: string;
+  company: string;
+  consentAccepted: boolean;
+  consentText: string;
+  consentVersion: string;
+};
+
+function extractContact(payload: SpunkyChatPayload): SpunkyContact {
+  const contact = isRecord(payload.contact) ? payload.contact : {};
+  return {
+    name: clamp(asText(contact.name) || asText(payload.name), 160),
+    email: normalizeEmail(asText(contact.email) || asText(payload.email)),
+    company: clamp(asText(contact.company) || asText(payload.company), 180),
+    consentAccepted: contact.consentAccepted === true || payload.consentAccepted === true,
+    consentText: clamp(asText(contact.consentText) || asText(payload.consentText) || DEFAULT_CONSENT_TEXT, 700),
+    consentVersion: clamp(asText(contact.consentVersion) || asText(payload.consentVersion) || DEFAULT_CONSENT_VERSION, 80),
+  };
+}
+
+async function linkContactToVentureMemory(input: {
+  sessionId: string;
+  contact: SpunkyContact;
+  transcript: string;
+  canvas?: Record<string, unknown>;
+  mode: "idea" | "company";
+}): Promise<{ leadCapture: { id: string; path: string; followUp: unknown }; dealCard: unknown } | null> {
+  const { sessionId, contact, transcript, canvas, mode } = input;
+  if (!contact.name || !validLeadEmail(contact.email) || !contact.consentAccepted) return null;
+
+  await captureVentureMemoryEvent({
+    sessionId,
+    role: "system",
+    type: "contact_linked",
+    content: "Visitor explicitly allowed AIOW to link this temporary Venture Memory to contact details and personal follow-up.",
+    personEmail: contact.email,
+    personName: contact.name,
+    company: contact.company,
+    consentAccepted: true,
+    canvas,
+    metadata: { consentText: contact.consentText, consentVersion: contact.consentVersion, source: "spunky-chat" },
+  });
+
+  const dealCard = await buildVentureDealCard(sessionId, canvas);
+  const leadInput: AiowLeadCaptureInput = {
+    email: contact.email,
+    consentAccepted: true,
+    consentText: contact.consentText,
+    consentVersion: contact.consentVersion,
+    source: "aiow.ai",
+    sourceRoute: "/",
+    sourceComponent: "homepage-spunky-chat",
+    locale: "nl",
+    name: contact.name,
+    company: contact.company,
+    intentType: mode === "company" ? "company" : "idea",
+    intentText: transcript || JSON.stringify(dealCard),
+    projectType: dealCard.likelyRoute,
+    moduleInterests: ["Spunky", "Venture Memory", "Deal Card", "AI follow-up"],
+    addOns: [],
+    metadata: {
+      ventureSessionId: sessionId,
+      dealCard,
+      retention: "account_linked",
+      sourceAgent: "spunky",
+    },
+  };
+  const leadCapture = await captureAiowLead(leadInput, "LOCAL_CAPTURED");
+  return { leadCapture: { id: leadCapture.id, path: leadCapture.path, followUp: leadCapture.record.followUp }, dealCard };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
