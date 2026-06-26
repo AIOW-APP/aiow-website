@@ -94,7 +94,7 @@ const memorySteps = [
 ];
 
 const firstMessage =
-  "Hey, ik ben Spunky, AI Venture Intake Partner van AIOW. Kom je met een startup of idee, een bestaand bedrijf, een AI-groeivraag of als mogelijke partner?";
+  "Hey, ik ben Spunky. Vertel wat je wilt bouwen, automatiseren of laten groeien. Je mag rommelig beginnen, ik maak er structuur van.";
 
 export function AiowAiHomepage() {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -247,8 +247,8 @@ export function AiowAiHomepage() {
 
           <div className={styles.mission}>
             <p>THE AI IS THE HOMEPAGE</p>
-            <h1>Laat je case beoordelen.</h1>
-            <span>Sprinky bouwt je Venture Memory op en toetst of AIOW als partner waarde kan toevoegen.</span>
+            <h1>Vertel wat je wilt bouwen.</h1>
+            <span>Wij bouwen de digitale toekomst met je mee.</span>
           </div>
 
           <div className={styles.presencePanel} aria-label="AI Presence">
@@ -326,13 +326,13 @@ export function AiowAiHomepage() {
           <form className={styles.composer} onSubmit={(event) => { event.preventDefault(); submitPrompt(); }}>
             <textarea
               ref={inputRef}
-              aria-label="Vertel AIOW welke case beoordeeld moet worden"
+              aria-label="Vertel AIOW waar je aan wilt bouwen"
               value={input}
               onChange={onInput}
               onFocus={() => setComposerFocused(true)}
               onBlur={() => setComposerFocused(false)}
               onKeyDown={onComposerKeyDown}
-              placeholder="Startup, bedrijf, markt of groeikans..."
+              placeholder="Vertel me wat je wilt bouwen..."
               rows={2}
             />
             <div className={styles.composerActions} aria-label="Input opties">
@@ -534,8 +534,8 @@ function mergeCanvas(current: Canvas, text: string, committed = false): Canvas {
 
 function getQuickActions(canvas: Canvas, userCount: number): string[] {
   if (userCount >= 2) return ["Maak hier een private intake van", "Welke info mist AIOW nog?", "Wat is de beste eerste sprint?"];
-  if (canvas.project !== "Nog niet ingevuld") return ["Wat is je tractie?", "Wie is de doelgroep?", "Waarom win jij deze markt?"];
-  return ["Ik heb een startup of idee", "Ik heb al een bedrijf", "Ik wil weten hoe AIOW werkt", "Ik ben partner of investeerder"];
+  if (canvas.project !== "Nog niet ingevuld") return ["Waar zit de meeste omzetlekkage?", "Welke data heb je al?", "Wat moet binnen 30 dagen bewezen zijn?"];
+  return ["Ik heb een startup of idee", "Ik heb een bestaand bedrijf", "Ik wil processen automatiseren", "Ik wil groeien met AI"];
 }
 
 function getThinkingProgress(canvas: Canvas, state: IntakeState, input: string): number[] {
@@ -559,8 +559,8 @@ function classifyConversationMode(text: string, transcript = "") {
   const lower = `${text}\n${transcript}`.toLowerCase();
   if (isGreeting(text.toLowerCase())) return "greeting";
   if (includesAny(lower, ["lead", "leads", "sales", "opvolg", "follow-up", "follow up", "mail", "crm", "offerte", "afspraak"])) return "lead_machine";
-  if (includesAny(lower, ["startup", "idee", "app", "platform", "product", "venture", "founder", "bouwen", "markt", "tractie"])) return "new_venture";
   if (includesAny(lower, ["proces", "workflow", "automatis", "administratie", "support", "planning", "operatie", "handwerk"])) return "workflow_scan";
+  if (includesAny(lower, ["startup", "idee", "app", "platform", "product", "venture", "bouwen"])) return "new_venture";
   if (includesAny(lower, ["prijs", "kosten", "budget", "revenue", "share", "participatie", "equity", "dealmodel", "retainer"])) return "pricing_model";
   if (includesAny(lower, ["team", "mini", "book", "handsome", "spunky", "toegang", "mac mini", "agent"])) return "team_access";
   return "general_intake";
@@ -570,12 +570,12 @@ function localReply(text: string, count: number): string {
   const lower = text.toLowerCase();
   const conversationMode = classifyConversationMode(text);
   if (isGreeting(lower)) return greetingReply();
-  if (count >= 3) return "Ik begin genoeg context te krijgen om dit serieus als AIOW-case te beoordelen. Om te voorkomen dat je opnieuw moet beginnen, maak ik graag vrijblijvend een Venture Memory voor je aan. Wat is je naam en e-mail, en mogen we je hierover persoonlijk mailen?";
+  if (count >= 3) return "Dit is genoeg voor een eerste Venture Memory. Wil je dat AIOW dit bewaart en persoonlijk opvolgt? Geef dan je naam en e-mail met toestemming. Geen nieuwsbrief, wel contextvaste opvolging.";
   if (conversationMode === "pricing_model") return "Het juiste model hangt af van bewijs en scope: scan, proof sprint, vaste build, growth partner, revenue share of participatie. Welke route wil je vooral onderzoeken?";
   if (conversationMode === "team_access") return "Handsome pakt de centrale bouw en waarheid, Spunky de AIOW intake en klantcontext, Book strategie en UX-redteam, Mini buitenwereld en growth-signalen. Welke uitkomst moet dit team nu forceren?";
-  if (conversationMode === "lead_machine") return "Ik beoordeel dit als groeicase, niet als losse marketingtaak. Waar verliest je bedrijf nu de meeste waarde: websitebezoek, intake, offerte, opvolging of retentie?";
-  if (conversationMode === "workflow_scan") return "Ik hoor een bestaande bedrijfsoperatie. Dan kijk ik breder dan een taakje: groei, klantcontact, administratie, planning en schaalbaarheid. Waar blijft nu de meeste waarde liggen?";
-  if (conversationMode === "new_venture") return "Om te bepalen of AIOW hier echt als venture partner waarde kan toevoegen, moet ik eerst begrijpen hoe sterk het idee, de markt en jouw eigen positie zijn. Wat is de doelgroep en welk bewijs of welke tractie heb je al?";
+  if (conversationMode === "lead_machine") return "Interessant. De kans zit waarschijnlijk in capture, scoring en opvolging. Waar valt de meeste waarde weg: websitebezoek, intake, offerte of opvolging?";
+  if (conversationMode === "workflow_scan") return "Ik hoor een operationele kans. Welk proces kost vandaag het meeste tijd en wat moet binnen 30 dagen meetbaar beter zijn?";
+  if (conversationMode === "new_venture") return "Ik hoor een mogelijke venture. Voor wie is dit urgent en welk bewijs heb je al dat klanten dit probleem echt willen oplossen?";
   return "Ik ben bij je. Dump je idee gerust rommelig: bedrijf, probleem, website, screenshot of gewoon één zin. Ik haal er markt, risico, AI-kans en de slimste vervolgvraag uit.";
 }
 
@@ -599,9 +599,9 @@ function isGreeting(lower: string): boolean {
 
 function greetingReply(): string {
   const replies = [
-    "Hey, vertel. Kom je met een startup of idee, een bestaand bedrijf, een AI-groeivraag of als mogelijke partner? Een rommelige zin is genoeg.",
-    "Hey. Ik ben Spunky, AI Venture Intake Partner van AIOW. Ik toets of jouw case interessant genoeg is om samen aan te bouwen.",
-    "Hey, ik luister. Om te bepalen of AIOW als venture partner waarde kan toevoegen, moet ik eerst begrijpen wie je bent en wat je wilt bouwen.",
+    "Hey, vertel. Wat wil je bouwen, automatiseren of laten groeien? Je mag rommelig beginnen, ik structureer het voor je.",
+    "Hey. Geef me één zin over je idee of bedrijf, dan bouw ik meteen je eerste Venture Memory op.",
+    "Hey, ik luister. Waar zit de kans: meer leads, minder handwerk, een nieuw product of iets dat nog vaag is?",
   ];
   return replies[Math.floor(Math.random() * replies.length)];
 }

@@ -1,5 +1,5 @@
-import { AiowAiHomepage } from "@/components/aiow/AiowAiHomepage";
+import { AiowVentureLanding } from "@/components/aiow/AiowVentureLanding";
 
 export default function Home() {
-  return <AiowAiHomepage />;
+  return <AiowVentureLanding />;
 }

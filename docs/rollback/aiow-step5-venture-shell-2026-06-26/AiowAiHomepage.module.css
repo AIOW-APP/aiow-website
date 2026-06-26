@@ -684,8 +684,8 @@
     padding: 12px 0 8px;
   }
   .aiBubble,
-  .thinkingCard { box-sizing: border-box; width: calc(100% - 28px); max-width: calc(100% - 28px); overflow-wrap: break-word; }
-  .userBubble { box-sizing: border-box; max-width: 88%; overflow-wrap: break-word; }
+  .thinkingCard { width: calc(100% - 28px); max-width: calc(100% - 28px); }
+  .userBubble { max-width: 88%; }
   .aiBubble,
   .userBubble,
   .thinkingCard { padding: 12px 14px; border-radius: 18px; }
