@@ -53,3 +53,24 @@ export async function supabaseSelect<T>(table: string, query: string): Promise<T
   }
   return (await response.json()) as T[];
 }
+
+export async function supabaseUpdate<T extends Record<string, unknown>>(table: string, query: string, patch: T): Promise<T[] | null> {
+  const config = getAiowSupabaseConfig();
+  if (!config) return null;
+  const separator = query.startsWith("?") ? "" : "?";
+  const response = await fetch(`${config.url}/rest/v1/${encodeURIComponent(table)}${separator}${query}`, {
+    method: "PATCH",
+    headers: {
+      apikey: config.key,
+      authorization: `Bearer ${config.key}`,
+      "content-type": "application/json",
+      prefer: "return=representation",
+    },
+    body: JSON.stringify(patch),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Supabase update failed for ${table}: ${response.status} ${body}`);
+  }
+  return (await response.json()) as T[];
+}
