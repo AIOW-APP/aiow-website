@@ -9,8 +9,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function CustomerPortalPage({ params }: { params: Promise<{ accountId: string }> }) {
+export default async function CustomerPortalPage({ params, searchParams }: { params: Promise<{ accountId: string }>; searchParams: Promise<{ lt?: string }> }) {
   const { accountId } = await params;
+  const { lt } = await searchParams;
   return (
     <main className={portalStyles.portalPage}>
       <div className={portalStyles.portalChrome}>
@@ -42,7 +43,7 @@ export default async function CustomerPortalPage({ params }: { params: Promise<{
               <div className={portalStyles.accountCode}>{accountId}</div>
             </div>
           </aside>
-          <CustomerPortalView accountId={accountId} />
+          <CustomerPortalView accountId={accountId} loginToken={lt} />
         </section>
       </div>
     </main>

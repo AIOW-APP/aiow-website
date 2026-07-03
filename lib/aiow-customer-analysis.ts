@@ -1,3 +1,27 @@
+export type AiowScoringPipelineStep =
+  | "intake-normalisatie"
+  | "founder-check"
+  | "commitment"
+  | "uniciteit"
+  | "concurrentie"
+  | "markt"
+  | "revenue-model"
+  | "ai-hefboom"
+  | "bouwbaarheid"
+  | "dealkwaliteit"
+  | "red-team"
+  | "weging-review";
+
+export type AiowExternalSourceType = "web" | "kvk" | "linkedin" | "customer_document" | "other";
+
+export type AiowExternalSource = {
+  type: AiowExternalSourceType;
+  title: string;
+  url?: string;
+  note?: string;
+  supportsSteps?: AiowScoringPipelineStep[];
+};
+
 export type AiowCustomerAnalysisInput = {
   industry?: string;
   ideaSummary?: string;
@@ -24,6 +48,7 @@ export type AiowCustomerAnalysisInput = {
   budgetRange?: string;
   risks?: string;
   aiowBuildScope?: string;
+  externalSources?: AiowExternalSource[];
 };
 
 export type AiowCustomerScorecard = {
@@ -32,6 +57,19 @@ export type AiowCustomerScorecard = {
   executionScore: number;
   aiOpportunityScore: number;
   investmentScore: number;
+};
+
+export type AiowScoringPipelineEventStatus = "queued" | "running" | "blocked" | "done" | "review";
+
+export type AiowScoringPipelineEvent = {
+  step: AiowScoringPipelineStep;
+  order: number;
+  customerLabel: string;
+  status: AiowScoringPipelineEventStatus;
+  score?: number;
+  requiresExternalSource: boolean;
+  externalSources: AiowExternalSource[];
+  internalNote: string;
 };
 
 export type AiowCustomerAnalysis = {
@@ -49,6 +87,7 @@ export type AiowCustomerAnalysis = {
   requiredCustomerProof: string[];
   firstSprintRecommendation: string;
   researchState: "INTAKE_ONLY_UNIQUENESS_ESTIMATE" | "RESEARCH_REQUIRED";
+  scoringPipelineEvents: AiowScoringPipelineEvent[];
 };
 
 type Signal = { key: keyof AiowCustomerAnalysisInput; label: string; weight: number };
@@ -94,6 +133,10 @@ export function analyzeAiowCustomer(input: AiowCustomerAnalysisInput): AiowCusto
   const verdict = ventureFitScore >= 82 ? "STRATEGIC_GO" : ventureFitScore >= 68 ? "GO" : ventureFitScore >= 48 ? "CONDITIONAL_GO" : "NO_GO";
   const recommendedRevenueSharePercent = recommendRevenueShare(ventureFitScore, uniqueness.score, input);
   const recommendedResaleSharePercent = recommendResaleShare(ventureFitScore, input);
+  const externalSources = normalizeExternalSources(input);
+  const researchState = hasSourceForStep(externalSources, "uniciteit") && hasSourceForStep(externalSources, "revenue-model")
+    ? "INTAKE_ONLY_UNIQUENESS_ESTIMATE"
+    : "RESEARCH_REQUIRED";
 
   return {
     successProbabilityScore: success.score,
@@ -109,7 +152,8 @@ export function analyzeAiowCustomer(input: AiowCustomerAnalysisInput): AiowCusto
     gaps: [...success.missing, ...uniqueness.missing].slice(0, 12),
     requiredCustomerProof: requiredProof(input, verdict),
     firstSprintRecommendation: firstSprint(verdict),
-    researchState: input.competitorNotes ? "INTAKE_ONLY_UNIQUENESS_ESTIMATE" : "RESEARCH_REQUIRED",
+    researchState,
+    scoringPipelineEvents: buildScoringPipelineEvents(input, scorecard, uniqueness.score, ventureFitScore, externalSources),
   };
 }
 
@@ -154,6 +198,53 @@ function buildScorecard(input: AiowCustomerAnalysisInput): AiowCustomerScorecard
   };
 }
 
+function buildScoringPipelineEvents(
+  input: AiowCustomerAnalysisInput,
+  scorecard: AiowCustomerScorecard,
+  uniquenessScore: number,
+  ventureFitScore: number,
+  externalSources: AiowExternalSource[],
+): AiowScoringPipelineEvent[] {
+  const spec: Array<{
+    step: AiowScoringPipelineStep;
+    label: string;
+    score?: number;
+    requiresExternalSource?: boolean;
+    doneWhen?: boolean;
+    status?: AiowScoringPipelineEventStatus;
+    note: string;
+  }> = [
+    { step: "intake-normalisatie", label: "Intake structureren", score: analysisCompleteness(input), doneWhen: true, note: "Formulierdata omgezet naar venture-analysevelden." },
+    { step: "founder-check", label: "Founder-check", score: scorecard.founderScore, requiresExternalSource: true, doneWhen: meaningful(input.founderExperience), note: "Mag niet op done zonder externe web/KvK/LinkedIn/broncheck." },
+    { step: "commitment", label: "Commitment", score: scorecard.executionScore, doneWhen: meaningful(input.executionCapacity), note: "Checkt owner, tempo, budget en feedbackcapaciteit." },
+    { step: "uniciteit", label: "Uniciteit", score: uniquenessScore, requiresExternalSource: true, doneWhen: meaningful(input.coreOffer) || meaningful(input.dataSources), note: "Mag niet op done zonder externe bron rond propositie/positionering." },
+    { step: "concurrentie", label: "Concurrentie", score: uniquenessScore, requiresExternalSource: true, doneWhen: meaningful(input.competitorNotes), note: "Concurrentiebeeld vereist echt onderzoek, geen intakeclaim." },
+    { step: "markt", label: "Markt", score: scorecard.marketScore, doneWhen: meaningful(input.customerSegments) || meaningful(input.proofOfDemand), note: "Doelgroep, pijn en betalingsbereidheid." },
+    { step: "revenue-model", label: "Revenue-model", score: scorecard.investmentScore, requiresExternalSource: true, doneWhen: meaningful(input.currentMonthlyRevenue) || meaningful(input.targetMonthlyRevenue) || meaningful(input.moduleRevenueNotes), note: "Mag niet op done zonder externe omzet/markt/prijsbron of LinkedIn/KvK-context." },
+    { step: "ai-hefboom", label: "AI-hefboom", score: scorecard.aiOpportunityScore, doneWhen: meaningful(input.aiowBuildScope) || meaningful(input.dataSources), note: "Bepaalt of AI structureel voordeel geeft." },
+    { step: "bouwbaarheid", label: "Bouwbaarheid", score: scorecard.executionScore, doneWhen: meaningful(input.systemsStack) || meaningful(input.keyProcesses), note: "Technische haalbaarheid, data en integraties." },
+    { step: "dealkwaliteit", label: "Dealkwaliteit", score: scorecard.investmentScore, doneWhen: meaningful(input.budgetRange) || meaningful(input.resalePotential) || meaningful(input.moduleRevenueNotes), note: "Revenue share, resale, module-waarde en risico." },
+    { step: "red-team", label: "Red-team", score: Math.max(0, 100 - scorecard.investmentScore), status: "review", note: "Zoekt redenen om niet te bouwen of deal aan te passen." },
+    { step: "weging-review", label: "Weging + review", score: ventureFitScore, status: "review", note: "Eindweging voor Team Richard; geen automatische live-go." },
+  ];
+
+  return spec.map((item, index) => {
+    const sources = sourcesForStep(externalSources, item.step);
+    const hardGateBlocked = Boolean(item.requiresExternalSource && sources.length === 0);
+    const status = item.status || (hardGateBlocked ? "blocked" : item.doneWhen ? "done" : "queued");
+    return {
+      step: item.step,
+      order: index + 1,
+      customerLabel: item.label,
+      status,
+      score: item.score,
+      requiresExternalSource: Boolean(item.requiresExternalSource),
+      externalSources: sources,
+      internalNote: hardGateBlocked ? `${item.note} Externe bron ontbreekt: stap blijft blocked.` : item.note,
+    };
+  });
+}
+
 function averageFields(input: AiowCustomerAnalysisInput, fields: WeightedSignal[]): number {
   const total = fields.reduce((sum, field) => sum + field.weight, 0);
   return Math.round((fields.filter((field) => meaningful(input[field.key])).reduce((sum, field) => sum + field.weight, 0) / total) * 100);
@@ -172,6 +263,50 @@ function scoreSignals(input: AiowCustomerAnalysisInput, signals: Signal[]): { sc
 
 function meaningful(value: unknown): boolean {
   return typeof value === "string" ? value.trim().length >= 12 : Boolean(value);
+}
+
+function normalizeExternalSources(input: AiowCustomerAnalysisInput): AiowExternalSource[] {
+  const explicit = (input.externalSources || []).filter((source) => meaningful(source.title) || meaningful(source.url));
+  const inferred = [input.founderExperience, input.industryContacts, input.existingAudience, input.proofOfDemand, input.competitorNotes, input.moduleRevenueNotes]
+    .flatMap((value) => extractExternalSources(String(value || "")));
+  const byKey = new Map<string, AiowExternalSource>();
+  for (const source of [...explicit, ...inferred]) {
+    const key = `${source.type}:${source.url || source.title}`.toLowerCase();
+    byKey.set(key, source);
+  }
+  return [...byKey.values()];
+}
+
+function extractExternalSources(text: string): AiowExternalSource[] {
+  const urls = [...text.matchAll(/https?:\/\/[^\s),]+/gi)].map((match) => match[0]);
+  return urls.map((url) => ({
+    type: url.includes("linkedin.com") ? "linkedin" : url.includes("kvk.nl") ? "kvk" : "web",
+    title: url,
+    url,
+    supportsSteps: inferSupportedStepsFromUrl(url),
+  }));
+}
+
+function inferSupportedStepsFromUrl(url: string): AiowScoringPipelineStep[] {
+  const lower = url.toLowerCase();
+  const steps: AiowScoringPipelineStep[] = [];
+  if (lower.includes("linkedin.com") || lower.includes("kvk.nl") || lower.includes("company") || lower.includes("bedrijf")) steps.push("founder-check", "commitment");
+  if (lower.includes("pricing") || lower.includes("tarief") || lower.includes("revenue") || lower.includes("omzet")) steps.push("revenue-model");
+  steps.push("uniciteit", "concurrentie", "markt");
+  return [...new Set(steps)];
+}
+
+function sourcesForStep(sources: AiowExternalSource[], step: AiowScoringPipelineStep): AiowExternalSource[] {
+  return sources.filter((source) => !source.supportsSteps?.length || source.supportsSteps.includes(step));
+}
+
+function hasSourceForStep(sources: AiowExternalSource[], step: AiowScoringPipelineStep): boolean {
+  return sourcesForStep(sources, step).length > 0;
+}
+
+function analysisCompleteness(input: AiowCustomerAnalysisInput): number {
+  const keys: Array<keyof AiowCustomerAnalysisInput> = ["ideaSummary", "founderExperience", "proofOfDemand", "customerSegments", "coreOffer", "currentMonthlyRevenue", "keyProcesses", "systemsStack", "dataSources", "painPoints", "successMetrics", "aiowBuildScope"];
+  return Math.round((keys.filter((key) => meaningful(input[key])).length / keys.length) * 100);
 }
 
 function recommendRevenueShare(score: number, uniqueness: number, input: AiowCustomerAnalysisInput): number {
@@ -204,7 +339,8 @@ function buildDealRationale(verdict: AiowCustomerAnalysis["verdict"], rev: numbe
   if (meaningful(input.industryContacts)) out.push("Klantclaimt branchecontacten/distributie: verhoogt slagingskans maar bewijs nodig.");
   if (meaningful(input.proofOfDemand)) out.push("Er is vraag-/betalingsbewijs: deal kan meer performance-based worden.");
   if (!meaningful(input.executionCapacity)) out.push("Uitvoeringscapaciteit ontbreekt: AIOW moet niet bouwen zonder klant-owner en ritme.");
-  if (!meaningful(input.competitorNotes)) out.push("Uniekheid vereist extern onderzoek voordat definitieve deal/positionering wordt gekozen.");
+  if (!hasSourceForStep(normalizeExternalSources(input), "uniciteit")) out.push("Uniekheid vereist extern onderzoek voordat definitieve deal/positionering wordt gekozen.");
+  if (!hasSourceForStep(normalizeExternalSources(input), "revenue-model")) out.push("Revenue-model vereist externe bron of controle voordat deze stap op done mag.");
   return out;
 }
 
@@ -214,6 +350,9 @@ function requiredProof(input: AiowCustomerAnalysisInput, verdict: AiowCustomerAn
   if (!meaningful(input.industryContacts)) proof.push("Lijst met warme contacten/partners/beslissers en toegangsniveau.");
   if (!meaningful(input.executionCapacity)) proof.push("Wie bij de klant dagelijks/wekelijk owner is voor sales, operatie en feedback.");
   if (!meaningful(input.dataSources)) proof.push("Beschikbare data/documenten/processen die AIOW mag gebruiken voor analyse en bouw.");
+  if (!hasSourceForStep(normalizeExternalSources(input), "founder-check")) proof.push("Externe founder/bedrijf-bron: LinkedIn, KvK of betrouwbare webbron.");
+  if (!hasSourceForStep(normalizeExternalSources(input), "uniciteit")) proof.push("Externe concurrentie-/uniciteitsbron: websearch, marktpartij, LinkedIn of documentbewijs.");
+  if (!hasSourceForStep(normalizeExternalSources(input), "revenue-model")) proof.push("Externe revenue/prijs/omzetbron of gevalideerde marktinput.");
   if (verdict === "NO_GO") proof.push("Herformuleer propositie naar één concrete doelgroep + pijnlijk probleem + betaalroute.");
   return proof.length ? proof : ["30 dagen proof sprint met echte klantfeedback, conversie-indicator en modulewaarde-test."];
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { assertAiowAdmin } from "@/lib/aiow-admins";
-import { createAiowCustomerAccount, findAiowCustomerAccount, listPublicAiowCustomerAccounts, requestAiowCustomerScopeReview } from "@/lib/aiow-customer-accounts";
+import { createAiowCustomerAccount, findAiowCustomerAccount, getPublicAiowCustomerAccountById, listPublicAiowCustomerAccounts, requestAiowCustomerScopeReview } from "@/lib/aiow-customer-accounts";
+import { verifyPortalLoginToken } from "@/lib/aiow-portal-login";
 import { captureAiowLead } from "@/lib/aiow-lead-capture";
 import { appendAiowProofEvent } from "@/lib/aiow-proof-events";
 
@@ -195,6 +196,17 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const accountId = url.searchParams.get("accountId") || "";
     const accessCode = url.searchParams.get("accessCode") || "";
+    const loginToken = url.searchParams.get("loginToken") || "";
+
+    /* E-mail-first pad: kortlevend token uit /api/portal/my-accounts (na magic-link-verificatie). */
+    if (accountId && loginToken) {
+      if (!verifyPortalLoginToken(accountId, loginToken)) {
+        return NextResponse.json({ error: "Inloglink verlopen. Vraag een nieuwe aan met je e-mailadres." }, { status: 401 });
+      }
+      const account = await getPublicAiowCustomerAccountById(accountId);
+      if (!account) return NextResponse.json({ error: "Account not found" }, { status: 404 });
+      return NextResponse.json({ ok: true, account });
+    }
 
     if (accountId || accessCode) {
       if (!accountId || !accessCode) {

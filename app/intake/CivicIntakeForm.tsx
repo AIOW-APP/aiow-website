@@ -107,8 +107,9 @@ export function CivicIntakeForm() {
           Het systeem is aan het wegen.
         </h2>
         <p className={styles.lead}>
-          Je dossier is aangemaakt. Bewaar je toegangscode goed; daarmee log je in op je dossier en volg je
-          het oordeel, het voorstel en straks elke gerealiseerde stap.
+          Je account is aangemaakt en het onderzoek start nu. In je dossier beantwoord je de vervolgvragen
+          die je score sterker maken, en kijk je live mee terwijl het systeem je plan onderzoekt en beoordeelt:
+          marktscan, concurrentiecheck, founder-verificatie en red-team. Bewaar je toegangscode goed.
         </p>
         <div className={styles.codeBox}>Toegangscode: {state.accessCode}</div>
         <div className={styles.ctaRow}>
@@ -172,8 +173,13 @@ export function CivicIntakeForm() {
       {state.status === "error" && <p className={styles.error}>{state.message}</p>}
 
       <button className={styles.submit} type="submit" disabled={!canSubmit}>
-        {state.status === "sending" ? "Dossier openen..." : "Open mijn dossier"}
+        {state.status === "sending" ? "Account aanmaken..." : "Maak mijn account en open mijn dossier"}
       </button>
+      <p className={styles.note}>
+        Met deze gegevens maak je direct je AIOW-account aan. In je dossier beantwoord je daarna de
+        vervolgvragen en kijk je live mee terwijl ons AI-systeem je plan onderzoekt: marktcheck,
+        concurrentie, founder-verificatie en red-team. Elke stap verschijnt in je tijdlijn.
+      </p>
       <p className={styles.note}>Eerlijk oordeel binnen een werkdag. Wij zeggen vaker nee dan ja; daarom betekent onze ja iets.</p>
     </form>
   );

@@ -21,10 +21,12 @@ type VentureScorePayload = Partial<Record<keyof AiowCustomerAnalysisInput, unkno
   honeyWebsite?: unknown;
 };
 
+type TextAnalysisField = Exclude<keyof AiowCustomerAnalysisInput, "externalSources">;
+
 const RATE_LIMIT = { windowMs: 60 * 60 * 1000, maxAttempts: 12 };
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
-const TEXT_FIELDS: Array<keyof AiowCustomerAnalysisInput> = [
+const TEXT_FIELDS: TextAnalysisField[] = [
   "industry",
   "ideaSummary",
   "founderExperience",
@@ -191,6 +193,7 @@ function normalizeAnalysisInput(payload: VentureScorePayload): AiowCustomerAnaly
     const value = clamp(asText(payload[field]), maxLength(field));
     if (value) input[field] = value;
   }
+  if (Array.isArray(payload.externalSources)) input.externalSources = payload.externalSources as AiowCustomerAnalysisInput["externalSources"];
   if (!input.ideaSummary && asText(payload.message)) input.ideaSummary = clamp(asText(payload.message), 1600);
   if (!input.coreOffer && asText(payload.companyName)) input.coreOffer = `${asText(payload.companyName)} venture / growth case`;
   return input;
@@ -243,6 +246,7 @@ async function recordAdminEvent(dossier: any) {
       reviewState: dossier.review.state,
       revenueShare: dossier.analysis.recommendedRevenueSharePercent,
       resaleShare: dossier.analysis.recommendedResaleSharePercent,
+      scoringPipelineEvents: dossier.analysis.scoringPipelineEvents,
       requiredProof: dossier.analysis.requiredCustomerProof,
       gates: dossier.gates,
       stakeholders: dossier.stakeholders,
@@ -313,7 +317,7 @@ function clamp(value: string, max: number): string {
   return value.length > max ? value.slice(0, max) : value;
 }
 
-function maxLength(field: keyof AiowCustomerAnalysisInput): number {
+function maxLength(field: TextAnalysisField): number {
   if (["ideaSummary", "founderExperience", "industryContacts", "proofOfDemand", "keyProcesses", "systemsStack", "dataSources", "painPoints", "risks", "aiowBuildScope"].includes(field)) return 1600;
   if (["customerSegments", "acquisitionChannels", "coreOffer", "successMetrics", "competitorNotes", "resalePotential", "moduleRevenueNotes", "executionCapacity"].includes(field)) return 1200;
   return 240;

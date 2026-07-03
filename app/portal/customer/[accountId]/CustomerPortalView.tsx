@@ -322,7 +322,7 @@ const intakeSteps: IntakeStep[] = [
   },
 ];
 
-export function CustomerPortalView({ accountId }: { accountId: string }) {
+export function CustomerPortalView({ accountId, loginToken }: { accountId: string; loginToken?: string }) {
   const [accessCode, setAccessCode] = useState("");
   const [loadState, setLoadState] = useState<LoadState>({ status: "locked" });
 
@@ -336,17 +336,27 @@ export function CustomerPortalView({ accountId }: { accountId: string }) {
     event?.preventDefault();
     setLoadState({ status: "loading" });
     try {
-      const response = await fetch(`/api/customer-accounts?accountId=${encodeURIComponent(accountId)}&accessCode=${encodeURIComponent(accessCode)}`);
+      /* E-mail-first: met een geldige inloglink (loginToken) is geen toegangscode nodig. */
+      const query = loginToken
+        ? `accountId=${encodeURIComponent(accountId)}&loginToken=${encodeURIComponent(loginToken)}`
+        : `accountId=${encodeURIComponent(accountId)}&accessCode=${encodeURIComponent(accessCode)}`;
+      const response = await fetch(`/api/customer-accounts?${query}`);
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Geen toegang tot dit account.");
       localStorage.setItem("aiow:lastAccountId", accountId);
-      localStorage.setItem("aiow:lastAccessCode", accessCode);
+      if (!loginToken) localStorage.setItem("aiow:lastAccessCode", accessCode);
       window.dispatchEvent(new Event("aiow:account-state-changed"));
       setLoadState({ status: "loaded", account: data.account });
     } catch (error) {
       setLoadState({ status: "error", message: error instanceof Error ? error.message : "Onbekende fout" });
     }
   }
+
+  /* Binnenkomst via e-mail-inloglink: dossier direct openen, zonder code-formulier. */
+  useEffect(() => {
+    if (loginToken) void loadAccount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loginToken, accountId]);
 
   return (
     <div className={styles.shell}>
