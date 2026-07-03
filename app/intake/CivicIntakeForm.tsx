@@ -87,11 +87,13 @@ export function CivicIntakeForm() {
           ? "Er ontbreekt nog iets: " + (data.missing || []).join(", ")
           : data.error || "Aanmelden is niet gelukt.");
       }
+      const accountId = data.account?.accountId || data.accountId || String(data.portalUrl || "").split("/portal/customer/")[1] || "";
+      if (!accountId) throw new Error("Dossier is aangemaakt, maar accountnummer ontbreekt in de API-response.");
       try {
-        localStorage.setItem("aiow:lastAccountId", data.accountId);
+        localStorage.setItem("aiow:lastAccountId", accountId);
         localStorage.setItem("aiow:lastAccessCode", data.accessCode);
       } catch { /* privé-modus: geen blocker */ }
-      setState({ status: "success", accountId: data.accountId, accessCode: data.accessCode, portalUrl: data.portalUrl });
+      setState({ status: "success", accountId, accessCode: data.accessCode, portalUrl: data.portalUrl || `/portal/customer/${accountId}` });
     } catch (error) {
       setState({ status: "error", message: error instanceof Error ? error.message : "Aanmelden is niet gelukt." });
     }
