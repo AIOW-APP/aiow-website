@@ -7,265 +7,307 @@ import styles from "./AiowNativeMotionPage.module.css";
 import { AiowWebGPUCore } from "./AiowWebGPUCore";
 
 type Lang = "nl" | "en";
+type SpunkyMessage = { role: "spunky" | "visitor"; text: string };
+type SpunkyAccountState =
+  | { status: "idle" }
+  | { status: "creating" }
+  | { status: "created"; accountId: string; accessCode: string; portalUrl: string; leadId?: string }
+  | { status: "error"; message: string };
+
 
 const content = {
   nl: {
-    nav: { story: "Verhaal", model: "Werking", scan: "AI-scan" },
-    brand: "Secure AI worklayer",
+    nav: { story: "Venture flow", model: "Aanpak", work: "Platform", scan: "Private intake" },
+    brand: "AI venture & growth partner",
     themeLabel: "Thema",
+    headerAi: {
+      label: "Vraag AIOW AI",
+      placeholder: "Vraag over AIOW of beschrijf je idee...",
+      ask: "Praat",
+      apply: "Aanmelden",
+      modes: ["Nieuw idee", "Bestaand bedrijf"],
+      prompts: {
+        idea: "Ik heb een nieuw idee/startup en wil weten of AIOW dit AI-native kan beoordelen, bouwen en laten groeien.",
+        company: "Ik heb een bestaand bedrijf en wil weten hoe AIOW processen, software, marketing of klantcontact kan digitaliseren met AI.",
+      },
+    },
     voice: {
-      aria: "Beluister wat AIOW doet",
-      title: "Audio briefing: wat doet AIOW?",
-      hint: "Korte uitleg in ±90 sec",
+      aria: "Beluister hoe AIOW bedrijven helpt groeien",
+      title: "Audio briefing: AIOW venture studio",
+      hint: "Voor startups en groeibedrijven",
       src: "/aiow/audio/aiow-gpt-voice-briefing-nl.mp3",
       fallback: "Je browser ondersteunt geen audio. De geschreven uitleg staat op deze pagina.",
     },
     hero: {
-      eyebrow: "Voor teams die AI veilig willen inzetten",
-      headline: "Jouw persoonlijke AI-medewerker voor je bedrijf.",
-      text: "Wij installeren een AI die je bedrijf leert kennen, werk onthoudt en veilig helpt met klantvragen, offertes, content, planning en administratie.",
-      primary: "Start met je persoonlijke AI",
-      secondary: "Bekijk de werking",
-      trust: ["Lokaal waar nodig", "Cloud waar het mag", "Agents met controle"],
+      eyebrow: "Voor startups en gevestigde bedrijven",
+      headline: "Wij bouwen AI in je bedrijf en groeien mee.",
+      text: "AIOW.ai helpt ondernemers, startups en bestaande bedrijven sneller groeien met AI, automatisering, softwareontwikkeling, marketing en digitale strategie, als actieve venture & growth partner.",
+      primary: "Start private intake",
+      secondary: "Bekijk onze aanpak",
+      trust: ["AI due diligence", "Software + growth", "Revenue/share upside"],
       trustLabel: "AIOW kernpunten",
-      caption: "Van losse AI-tools naar één eigen AI-assistent die je bedrijf begrijpt en gecontroleerd blijft werken.",
+      caption: "Van idee of bestaand bedrijf naar een AI-native groeisysteem met portal, agents, dashboards en meetbare uitvoering.",
       valueProof: [
-        ["Wij installeren", "jouw persoonlijke AI"],
-        ["Voor", "klanten, offertes, planning en kennis"],
-        ["Start", "klein vanaf €2.500"],
+        ["Wij bouwen", "AI, software en growth"],
+        ["Voor", "startups en bestaande bedrijven"],
+        ["Deal", "fee, revenue share of equity"],
       ],
     },
     aiDemo: {
-      eyebrow: "Live productgevoel",
-      headline: "Zie hoe je AI-medewerker straks werkt.",
-      text: "Geen abstracte belofte: een klantvraag wordt context, concept, menselijke approval en een zichtbare portalstatus.",
+      eyebrow: "Live venture flow",
+      headline: "Zie hoe AIOW een plan omzet naar groei.",
+      text: "Geen bureaupresentatie: een aanvraag wordt private intake, AI due diligence, dealadvies, contract, projectgroep met Spunky en een zichtbaar groeidashboard.",
       tabs: [
-        { label: "Klantvraag", input: "Klant vraagt: kunnen jullie morgen een offerte sturen?", ai: "AI vat context samen, zoekt eerdere afspraken en maakt een conceptantwoord.", approval: "Mens controleert prijs, toon en belofte vóór verzending.", status: "Portal: offerte in voorbereiding" },
-        { label: "Offerte", input: "Nieuwe lead wil Persoonlijke AI Starter.", ai: "AI zet scope, aannames, onderhoud en extra werk op uurbasis in één offerteblok.", approval: "AIOW checkt datagrens, planning en buiten-scope voordat klant het ziet.", status: "Portal: offerte klaar voor review" },
-        { label: "Planning", input: "Klant wil starten na akkoord.", ai: "AI stelt intake, datagrenssessie en installatie-kickoff voor met dependencies.", approval: "Planning pas definitief na scope-akkoord en veilige toegangskeuzes.", status: "Portal: planning voorbereid" },
+        { label: "Startup", input: "Founder meldt een platformidee met branchecontacten en eerste klantvraag.", ai: "AI maakt Founder, Market, Execution, AI Opportunity en Investment scores.", approval: "Richard/Jeroen krijgen Go, Conditional Go of No-Go met dealadvies.", status: "Portal: Deal Card + proof sprint" },
+        { label: "Groeibedrijf", input: "Bestaand bedrijf wil omzet, processen en marketing digitaal versnellen.", ai: "AI vindt automatiseringskansen, softwarelaag, growth loops en KPI-impact.", approval: "AIOW bepaalt vaste fee, retainer, revenue share of profit share.", status: "Portal: contract + roadmap" },
+        { label: "Na akkoord", input: "Klant tekent de AIOW aanpak en commerciële basis.", ai: "Spunky gaat in de projectgroep en vangt vragen, besluiten en context op.", approval: "Intern AIOW bouwt met dashboardstatus, risico’s en proof log.", status: "Portal: sprint live" },
       ],
-      rail: ["Input", "Bedrijfsgeheugen", "AI-concept", "Approval", "Portalstatus"],
+      rail: ["Aanvraag", "AI analyse", "Deal Card", "Contract", "Projectdashboard"],
       cta: "Bekijk klantportal",
     },
-    storyLabel: "AIOW 7-layer pinned scroll story",
+    storyLabel: "AIOW venture studio pinned scroll story",
     layers: [
-      { id: "promise", n: "01", eyebrow: "De belofte", headline: "Begin met één proces.", text: "Kies waar AI direct waarde moet leveren — zonder je data open te gooien.", chips: ["veilig", "praktisch", "bedrijfsklaar"], videoBrief: "Kalm premium kantoor, team start werkdag, subtiele AI-werklaag verbindt mensen, documenten en systemen." },
-      { id: "chaos", n: "02", eyebrow: "Het probleem", headline: "Losse AI wordt risico.", text: "Accounts, prompts en klantdata raken versnipperd zonder eigenaar of beleid.", chips: ["shadow AI", "geen eigenaar", "geen beleid"], videoBrief: "Herkenbare kantoorchaos: mail, WhatsApp, docs, spreadsheets en AI-tabs; druk maar realistisch, niet hysterisch." },
-      { id: "boundary", n: "03", eyebrow: "Het risico", headline: "Eerst de datagrens.", text: "Wat blijft lokaal, wat mag cloud, en wie moet goedkeuren?", chips: ["cloud policy", "lokale LLMs", "datagrens"], videoBrief: "Split visual: externe cloudroute versus interne veilige route; policy-gate beslist rustig wat wel/niet naar buiten mag." },
-      { id: "worklayer", n: "04", eyebrow: "De oplossing", headline: "Dan één werklaag.", text: "Processen, agents, modellen en rechten komen samen in één controleerbaar systeem.", chips: ["proceslaag", "governance", "integratie"], videoBrief: "Losse procesblokken klikken in één nette operating layer; AIOW zit tussen team, tools, documenten, modellen en approvals." },
-      { id: "hardware", n: "05", eyebrow: "De infrastructuur", headline: "Private/cloud volgens beleid.", text: "Private infrastructuur en cloudmodellen werken alleen binnen afgesproken routes.", chips: ["private AI", "modelrouting", "cloud waar het mag"], videoBrief: "Premium infrastructuurvisual: private compute, lokale modelnode en goedgekeurde cloudroutes." },
-      { id: "agents", n: "06", eyebrow: "De uitvoering", headline: "Agents voeren uit.", text: "Ze lezen, routeren, schrijven en dragen over — met approval waar nodig.", chips: ["OpenClaw", "Hermes", "human approval"], videoBrief: "Een klantvraag wordt samenvatting, taak, concept, approval, CRM/update en teamhandoff; één rustige kettingreactie." },
-      { id: "outcome", n: "07", eyebrow: "Het resultaat", headline: "Eindig met controle.", text: "Minder ruis, sneller werk en een duidelijk eerste vervolg: de AI-scan.", chips: ["rust", "snelheid", "controle"], videoBrief: "Terug naar hetzelfde bedrijf: team werkt gefocust, dashboard helder, approvals afgerond, veilige AI-laag draait op de achtergrond." },
+      { id: "promise", n: "01", eyebrow: "De belofte", headline: "Breng ons je plan of bedrijf.", text: "Jij brengt idee, marktkennis, klanten, data of distributie. AIOW onderzoekt waar AI, software en growth het bedrijf kunnen versnellen.", chips: ["venture", "growth", "AI-native"], videoBrief: "Premium venture studio: founders, operators en AI-systemen beoordelen een nieuwe kans op één digitaal command board." },
+      { id: "chaos", n: "02", eyebrow: "De bottleneck", headline: "Goede ideeën missen digitale slagkracht.", text: "Veel ondernemers hebben marktkennis en netwerk, maar missen AI-capaciteit, softwareteam, automatisering, marketingmachine en KPI-sturing.", chips: ["geen tech-team", "geen growth engine", "te langzaam"], videoBrief: "Founder met tractie maar te veel losse tools; AIOW brengt orde, productstrategie en digitale uitvoering." },
+      { id: "boundary", n: "03", eyebrow: "Private intake", headline: "Eerst due diligence.", text: "Gevoelige omzet, marges, klantlijsten, contacten en IP delen we niet publiek. Dat gebeurt in een private portal met duidelijke toegang.", chips: ["private portal", "proof", "vertrouwelijk"], videoBrief: "Secure intake portal met founderprofiel, marktdata, klantbewijs en dealinformatie achter private toegang." },
+      { id: "worklayer", n: "04", eyebrow: "AI analyse", headline: "Daarna de Deal Card.", text: "AIOW scoort founder, markt, execution, AI opportunity en investment fit. Daarna adviseren we fee, revenue share, profit share of participatie.", chips: ["5 scores", "dealadvies", "Go/No-Go"], videoBrief: "AI due diligence board met scorecards, risico’s, uniekheid, slagingskans en aanbevolen dealmodel." },
+      { id: "hardware", n: "05", eyebrow: "De bouw", headline: "Wij bouwen de AI-groeimotor.", text: "Software, agents, automatisering, marketing, dashboards en customer portals worden één uitvoerbaar systeem dat met het bedrijf meegroeit.", chips: ["software", "agents", "growth loops"], videoBrief: "AIOW bouwt platform, agent workflows, marketing funnels en dashboards vanuit één productstudio." },
+      { id: "agents", n: "06", eyebrow: "De uitvoering", headline: "Spunky en agents houden contact vast.", text: "Na akkoord komt Spunky in de klantgroep als contact-AI/contextcollector. Intern gebruikt AIOW die context om sneller te bouwen en verbeteren.", chips: ["Spunky", "klantgroep", "context"], videoBrief: "Telegram projectgroep met klant en Spunky; context stroomt naar het interne AIOW dashboard en buildteam." },
+      { id: "outcome", n: "07", eyebrow: "Het resultaat", headline: "Samen groeien op resultaat.", text: "AIOW blijft digitaal ondersteunen met KPI’s, optimalisaties en nieuwe AI-modules en groeit mee via de afgesproken commerciële upside.", chips: ["KPI’s", "proof log", "upside"], videoBrief: "Dashboard met omzet, leads, automatisering, sprintstatus en proof log; AIOW en klant groeien samen door." },
     ],
     search: {
-      eyebrow: "AI-oplossingen voor Nederland",
-      headline: "AI-integratie, automatisering en private AI voor bedrijven.",
-      text: "Vier concrete ingangen waar Nederlandse teams AIOW voor inzetten — van eerste proces-scan tot agents met veilige datagrens.",
+      eyebrow: "AI venture studio voor Nederland",
+      headline: "AI inbouwen voor startups en gevestigde bedrijven.",
+      text: "Vier manieren waarop AIOW bedrijven helpt groeien: van idee-validatie tot AI-platform, automatisering, marketingmachine en resultaatgedreven samenwerking.",
       points: [
-        ["AI-integratie MKB", "Van inbox, offertes en planning naar één gecontroleerde AI-werklaag."],
-        ["Private en lokale AI", "Data blijft lokaal waar nodig; cloudmodellen alleen volgens beleid."],
-        ["AI-agents voor teams", "Agents voeren terugkerend werk uit met logging, rollen en approvalregels."],
-        ["AI-scan Nederland", "Een concrete eerste analyse voor proceskansen, risico's en snelle winst."],
+        ["Startups", "Van idee, founder en markt naar private intake, Deal Card, proof sprint en eerste AI-product."],
+        ["Bestaande bedrijven", "Van processen, data en klanten naar AI-automatisering, dashboards, CRM/growth en betere marges."],
+        ["Revenue share", "Wanneer AIOW omzet helpt creëren of opschalen, werken we met minimaal 10% en hoger bij meer IP/risico."],
+        ["Doorverkoop & modules", "Bij white-label, resale of sublicensing deelt AIOW mee in doorverkoop en modulewaarde."],
       ],
     },
     faq: [
-      ["Wat doet AIOW?", "AIOW ontwerpt en bouwt veilige AI-werklagen voor Nederlandse bedrijven: processen, data, agents, lokale/private AI en menselijke approvals in één bestuurbaar systeem."],
-      ["Voor wie is AIOW?", "Voor MKB-bedrijven, operations teams, logistiek, finance, support, agencies en technische teams die AI willen gebruiken zonder losse chatbot-chaos of datarisico."],
-      ["Wat krijg je na de AI-scan?", "Een duidelijk overzicht van de beste eerste AI-usecase, datagrens, risico's, quick wins en een concreet voorstel voor een veilige pilot."],
-      ["Werkt AIOW met GPT, Claude en lokale AI?", "Ja. AIOW kiest per proces welke modellen passen: GPT, Claude, andere cloudmodellen of lokale/private modellen binnen beheerde infrastructuur."],
+      ["Wat doet AIOW?", "AIOW is een AI-gedreven venture & growth partner. We bouwen AI, software, automatisering, marketing en digitale groeisystemen in startups en bestaande bedrijven."],
+      ["Voor wie is AIOW?", "Voor founders, ondernemers, startups en gevestigde bedrijven die sneller digitaal willen groeien maar AI/software/growth-executie missen."],
+      ["Wat krijg je na de private intake?", "Een AI Deal Card met founder, market, execution, AI opportunity en investment score plus advies voor fee, revenue share, profit share of participatie."],
+      ["Blijft AIOW betrokken na bouw?", "Ja. AIOW blijft digitaal ondersteunen via dashboards, agents, marketing, automatisering, optimalisatie en afgesproken commerciële upside."],
     ],
     operating: {
-      eyebrow: "Hoe AIOW werkt",
-      headline: "Van één proces naar een veilige AI-werklaag.",
-      text: "We kiezen eerst de juiste workflow, bepalen de datagrens, bouwen agents met approvals en maken de output meetbaar.",
+      eyebrow: "Hoe AIOW meebouwt",
+      headline: "Van plan naar AI-native groeibedrijf.",
+      text: "We beoordelen de kans, bepalen het juiste dealmodel, bouwen de AI/software/growth-laag en meten daarna of het bedrijf daadwerkelijk groeit.",
       steps: [
-        ["1", "Kies één proces", "Bijvoorbeeld klantcontact, offertes, planning, finance of documenten."],
-        ["2", "Bepaal de datagrens", "Wat blijft lokaal, wat mag cloud, wie mag goedkeuren en waar ligt het risico?"],
-        ["3", "Bouw agents en routing", "OpenClaw/Hermes/AIOW-workers krijgen taken, tools, geheugen en approvalregels."],
-        ["4", "Meet en verbeter", "Elke handoff, status en output wordt zichtbaar zodat het bedrijf rustiger gaat werken."],
+        ["1", "Private intake", "We verzamelen founder, markt, bewijs, contacten, data, omzet, risico’s en wat AIOW moet bouwen."],
+        ["2", "AI due diligence", "AIOW berekent scores, slagingskans, uniekheid, risico’s en het beste commerciële model."],
+        ["3", "Build & growth sprint", "We bouwen platform, agents, automatisering, marketing, dashboard en meetbare KPI’s."],
+        ["4", "Scale op resultaat", "Na akkoord blijven Spunky, dashboards en het AIOW-team ondersteunen, meten en optimaliseren."],
       ],
     },
     router: {
-      eyebrow: "Live systeemlaag",
-      headline: "Beleid, data en agents onder controle.",
-      text: "De control room laat zien welke route een taak neemt: lokaal, cloud, approval of agent-handoff.",
+      eyebrow: "AIOW operating layer",
+      headline: "Intake, deal, build en groei in één control room.",
+      text: "De control room toont klantstatus, scores, contract, projectgroep, Spunky-context, sprintstatus, risico’s, KPI’s en proof log.",
     },
     pricing: {
-      eyebrow: "Budget zonder verrassingen",
-      headline: "Begin klein. Groei later door.",
-      text: "Voor kleine ondernemers maken we de instap bewust simpel: één persoonlijke AI die je bedrijf leert kennen. Voor grotere teams kan dezelfde basis doorgroeien naar private worklayers, lokale AI-nodes en governance.",
-      formula: ["gratis quick check", "persoonlijke AI-installatie", "onderhoud", "uitbreiding per uur"],
-      scan: { label: "Eerst helderheid", title: "AI-systeemscan", price: "€950", suffix: "vanaf", text: "Proceskaart, datagrens, risico’s, beste eerste pilot en routeadvies. Een korte kennismaking/quick check kan gratis via WhatsApp." },
+      eyebrow: "Samenwerken met duidelijke voorwaarden",
+      headline: "Eerst scope en budget. Daarna pas upside.",
+      text: "AIOW bouwt niet gratis en neemt geen open risico zonder controle. Elke samenwerking start met betaalde intake, duidelijke scope, budget, beslisrechten en contract. Revenue share, profit share of participatie komt alleen bovenop sterke bewijsvoering of bij een selectieve venture-deal.",
+      formula: ["betaalde intake", "Deal Card", "scope + contract", "build met budget"],
+      scan: { label: "Eerst betaald beoordelen", title: "Private Venture Intake", price: "op aanvraag", suffix: "vanaf", text: "We beoordelen founder, markt, bewijs, data, budget, risico en upside. Pas daarna bepalen we of AIOW bouwt, afwijst of een hybride deal bespreekt." },
       plans: [
-        { name: "Persoonlijke AI Starter", fit: "ZZP / kleine ondernemer", price: "vanaf €2.500", monthly: "+ €650/mnd onderhoud", badge: "laagste instap", features: ["eigen AI-medewerker voor je bedrijf", "bedrijfskennis, werkwijze en tone of voice", "klantvragen, offertes, content en planning", "extra hulp/uitbreiding apart per uur"] },
-        { name: "Private Worklayer", fit: "klein team + hybride AI", price: "vanaf €8.500", monthly: "+ €950/mnd per machine", badge: "hybride", features: ["beheerde private AI-omgeving", "lokale routing en veilige cloud", "documenten/workflows", "infrastructuur apart begroot"] },
-        { name: "Local AI Node", fit: "gevoelige data / lokale LLMs", price: "vanaf €18.500", monthly: "+ €1.750/mnd per machine", badge: "private AI", features: ["private compute voor lokale AI", "lokale modellen en modelbeheer", "private documenten/agents", "monitoring, updates en governance"] },
-        { name: "Business AI Layer", fit: "meerdere processen en nodes", price: "vanaf €45.000", monthly: "vanaf €2.500/mnd + nodes", badge: "schaalbaar", features: ["platformlaag voor teams", "meerdere AI-nodes", "integraties, dashboards en rollen", "beheercontract per actieve machine"] },
+        { name: "Paid Proof Sprint", fit: "idee of bedrijf met bewijs nodig", price: "betaalde sprint", monthly: "geen gratis bouw", badge: "bewijs", features: ["private intake + Deal Card", "kleine afgebakende proof of growth test", "budget vóór uitvoering", "Go/No-Go vóór grotere bouw"] },
+        { name: "Growth Partner", fit: "bestaand bedrijf met budget en groeipotentie", price: "retainer + mogelijke upside", monthly: "maandelijks", badge: "partner", features: ["vaste maandbasis", "AI en automatisering in processen", "marketing/growth machine", "upside alleen bij meetbare bijdrage"] },
+        { name: "AI Platform Build", fit: "software of platform als kern", price: "scopeprijs + support", monthly: "onderhoud + optimalisatie", badge: "build", features: ["custom software en agents", "klantportal en dashboards", "integraties en automatisering", "resale of omzetdeel alleen met contract"] },
+        { name: "Selective Venture Deal", fit: "strategische kans met grote upside", price: "maatwerk + bescherming", monthly: "cash, share of equity", badge: "selectief", features: ["alleen bij sterke markt en bewijs", "AIOW krijgt controle over digitale uitvoering", "IP, data en upside vastgelegd", "geen open bouw zonder harde afspraken"] },
       ],
-      note: "Alle bedragen zijn richtprijzen excl. btw. Maandkosten zijn voor technisch onderhoud, hosting, updates, monitoring en continuïteit — niet voor onbeperkte service. Nieuwe workflows, extra koppelingen, begeleiding en optimalisaties worden apart uitgevoerd op uurbasis vanaf €175/u.",
-      cta: "Bereken je AI-route in 4 vragen",
+      note: "Belangrijk: AIOW is geen goedkope bouwpartij. We investeren pas risico, teamtijd of IP wanneer budget, scope, beslisrechten, data-toegang en upside contractueel kloppen. Zonder die basis is het een betaald project of een No-Go.",
+      cta: "Start private intake",
     },
     afterScan: {
-      eyebrow: "Na de AI-scan",
-      headline: "Van WhatsApp naar offerte, planning en veilige uitvoering.",
-      text: "De intake is bewust klein. Daarna maken we pas concreet wat er gebouwd wordt, wat het kost, wie akkoord geeft en welke data waar mag lopen.",
+      eyebrow: "Na akkoord",
+      headline: "Van Deal Card naar projectgroep, Spunky en sprint.",
+      text: "Na de private intake maken Richard/Jeroen vanuit admin het voorstel. Na tekenen start de klantgroep met Spunky en bouwen we intern met alle context door.",
       steps: [
-        ["1", "Intake via WhatsApp", "Je stuurt context zonder lang formulier. Wij vragen alleen wat nodig is om de eerste route te bepalen."],
-        ["2", "Scanrapport + offerte", "Je krijgt usecase, datagrens, risico’s, infrastructuurkeuze en een heldere offerte met aannames."],
-        ["3", "Akkoord → planning", "Na akkoord plannen we kickoff, toegang, technische keuzes en eerste pilotstappen."],
+        ["1", "Private intake", "Je deelt gevoelige data alleen in de private portal: bewijs, cijfers, contacten, systemen en risico’s."],
+        ["2", "Deal Card + contract", "AIOW geeft scores, aanpak, dealmodel, scope, verantwoordelijkheden en dashboardfocus."],
+        ["3", "Projectgroep + build", "Na signing maken we de Telegram projectgroep met Spunky en start het interne AIOW build/growth systeem."],
       ],
-      note: "Iedere geïnteresseerde klant krijgt een eigen klantportal-route: intake, offerte, scope, datagrens, planning en status op één plek. In deze fase is dat manual-safe: geen betaling, geen echte acceptatie en geen live automatisering zonder expliciet akkoord.",
+      note: "Iedere klant krijgt een private portal met intake, Deal Card, contract, roadmap, KPI’s, proof log en verbeteradvies. Livegang, betalingen en modules blijven achter expliciete voorwaarden en akkoord.",
+    },
+    projects: {
+      eyebrow: "Made by AIOW",
+      headline: "Elk nieuw product krijgt hier zijn bewijsplek.",
+      text: "Alles wat we vanaf nu lanceren krijgt één centrale plek op AIOW.ai zodra het in ons productmanifest staat: app, webtool, agent, portal of klantlaag. Geen losse eilandjes. Alles zichtbaar als AIOW-built.",
+      meta: "Automatisch gevuld vanuit het AIOW-projectmanifest.",
+      open: "Open project",
     },
     cta: {
-      eyebrow: "AI-scan voor je bedrijf",
-      headline: "Vind je eerste\nveilige AI-winst",
-      text: "Kies twee snelle opties. WhatsApp neemt je context direct mee.",
-      proof: ["30 min", "veilig starten", "concreet vervolg"],
+      eyebrow: "Private intake voor je bedrijf",
+      headline: "Laat AIOW je plan\nof bedrijf beoordelen",
+      text: "Start laagdrempelig. Gevoelige cijfers en contacten volgen pas in de private portal.",
+      proof: ["private portal", "Deal Card", "groei op resultaat"],
       intake: {
-        typeLabel: "Wat wil je vooral verbeteren?",
-        typeOptions: ["Bedrijf", "Team", "Local AI", "Automation"],
-        processLabel: "Waar wil je AI als eerste inzetten?",
-        processOptions: ["Klantcontact", "Offertes", "Planning", "Finance", "Documenten", "Anders"],
+        typeLabel: "Waar kom je mee naar AIOW?",
+        typeOptions: ["Startup/idee", "Bestaand bedrijf", "AI-platform", "Growth/marketing"],
+        processLabel: "Waar moet AIOW het meeste waarde bouwen?",
+        processOptions: ["Software/platform", "Automatisering", "Marketing/growth", "CRM/sales", "Klantportal", "Anders"],
         otherProcessPlaceholder: "Bijv. HR, sales, support, operatie…",
-        goalLabel: "Wat is nu het belangrijkst?",
-        goalOptions: ["Tijd winnen", "Minder risico", "Betere output", "AI-structuur"],
+        goalLabel: "Welk samenwerkingsmodel past mogelijk?",
+        goalOptions: ["Proof sprint", "Fixed project", "Growth partner", "Revenue share"],
         questionLabel: "Vraag of context",
-        questionPlaceholder: "Bijv. we gebruiken al ChatGPT, maar missen beleid en overzicht.",
-        defaultQuestion: "Ik wil weten waar AIOW veilig waarde kan leveren.",
-        whatsappIntro: "Hoi AIOW, ik wil een AI-scan plannen.",
+        questionPlaceholder: "Bijv. we hebben een idee, branchecontacten en willen weten of AIOW dit AI-native kan bouwen en laten groeien.",
+        defaultQuestion: "Ik wil dat AIOW mijn idee/bedrijf beoordeelt en adviseert welke AI/software/growth route het beste is.",
+        whatsappIntro: "Hoi AIOW, ik wil een private intake starten voor mijn idee/bedrijf.",
       },
-      button: "Stuur via WhatsApp",
+      button: "Start via WhatsApp",
     },
   },
   en: {
-    nav: { story: "Story", model: "How it works", scan: "AI scan" },
-    brand: "Secure AI worklayer",
+    nav: { story: "Venture flow", model: "Approach", work: "Platform", scan: "Private intake" },
+    brand: "AI venture & growth partner",
     themeLabel: "Theme",
+    headerAi: {
+      label: "Ask AIOW AI",
+      placeholder: "Ask about AIOW or describe your idea...",
+      ask: "Talk",
+      apply: "Apply",
+      modes: ["New idea", "Existing company"],
+      prompts: {
+        idea: "I have a new idea/startup and want to know whether AIOW can assess, build and grow it AI-native.",
+        company: "I have an existing company and want to know how AIOW can digitize processes, software, marketing or customer contact with AI.",
+      },
+    },
     voice: {
-      aria: "Listen to what AIOW does",
-      title: "Audio briefing: what does AIOW do?",
-      hint: "Short explanation in ±90 sec",
+      aria: "Listen to how AIOW helps companies grow",
+      title: "Audio briefing: AIOW venture studio",
+      hint: "For startups and growth companies",
       src: "/aiow/audio/aiow-gpt-voice-briefing-en.mp3",
       fallback: "Your browser does not support audio. The written explanation is on this page.",
     },
     hero: {
-      eyebrow: "For teams ready to use AI safely",
-      headline: "Your personal AI worker for your business.",
-      text: "We install an AI that learns your business, remembers your way of working and safely helps with customer questions, quotes, content, planning and admin.",
-      primary: "Start with your personal AI",
-      secondary: "See how it works",
-      trust: ["Local where needed", "Cloud where allowed", "Agents with control"],
+      eyebrow: "For startups and established companies",
+      headline: "We build AI into your company and grow with you.",
+      text: "AIOW.ai helps founders, startups and existing companies grow faster with AI, automation, software development, marketing and digital strategy, as an active venture & growth partner.",
+      primary: "Start private intake",
+      secondary: "See our approach",
+      trust: ["AI due diligence", "Software + growth", "Revenue/share upside"],
       trustLabel: "AIOW core points",
-      caption: "From scattered AI tools to one personal AI assistant that understands your business and stays controlled.",
+      caption: "From idea or existing business to an AI-native growth system with portal, agents, dashboards and measurable execution.",
       valueProof: [
-        ["We install", "your personal AI"],
-        ["For", "customers, quotes, planning and knowledge"],
-        ["Start", "small from €2,500"],
+        ["We build", "AI, software and growth"],
+        ["For", "startups and existing companies"],
+        ["Deal", "fee, revenue share or equity"],
       ],
     },
     aiDemo: {
-      eyebrow: "Live product feel",
-      headline: "See how your AI worker will operate.",
-      text: "Not an abstract promise: a customer request becomes context, a draft, human approval and a visible portal status.",
+      eyebrow: "Live venture flow",
+      headline: "See how AIOW turns a plan into growth.",
+      text: "Not an agency presentation: a request becomes private intake, AI due diligence, deal advice, contract, Spunky project group and a visible growth dashboard.",
       tabs: [
-        { label: "Customer", input: "Customer asks: can you send a quote tomorrow?", ai: "AI summarizes context, checks previous agreements and drafts a reply.", approval: "A human checks price, tone and promise before anything is sent.", status: "Portal: quote in preparation" },
-        { label: "Quote", input: "New lead wants the Personal AI Starter.", ai: "AI turns scope, assumptions, maintenance and hourly extra work into one quote block.", approval: "AIOW checks data boundary, planning and out-of-scope before the customer sees it.", status: "Portal: quote ready for review" },
-        { label: "Planning", input: "Customer wants to start after approval.", ai: "AI proposes intake, data-boundary session and installation kickoff with dependencies.", approval: "Planning only becomes final after scope approval and safe access choices.", status: "Portal: planning prepared" },
+        { label: "Startup", input: "A founder submits a platform idea with industry contacts and first customer demand.", ai: "AI creates Founder, Market, Execution, AI Opportunity and Investment scores.", approval: "Richard/Jeroen get Go, Conditional Go or No-Go with deal advice.", status: "Portal: Deal Card + proof sprint" },
+        { label: "Growth company", input: "An existing company wants to accelerate revenue, processes and marketing digitally.", ai: "AI identifies automation opportunities, software layer, growth loops and KPI impact.", approval: "AIOW decides fixed fee, retainer, revenue share or profit share.", status: "Portal: contract + roadmap" },
+        { label: "After signing", input: "The customer signs the AIOW approach and commercial basis.", ai: "Spunky joins the project group and captures questions, decisions and context.", approval: "Internal AIOW builds with dashboard status, risks and proof log.", status: "Portal: sprint live" },
       ],
-      rail: ["Input", "Business memory", "AI draft", "Approval", "Portal status"],
+      rail: ["Request", "AI analysis", "Deal Card", "Contract", "Project dashboard"],
       cta: "View customer portal",
     },
-    storyLabel: "AIOW 7-layer pinned scroll story",
+    storyLabel: "AIOW venture studio pinned scroll story",
     layers: [
-      { id: "promise", n: "01", eyebrow: "The promise", headline: "Start with one process.", text: "Pick where AI should create value first — without exposing your data.", chips: ["secure", "practical", "business-ready"], videoBrief: "A calm premium office as the team starts the day; a subtle AI worklayer connects people, documents and systems." },
-      { id: "chaos", n: "02", eyebrow: "The problem", headline: "Scattered AI creates risk.", text: "Accounts, prompts and customer data fragment without ownership or policy.", chips: ["shadow AI", "no owner", "no policy"], videoBrief: "Recognizable office pressure: mail, chat, docs, spreadsheets and AI tabs; busy but realistic, never hysterical." },
-      { id: "boundary", n: "03", eyebrow: "The risk", headline: "Set the data boundary.", text: "What stays local, what may use cloud, and who must approve?", chips: ["cloud policy", "local LLMs", "data boundary"], videoBrief: "A split visual: external cloud route versus internal secure route; a calm policy gate decides what may leave." },
-      { id: "worklayer", n: "04", eyebrow: "The solution", headline: "Then one worklayer.", text: "Processes, agents, models and permissions become one controlled system.", chips: ["process layer", "governance", "integration"], videoBrief: "Loose process blocks align into one operating layer between teams, tools, documents, models and approvals." },
-      { id: "hardware", n: "05", eyebrow: "The infrastructure", headline: "Private/cloud by policy.", text: "Private infrastructure and cloud models run only through approved routes.", chips: ["private AI", "model routing", "cloud where allowed"], videoBrief: "Premium infrastructure visual: private compute, a local model node and approved cloud routes." },
-      { id: "agents", n: "06", eyebrow: "The execution", headline: "Agents execute work.", text: "They read, route, write and hand off — with approval where needed.", chips: ["OpenClaw", "Hermes", "human approval"], videoBrief: "A customer request becomes a summary, task, draft, approval, CRM update and team handoff." },
-      { id: "outcome", n: "07", eyebrow: "The outcome", headline: "End with control.", text: "Less noise, faster work and a clear next step: the AI scan.", chips: ["calm", "speed", "control"], videoBrief: "The same company after AIOW: focused team, clear dashboards, completed approvals and a safe AI layer running quietly." },
+      { id: "promise", n: "01", eyebrow: "The promise", headline: "Bring us your plan or company.", text: "You bring the idea, market knowledge, customers, data or distribution. AIOW investigates where AI, software and growth can accelerate the business.", chips: ["venture", "growth", "AI-native"], videoBrief: "Premium venture studio: founders, operators and AI systems evaluating a new opportunity on one command board." },
+      { id: "chaos", n: "02", eyebrow: "The bottleneck", headline: "Good ideas lack digital execution.", text: "Many entrepreneurs have market knowledge and network, but lack AI capacity, software team, automation, marketing engine and KPI steering.", chips: ["no tech team", "no growth engine", "too slow"], videoBrief: "Founder with traction but scattered tools; AIOW adds product strategy, order and execution." },
+      { id: "boundary", n: "03", eyebrow: "Private intake", headline: "Due diligence first.", text: "Revenue, margins, customer lists, contacts and IP are not shared publicly. They belong in a private portal with clear access.", chips: ["private portal", "proof", "confidential"], videoBrief: "Secure intake portal with founder profile, market data, customer proof and deal information behind private access." },
+      { id: "worklayer", n: "04", eyebrow: "AI analysis", headline: "Then the Deal Card.", text: "AIOW scores founder, market, execution, AI opportunity and investment fit. Then we advise fee, revenue share, profit share or equity.", chips: ["5 scores", "deal advice", "Go/No-Go"], videoBrief: "AI due diligence board with scorecards, risks, uniqueness, success probability and recommended deal model." },
+      { id: "hardware", n: "05", eyebrow: "The build", headline: "We build the AI growth engine.", text: "Software, agents, automation, marketing, dashboards and customer portals become one executable system that grows with the company.", chips: ["software", "agents", "growth loops"], videoBrief: "AIOW builds platform, agent workflows, marketing funnels and dashboards from one product studio." },
+      { id: "agents", n: "06", eyebrow: "Execution", headline: "Spunky and agents keep context alive.", text: "After agreement, Spunky joins the customer group as contact-AI/context collector. Internally AIOW uses that context to build and improve faster.", chips: ["Spunky", "project group", "context"], videoBrief: "Telegram project group with customer and Spunky; context flows to internal AIOW dashboard and build team." },
+      { id: "outcome", n: "07", eyebrow: "Outcome", headline: "Grow together on results.", text: "AIOW keeps supporting with KPIs, optimizations and new AI modules and grows through the agreed commercial upside.", chips: ["KPIs", "proof log", "upside"], videoBrief: "Dashboard with revenue, leads, automation, sprint status and proof log; AIOW and customer grow together." },
     ],
     search: {
-      eyebrow: "AI solutions for the Netherlands",
-      headline: "AI integration, automation and private AI for companies.",
-      text: "Four concrete ways Dutch teams use AIOW — from the first process scan to agents with a safe data boundary.",
+      eyebrow: "AI venture studio for the Netherlands",
+      headline: "Building AI into startups and established companies.",
+      text: "Four ways AIOW helps companies grow: from idea validation to AI platform, automation, marketing machine and result-driven partnership.",
       points: [
-        ["AI integration for SMEs", "From inbox, quotes and planning to one controlled AI worklayer."],
-        ["Private and local AI", "Data stays local where needed; cloud models only by policy."],
-        ["AI agents for teams", "Agents execute recurring work with logging, roles and approval rules."],
-        ["AI scan Netherlands", "A concrete first analysis for process opportunities, risks and quick wins."],
+        ["Startups", "From idea, founder and market to private intake, Deal Card, proof sprint and first AI product."],
+        ["Existing companies", "From processes, data and customers to AI automation, dashboards, CRM/growth and better margins."],
+        ["Revenue share", "When AIOW helps create or scale revenue, we work from a minimum 10% and higher with more IP/risk."],
+        ["Resale & modules", "With white-label, resale or sublicensing, AIOW shares in resale and module value."],
       ],
     },
     faq: [
-      ["What does AIOW do?", "AIOW designs and builds secure AI worklayers for Dutch companies: processes, data, agents, local/private AI and human approvals in one controllable system."],
-      ["Who is AIOW for?", "SMEs, operations teams, logistics, finance, support, agencies and technical teams that want AI without scattered chatbot chaos or data risk."],
-      ["What do you get after the AI scan?", "A clear overview of the best first AI use case, data boundary, risks, quick wins and a concrete safe pilot proposal."],
-      ["Does AIOW work with GPT, Claude and local AI?", "Yes. AIOW chooses the right model per process: GPT, Claude, other cloud models or local/private models inside managed infrastructure."],
+      ["What does AIOW do?", "AIOW is an AI-driven venture & growth partner. We build AI, software, automation, marketing and digital growth systems into startups and existing companies."],
+      ["Who is AIOW for?", "Founders, entrepreneurs, startups and established companies that want to grow digitally faster but lack AI/software/growth execution."],
+      ["What do you get after private intake?", "An AI Deal Card with founder, market, execution, AI opportunity and investment score plus advice for fee, revenue share, profit share or equity."],
+      ["Does AIOW stay involved after the build?", "Yes. AIOW keeps supporting through dashboards, agents, marketing, automation, optimization and agreed commercial upside."],
     ],
     operating: {
-      eyebrow: "How AIOW works",
-      headline: "From one process to a secure AI worklayer.",
-      text: "We choose the right workflow first, define the data boundary, build agents with approvals and make output measurable.",
+      eyebrow: "How AIOW co-builds",
+      headline: "From plan to AI-native growth company.",
+      text: "We assess the opportunity, choose the right deal model, build the AI/software/growth layer and then measure whether the company actually grows.",
       steps: [
-        ["1", "Choose one process", "For example customer contact, quotes, planning, finance or documents."],
-        ["2", "Define the data boundary", "What stays local, what may use cloud, who approves and where is the risk?"],
-        ["3", "Build agents and routing", "OpenClaw/Hermes/AIOW workers get tasks, tools, memory and approval rules."],
-        ["4", "Measure and improve", "Every handoff, status and output becomes visible so the company works with more calm."],
+        ["1", "Private intake", "We collect founder, market, proof, contacts, data, revenue, risks and what AIOW should build."],
+        ["2", "AI due diligence", "AIOW calculates scores, success probability, uniqueness, risks and best commercial model."],
+        ["3", "Build & growth sprint", "We build platform, agents, automation, marketing, dashboard and measurable KPIs."],
+        ["4", "Scale on results", "After agreement, Spunky, dashboards and the AIOW team keep supporting, measuring and optimizing."],
       ],
     },
     router: {
-      eyebrow: "Live operating layer",
-      headline: "Policy, data and agents under control.",
-      text: "The control room shows which route a task takes: local, cloud, approval or agent handoff.",
+      eyebrow: "AIOW operating layer",
+      headline: "Intake, deal, build and growth in one control room.",
+      text: "The control room shows customer status, scores, contract, project group, Spunky context, sprint status, risks, KPIs and proof log.",
     },
     pricing: {
-      eyebrow: "Budget without surprises",
-      headline: "Start small. Scale later.",
-      text: "For small business owners, the entry should feel simple: one personal AI that learns the company. For larger teams, that same foundation can scale into private worklayers, local AI nodes and governance.",
-      formula: ["free quick check", "personal AI install", "maintenance", "expansion hourly"],
-      scan: { label: "Clarity first", title: "AI system scan", price: "€950", suffix: "from", text: "Process map, data boundary, risks, best first pilot and route advice. A short intro/quick check can be done free through WhatsApp." },
+      eyebrow: "Work with clear terms",
+      headline: "Scope and budget first. Upside comes after.",
+      text: "AIOW does not build for free and does not take open risk without control. Every collaboration starts with paid assessment, clear scope, budget, decision rights and contract. Revenue share, profit share or equity only comes on top of strong proof or in a selective venture deal.",
+      formula: ["paid intake", "Deal Card", "scope + contract", "funded build"],
+      scan: { label: "Paid assessment first", title: "Private Venture Intake", price: "on request", suffix: "from", text: "We assess founder, market, proof, data, budget, risk and upside. Only then do we decide whether AIOW builds, rejects or discusses a hybrid deal." },
       plans: [
-        { name: "Personal AI Starter", fit: "solo / small business", price: "from €2,500", monthly: "+ €650/mo maintenance", badge: "entry", features: ["own AI worker for your business", "company knowledge, workflow and tone of voice", "customer questions, quotes, content and planning", "extra help/expansion billed hourly"] },
-        { name: "Private Worklayer", fit: "small team + hybrid AI", price: "from €8,500", monthly: "+ €950/mo per machine", badge: "hybrid", features: ["managed private AI environment", "local routing and safe cloud", "documents/workflows", "infrastructure scoped separately"] },
-        { name: "Local AI Node", fit: "sensitive data / local LLMs", price: "from €18,500", monthly: "+ €1,750/mo per machine", badge: "private AI", features: ["private compute for local AI", "local models and model management", "private documents/agents", "monitoring, updates and governance"] },
-        { name: "Business AI Layer", fit: "multiple processes and nodes", price: "from €45,000", monthly: "from €2,500/mo + nodes", badge: "scalable", features: ["platform layer for teams", "multiple AI nodes", "integrations, dashboards and roles", "managed contract per active machine"] },
+        { name: "Paid Proof Sprint", fit: "idea or company needs proof", price: "paid sprint", monthly: "no free build", badge: "proof", features: ["private intake + Deal Card", "small scoped proof or growth test", "budget before execution", "Go/No-Go before larger build"] },
+        { name: "Growth Partner", fit: "existing company with budget and growth potential", price: "retainer + possible upside", monthly: "monthly", badge: "partner", features: ["fixed monthly base", "AI and automation in processes", "marketing/growth machine", "upside only with measurable contribution"] },
+        { name: "AI Platform Build", fit: "software or platform as core", price: "scope price + support", monthly: "maintenance + optimization", badge: "build", features: ["custom software and agents", "customer portal and dashboards", "integrations and automation", "resale or revenue share only with contract"] },
+        { name: "Selective Venture Deal", fit: "strategic upside opportunity", price: "custom + protection", monthly: "cash, share or equity", badge: "selective", features: ["only with strong market and proof", "AIOW gets control over digital execution", "IP, data and upside are contracted", "no open build without hard terms"] },
       ],
-      note: "All amounts are starting prices excl. VAT. Monthly fees cover technical maintenance, hosting, updates, monitoring and continuity — not unlimited service. New workflows, extra integrations, guidance and optimisations are billed separately from €175/h.",
-      cta: "Calculate your AI route in 4 questions",
+      note: "Important: AIOW is not a cheap build shop. We only invest risk, team time or IP when budget, scope, decision rights, data access and upside are contractually right. Without that basis, it is a paid project or a No-Go.",
+      cta: "Start private intake",
     },
     afterScan: {
-      eyebrow: "After the AI scan",
-      headline: "From WhatsApp to quote, planning and safe delivery.",
-      text: "The intake is intentionally small. After that we make clear what will be built, what it costs, who approves and which data may go where.",
+      eyebrow: "After agreement",
+      headline: "From Deal Card to project group, Spunky and sprint.",
+      text: "After private intake, Richard/Jeroen create the proposal from admin. After signing, the customer group with Spunky starts and we build internally with all context.",
       steps: [
-        ["1", "Intake through WhatsApp", "You send context without a long form. We only ask what is needed to define the first route."],
-        ["2", "Scan report + quote", "You receive use case, data boundary, risks, infrastructure choice and a clear quote with assumptions."],
-        ["3", "Approval → planning", "After approval we plan kickoff, access, technical choices and first pilot steps."],
+        ["1", "Private intake", "You share sensitive data only in the private portal: proof, numbers, contacts, systems and risks."],
+        ["2", "Deal Card + contract", "AIOW provides scores, approach, deal model, scope, responsibilities and dashboard focus."],
+        ["3", "Project group + build", "After signing we create the Telegram project group with Spunky and start the internal AIOW build/growth system."],
       ],
-      note: "Every interested customer gets their own customer portal route: intake, quote, scope, data boundary, planning and status in one place. In this phase it is manual-safe: no payment, no real acceptance and no live automation without explicit approval.",
+      note: "Every customer gets a private portal with intake, Deal Card, contract, roadmap, KPIs, proof log and improvement advice. Launch, payments and modules stay behind explicit terms and approval.",
+    },
+    projects: {
+      eyebrow: "Built with AIOW",
+      headline: "Every venture gets its proof slot here.",
+      text: "Everything AIOW helps build gets one central place once it is ready: app, platform, agent, portal, growth layer or customer system. No loose islands. Everything visible as AIOW-built.",
+      meta: "Automatically filled from the AIOW project manifest.",
+      open: "Open project",
     },
     cta: {
-      eyebrow: "AI scan for your company",
-      headline: "Find your first safe AI win.",
-      text: "Choose two quick options. WhatsApp sends your context with the message.",
-      proof: ["30 min", "safe start", "clear next step"],
+      eyebrow: "Private intake for your company",
+      headline: "Let AIOW assess your plan\nor company",
+      text: "Start low-friction. Sensitive numbers and contacts follow only in the private portal.",
+      proof: ["private portal", "Deal Card", "growth on results"],
       intake: {
-        typeLabel: "What should improve first?",
-        typeOptions: ["Company", "Team", "Local AI", "Automation"],
-        processLabel: "Where should AI help first?",
-        processOptions: ["Customer contact", "Quotes", "Planning", "Finance", "Documents", "Other"],
+        typeLabel: "What are you bringing to AIOW?",
+        typeOptions: ["Startup/idea", "Existing company", "AI platform", "Growth/marketing"],
+        processLabel: "Where should AIOW build the most value?",
+        processOptions: ["Software/platform", "Automation", "Marketing/growth", "CRM/sales", "Customer portal", "Other"],
         otherProcessPlaceholder: "E.g. HR, sales, support, operations…",
-        goalLabel: "What matters most now?",
-        goalOptions: ["Save time", "Reduce risk", "Better output", "AI structure"],
+        goalLabel: "Which collaboration model may fit?",
+        goalOptions: ["Proof sprint", "Fixed project", "Growth partner", "Revenue share"],
         questionLabel: "Question or context",
-        questionPlaceholder: "E.g. we already use ChatGPT, but lack policy and overview.",
-        defaultQuestion: "I want to know where AIOW can safely create value.",
-        whatsappIntro: "Hi AIOW, I want to book an AI scan.",
+        questionPlaceholder: "E.g. we have an idea, industry contacts and want to know whether AIOW can build and grow this AI-native.",
+        defaultQuestion: "I want AIOW to assess my idea/company and advise the best AI/software/growth route.",
+        whatsappIntro: "Hi AIOW, I want to start a private intake for my idea/company.",
       },
-      button: "Send via WhatsApp",
+      button: "Start through WhatsApp",
     },
-  },
-} as const;
+  }} as const;
 
 
 const nlAuthorityLinks = [
@@ -287,18 +329,18 @@ const nlAuthorityLinks = [
 
 const layerMedia = [
   {
-    desktop: "/aiow/story-v415/desktop/02-intake-hub.png",
-    mobile: "/aiow/story-v415/mobile/02-intake-hub.png",
-    video: { desktopLight: "/aiow/homepage-story/layer-01/layer-01_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-01/layer-01_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-01/layer-01_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-01/layer-01_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
-  },
-  {
-    desktop: "/aiow/story-v415/desktop/01-mess-before-ai.png",
-    mobile: "/aiow/story-v415/mobile/01-mess-before-ai.png",
+    desktop: "/aiow/story-v415/desktop/11-proof-studio.png",
+    mobile: "/aiow/story-v415/mobile/11-proof-studio.png",
     video: { desktopLight: "/aiow/homepage-story/layer-02/layer-02_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-02/layer-02_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-02/layer-02_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-02/layer-02_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
   },
   {
-    desktop: "/aiow/story-v415/desktop/03-private-boundary.png",
-    mobile: "/aiow/story-v415/mobile/03-private-boundary.png",
+    desktop: "/aiow/story-v415/desktop/08-channel-hub.png",
+    mobile: "/aiow/story-v415/mobile/08-channel-hub.png",
+    video: { desktopLight: "/aiow/homepage-story/layer-06/layer-06_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-06/layer-06_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-06/layer-06_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-06/layer-06_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
+  },
+  {
+    desktop: "/aiow/story-v415/desktop/02-intake-hub.png",
+    mobile: "/aiow/story-v415/mobile/02-intake-hub.png",
     video: { desktopLight: "/aiow/homepage-story/layer-03/layer-03_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-03/layer-03_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-03/layer-03_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-03/layer-03_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
   },
   {
@@ -307,14 +349,14 @@ const layerMedia = [
     video: { desktopLight: "/aiow/homepage-story/layer-04/layer-04_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-04/layer-04_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-04/layer-04_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-04/layer-04_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
   },
   {
-    desktop: "/aiow/story-v415/desktop/04-local-hardware-dock.png",
-    mobile: "/aiow/story-v415/mobile/04-local-hardware-dock.png",
+    desktop: "/aiow/story-v415/desktop/10-managed-ops.png",
+    mobile: "/aiow/story-v415/mobile/10-managed-ops.png",
     video: { desktopLight: "/aiow/homepage-story/layer-05/layer-05_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-05/layer-05_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-05/layer-05_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-05/layer-05_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
   },
   {
-    desktop: "/aiow/story-v415/desktop/06-business-agents.png",
-    mobile: "/aiow/story-v415/mobile/06-business-agents.png",
-    video: { desktopLight: "/aiow/homepage-story/layer-06/layer-06_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-06/layer-06_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-06/layer-06_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-06/layer-06_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
+    desktop: "/aiow/story-v415/desktop/09-human-approval.png",
+    mobile: "/aiow/story-v415/mobile/09-human-approval.png",
+    video: { desktopLight: "/aiow/homepage-story/layer-01/layer-01_desktop-light_video_kling-v2-1-master-desktop-balanced.mp4", desktopDark: "/aiow/homepage-story/layer-01/layer-01_desktop-dark_video_kling-v2-1-master-desktop-balanced.mp4", mobileLight: "/aiow/homepage-story/layer-01/layer-01_mobile-light_video_kling-v2-1-master-mobile-lite.mp4", mobileDark: "/aiow/homepage-story/layer-01/layer-01_mobile-dark_video_kling-v2-1-master-mobile-lite.mp4" },
   },
   {
     desktop: "/aiow/story-v415/desktop/12-final-installation.png",
@@ -415,17 +457,26 @@ function ThemeToggle({ theme, setTheme, label }: { theme: "light" | "dark"; setT
 function LangToggle({ lang, setLang }: { lang: Lang; setLang: (value: Lang) => void }) {
   const nextLang = lang === "nl" ? "en" : "nl";
   return (
-    <button
-      type="button"
-      className={styles.langToggle}
-      aria-label={`Switch language to ${nextLang.toUpperCase()}`}
-      onClick={() => setLang(nextLang)}
-    >
+    <button type="button" className={styles.langToggle} onClick={() => setLang(nextLang)} aria-label={`Switch language to ${nextLang.toUpperCase()}`}>
       {nextLang.toUpperCase()}
     </button>
   );
 }
 
+type NavKey = "home" | "story" | "scan" | "platform" | "account";
+
+type MobileIconType = "home" | "story" | "chat" | "scan" | "platform" | "account" | "plus";
+
+function MobileNavIcon({ type }: { type: MobileIconType }) {
+  const common = { width: 28, height: 28, viewBox: "0 0 28 28", fill: "none", xmlns: "http://www.w3.org/2000/svg", "aria-hidden": true };
+  if (type === "home") return <svg {...common}><path d="M5.9 13.2 14 6.35l8.1 6.85v8.35a2 2 0 0 1-2 2h-3.05v-6.75h-6.1v6.75H7.9a2 2 0 0 1-2-2V13.2Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><path d="M10.95 23.55v-6.75h6.1v6.75" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>;
+  if (type === "story") return <svg {...common}><rect x="5.2" y="6.1" width="17.6" height="15.8" rx="5" stroke="currentColor" strokeWidth="2.25" /><path d="M10.1 10.5h4.2M10.1 14h7.8M10.1 17.5h5.8" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" /><path d="M21.1 8.8v10.4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" opacity=".45" /></svg>;
+  if (type === "chat") return <svg {...common}><path d="M6.1 13.2c0-4.5 3.72-7.35 7.94-7.35 4.35 0 7.86 2.92 7.86 7.18 0 4.18-3.34 7.18-7.77 7.18-.58 0-1.14-.05-1.68-.16l-4.15 2.22.88-3.65c-1.9-1.28-3.08-3.15-3.08-5.42Z" stroke="currentColor" strokeWidth="2.15" strokeLinejoin="round" /><path d="M10.35 12.15h7.25M10.35 15.4h4.85" stroke="currentColor" strokeWidth="2.15" strokeLinecap="round" /></svg>;
+  if (type === "scan") return <svg {...common}><path d="M14 4.9v18.2M4.9 14h18.2" stroke="currentColor" strokeWidth="2.65" strokeLinecap="round" /><circle cx="14" cy="14" r="8.7" stroke="currentColor" strokeWidth="2.05" opacity=".36" /></svg>;
+  if (type === "platform") return <svg {...common}><rect x="5.4" y="5.4" width="7" height="7" rx="2.2" stroke="currentColor" strokeWidth="2.15" /><rect x="15.6" y="5.4" width="7" height="7" rx="2.2" stroke="currentColor" strokeWidth="2.15" /><rect x="5.4" y="15.6" width="7" height="7" rx="2.2" stroke="currentColor" strokeWidth="2.15" /><path d="M18.9 16.1v6.4M15.7 19.3h6.4" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" /></svg>;
+  if (type === "plus") return <svg {...common}><circle cx="14" cy="14" r="8.8" stroke="currentColor" strokeWidth="2.2" /><path d="M14 9.8v8.4M9.8 14h8.4" stroke="currentColor" strokeWidth="2.55" strokeLinecap="round" /></svg>;
+  return <svg {...common}><circle cx="14" cy="9.8" r="4.35" stroke="currentColor" strokeWidth="2.25" /><path d="M6.4 23.1c1.38-4.05 4.12-6.05 7.6-6.05s6.22 2 7.6 6.05" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" /></svg>;
+}
 
 function AiowCursorOrb() {
   const layerRef = useRef<HTMLDivElement | null>(null);
@@ -465,6 +516,7 @@ function AiowCursorOrb() {
     };
 
     const move = (event: MouseEvent) => {
+      layer.dataset.visible = "true";
       mx = event.clientX;
       my = event.clientY;
       core.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
@@ -490,8 +542,6 @@ function AiowCursorOrb() {
     window.addEventListener("mouseup", up, { passive: true });
     document.documentElement.addEventListener("mouseleave", leave, { passive: true });
     document.documentElement.addEventListener("mouseenter", enter, { passive: true });
-    layer.dataset.visible = "true";
-    layer.dataset.mode = "scan";
     label.textContent = "SCAN";
 
     return () => {
@@ -535,13 +585,18 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
   const [storyPreloaded, setStoryPreloaded] = useState(false);
   const [storyWarm, setStoryWarm] = useState(false);
   const [heroVideoReady, setHeroVideoReady] = useState(false);
-  const [voicePlaying, setVoicePlaying] = useState(false);
-  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [mobileNavCompact, setMobileNavCompact] = useState(false);
+  const [activeNav, setActiveNav] = useState<NavKey>("home");
+  const [customerAccountId, setCustomerAccountId] = useState<string | null>(null);
+  const hasCustomerAccount = Boolean(customerAccountId);
+  const accountHref = hasCustomerAccount ? `/portal/customer/${customerAccountId}` : "/portal/account/new";
   const [selectedScanType, setSelectedScanType] = useState("");
   const [selectedProcess, setSelectedProcess] = useState("");
   const [customProcess, setCustomProcess] = useState("");
   const [selectedGoal, setSelectedGoal] = useState("");
   const [scanQuestion, setScanQuestion] = useState("");
+  const [headerAiQuestion, setHeaderAiQuestion] = useState("");
+  const [headerAiMode, setHeaderAiMode] = useState<"idea" | "company">("idea");
   const [intakeStarted, setIntakeStarted] = useState(false);
   const [intakeStep, setIntakeStep] = useState(0);
   const [activeDemo, setActiveDemo] = useState(0);
@@ -550,6 +605,16 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
   const [scanInView, setScanInView] = useState(false);
   const scanRef = useRef<HTMLElement | null>(null);
   const storyRef = useRef<HTMLElement | null>(null);
+  const spunkyChatRef = useRef<HTMLDivElement | null>(null);
+  const spunkyInputRef = useRef<HTMLInputElement | null>(null);
+  const [spunkyMessages, setSpunkyMessages] = useState<SpunkyMessage[]>(() => [
+    { role: "spunky", text: "Hoi, ik ben Spunky. Stel direct je vraag of vertel kort wat je wilt bouwen, automatiseren of groeien. Ik antwoord meteen; na twee berichten vraag ik je gegevens zodat we je intake kunnen vastleggen." },
+  ]);
+  const [spunkyInput, setSpunkyInput] = useState("");
+  const [spunkyOpened, setSpunkyOpened] = useState(false);
+  const [spunkyTyping, setSpunkyTyping] = useState(false);
+  const [spunkyLead, setSpunkyLead] = useState({ name: "", email: "", company: "", consent: false });
+  const [spunkyAccountState, setSpunkyAccountState] = useState<SpunkyAccountState>({ status: "idle" });
   const storyVideoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const progressStyle = useMemo(() => ({ "--layers": layers.length } as React.CSSProperties), [layers.length]);
 
@@ -561,12 +626,66 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
   }, []);
 
   useEffect(() => {
-    const audio = voiceAudioRef.current;
-    if (!audio) return;
-    audio.pause();
-    audio.currentTime = 0;
-    setVoicePlaying(false);
-  }, [lang]);
+    const readAccountState = () => {
+      const storedAccountId = localStorage.getItem("aiow:lastAccountId");
+      const storedCode = localStorage.getItem("aiow:lastAccessCode");
+      setCustomerAccountId(storedAccountId && storedCode ? storedAccountId : null);
+    };
+    readAccountState();
+    window.addEventListener("storage", readAccountState);
+    window.addEventListener("aiow:account-state-changed", readAccountState);
+    return () => {
+      window.removeEventListener("storage", readAccountState);
+      window.removeEventListener("aiow:account-state-changed", readAccountState);
+    };
+  }, []);
+
+  useEffect(() => {
+    const sections: Array<[NavKey, string]> = [
+      ["home", "intro"],
+      ["story", "story"],
+      ["platform", "made-by-aiow"],
+      ["scan", "scan"],
+    ];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        const match = sections.find(([, id]) => id === visible.target.id);
+        if (match) setActiveNav(match[0]);
+      },
+      { rootMargin: "-34% 0px -48% 0px", threshold: [0.08, 0.18, 0.32, 0.52] }
+    );
+    sections.forEach(([, id]) => {
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const currentY = window.scrollY;
+      const delta = currentY - lastY;
+      if (currentY < 80) setMobileNavCompact(false);
+      else if (delta > 9) setMobileNavCompact(true);
+      else if (delta < -9) setMobileNavCompact(false);
+      lastY = currentY;
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useEffect(() => {
     setSelectedScanType(current.cta.intake.typeOptions[0]);
@@ -713,6 +832,14 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
     };
   }, [layers.length]);
 
+  useEffect(() => {
+    if (!spunkyOpened || !window.matchMedia("(max-width: 760px)").matches) return;
+    const timeout = window.setTimeout(() => {
+      spunkyInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+    return () => window.clearTimeout(timeout);
+  }, [spunkyOpened, spunkyMessages.length, spunkyTyping, spunkyAccountState.status]);
+
   const weightedSegment = getWeightedStorySegment(storyProgress, isMobileStory);
   const segmentIndex = weightedSegment.index;
   const segmentLocal = segmentIndex === layers.length - 1 && storyProgress > 0.995
@@ -804,9 +931,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
     } as React.CSSProperties;
   };
 
-  const heroVideoSrc = isMobileStory
-    ? "/aiow/homepage-story/aiow-hero-gpt2-kling-mobile-12s-lite.mp4"
-    : "/aiow/homepage-story/aiow-hero-gpt2-kling-desktop-12s-lite.mp4";
+  const heroVideoSrc = "/aiow/homepage-story/aiow-hero-premium-business-worklayer.mp4";
   const heroPosterSrc = isMobileStory
     ? "/aiow/homepage-story/aiow-hero-keyframe-mobile-760.webp"
     : "/aiow/homepage-story/aiow-hero-keyframe-desktop-1280.webp";
@@ -816,7 +941,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
     : (selectedProcess || current.cta.intake.processOptions[0]);
   const whatsappMessage = lang === "nl"
     ? [
-        "👋 Hoi AIOW, ik wil graag een AI-scan plannen.",
+        "👋 Hoi AIOW, ik wil een private intake starten voor mijn idee/bedrijf.",
         "",
         "📌 Mijn situatie:",
         `• Type vraag: ${selectedScanType || current.cta.intake.typeOptions[0]}`,
@@ -826,10 +951,10 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
         "💬 Context / vraag:",
         scanQuestion || current.cta.intake.defaultQuestion,
         "",
-        "✅ Kunnen jullie meekijken wat voor ons de veiligste en meest waardevolle eerste AI-stap is?",
+        "✅ Kunnen jullie beoordelen welke AI/software/growth route en dealmodel het beste past?",
       ].join("\n")
     : [
-        "👋 Hi AIOW, I’d like to book an AI scan.",
+        "👋 Hi AIOW, I want to start a private intake for my idea/company.",
         "",
         "📌 My situation:",
         `• Request type: ${selectedScanType || current.cta.intake.typeOptions[0]}`,
@@ -839,50 +964,164 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
         "💬 Context / question:",
         scanQuestion || current.cta.intake.defaultQuestion,
         "",
-        "✅ Can you help us identify the safest and most valuable first AI step?",
+        "✅ Can you assess the best AI/software/growth route and deal model?",
       ].join("\n");
-  const handleVoiceToggle = () => {
-    const audio = voiceAudioRef.current;
-    if (!audio) return;
-    if (voicePlaying) {
-      audio.pause();
+  const whatsappHref = `https://wa.me/31621898039?text=${encodeURIComponent(whatsappMessage)}`;
+  const headerAiSeed = current.headerAi.prompts[headerAiMode];
+  const headerAiText = (headerAiQuestion.trim() || headerAiSeed).slice(0, 480);
+  const headerTalkHref = `/portal/account/new?intent=${headerAiMode}&action=talk&context=${encodeURIComponent(headerAiText)}`;
+  const headerApplyHref = `/portal/account/new?intent=${headerAiMode}&action=apply&context=${encodeURIComponent(headerAiText)}`;
+  const visitorMessageCount = spunkyMessages.filter((message) => message.role === "visitor").length;
+  const shouldAskSpunkyLead = visitorMessageCount >= 2 && spunkyAccountState.status !== "created";
+  const spunkyTranscript = spunkyMessages.map((message) => `${message.role === "visitor" ? "Bezoeker" : "Spunky"}: ${message.text}`).join("\n");
+
+  function openSpunkyChat(seed?: string) {
+    setSpunkyOpened(true);
+    window.setTimeout(() => {
+      spunkyChatRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      spunkyInputRef.current?.focus();
+    }, 30);
+    if (seed?.trim() && spunkyMessages.filter((message) => message.role === "visitor").length === 0) {
+      submitSpunkyMessage(seed.trim());
+    }
+  }
+
+  function spunkyAnswer(question: string, countAfter: number): string {
+    const lower = question.toLowerCase();
+    if (countAfter >= 2) {
+      return "Helder. Ik heb genoeg eerste context om dit niet te verliezen. Voordat we verder gaan wil ik je naam, e-mail en eventueel bedrijfsnaam. Dan maak ik je AIOW-account aan en bewaren we deze chat voor beoordeling en opvolging.";
+    }
+    if (lower.includes("lead") || lower.includes("sales") || lower.includes("opvolg") || lower.includes("mail")) {
+      return "Dan ligt de eerste AI-hefboom bij lead capture + opvolging: bezoekers herkennen, intentie scoren, CRM vullen en de volgende dag persoonlijk opvolgen. Welke leads mis je nu vooral: websitebezoekers, bestaande klanten of koude prospects?";
+    }
+    if (lower.includes("bedrijf") || lower.includes("proces") || lower.includes("automatis")) {
+      return "Voor een bestaand bedrijf zoeken we de workflow met de meeste tijdverlies of omzetlekkage: klantcontact, sales, planning, administratie, support of data. Welk proces wil je als eerste sneller maken?";
+    }
+    if (lower.includes("startup") || lower.includes("idee") || lower.includes("app")) {
+      return "Voor een nieuw idee kijk ik naar doelgroep, bewijs van vraag, distributie en AI-moat. Voor wie is het, welk probleem lost het op en heb je al klanten/contacten/data?";
+    }
+    return "Ja. Vertel in één zin wat je wilt bouwen, automatiseren of groeien. Ik vertaal het direct naar AIOW-kansen, risico’s en de eerste slimme vervolgvraag.";
+  }
+
+  async function submitSpunkyMessage(textOverride?: string) {
+    const text = (textOverride ?? spunkyInput).trim();
+    if (!text || spunkyTyping) return;
+    const nextVisitorCount = visitorMessageCount + 1;
+    const nextMessages: SpunkyMessage[] = [...spunkyMessages, { role: "visitor", text }];
+    setSpunkyMessages(nextMessages);
+    setSpunkyInput("");
+    setSpunkyOpened(true);
+    setSpunkyTyping(true);
+    track("Spunky chat message", { page: "native-homepage", count: nextVisitorCount, mode: headerAiMode });
+    try {
+      const response = await fetch("/api/spunky/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          mode: headerAiMode,
+          visitorMessageCount: nextVisitorCount,
+          transcript: nextMessages.map((message) => `${message.role === "visitor" ? "Bezoeker" : "Spunky"}: ${message.text}`).join("\n"),
+          page: "aiow.ai/",
+        }),
+      });
+      const data = await response.json();
+      const reply = response.ok && typeof data.reply === "string" ? data.reply : spunkyAnswer(text, nextVisitorCount);
+      setSpunkyMessages((messages) => [...messages, { role: "spunky", text: reply }]);
+    } catch {
+      setSpunkyMessages((messages) => [...messages, { role: "spunky", text: spunkyAnswer(text, nextVisitorCount) }]);
+    } finally {
+      setSpunkyTyping(false);
+    }
+  }
+
+  async function createSpunkyAccount() {
+    const name = spunkyLead.name.trim();
+    const email = spunkyLead.email.trim().toLowerCase();
+    const company = spunkyLead.company.trim();
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !spunkyLead.consent) {
+      setSpunkyAccountState({ status: "error", message: "Vul minimaal naam, geldig e-mailadres en toestemming in." });
       return;
     }
-    track("Voice explainer play", { lang, page: "native-homepage", location: "header" });
-    void audio.play();
-  };
+    setSpunkyAccountState({ status: "creating" });
+    const transcript = `${spunkyTranscript}\nBezoeker contact: ${name} · ${email} · ${company || "geen bedrijfsnaam opgegeven"}`.slice(0, 1600);
+    const companyName = company || `${name} persoonlijke AIOW aanvraag`;
+    try {
+      const response = await fetch("/api/customer-accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName,
+          legalName: companyName,
+          contactName: name,
+          contactEmail: email,
+          projectName: headerAiMode === "idea" ? "Nieuw AIOW idee via Spunky chat" : "AI digitalisering via Spunky chat",
+          projectType: headerAiMode === "idea" ? "AI venture / startup" : "AI-integratie bestaand bedrijf",
+          moduleInterests: ["Spunky intake", "AI due diligence", "Customer portal", "Build & growth sprint"],
+          addOns: ["Team Richard beoordeling", "Persoonlijke opvolging"],
+          aiowRevenueSharePercent: 10,
+          revenueShareNotes: "Door Spunky-chat aangemaakt; dealmodel volgt na AIOW beoordeling.",
+          moduleRevenueNotes: transcript,
+          ideaSummary: transcript,
+          aiowBuildScope: transcript,
+          painPoints: transcript,
+          successMetrics: "AIOW bepaalt eerste KPI's na aanvullende account-chat.",
+          accountTermsAccepted: true,
+          emailFollowupConsent: true,
+          consentText: "Bezoeker gaf via Spunky-chat toestemming dat AIOW de contactgegevens en intakecontext gebruikt voor persoonlijke opvolging en account-aanmaak.",
+          consentVersion: "aiow-spunky-chat-v1",
+          sourceRoute: "/",
+          sourceComponent: "homepage-spunky-chat",
+          intentType: headerAiMode,
+          intentText: transcript,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || "Account kon niet worden aangemaakt.");
+      localStorage.setItem("aiow:customerAccountId", data.account.accountId);
+      localStorage.setItem("aiow:customerAccessCode", data.accessCode);
+      setCustomerAccountId(data.account.accountId);
+      setSpunkyAccountState({ status: "created", accountId: data.account.accountId, accessCode: data.accessCode, portalUrl: data.portalUrl, leadId: data.leadId });
+      setSpunkyMessages((messages) => [
+        ...messages,
+        { role: "spunky", text: "Je AIOW-account is aangemaakt. Check je e-mail en log in op je account; daar gaan we verder met de aanvullende vragen die Team Richard nodig heeft voor score, risico’s en dealadvies." },
+      ]);
+      track("Spunky account created", { page: "native-homepage", accountId: data.account.accountId });
+    } catch (error) {
+      setSpunkyAccountState({ status: "error", message: error instanceof Error ? error.message : "Onbekende fout" });
+    }
+  }
 
-  const whatsappHref = `https://wa.me/31621898039?text=${encodeURIComponent(whatsappMessage)}`;
-  const budgetSetupEstimate = 2500 + Math.max(0, budgetWorkflows - 1) * 850 + budgetHours * 175;
+  const budgetSetupEstimate = 7500 + Math.max(0, budgetWorkflows - 1) * 3500 + budgetHours * 500;
   const budgetFormatter = useMemo(() => new Intl.NumberFormat(lang === "nl" ? "nl-NL" : "en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }), [lang]);
 
   const intakeTotalQuestions = 4;
   const intakeProgress = Math.min(intakeStep + 1, intakeTotalQuestions);
-  const intakeEstimate = selectedScanType === "Local AI" || selectedScanType === "Private AI"
-    ? (lang === "nl" ? "Waarschijnlijk: private/local AI-route met governance vanaf de scan." : "Likely: private/local AI route with governance after the scan.")
-    : selectedScanType === "Automation"
-      ? (lang === "nl" ? "Waarschijnlijk: snelle workflowpilot met duidelijke approvalregels." : "Likely: fast workflow pilot with clear approval rules.")
-      : (lang === "nl" ? "Waarschijnlijk: eerst proceskaart + veilige pilotkeuze." : "Likely: process map first + safe pilot choice.");
+  const intakeEstimate = selectedScanType === "Startup/idee" || selectedScanType === "Startup/idea"
+    ? (lang === "nl" ? "Waarschijnlijk: eerst private due diligence + proof sprint voordat we groter bouwen." : "Likely: private due diligence + proof sprint before a larger build.")
+    : selectedScanType === "Bestaand bedrijf" || selectedScanType === "Existing company"
+      ? (lang === "nl" ? "Waarschijnlijk: growth partner route met KPI-dashboard, automatisering en mogelijke upside." : "Likely: growth partner route with KPI dashboard, automation and possible upside.")
+      : (lang === "nl" ? "Waarschijnlijk: AI Platform Build met Deal Card, contract en sprint-roadmap." : "Likely: AI Platform Build with Deal Card, contract and sprint roadmap.");
   const intakeRouteTitle = lang === "nl"
-    ? `${resolvedProcess} AI-route`
-    : `${resolvedProcess} AI route`;
+    ? `${resolvedProcess} venture-route`
+    : `${resolvedProcess} venture route`;
   const intakeWinItems = lang === "nl"
     ? [
-        selectedGoal === "Minder risico" ? "minder risico door datagrens + approvals" : "tijdwinst op terugkerende ruis",
-        selectedGoal === "Betere output" ? "betere output met vaste werkwijze" : "betere output door templates en controle",
-        selectedScanType === "Local AI" ? "private/local AI waar data gevoelig is" : "duidelijke route: cloud, hybride of private",
+        selectedGoal === "Revenue share" ? "dealadvies voor omzetdeling en doorverkoop" : "heldere Deal Card vóór bouw",
+        selectedProcess === "Marketing/growth" ? "growth loops met KPI-dashboard" : "AI/software sprint met meetbare output",
+        selectedScanType === "Startup/idee" ? "proof sprint vóór grote investering" : "verbeteradvies voor bestaande digitale operatie",
       ]
     : [
-        selectedGoal === "Less risk" ? "less risk through data boundary + approvals" : "time saved on repeated noise",
-        selectedGoal === "Better output" ? "better output with fixed workflow" : "better output through templates and control",
-        selectedScanType === "Local AI" ? "private/local AI where data is sensitive" : "clear route: cloud, hybrid or private",
+        selectedGoal === "Revenue share" ? "deal advice for revenue share and resale" : "clear Deal Card before build",
+        selectedProcess === "Marketing/growth" ? "growth loops with KPI dashboard" : "AI/software sprint with measurable output",
+        selectedScanType === "Startup/idea" ? "proof sprint before major investment" : "improvement advice for existing digital operations",
       ];
   const scanDeliverables = lang === "nl"
-    ? ["proceskaart", "datagrens + risico’s", "quick wins", "eerste pilotvoorstel", "budgetroute"]
-    : ["process map", "data boundary + risks", "quick wins", "first pilot proposal", "budget route"];
+    ? ["Founder/Market/Execution scores", "AI opportunity score", "dealadvies", "eerste sprint", "risico’s + proof"]
+    : ["Founder/Market/Execution scores", "AI opportunity score", "deal advice", "first sprint", "risks + proof"];
   const intakeRoiHint = lang === "nl"
-    ? "Als dit 5–10 uur per week ruis weghaalt, is de scan meestal snel terugverdiend."
-    : "If this removes 5–10 hours of weekly noise, the scan usually pays back quickly.";
+    ? "Als AIOW aantoonbaar omzet, resale of modulewaarde creëert, adviseren we minimaal 10% en hoger bij meer IP/risico."
+    : "When AIOW demonstrably creates revenue, resale or module value, we advise at least 10% and higher with more IP/risk.";
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -892,6 +1131,19 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
       acceptedAnswer: { "@type": "Answer", text: answer },
     })),
   };
+  const teamRail = lang === "nl"
+    ? [
+        ["👑", "Handsome", "Command + build", "Beslist de beste route, bouwt, test, shipped en houdt Richard uit procesruis."],
+        ["🦎", "Book", "UX/taste/red-team", "Controleert of richting, copy, deal en product premium genoeg zijn voordat we groot doorbouwen."],
+        ["👽", "Mini", "Market/radar", "Levert buitenwereld: X/social, SEO/GAO, concurrenten, timing en publiekswaarde."],
+        ["⚡", "Spunky", "AIOW context bridge", "Haalt klant/project/context uit de AIOW command room op; adviseert, maar Team Richard beslist."],
+      ]
+    : [
+        ["👑", "Handsome", "Command + build", "Chooses the best route, builds, tests, ships and keeps Richard out of process noise."],
+        ["🦎", "Book", "UX/taste/red-team", "Checks whether direction, copy, deal and product quality are premium before we scale the work."],
+        ["👽", "Mini", "Market/radar", "Brings outside-world truth: X/social, SEO/GAO, competitors, timing and audience value."],
+        ["⚡", "Spunky", "AIOW context bridge", "Pulls customer/project/context from the AIOW command room; advises, Team Richard decides."],
+      ];
 
   useEffect(() => {
     const sent = new Set<number>();
@@ -910,6 +1162,11 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const thread = spunkyChatRef.current?.querySelector('[data-spunky-thread="true"]');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }, [spunkyMessages.length, spunkyTyping, shouldAskSpunkyLead, spunkyAccountState.status]);
+
   return (
     <main className={styles.page} data-theme={theme} lang={lang}>
       <AiowCursorOrb />
@@ -919,41 +1176,36 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
           <span className={styles.brandMark} aria-hidden="true" />
           <span className={styles.brandText}><strong>AIOW</strong><small>{current.brand}</small></span>
         </Link>
-        <nav aria-label="Preview navigation">
-          <a href="#story">{current.nav.story}</a>
-          <a href="#operating-model">{current.nav.model}</a>
-          <a href="#scan">{current.nav.scan}</a>
+        <nav aria-label="Preview navigation" className={styles.desktopNav}>
+          <a href="#story" data-active={activeNav === "story" ? "true" : "false"}>{current.nav.story}</a>
+          <a href="#operating-model" data-active={activeNav === "platform" ? "true" : "false"}>{current.nav.model}</a>
+          <a href="#made-by-aiow" data-active={activeNav === "platform" ? "true" : "false"}>{current.nav.work}</a>
+          <a href="#scan" data-active={activeNav === "scan" ? "true" : "false"}>{current.nav.scan}</a>
         </nav>
-        <div className={styles.voiceBrief} aria-label={current.voice.aria} data-playing={voicePlaying}>
-          <button type="button" className={styles.voiceButton} onClick={handleVoiceToggle} aria-pressed={voicePlaying}>
-            <span className={styles.voiceGlow} aria-hidden="true">{voicePlaying ? "Ⅱ" : "▶"}</span>
-            <span className={styles.voiceText}>
-              <strong>{current.voice.title}</strong>
-              <small>{current.voice.hint}</small>
-            </span>
-            <span className={styles.voiceWave} aria-hidden="true"><i /><i /><i /><i /></span>
-          </button>
-          <audio
-            ref={voiceAudioRef}
-            preload="none"
-            src={current.voice.src}
-            onPlay={() => setVoicePlaying(true)}
-            onPause={() => setVoicePlaying(false)}
-            onEnded={() => setVoicePlaying(false)}
-          >
-            {current.voice.fallback}
-          </audio>
-        </div>
         <div className={styles.headerToggles}>
+          <a href={accountHref} className={styles.accountTopLink} data-state={hasCustomerAccount ? "signed-in" : "new"} aria-label={hasCustomerAccount ? (lang === "nl" ? "Open account" : "Open account") : (lang === "nl" ? "Account aanmaken" : "Create account")}>
+            <MobileNavIcon type={hasCustomerAccount ? "account" : "plus"} />
+            <span>{hasCustomerAccount ? "Account" : "Start"}</span>
+          </a>
           <LangToggle lang={lang} setLang={setLang} />
           <ThemeToggle theme={theme} setTheme={setTheme} label={current.themeLabel} />
         </div>
       </header>
 
       <div className={styles.scrollProgress} style={progressStyle} aria-hidden="true" />
-      <a href="#scan" className={styles.stickyScanCta} data-hidden={scanInView ? "true" : "false"} aria-hidden={scanInView ? "true" : undefined} tabIndex={scanInView ? -1 : undefined}>{lang === "nl" ? "Plan AI-scan" : "Book AI scan"}</a>
+      <a href="#scan" className={styles.stickyScanCta} data-hidden={scanInView ? "true" : "false"} aria-hidden={scanInView ? "true" : undefined} tabIndex={scanInView ? -1 : undefined}>{lang === "nl" ? "Start private intake" : "Start private intake"}</a>
+      <nav className={styles.mobileBottomNav} data-compact={mobileNavCompact ? "true" : "false"} aria-label={lang === "nl" ? "Mobiele AIOW navigatie" : "Mobile AIOW navigation"}>
+        <a href="#intro" className={styles.mobileNavItem} data-active={activeNav === "home" ? "true" : "false"} aria-label="Home"><MobileNavIcon type="home" /></a>
+        <a href="#story" className={styles.mobileNavItem} data-active={activeNav === "story" ? "true" : "false"} aria-label={lang === "nl" ? "Venture flow" : "Venture flow"}><MobileNavIcon type="story" /></a>
+        <button type="button" className={`${styles.mobileNavItem} ${styles.mobileNavChat}`} data-active="false" aria-label={lang === "nl" ? "Chat met AIOW" : "Chat with AIOW"} onClick={() => { track("CTA click", { location: "mobile-bottom-chat", mode: headerAiMode, page: "native-homepage" }); openSpunkyChat(headerAiText); }}><MobileNavIcon type="chat" /></button>
+        <a href="#made-by-aiow" className={styles.mobileNavItem} data-active={activeNav === "platform" ? "true" : "false"} aria-label={lang === "nl" ? "Platform" : "Platform"}><MobileNavIcon type="platform" /></a>
+        <a href={accountHref} className={`${styles.mobileNavItem} ${styles.mobileNavAvatar}`} data-account-state={hasCustomerAccount ? "signed-in" : "new"} data-active={activeNav === "account" ? "true" : "false"} aria-label={hasCustomerAccount ? (lang === "nl" ? "Open account" : "Open account") : (lang === "nl" ? "Account aanmaken" : "Create account")}>
+          <span className={styles.mobileNavAvatarMark}><MobileNavIcon type={hasCustomerAccount ? "account" : "plus"} /></span>
+          {hasCustomerAccount ? <i aria-hidden="true" /> : null}
+        </a>
+      </nav>
 
-      <section className={styles.intro} aria-labelledby="intro-title">
+      <section id="intro" className={styles.intro} aria-labelledby="intro-title">
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>{current.hero.eyebrow}</p>
           <h1 id="intro-title">{current.hero.headline}</h1>
@@ -975,8 +1227,8 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
           <video
             key={heroVideoSrc}
             data-video-role="hero"
-            data-mobile-src="/aiow/homepage-story/aiow-hero-gpt2-kling-mobile-12s-lite.mp4"
-            data-desktop-src="/aiow/homepage-story/aiow-hero-gpt2-kling-desktop-12s-lite.mp4"
+            data-mobile-src="/aiow/homepage-story/aiow-hero-premium-business-worklayer.mp4"
+            data-desktop-src="/aiow/homepage-story/aiow-hero-premium-business-worklayer.mp4"
             autoPlay
             muted
             loop
@@ -984,6 +1236,61 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
             preload="metadata"
             poster={heroPosterSrc}
           />
+          <div ref={spunkyChatRef} id="spunky-chat" className={styles.heroAiPanel} data-mode={headerAiMode} data-open={spunkyOpened ? "true" : "false"}>
+            <div className={styles.heroAiTopline}>
+              <span className={styles.heroAiPulse} aria-hidden="true">AI</span>
+              <div>
+                <small>Spunky chat</small>
+                <strong>{lang === "nl" ? "Chat direct met Spunky. Geen formulier vooraf." : "Chat directly with Spunky. No form first."}</strong>
+              </div>
+            </div>
+            <div className={styles.spunkyThread} data-spunky-thread="true" aria-live="polite">
+              {spunkyMessages.map((message, index) => (
+                <div key={`${message.role}-${index}`} className={styles.spunkyBubble} data-role={message.role}>
+                  <span>{message.role === "spunky" ? "Spunky" : "Jij"}</span>
+                  <p>{message.text}</p>
+                </div>
+              ))}
+              {spunkyTyping ? <div className={styles.spunkyBubble} data-role="spunky" data-typing="true"><span>Spunky</span><p>aan het typen…</p></div> : null}
+            </div>
+            <form className={styles.spunkyComposer} onSubmit={(event) => { event.preventDefault(); submitSpunkyMessage(); }}>
+              <input ref={spunkyInputRef} value={spunkyInput} onChange={(event) => { setSpunkyInput(event.target.value); setHeaderAiQuestion(event.target.value); }} placeholder="Bericht aan Spunky…" aria-label="Chat met Spunky" />
+              <button type="submit" aria-label="Stuur bericht" disabled={!spunkyInput.trim() || spunkyTyping}>➤</button>
+            </form>
+            <div className={styles.heroAiControls} data-chat-controls="true">
+              <div className={styles.heroAiModes} aria-label={lang === "nl" ? "AIOW vraagtype" : "AIOW question type"}>
+                <button type="button" data-active={headerAiMode === "idea" ? "true" : "false"} onClick={() => setHeaderAiMode("idea")}>{current.headerAi.modes[0]}</button>
+                <button type="button" data-active={headerAiMode === "company" ? "true" : "false"} onClick={() => setHeaderAiMode("company")}>{current.headerAi.modes[1]}</button>
+              </div>
+              <button type="button" className={styles.heroAiAsk} onClick={() => openSpunkyChat(headerAiText)}>{current.headerAi.ask}</button>
+              <Link href={headerApplyHref} className={styles.heroAiApply} onClick={() => track("CTA click", { location: "hero-ai-apply", mode: headerAiMode, page: "native-homepage" })}>Account</Link>
+            </div>
+            {shouldAskSpunkyLead && (
+              <div className={styles.spunkyLeadCapture}>
+                <strong>Voordat we verder gaan</strong>
+                <p>Mag ik je naam, e-mail en eventueel bedrijfsnaam? Dan maak ik direct je AIOW-account aan en bewaren we deze chat voor de beoordeling.</p>
+                <div className={styles.spunkyLeadGrid}>
+                  <input value={spunkyLead.name} onChange={(event) => setSpunkyLead((lead) => ({ ...lead, name: event.target.value }))} placeholder="Naam" />
+                  <input value={spunkyLead.email} onChange={(event) => setSpunkyLead((lead) => ({ ...lead, email: event.target.value }))} placeholder="E-mail" inputMode="email" />
+                  <input value={spunkyLead.company} onChange={(event) => setSpunkyLead((lead) => ({ ...lead, company: event.target.value }))} placeholder="Bedrijfsnaam optioneel" />
+                </div>
+                <label className={styles.spunkyConsent}>
+                  <input type="checkbox" checked={spunkyLead.consent} onChange={(event) => setSpunkyLead((lead) => ({ ...lead, consent: event.target.checked }))} />
+                  <span>AIOW mag mijn gegevens en chatcontext gebruiken voor account-aanmaak en persoonlijke opvolging per e-mail.</span>
+                </label>
+                <button type="button" onClick={createSpunkyAccount} disabled={spunkyAccountState.status === "creating"}>{spunkyAccountState.status === "creating" ? "Account maken..." : "Maak mijn AIOW-account"}</button>
+                {spunkyAccountState.status === "error" && <p className={styles.spunkyError}>{spunkyAccountState.message}</p>}
+              </div>
+            )}
+            {spunkyAccountState.status === "created" && (
+              <div className={styles.spunkyAccountReady}>
+                <strong>Account klaar. Check je e-mail en log in.</strong>
+                <p>Account: <code>{spunkyAccountState.accountId}</code></p>
+                <p>Toegangscode: <code>{spunkyAccountState.accessCode}</code></p>
+                <Link href={spunkyAccountState.portalUrl}>Open mijn AIOW-account</Link>
+              </div>
+            )}
+          </div>
           <figcaption>{current.hero.caption}</figcaption>
         </figure>
       </section>
@@ -995,7 +1302,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
           <p>{current.aiDemo.text}</p>
         </div>
         <div className={styles.demoShell}>
-          <div className={styles.demoTabs} role="tablist" aria-label={lang === "nl" ? "AI medewerker demo opties" : "AI worker demo options"}>
+          <div className={styles.demoTabs} role="tablist" aria-label={lang === "nl" ? "AIOW venture flow opties" : "AIOW venture flow options"}>
             {current.aiDemo.tabs.map((tab, index) => (
               <button key={tab.label} type="button" role="tab" aria-selected={activeDemo === index} data-active={activeDemo === index ? "true" : "false"} onClick={() => setActiveDemo(index)}>{tab.label}</button>
             ))}
@@ -1009,7 +1316,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
               <strong>{current.aiDemo.tabs[activeDemo].input}</strong>
             </article>
             <article className={styles.demoPanel} data-ai="true">
-              <span>{lang === "nl" ? "AI-medewerker" : "AI worker"}</span>
+              <span>{lang === "nl" ? "AIOW analyse" : "AIOW analysis"}</span>
               <strong>{current.aiDemo.tabs[activeDemo].ai}</strong>
             </article>
             <article className={styles.demoPanel}>
@@ -1022,7 +1329,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
             </article>
           </div>
           <div className={styles.demoFooter}>
-            <p>{lang === "nl" ? "Top-1%-UX: bezoekers zien in één scherm wat AIOW installeert, wat veilig blijft en waarom de klantportal vertrouwen geeft." : "Top-1% UX: visitors see in one screen what AIOW installs, what stays controlled and why the portal builds trust."}</p>
+            <p>{lang === "nl" ? "Top-1%-UX: bezoekers zien in één scherm hoe AIOW beoordeelt, bouwt, contracteert en met Spunky blijft meedraaien." : "Top-1% UX: visitors see in one screen how AIOW assesses, builds, contracts and keeps Spunky in the loop."}</p>
             <Link href="/portal" className={styles.secondary}>{current.aiDemo.cta}</Link>
           </div>
         </div>
@@ -1030,9 +1337,9 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
 
       <noscript>
         <section className={styles.noScriptFallback} aria-label="AIOW fallback">
-          <p>{lang === "nl" ? "Video en scroll-interactie staan uit, maar de kern blijft hetzelfde." : "Video and scroll interaction are disabled, but the core offer is the same."}</p>
-          <strong>{lang === "nl" ? "AIOW bouwt één veilige AI-werklaag voor processen, data, agents en approvals." : "AIOW builds one secure AI worklayer for processes, data, agents and approvals."}</strong>
-          <a href="#scan">{lang === "nl" ? "Plan een AI-scan" : "Book an AI scan"}</a>
+          <p>{lang === "nl" ? "Video en scroll-interactie staan uit, maar de venture-studio kern blijft hetzelfde." : "Video and scroll interaction are disabled, but the venture-studio offer is the same."}</p>
+          <strong>{lang === "nl" ? "AIOW bouwt AI, software, automatisering en growth in startups en bestaande bedrijven." : "AIOW builds AI, software, automation and growth into startups and established companies."}</strong>
+          <a href="#scan">{lang === "nl" ? "Start private intake" : "Start private intake"}</a>
         </section>
       </noscript>
 
@@ -1128,6 +1435,24 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
         </div>
       </section>
 
+      <section className={styles.teamRailSection} aria-labelledby="team-rail-title">
+        <div className={styles.sectionHead}>
+          <p className={styles.eyebrow}>{lang === "nl" ? "Team Richard upgrade" : "Team Richard upgrade"}</p>
+          <h2 id="team-rail-title">{lang === "nl" ? "Iedere lane heeft nu één taak: bewijs leveren." : "Every lane now has one job: produce proof."}</h2>
+          <p>{lang === "nl" ? "Spunky is geen extra baas en geen ruislaag. Het is de AIOW-contextbrug: klantgroep, artifacts en projectvragen naar Team Richard. Daarna beslist Handsome met Book/Mini-checks wat waarde heeft." : "Spunky is not an extra boss or noise layer. It is the AIOW context bridge: customer group, artifacts and project questions into Team Richard. Then Handsome decides with Book/Mini checks what has value."}</p>
+        </div>
+        <div className={styles.teamRailGrid}>
+          {teamRail.map(([icon, name, role, text]) => (
+            <article key={name}>
+              <span>{icon}</span>
+              <small>{role}</small>
+              <h3>{name}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className={styles.searchAuthority} aria-labelledby="search-title">
         <div className={styles.sectionHead}>
           <p className={styles.eyebrow}>{current.search.eyebrow}</p>
@@ -1144,7 +1469,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
         ) : null}
       </section>
 
-      <section className={`${styles.routerSection} ${styles.webgpuShowcase}`} aria-labelledby="router-title">
+      <section id="made-by-aiow" className={`${styles.routerSection} ${styles.webgpuShowcase}`} aria-labelledby="router-title">
         <div className={styles.routerCopy}>
           <p className={styles.eyebrow}>{current.router.eyebrow}</p>
           <h2 id="router-title">{current.router.headline}</h2>
@@ -1175,26 +1500,26 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
           <b>{current.pricing.scan.suffix} {current.pricing.scan.price}</b>
           <p>{current.pricing.scan.text}</p>
         </div>
-        <div className={styles.budgetCompass} aria-label={lang === "nl" ? "Starter budget indicatie" : "Starter budget estimate"}>
+        <div className={styles.budgetCompass} aria-label={lang === "nl" ? "Deal indicatie" : "Deal estimate"}>
           <div className={styles.budgetCopy}>
-            <span>{lang === "nl" ? "Starter budgetkompas" : "Starter budget compass"}</span>
-            <strong>{lang === "nl" ? "Maak de instapprijs voelbaar zonder valse belofte." : "Make the entry price tangible without overpromising."}</strong>
-            <p>{lang === "nl" ? "Dit is een interne/indicatieve rekentool: setup vanaf €2.500, onderhoud vanaf €650/mnd, extra begeleiding en uitbreidingen vanaf €175/u." : "This is an indicative calculator: setup from €2,500, maintenance from €650/mo, extra guidance and expansions from €175/h."}</p>
+            <span>{lang === "nl" ? "Deal kompas" : "Deal compass"}</span>
+            <strong>{lang === "nl" ? "AIOW neemt pas risico als budget, data en controle kloppen." : "AIOW only takes risk when budget, data and control are right."}</strong>
+            <p>{lang === "nl" ? "Indicatief: eerst betaalde intake, proof sprint of scopeprijs. Revenue, profit of equity komt alleen in beeld bij sterke upside, duidelijke meetbaarheid en contractuele bescherming." : "Indicative: paid intake, proof sprint or scoped price first. Revenue, profit or equity only enters when upside is strong, measurable and contractually protected."}</p>
           </div>
           <div className={styles.budgetControls}>
             <label>
-              <span>{lang === "nl" ? "Eerste workflows" : "First workflows"} <b>{budgetWorkflows}</b></span>
+              <span>{lang === "nl" ? "Build-complexiteit" : "Build complexity"} <b>{budgetWorkflows}</b></span>
               <input type="range" min="1" max="4" value={budgetWorkflows} onChange={(event) => setBudgetWorkflows(Number(event.target.value))} />
             </label>
             <label>
-              <span>{lang === "nl" ? "Extra uren buiten onderhoud" : "Extra hours outside maintenance"} <b>{budgetHours}</b></span>
+              <span>{lang === "nl" ? "AIOW risico/upside" : "AIOW risk/upside"} <b>{budgetHours}</b></span>
               <input type="range" min="0" max="20" step="1" value={budgetHours} onChange={(event) => setBudgetHours(Number(event.target.value))} />
             </label>
           </div>
           <div className={styles.budgetResult}>
-            <span>{lang === "nl" ? "Indicatie" : "Estimate"}</span>
+            <span>{lang === "nl" ? "Budgetindicatie vanaf" : "Budget indication from"}</span>
             <strong>{budgetFormatter.format(budgetSetupEstimate)}</strong>
-            <p>{lang === "nl" ? "+ vanaf €650/mnd technisch onderhoud. Definitieve prijs volgt pas na datagrens, scope en approval." : "+ from €650/mo technical maintenance. Final price only after data boundary, scope and approval."}</p>
+            <p>{lang === "nl" ? "Niet bindend: echte afspraak volgt uit Deal Card, scope, bewijs, beslisrechten en contract." : "Non-binding: real terms follow from Deal Card, scope, proof, decision rights and contract."}</p>
           </div>
         </div>
         <div className={styles.pricingGrid}>
@@ -1237,6 +1562,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
           <Link href="/portal" className={styles.secondary}>{lang === "nl" ? "Bekijk klantportal" : "View customer portal"}</Link>
         </div>
       </section>
+
 
       <section id="scan" ref={scanRef} className={styles.cta} aria-labelledby="cta-title" data-wizard={intakeStarted ? "open" : "closed"}>
         <div className={styles.ctaIntroBlock}>
@@ -1311,26 +1637,26 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
               {intakeStep >= 4 ? (
                 <div className={styles.wizardResult}>
                   <div className={styles.resultHeroLine}>
-                    <span>{lang === "nl" ? "Mini-scan resultaat" : "Mini scan result"}</span>
-                    <strong>{lang === "nl" ? "Jullie eerste AI-route:" : "Your first AI route:"} {intakeRouteTitle}</strong>
+                    <span>{lang === "nl" ? "Private intake richting" : "Private intake direction"}</span>
+                    <strong>{lang === "nl" ? "Aanbevolen venture-route:" : "Recommended venture route:"} {intakeRouteTitle}</strong>
                     <p>{intakeEstimate}</p>
                   </div>
                   <div className={styles.resultSplit}>
                     <div className={styles.resultOutcomeCard}>
-                      <b>{lang === "nl" ? "Verwachte winst" : "Expected win"}</b>
+                      <b>{lang === "nl" ? "Waarde / upside" : "Value / upside"}</b>
                       <ul>
                         {intakeWinItems.map((item) => <li key={item}>{item}</li>)}
                       </ul>
                     </div>
                     <div className={styles.scanOfferCard}>
-                      <span>{lang === "nl" ? "Betaalde start" : "Paid start"}</span>
-                      <b>{lang === "nl" ? "Wat krijg je voor €950?" : "What do you get for €950?"}</b>
+                      <span>{lang === "nl" ? "AIOW Deal Card" : "AIOW Deal Card"}</span>
+                      <b>{lang === "nl" ? "Wat moet de intake opleveren?" : "What should intake produce?"}</b>
                       <ul>
                         {scanDeliverables.map((item) => <li key={item}>{item}</li>)}
                       </ul>
                     </div>
                   </div>
-                  <p className={styles.resultNextStep}>{lang === "nl" ? "Beste volgende stap: plan de AI-systeemscan. Dan bepalen we datagrens, quick wins, tooling, risico’s en budgetroute voordat er gebouwd wordt." : "Best next step: book the AI system scan. We define data boundary, quick wins, tooling, risks and budget route before anything is built."}</p>
+                  <p className={styles.resultNextStep}>{lang === "nl" ? "Beste volgende stap: start de private intake. Daarna maken we Deal Card, contractvoorstel en eerste build/growth sprint." : "Best next step: start private intake. Then we create Deal Card, contract proposal and first build/growth sprint."}</p>
                   <p className={styles.resultRoi}>{intakeRoiHint}</p>
                 </div>
               ) : null}
@@ -1358,7 +1684,7 @@ export function AiowNativeMotionPage({ initialLang = "nl" }: { initialLang?: Lan
             <span className={styles.brandMark} aria-hidden="true" />
             <span className={styles.brandText}><strong>AIOW</strong><small>{current.brand}</small></span>
           </Link>
-          <p>{lang === "nl" ? "AIOW BV bouwt veilige AI-werklagen voor processen, data, agents en approvals." : "AIOW BV builds secure AI worklayers for processes, data, agents and approvals."}</p>
+          <p>{lang === "nl" ? "AIOW BV bouwt AI, software, automatisering en growth in startups en gevestigde bedrijven." : "AIOW BV builds AI, software, automation and growth into startups and established companies."}</p>
           <p className={styles.footerMeta}>AIOW BV · KvK 71887466 · Bijlmermeerstraat 30, 2131HC Hoofddorp</p>
         </div>
         <nav className={styles.footerNav} aria-label={lang === "nl" ? "Juridische links" : "Legal links"}>

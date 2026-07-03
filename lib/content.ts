@@ -1,14 +1,14 @@
-// Content data — Dutch copy, AIOW consultancy positioning
+// Content data: Dutch copy, AIOW consultancy positioning
 
 export const hero = {
-  eyebrow: "AIOW — AI-transformatie voor MKB",
+  eyebrow: "AIOW: AI-transformatie voor MKB",
   titleLines: [
     "Jouw bedrijf.",
     "AI-native.",
     "Van A tot Z geregeld.",
   ],
   lead:
-    "AI is geen tool die je koopt. Het is een nieuwe medewerker die je aanneemt. Wij maken je bedrijf AI-ready — scan, strategie, implementatie, training, groei.",
+    "AI is geen tool die je koopt. Het is een nieuwe medewerker die je aanneemt. Wij maken je bedrijf AI-ready: scan, strategie, implementatie, training, groei.",
   ctaPrimary: { label: "Start je AI-scan", href: "#scan" },
   ctaSecondary: { label: "Zie ons werk", href: "#portfolio" },
 };
@@ -32,7 +32,7 @@ export const problems = [
   {
     icon: "🎯",
     title: "Waar beginnen?",
-    body: "Je weet dat AI groot is. Maar wáár het verschil maakt in jouw sector — dat is de vraag.",
+    body: "Je weet dat AI groot is. Maar wáár het verschil maakt in jouw sector, dat is de vraag.",
   },
 ];
 
@@ -215,10 +215,10 @@ export const fleet = {
 
 export const team = {
   name: "Richard Vermeer",
-  role: "Founder — AIOW BV",
+  role: "Founder, AIOW BV",
   handle: "@handsomebstrd",
   bio:
-    "Bouwt al 15+ jaar systemen voor MKB. Systems over ideas. Long game. Oprichter van Team Handsome — een AI-first consultancy die z'n eigen medicijn slikt.",
+    "Bouwt al 15+ jaar systemen voor MKB. Systems over ideas. Long game. Oprichter van Team Handsome, een AI-first consultancy die z'n eigen medicijn slikt.",
 };
 
 export const finalCta = {
@@ -226,5 +226,5 @@ export const finalCta = {
   title: "Gratis AI-scan",
   body:
     "Twee uur video-call, wij brengen je AI-opportunity's in kaart. Geen verplichtingen. Wel een concreet rapport.",
-  emailTo: "info@aiow.io",
+  emailTo: "info@aiow.ai",
 };

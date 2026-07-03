@@ -1,0 +1,91 @@
+{
+  "timestamp_utc": "2026-06-15T06:25:30+00:00",
+  "deploy": {
+    "vercel_project": "aiow-main-site",
+    "project_id": "prj_dSUzlCuSMKrAwAcaRUdpmeFQjr2d",
+    "production_url": "https://aiow-main-site-631x6qqco-officeaiowios-projects.vercel.app",
+    "custom_domain": "https://aiow.ai"
+  },
+  "checks": [
+    {
+      "url": "https://aiow.ai/",
+      "status": 200,
+      "final_url": "https://aiow.ai/",
+      "bytes_read": 50493,
+      "markers": {
+        "AIOW": true,
+        "ItemList": false,
+        "BreadcrumbList": false,
+        "related_knowledge": false,
+        "extractability_block": false
+      }
+    },
+    {
+      "url": "https://aiow.ai/nl/kennis",
+      "status": 200,
+      "final_url": "https://aiow.ai/nl/kennis",
+      "bytes_read": 128176,
+      "markers": {
+        "AIOW": true,
+        "ItemList": true,
+        "BreadcrumbList": true,
+        "related_knowledge": false,
+        "extractability_block": true
+      }
+    },
+    {
+      "url": "https://aiow.ai/sitemap.xml",
+      "status": 200,
+      "final_url": "https://aiow.ai/sitemap.xml",
+      "bytes_read": 82166,
+      "markers": {
+        "AIOW": false,
+        "ItemList": false,
+        "BreadcrumbList": false,
+        "related_knowledge": false,
+        "extractability_block": false
+      },
+      "sitemap_url_count": 415,
+      "knowledge_url_count": 361
+    },
+    {
+      "url": "https://aiow.ai/llms.txt",
+      "status": 200,
+      "final_url": "https://aiow.ai/llms.txt",
+      "bytes_read": 18618,
+      "markers": {
+        "AIOW": true,
+        "ItemList": false,
+        "BreadcrumbList": false,
+        "related_knowledge": false,
+        "extractability_block": false
+      }
+    },
+    {
+      "url": "https://aiow.ai/business.json",
+      "status": 200,
+      "final_url": "https://aiow.ai/business.json",
+      "bytes_read": 2302,
+      "markers": {
+        "AIOW": true,
+        "ItemList": false,
+        "BreadcrumbList": false,
+        "related_knowledge": false,
+        "extractability_block": false
+      }
+    },
+    {
+      "url": "https://aiow.ai/nl/kennis/ai-implementatie-mkb-nederland-voor-bedrijven",
+      "status": 200,
+      "final_url": "https://aiow.ai/nl/kennis/ai-implementatie-mkb-nederland-voor-bedrijven",
+      "bytes_read": 39296,
+      "markers": {
+        "AIOW": true,
+        "ItemList": false,
+        "BreadcrumbList": true,
+        "related_knowledge": true,
+        "extractability_block": false
+      }
+    }
+  ]
+}

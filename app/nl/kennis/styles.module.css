@@ -1,0 +1,276 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 170, 76, .16), transparent 36rem),
+    radial-gradient(circle at 80% 10%, rgba(94, 151, 255, .14), transparent 34rem),
+    #080706;
+  color: #fff8ed;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.hero,
+.article,
+.indexBlock,
+.gridSection {
+  width: min(1120px, calc(100vw - 32px));
+  margin: 0 auto;
+}
+
+.hero {
+  padding: 112px 0 48px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: #ffb961;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-size: .74rem;
+}
+
+.hero h1,
+.article h1 {
+  max-width: 900px;
+  margin: 0;
+  font-size: clamp(2.7rem, 7vw, 6.7rem);
+  line-height: .88;
+  letter-spacing: -.075em;
+}
+
+.hero p,
+.lead {
+  max-width: 760px;
+  color: rgba(255, 248, 237, .75);
+  font-size: clamp(1rem, 1.4vw, 1.22rem);
+  line-height: 1.6;
+}
+
+.proofRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.proofRow span,
+.metaGrid span {
+  border: 1px solid rgba(255, 248, 237, .14);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 248, 237, .06);
+  color: rgba(255, 248, 237, .82);
+}
+
+.gridSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 22px 0 80px;
+}
+
+.card {
+  min-height: 230px;
+  border: 1px solid rgba(255, 248, 237, .13);
+  border-radius: 30px;
+  padding: 22px;
+  background: linear-gradient(135deg, rgba(255, 248, 237, .09), rgba(255, 248, 237, .025));
+  color: inherit;
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 185, 97, .45);
+  background: linear-gradient(135deg, rgba(255, 185, 97, .12), rgba(255, 248, 237, .035));
+}
+
+.card span {
+  display: block;
+  color: #ffb961;
+  font-size: .76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  margin-bottom: 14px;
+}
+
+.card strong {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1.08;
+  letter-spacing: -.04em;
+}
+
+.card p,
+.indexBlock p,
+.answerBox p,
+.contentSection p,
+.faq p,
+.ctaBox p {
+  color: rgba(255, 248, 237, .72);
+  line-height: 1.58;
+}
+
+.indexBlock {
+  padding: 0 0 100px;
+}
+
+.indexBlock h2,
+.answerBox h2,
+.contentSection h2,
+.faq h2,
+.ctaBox h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.8rem, 3vw, 3.1rem);
+  letter-spacing: -.06em;
+}
+
+.indexBlock a,
+.ctaBox a,
+.back {
+  color: #ffb961;
+}
+
+.article {
+  padding: 92px 0 120px;
+}
+
+.back {
+  display: inline-flex;
+  margin-bottom: 32px;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 34px 0 52px;
+}
+
+.metaGrid span {
+  border-radius: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.metaGrid strong {
+  color: #ffb961;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.contentSection,
+.answerBox,
+.faq,
+.related,
+.ctaBox {
+  border-top: 1px solid rgba(255, 248, 237, .12);
+  padding: 34px 0;
+}
+
+.answerBox {
+  margin: 34px 0 18px;
+  padding: 26px;
+  border: 1px solid rgba(255, 185, 97, .22);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 185, 97, .14), transparent 18rem),
+    rgba(255, 248, 237, .045);
+}
+
+.answerBox h2 {
+  font-size: clamp(1.55rem, 2.4vw, 2.45rem);
+}
+
+.related h2 {
+  margin: 0 0 18px;
+  font-size: clamp(1.8rem, 3vw, 3.1rem);
+  letter-spacing: -.06em;
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.relatedGrid a {
+  border: 1px solid rgba(255, 248, 237, .12);
+  border-radius: 22px;
+  padding: 16px;
+  color: inherit;
+  text-decoration: none;
+  background: rgba(255, 248, 237, .045);
+}
+
+.relatedGrid span {
+  display: block;
+  margin-bottom: 8px;
+  color: #ffb961;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.relatedGrid strong {
+  display: block;
+  line-height: 1.18;
+}
+
+.faq details {
+  border: 1px solid rgba(255, 248, 237, .12);
+  border-radius: 22px;
+  margin: 10px 0;
+  padding: 16px 18px;
+  background: rgba(255, 248, 237, .045);
+}
+
+.faq summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.ctaBox {
+  margin-top: 24px;
+  padding: 30px;
+  border: 1px solid rgba(255, 185, 97, .28);
+  border-radius: 30px;
+  background: radial-gradient(circle at 12% 0%, rgba(255, 185, 97, .18), transparent 22rem), rgba(255, 248, 237, .045);
+}
+
+.ctaBox a {
+  display: inline-flex;
+  margin-top: 12px;
+  min-height: 48px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 18px;
+  background: #ffb961;
+  color: #150d06;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .article,
+  .indexBlock,
+  .gridSection { width: min(100vw - 22px, 680px); }
+  .hero { padding-top: 78px; }
+  .gridSection { grid-template-columns: 1fr; }
+  .relatedGrid { grid-template-columns: 1fr; }
+  .card { min-height: auto; }
+  .metaGrid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 520px) {
+  .metaGrid { grid-template-columns: 1fr; }
+  .hero h1,
+  .article h1 { font-size: clamp(2.25rem, 13vw, 3.7rem); }
+}

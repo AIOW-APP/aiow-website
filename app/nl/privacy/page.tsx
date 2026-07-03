@@ -12,7 +12,7 @@ const sections = [
   },
   {
     title: "2. Welke gegevens verwerken wij?",
-    body: "Wij verwerken uitsluitend gegevens die u actief aan ons verstrekt, zoals naam, bedrijfsnaam en contactgegevens bij AI-systeemscan of WhatsApp-contact, en informatie over uw bedrijfsprocessen die u deelt tijdens een scan of intake. Wij installeren geen analytics, tracking of marketingpixels zolang dat niet uitdrukkelijk is goedgekeurd.",
+    body: "Wij verwerken uitsluitend gegevens die u actief aan ons verstrekt, zoals naam, bedrijfsnaam en contactgegevens bij AI-systeemscan, WhatsApp-contact of OneTap Day intake, en informatie over uw bedrijfsprocessen, taken, afspraken, tijdvensters en prioriteiten die u deelt tijdens een scan of intake. Wij installeren geen analytics, tracking of marketingpixels zolang dat niet uitdrukkelijk is goedgekeurd.",
   },
   {
     title: "3. Grondslagen",
@@ -20,11 +20,11 @@ const sections = [
   },
   {
     title: "4. Bewaartermijnen",
-    body: "Gegevens bewaren wij niet langer dan noodzakelijk voor het doel waarvoor ze zijn verstrekt, en niet langer dan de wettelijke bewaarplichten vereisen.",
+    body: "Gegevens bewaren wij niet langer dan noodzakelijk voor het doel waarvoor ze zijn verstrekt, en niet langer dan de wettelijke bewaarplichten vereisen. Raw OneTap Day Phase 1 intake wordt maximaal 30 dagen bewaard. Op verzoek via support@aiow.ai of hello@aiow.ai verwijderen wij deze eerder uit de actieve inbox/workflow en zetten wij deze klaar voor permanente verwijdering volgens de verwijdercyclus van de mailboxprovider.",
   },
   {
     title: "5. Delen met derden",
-    body: "Wij delen geen persoonsgegevens met derden zonder uw toestemming, behalve waar dit wettelijk verplicht is. Voor AI-verwerking gebruiken wij waar mogelijk lokale of private infrastructuur. Indien externe AI-diensten worden ingezet, informeren wij u hierover en vragen wij uw goedkeuring.",
+    body: "Wij delen geen persoonsgegevens met derden zonder uw toestemming, behalve waar dit wettelijk verplicht is of noodzakelijk is voor verwerking van door u gevraagde communicatie/dienstverlening, zoals e-maildelivery via Resend (DPA: resend.com/legal/dpa; subprocessors: resend.com/legal/subprocessors). Voor AI-verwerking gebruiken wij waar mogelijk lokale of private infrastructuur. Bij OneTap Day geeft u apart toestemming dat AIOW AI-tools mag gebruiken om uw text-only intake samen te vatten en een dagplan te maken. Stuur geen wachtwoorden, secrets, medische details, financiële accountgegevens of gevoelige data van derden.",
   },
   {
     title: "6. Geen geautomatiseerde besluitvorming",

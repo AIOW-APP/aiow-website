@@ -1,4 +1,4 @@
-// POST /api/scan/finalize — email report to user + team after scan completes.
+// POST /api/scan/finalize: email report to user + team after scan completes.
 import { NextResponse } from "next/server";
 import { verifySession } from "@/lib/scan/store";
 
@@ -21,12 +21,13 @@ export async function POST(req: Request) {
     const reportHtml = mdToHtml(String(report || ""));
 
     const userPayload = {
-      from: "AIOW <scan@aiow.ai>",
+      from: "AIOW <scan@send.aiow.ai>",
       to: [targetEmail],
+      reply_to: "hello@aiow.ai",
       subject: `Jouw AIOW AI-scan voor ${company}`,
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;max-width:640px;margin:0 auto;padding:32px;background:#0A0A0B;color:#F8F8FA">
-          <h2 style="color:#00F0FF;font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 16px">— AIOW Scan Rapport</h2>
+          <h2 style="color:#00F0FF;font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 16px">AIOW Scan Rapport</h2>
           <h1 style="font-size:32px;margin:0 0 8px;letter-spacing:-0.02em;line-height:1.05">${escapeHtml(company)}</h1>
           <p style="color:#8A8A94;font-size:13px;margin:0 0 32px">Sector: ${escapeHtml(sector)} · Voor ${escapeHtml(name)}</p>
           <div style="color:#D1D1D8;line-height:1.7;font-size:15px">${reportHtml}</div>
@@ -38,14 +39,14 @@ export async function POST(req: Request) {
             Stuur WhatsApp →
           </a>
           <p style="color:#8A8A94;font-size:12px;margin:40px 0 0">
-            AIOW BV · <a style="color:#00F0FF" href="https://aiow.ai">aiow.ai</a> · Concept — finale juridische review aanbevolen
+            AIOW BV · <a style="color:#00F0FF" href="https://aiow.ai">aiow.ai</a> · Concept, finale juridische review aanbevolen
           </p>
         </div>
       `,
     };
 
     const teamPayload = {
-      from: "AIOW Scan <scan@aiow.ai>",
+      from: "AIOW Scan <scan@send.aiow.ai>",
       to: ["hello@aiow.ai"],
       reply_to: targetEmail,
       subject: `🎯 Nieuwe scan: ${company} (${sector})`,

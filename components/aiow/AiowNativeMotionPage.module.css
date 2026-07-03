@@ -43,7 +43,7 @@
   width: min(1280px, calc(100% - 2rem));
   margin: 0 auto;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(15rem, .76fr) minmax(22rem, 1.24fr) auto;
   align-items: center;
   gap: 1rem;
   padding: .68rem .8rem;
@@ -104,6 +104,85 @@
 .header nav { display: flex; gap: .32rem; justify-self: center; }
 .header nav a,.themeToggle,.langToggle { border: 1px solid var(--line); border-radius: 999px; padding: .55rem .72rem; background: var(--surface); color: var(--muted); font-size: .75rem; font-weight: 900; }
 .headerToggles { display: flex; align-items: center; justify-self: end; gap: .32rem; }
+.headerAi {
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr) auto auto auto;
+  align-items: center;
+  gap: .34rem;
+  min-width: 0;
+  padding: .18rem;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 28%, var(--line));
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 14rem),
+    color-mix(in srgb, var(--surface) 84%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 16px 46px rgba(0,0,0,.08);
+  backdrop-filter: blur(20px) saturate(1.15);
+  justify-self: stretch;
+}
+.headerAiPulse {
+  display: grid;
+  place-items: center;
+  width: 2.12rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #100904;
+  font: 950 .68rem var(--font-mono-family, ui-monospace, monospace);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 10%, transparent), 0 8px 22px rgba(0,0,0,.14);
+}
+.headerAiInput {
+  display: grid;
+  min-width: 0;
+  gap: .05rem;
+}
+.headerAiInput span {
+  color: var(--accent-2);
+  font: 950 .54rem var(--font-mono-family, ui-monospace, monospace);
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.headerAiInput input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 850 .78rem var(--font-inter), system-ui, sans-serif;
+}
+.headerAiInput input::placeholder { color: color-mix(in srgb, var(--muted) 78%, transparent); }
+.headerAiModes {
+  display: flex;
+  gap: .18rem;
+  padding: .13rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 46%, transparent);
+}
+.headerAiModes button,
+.headerAiAsk,
+.headerAiApply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: .46rem .62rem;
+  font-size: .66rem;
+  font-weight: 950;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.headerAiModes button {
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.headerAiModes button[data-active="true"] { background: var(--ink); color: var(--bg); }
+.headerAiAsk { background: var(--ink); color: var(--bg) !important; }
+.headerAiApply { border-color: var(--line); background: var(--surface); color: var(--ink) !important; }
 .themeToggle,.langToggle { cursor: pointer; background: var(--ink); color: var(--bg); }
 .langToggle { min-width: 2.45rem; }
 .themeToggle { min-width: 3.55rem; }
@@ -442,6 +521,15 @@
   font-weight: 950;
 }
 .assetMatrix strong { background: var(--ink); color: var(--bg); }
+.assetMatrix small {
+  color: var(--accent);
+  font: 900 .62rem var(--font-mono-family, ui-monospace, monospace);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.assetMatrix b { margin-top: .35rem; font-size: 1.05rem; letter-spacing: -.035em; }
+.assetMatrix em { margin-top: .25rem; color: var(--muted); font-style: normal; font-weight: 650; line-height: 1.35; }
+.assetMatrix a { margin-top: .7rem; color: var(--ink); text-decoration: underline; text-underline-offset: .18em; }
 .primary { view-transition-name: primary-cta; }
 @supports (animation-timeline: view()) {
   .stepGrid article, .productionManifest { animation: cardRise linear both; animation-timeline: view(); animation-range: entry 0% cover 34%; }
@@ -3881,5 +3969,1820 @@
   .pricingSection,
   .cta {
     scroll-margin-top: 5rem;
+  }
+}
+
+/* Pass 42: Instagram-style mobile glass bottom nav for AIOW venture flow. */
+.mobileBottomNav {
+  display: none;
+}
+@media (max-width: 760px) {
+  .page {
+    padding-bottom: calc(6.9rem + env(safe-area-inset-bottom));
+  }
+  .header {
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+    align-items: center;
+    column-gap: .5rem;
+  }
+  .brand { grid-area: auto; }
+  .headerToggles { grid-area: auto; }
+  .stickyScanCta {
+    display: none !important;
+  }
+  .mobileBottomNav {
+    position: fixed;
+    left: 50%;
+    bottom: calc(.86rem + env(safe-area-inset-bottom));
+    z-index: 72;
+    display: grid;
+    grid-template-columns: 1.55fr 1fr 1fr 1fr 1.08fr;
+    align-items: center;
+    width: min(88vw, 27.5rem);
+    height: 4.35rem;
+    padding: .36rem;
+    border: 1px solid rgba(255,255,255,.58);
+    border-radius: 999px;
+    color: #07100e;
+    background:
+      linear-gradient(105deg, rgba(255,255,255,.78), rgba(236,246,248,.54) 46%, rgba(255,226,214,.70)),
+      color-mix(in srgb, var(--bg) 62%, transparent);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.88),
+      inset 0 -18px 38px rgba(255,255,255,.16),
+      0 18px 60px rgba(0,0,0,.28);
+    backdrop-filter: blur(24px) saturate(1.35);
+    -webkit-backdrop-filter: blur(24px) saturate(1.35);
+    transform: translateX(-50%) translateY(0) scale(1);
+    transform-origin: center bottom;
+    transition: width .42s cubic-bezier(.2,.9,.16,1), height .42s cubic-bezier(.2,.9,.16,1), transform .42s cubic-bezier(.2,.9,.16,1), box-shadow .42s ease, opacity .28s ease;
+    will-change: transform, width, height;
+  }
+  .mobileBottomNav::before {
+    content: "";
+    position: absolute;
+    inset: .14rem;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 23% 48%, rgba(0,0,0,.10), transparent 21%),
+      radial-gradient(circle at 61% 47%, rgba(72,214,255,.20), transparent 16%),
+      linear-gradient(90deg, rgba(255,255,255,.26), transparent 44%, rgba(255,198,176,.18));
+    filter: blur(.15px);
+    opacity: .88;
+  }
+  .mobileNavItem {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    height: 3.55rem;
+    min-width: 0;
+    border-radius: 999px;
+    color: #07100e;
+    transform: translateZ(0);
+    transition: transform .34s cubic-bezier(.2,.9,.16,1), background .34s ease, opacity .24s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobileNavItem svg {
+    width: 1.86rem;
+    height: 1.86rem;
+    filter: drop-shadow(0 1px 0 rgba(255,255,255,.36));
+  }
+  .mobileNavItem[data-active="true"] {
+    min-width: 6rem;
+    background: rgba(228,221,211,.74);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,.72), 0 10px 30px rgba(0,0,0,.12);
+  }
+  .mobileNavItem:active {
+    transform: scale(.93);
+  }
+  .mobileNavAvatarMark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.18rem;
+    height: 2.18rem;
+    border: 2px solid rgba(255,255,255,.72);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), transparent 26%),
+      url("/aiow/brand/aiow-logo-source-round.webp") center / cover no-repeat,
+      #102017;
+    color: transparent;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  }
+  .mobileNavAvatarMark svg { opacity: 0; }
+  .mobileNavAvatar i {
+    position: absolute;
+    right: 1.05rem;
+    bottom: 1rem;
+    width: .56rem;
+    height: .56rem;
+    border: 2px solid rgba(255,255,255,.85);
+    border-radius: 50%;
+    background: #ff2b54;
+    box-shadow: 0 4px 12px rgba(255,43,84,.35);
+  }
+  .mobileBottomNav[data-compact="true"] {
+    width: min(76vw, 22.75rem);
+    height: 3.38rem;
+    transform: translateX(-50%) translateY(.2rem) scale(.91);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.72),
+      0 12px 38px rgba(0,0,0,.25);
+  }
+  .mobileBottomNav[data-compact="true"] .mobileNavItem {
+    height: 2.62rem;
+  }
+  .mobileBottomNav[data-compact="true"] .mobileNavItem svg {
+    width: 1.46rem;
+    height: 1.46rem;
+  }
+  .mobileBottomNav[data-compact="true"] .mobileNavItem[data-active="true"] {
+    min-width: 4.85rem;
+  }
+  .mobileBottomNav[data-compact="true"] .mobileNavAvatarMark {
+    width: 1.72rem;
+    height: 1.72rem;
+  }
+  .mobileBottomNav[data-compact="true"] .mobileNavAvatar i {
+    right: .82rem;
+    bottom: .72rem;
+    width: .48rem;
+    height: .48rem;
+  }
+}
+@media (max-width: 390px) {
+  .mobileBottomNav {
+    width: min(92vw, 24rem);
+  }
+  .mobileNavItem[data-active="true"] {
+    min-width: 5.1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobileBottomNav,
+  .mobileNavItem,
+  .mobileNavItem svg {
+    transition: none !important;
+  }
+}
+
+
+/* Pass 43: premium top menu + state-aware mobile account icon. */
+.desktopNav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  gap: .18rem;
+  padding: .18rem;
+  border: 1px solid color-mix(in srgb, var(--line) 68%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
+}
+.header .desktopNav a {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
+  transition: color .22s ease, background .22s ease, transform .22s ease;
+}
+.header .desktopNav a[data-active="true"] {
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent);
+}
+.header .desktopNav a:hover { color: var(--ink); transform: translateY(-1px); }
+.accountTopLink {
+  display: inline-flex;
+  min-height: 2.38rem;
+  align-items: center;
+  gap: .42rem;
+  padding: .38rem .72rem .38rem .46rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--ink) !important;
+  font-size: .72rem;
+  font-weight: 950;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent);
+  transition: transform .22s ease, background .22s ease, border-color .22s ease;
+}
+.accountTopLink:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 48%, var(--line)); }
+.accountTopLink svg {
+  width: 1.32rem;
+  height: 1.32rem;
+}
+.accountTopLink[data-state="signed-in"] {
+  background: color-mix(in srgb, var(--ink) 88%, transparent);
+  color: var(--bg) !important;
+}
+@media (max-width: 980px) {
+  .desktopNav { display: none !important; }
+}
+@media (max-width: 760px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    background: color-mix(in srgb, var(--bg) 76%, transparent);
+    box-shadow: 0 12px 42px color-mix(in srgb, #000 10%, transparent);
+  }
+  .cursorOrb { display: none !important; }
+  .brand { min-width: 0; }
+  .brandText strong { font-size: .72rem; letter-spacing: .14em; }
+  .brandText small { display: none !important; }
+  .brandMark { width: 2rem; }
+  .accountTopLink { display: none; }
+  .headerToggles { justify-self: end; }
+  .mobileBottomNav {
+    grid-template-columns: 1fr 1fr 1.18fr 1fr 1fr;
+  }
+  .mobileNavItem[data-active="true"] {
+    color: #05100c;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(255,255,255,.62), transparent 34%),
+      color-mix(in srgb, var(--accent) 16%, rgba(228,221,211,.72));
+  }
+  .mobileNavAvatar span {
+    background: color-mix(in srgb, var(--ink) 7%, rgba(255,255,255,.72));
+    color: #07100e;
+  }
+  .mobileNavAvatar span svg { opacity: 1; }
+  .mobileNavAvatar[data-account-state="signed-in"] span {
+    border-color: rgba(255,255,255,.72);
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.55), transparent 26%),
+      url("/aiow/brand/aiow-logo-source-round.webp") center / cover no-repeat,
+      #102017;
+    color: transparent;
+  }
+  .mobileNavAvatar[data-account-state="signed-in"] span svg { opacity: 0; }
+  .mobileNavAvatar[data-account-state="new"] span {
+    border-color: color-mix(in srgb, var(--accent) 34%, rgba(255,255,255,.62));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.64),
+      0 6px 20px rgba(0,0,0,.14),
+      0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+}
+
+
+/* Pass 44: dark-mode native bottom bar — closer to Richard's Instagram reference. */
+@media (max-width: 760px) {
+  .page[data-theme="dark"] .mobileBottomNav {
+    border-color: rgba(255,255,255,.12);
+    color: rgba(255,255,255,.92);
+    background:
+      linear-gradient(115deg, rgba(28,31,34,.94), rgba(9,12,16,.88) 48%, rgba(31,33,38,.94)),
+      rgba(9,11,14,.86);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.10),
+      inset 0 -18px 38px rgba(0,0,0,.28),
+      0 22px 70px rgba(0,0,0,.58);
+    backdrop-filter: blur(26px) saturate(1.18);
+    -webkit-backdrop-filter: blur(26px) saturate(1.18);
+  }
+  .page[data-theme="dark"] .mobileBottomNav::before {
+    background:
+      radial-gradient(circle at 18% 48%, rgba(255,255,255,.12), transparent 18%),
+      radial-gradient(circle at 64% 48%, rgba(119,217,170,.12), transparent 18%),
+      linear-gradient(90deg, rgba(255,255,255,.055), transparent 48%, rgba(255,255,255,.035));
+    opacity: .82;
+  }
+  .page[data-theme="dark"] .mobileNavItem {
+    color: rgba(255,255,255,.92);
+  }
+  .page[data-theme="dark"] .mobileNavItem svg {
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,.38));
+  }
+  .page[data-theme="dark"] .mobileNavItem[data-active="true"] {
+    color: #ffffff;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(255,255,255,.12), transparent 38%),
+      rgba(255,255,255,.16);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.14),
+      inset 0 -10px 22px rgba(0,0,0,.18),
+      0 12px 32px rgba(0,0,0,.25);
+  }
+  .page[data-theme="dark"] .mobileNavAvatar span {
+    color: rgba(255,255,255,.94);
+    border-color: rgba(255,255,255,.28);
+    background: rgba(255,255,255,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 24px rgba(0,0,0,.34);
+  }
+  .page[data-theme="dark"] .mobileNavAvatar[data-account-state="new"] span {
+    border-color: rgba(255,255,255,.22);
+    background: rgba(255,255,255,.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.15),
+      0 8px 24px rgba(0,0,0,.34),
+      0 0 0 4px rgba(255,255,255,.045);
+  }
+  .page[data-theme="dark"] .mobileNavAvatar[data-account-state="signed-in"] span {
+    border-color: rgba(255,255,255,.76);
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.48), transparent 26%),
+      url("/aiow/brand/aiow-logo-source-round.webp") center / cover no-repeat,
+      #0b1511;
+  }
+  .page[data-theme="dark"] .mobileNavAvatar i {
+    border-color: rgba(15,18,21,.92);
+    background: #ff2853;
+  }
+}
+
+
+/* Pass 45: Team Richard proof lanes surfaced on page. */
+.teamRailSection {
+  width: min(1160px, calc(100% - 3rem));
+  margin: 0 auto;
+  padding: clamp(3rem, 5vw, 5.5rem) 0;
+}
+.teamRailGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .7rem;
+  margin-top: 1rem;
+}
+.teamRailGrid article {
+  position: relative;
+  min-height: 13.5rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+  border-radius: 1.2rem;
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 12rem),
+    color-mix(in srgb, var(--surface) 84%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent), 0 16px 54px color-mix(in srgb, #000 7%, transparent);
+  overflow: hidden;
+}
+.teamRailGrid article > span {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 90%, transparent);
+  color: var(--bg);
+  font-size: 1.05rem;
+}
+.teamRailGrid small {
+  display: block;
+  margin-top: 2.1rem;
+  color: var(--accent);
+  font: 950 .62rem var(--font-mono-family, ui-monospace, monospace);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.teamRailGrid h3 {
+  margin: .34rem 0 .45rem;
+  font-size: clamp(1.2rem, 1.6vw, 1.55rem);
+  letter-spacing: -.045em;
+  line-height: 1;
+}
+.teamRailGrid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .88rem;
+  line-height: 1.45;
+}
+@media (max-width: 980px) {
+  .teamRailGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .teamRailSection {
+    width: calc(100% - 1rem);
+    padding: 2.2rem 0;
+  }
+  .teamRailGrid {
+    grid-template-columns: 1fr;
+    gap: .55rem;
+  }
+  .teamRailGrid article {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    column-gap: .75rem;
+    align-items: start;
+    padding: .82rem;
+    border-radius: 1rem;
+  }
+  .teamRailGrid article > span { grid-row: 1 / span 3; }
+  .teamRailGrid small { margin-top: .08rem; font-size: .55rem; }
+  .teamRailGrid h3 { margin: .2rem 0 .28rem; }
+  .teamRailGrid p { font-size: .8rem; }
+}
+
+/* Pass 46: AI-first header entry — desktop + mobile ask/apply rail. */
+.header {
+  grid-template-columns: auto minmax(14rem, .72fr) minmax(22rem, 1.28fr) auto;
+}
+.headerAi {
+  min-width: 0;
+}
+.headerAiAsk,
+.headerAiApply,
+.headerAiModes button {
+  transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+}
+.headerAiAsk:hover,
+.headerAiApply:hover,
+.headerAiModes button:hover {
+  transform: translateY(-1px);
+}
+.page[data-theme="dark"] .headerAi {
+  border-color: rgba(145,255,210,.22);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(145,255,210,.11), transparent 14rem),
+    rgba(12,16,14,.64);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 18px 56px rgba(0,0,0,.26);
+}
+.page[data-theme="dark"] .headerAiInput input { color: #fff8ea; }
+.page[data-theme="dark"] .headerAiApply { color: #fff8ea !important; background: rgba(255,255,255,.06); }
+@media (max-width: 1180px) {
+  .header {
+    grid-template-columns: auto minmax(17rem, 1fr) auto;
+  }
+  .desktopNav { display: none !important; }
+  .headerAiModes button { max-width: 6.6rem; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 859px) {
+  .header {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    gap: .42rem !important;
+  }
+  .headerAi {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: .24rem;
+    padding: .16rem;
+  }
+  .headerAiModes { display: none; }
+  .headerAiPulse { width: 1.95rem; font-size: .62rem; }
+  .headerAiInput span { display: none; }
+  .headerAiInput input { font-size: .72rem; }
+  .headerAiAsk,
+  .headerAiApply {
+    min-height: 1.95rem;
+    padding: .38rem .5rem;
+    font-size: .62rem;
+  }
+  .accountTopLink { display: none !important; }
+}
+@media (max-width: 560px) {
+  .header {
+    border-radius: 1.25rem !important;
+    padding: .42rem !important;
+  }
+  .brandText { display: none !important; }
+  .brandMark { width: 2.02rem !important; }
+  .headerAi {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    border-radius: 1.05rem;
+  }
+  .headerAiApply { display: none; }
+  .headerAiAsk { min-width: 3.05rem; }
+  .headerToggles {
+    padding: .1rem !important;
+  }
+  .themeToggle { display: none !important; }
+  .langToggle { min-width: 2rem !important; }
+}
+
+/* Pass 47: AI header owns conversion; remove duplicate account/start pill from topbar. */
+.accountTopLink { display: none !important; }
+@media (min-width: 1181px) {
+  .header {
+    grid-template-columns: auto minmax(14rem, .7fr) minmax(27rem, 1.3fr) auto !important;
+  }
+  .headerAiApply { display: inline-flex !important; }
+}
+
+/* Pass 48: mobile header must include both AI talk and signup action. */
+@media (max-width: 560px) {
+  .headerAiApply {
+    display: inline-flex !important;
+    min-width: 3.1rem;
+    max-width: 3.35rem;
+    overflow: hidden;
+    font-size: 0 !important;
+    padding-inline: .42rem !important;
+  }
+  .headerAiApply::after {
+    content: "Start";
+    font-size: .62rem;
+    font-weight: 950;
+  }
+  .langToggle { display: none !important; }
+}
+
+/* Pass 49: Richard correction — AI is not a top-menu widget.
+   Desktop: central hero AI panel. Mobile: chat lives in bottom bar. */
+.header {
+  grid-template-columns: auto minmax(16rem, 1fr) auto !important;
+}
+.headerAi { display: none !important; }
+.accountTopLink { display: inline-flex !important; }
+.heroAiPanel {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: .75rem;
+  width: min(100%, 38rem);
+  margin: clamp(1.15rem, 2vw, 1.65rem) 0 .35rem;
+  padding: .72rem;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 34%, var(--line));
+  border-radius: 1.45rem;
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 18rem),
+    radial-gradient(circle at 92% 100%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 16rem),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent), 0 24px 74px color-mix(in srgb, #000 12%, transparent);
+  backdrop-filter: blur(22px) saturate(1.16);
+}
+.heroAiPanel::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent-2) 25%, transparent), transparent 32%, color-mix(in srgb, var(--accent) 16%, transparent));
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+  opacity: .9;
+}
+.heroAiTopline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .72rem;
+  align-items: center;
+}
+.heroAiPulse {
+  display: grid;
+  place-items: center;
+  width: 2.7rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #100904;
+  font: 950 .78rem var(--font-mono-family, ui-monospace, monospace);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-2) 10%, transparent), 0 12px 34px color-mix(in srgb, #000 18%, transparent);
+}
+.heroAiTopline small {
+  display: block;
+  color: var(--accent-2);
+  font: 950 .62rem var(--font-mono-family, ui-monospace, monospace);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.heroAiTopline strong {
+  display: block;
+  color: var(--ink);
+  font-size: clamp(1.02rem, 1.3vw, 1.25rem);
+  line-height: 1.05;
+  letter-spacing: -.035em;
+}
+.heroAiInput input {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 1rem;
+  outline: 0;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  color: var(--ink);
+  padding: .85rem 1rem;
+  font: 850 .95rem var(--font-inter), system-ui, sans-serif;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
+}
+.heroAiInput input::placeholder { color: color-mix(in srgb, var(--muted) 76%, transparent); }
+.heroAiControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: .45rem;
+  align-items: center;
+}
+.heroAiModes {
+  display: flex;
+  min-width: 0;
+  gap: .24rem;
+  padding: .18rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 42%, transparent);
+}
+.heroAiModes button,
+.heroAiAsk,
+.heroAiApply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: .58rem .82rem;
+  font-size: .74rem;
+  font-weight: 950;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.heroAiModes button {
+  min-width: 0;
+  flex: 1 1 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.heroAiModes button[data-active="true"] { background: var(--ink); color: var(--bg); }
+.heroAiAsk { background: var(--ink); color: var(--bg) !important; }
+.heroAiApply { border-color: var(--line); background: var(--surface); color: var(--ink) !important; }
+.heroAiConsentHint {
+  margin: -.18rem .2rem 0 !important;
+  max-width: none !important;
+  color: color-mix(in srgb, var(--muted) 82%, transparent) !important;
+  font-size: .76rem !important;
+  line-height: 1.35 !important;
+}
+.page[data-theme="dark"] .heroAiPanel {
+  border-color: rgba(145,255,210,.24);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(145,255,210,.13), transparent 18rem),
+    radial-gradient(circle at 92% 100%, rgba(0,240,255,.10), transparent 16rem),
+    rgba(12,16,14,.70);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 28px 90px rgba(0,0,0,.32);
+}
+.page[data-theme="dark"] .heroAiInput input { color: #fff8ea; background: rgba(255,255,255,.055); }
+.page[data-theme="dark"] .heroAiApply { color: #fff8ea !important; background: rgba(255,255,255,.06); }
+@media (min-width: 981px) {
+  .heroAiPanel {
+    justify-self: center;
+    transform: translateX(clamp(0rem, 2.4vw, 2.4rem));
+  }
+}
+@media (max-width: 980px) {
+  .header { grid-template-columns: auto auto !important; }
+  .desktopNav { display: none !important; }
+}
+@media (max-width: 760px) {
+  .heroAiPanel { display: none !important; }
+  .accountTopLink { display: none !important; }
+  .mobileBottomNav .mobileNavItem:nth-child(3) {
+    color: #07100b;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--accent-2) 18%, transparent), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .mobileBottomNav .mobileNavItem:nth-child(3)::after {
+    content: "Chat";
+    margin-left: .25rem;
+    font-size: .68rem;
+    font-weight: 950;
+    letter-spacing: -.02em;
+  }
+  .mobileBottomNav[data-compact="true"] .mobileNavItem:nth-child(3)::after { display: none; }
+}
+@media (max-width: 390px) {
+  .mobileBottomNav .mobileNavItem:nth-child(3)::after { display: none; }
+}
+
+/* Pass 50: desktop AI panel must be central in the opening viewport, not a left-column form. */
+@media (min-width: 981px) {
+  .intro {
+    position: relative;
+  }
+  .heroAiPanel {
+    position: absolute;
+    left: 50%;
+    top: min(68svh, 38rem);
+    width: min(42rem, calc(100vw - 4rem));
+    margin: 0;
+    justify-self: auto;
+    transform: translate(-50%, -50%) !important;
+  }
+  .actions,
+  .trustBar,
+  .valueProof {
+    max-width: 35rem;
+  }
+}
+@media (min-width: 1280px) {
+  .heroAiPanel {
+    top: min(67svh, 38rem);
+  }
+}
+
+/* Pass 51: center hero AI against the full intro canvas, not the left copy column. */
+@media (min-width: 981px) {
+  .heroCopy {
+    position: static !important;
+  }
+  .heroAiPanel {
+    left: 50% !important;
+    top: min(59svh, 34rem) !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+/* Pass 52: central, but below the hero headline — no overlap. */
+@media (min-width: 981px) {
+  .heroAiPanel {
+    top: min(69svh, 39.5rem) !important;
+  }
+}
+
+/* Pass 54: revert to clean icon-only mobile nav; softly emphasize Chat in light/dark. */
+@media (max-width: 760px) {
+  .mobileBottomNav {
+    grid-template-columns: 1fr 1fr 1.18fr 1fr 1fr;
+  }
+
+  .mobileNavChat {
+    z-index: 2;
+    background:
+      radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 58%),
+      color-mix(in srgb, var(--ink) 9%, transparent);
+    color: color-mix(in srgb, var(--ink) 92%, var(--accent-2));
+    box-shadow:
+      inset 0 1px 1px color-mix(in srgb, #fff 34%, transparent),
+      0 10px 32px color-mix(in srgb, var(--accent-2) 16%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent-2) 28%, transparent);
+    transform: translateY(-.12rem);
+  }
+
+  .mobileNavChat svg {
+    width: 2.02rem;
+    height: 2.02rem;
+    filter:
+      drop-shadow(0 1px 0 rgba(255,255,255,.28))
+      drop-shadow(0 0 13px color-mix(in srgb, var(--accent-2) 42%, transparent));
+  }
+
+  .mobileNavChat:active {
+    transform: translateY(-.12rem) scale(.93);
+  }
+
+  .mobileBottomNav[data-compact="true"] .mobileNavChat svg {
+    width: 1.62rem;
+    height: 1.62rem;
+  }
+}
+
+/* Pass 55: Richard correction — bottom nav must be five equal icon-only slots. No Chat label, no Chat highlight. */
+@media (max-width: 760px) {
+  .mobileBottomNav {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .mobileNavItem,
+  .mobileBottomNav[data-compact="true"] .mobileNavItem {
+    min-width: 0 !important;
+    width: auto !important;
+    justify-self: stretch !important;
+  }
+
+  .mobileBottomNav .mobileNavItem:nth-child(3),
+  .mobileNavChat,
+  .page[data-theme="dark"] .mobileNavChat {
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    transform: translateZ(0) !important;
+  }
+
+  .mobileBottomNav .mobileNavItem:nth-child(3)::after,
+  .mobileNavChat::after,
+  .mobileNavItem::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .mobileNavChat svg,
+  .mobileBottomNav[data-compact="true"] .mobileNavChat svg,
+  .page[data-theme="dark"] .mobileNavChat svg {
+    width: 1.86rem !important;
+    height: 1.86rem !important;
+    filter: drop-shadow(0 1px 0 rgba(255,255,255,.36)) !important;
+  }
+
+  .mobileBottomNav[data-compact="true"] .mobileNavChat svg {
+    width: 1.46rem !important;
+    height: 1.46rem !important;
+  }
+
+  .mobileNavChat:active {
+    transform: scale(.93) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .mobileBottomNav .mobileNavItem:nth-child(3)::after,
+  .mobileNavChat::after,
+  .mobileNavItem::after {
+    content: none !important;
+    display: none !important;
+  }
+}
+
+/* Pass 56: calmer professional typography inspired by Doorz — less shouty, more readable. */
+.page {
+  --font-professional: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-professional);
+  font-weight: 430;
+  letter-spacing: -0.008em;
+}
+
+.page h1,
+.page h2,
+.copyBlock h2,
+.sectionHead h2,
+.routerCopy h2,
+.cta h2,
+.searchTitle,
+.pricingHeader h2,
+.afterScanCopy h2,
+.projectHeader h2,
+.aiWorkerDemo .sectionHead h2,
+.teamRailSection h2 {
+  font-family: var(--font-professional) !important;
+  font-weight: 680 !important;
+  letter-spacing: -0.038em !important;
+  line-height: 1.03 !important;
+  text-wrap: balance;
+}
+
+.page h1 {
+  font-size: clamp(3.45rem, 7.1vw, 7.6rem) !important;
+  max-width: 12.5ch;
+}
+
+.page h2,
+.sectionHead h2,
+.searchTitle,
+.pricingHeader h2,
+.afterScanCopy h2,
+.projectHeader h2,
+.aiWorkerDemo .sectionHead h2,
+.teamRailSection h2 {
+  font-size: clamp(2.55rem, 5.1vw, 5.7rem) !important;
+  max-width: 14ch;
+}
+
+.copyBlock h2 {
+  font-size: clamp(2.55rem, 5vw, 5.65rem) !important;
+}
+
+.page h3,
+.demoPanel strong,
+.budgetCopy strong,
+.teamRailGrid h3,
+.projectCard h3,
+.priceCard h3,
+.afterScanSteps h3 {
+  font-family: var(--font-professional) !important;
+  font-weight: 670 !important;
+  letter-spacing: -0.026em !important;
+  line-height: 1.08 !important;
+}
+
+.page p,
+.intro p,
+.sectionHead p,
+.routerCopy p,
+.cta p,
+.copyBlock > p:last-of-type,
+.searchIntro,
+.projectHeader p,
+.afterScanCopy p,
+.pricingHeader p,
+.teamRailGrid p,
+.demoFooter p,
+.budgetCopy p,
+.budgetResult p {
+  font-family: var(--font-professional) !important;
+  font-weight: 430 !important;
+  letter-spacing: -0.006em !important;
+  line-height: 1.62 !important;
+}
+
+.eyebrow,
+.layerCount,
+.brandText strong,
+.brandText small,
+.header nav a,
+.themeToggle,
+.langToggle,
+.chips span,
+.trustBar span,
+.valueProof small,
+.heroAiTopline small,
+.heroAiPulse,
+.heroAiModes button,
+.heroAiAsk,
+.heroAiApply,
+.demoTabs button,
+.demoPanel span,
+.demoRail span,
+.teamRailGrid small,
+.budgetCopy span,
+.budgetResult span,
+.assetMatrix span {
+  font-family: var(--font-ui) !important;
+  font-weight: 760 !important;
+  letter-spacing: .025em !important;
+}
+
+.eyebrow,
+.heroAiTopline small,
+.demoPanel span,
+.teamRailGrid small,
+.budgetCopy span,
+.budgetResult span,
+.assetMatrix span {
+  text-transform: none !important;
+}
+
+.primary,
+.secondary,
+.heroAiAsk,
+.heroAiApply,
+.accountTopLink,
+.demoFooter .secondary {
+  font-family: var(--font-ui) !important;
+  font-weight: 740 !important;
+  letter-spacing: -0.004em !important;
+}
+
+@media (max-width: 760px) {
+  .page h1 {
+    font-size: clamp(3.05rem, 13.2vw, 4.55rem) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.043em !important;
+  }
+
+  .page h2,
+  .sectionHead h2,
+  .searchTitle,
+  .pricingHeader h2,
+  .afterScanCopy h2,
+  .projectHeader h2,
+  .aiWorkerDemo .sectionHead h2,
+  .teamRailSection h2 {
+    font-size: clamp(2.35rem, 10.5vw, 3.45rem) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .eyebrow {
+    font-size: .72rem !important;
+    letter-spacing: .045em !important;
+  }
+
+  .intro p,
+  .sectionHead p,
+  .routerCopy p,
+  .cta p,
+  .copyBlock > p:last-of-type {
+    font-size: clamp(.98rem, 4.1vw, 1.08rem) !important;
+    line-height: 1.58 !important;
+  }
+}
+
+/* Pass 57: Doorz-scale hero typography — reduce billboard feel and improve layout calm. */
+@media (min-width: 981px) {
+  .page h1 {
+    font-size: clamp(3.8rem, 5.55vw, 6.2rem) !important;
+    max-width: 12.8ch !important;
+    line-height: 1.045 !important;
+    letter-spacing: -0.034em !important;
+    font-weight: 660 !important;
+  }
+
+  .intro > .heroCopy > p:not(.eyebrow) {
+    max-width: 39rem !important;
+    font-size: clamp(1rem, 1.1vw, 1.14rem) !important;
+    line-height: 1.62 !important;
+  }
+
+  .heroAiPanel {
+    top: min(66svh, 37rem) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .page h1 {
+    font-size: clamp(2.85rem, 11.8vw, 4.05rem) !important;
+    max-width: 10.5ch !important;
+    line-height: 1.055 !important;
+    font-weight: 660 !important;
+  }
+}
+
+/* Pass 58: Spunky on-page chat — no redirect/form-first flow. */
+.spunkyThread {
+  display: grid;
+  gap: .55rem;
+  max-height: 15.5rem;
+  overflow: auto;
+  padding: .25rem .15rem .35rem;
+  scrollbar-width: thin;
+}
+
+.spunkyBubble {
+  width: min(92%, 31rem);
+  padding: .72rem .82rem;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  border-radius: 1.05rem;
+  background: color-mix(in srgb, var(--bg) 46%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+}
+
+.spunkyBubble[data-role="visitor"] {
+  justify-self: end;
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+}
+
+.spunkyBubble span {
+  display: block;
+  margin-bottom: .16rem;
+  color: var(--accent-2);
+  font-size: .68rem;
+  font-weight: 760;
+  letter-spacing: .02em;
+}
+
+.spunkyBubble p {
+  margin: 0 !important;
+  max-width: none !important;
+  color: var(--ink) !important;
+  font-size: .9rem !important;
+  line-height: 1.45 !important;
+}
+
+.spunkyComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .45rem;
+}
+
+.spunkyComposer input,
+.spunkyLeadGrid input {
+  width: 100%;
+  min-height: 2.85rem;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: .95rem;
+  outline: 0;
+  background: color-mix(in srgb, var(--bg) 58%, transparent);
+  color: var(--ink);
+  padding: .75rem .85rem;
+  font: 430 .92rem var(--font-professional, Inter, system-ui, sans-serif);
+}
+
+.spunkyComposer button,
+.spunkyLeadCapture button,
+.spunkyAccountReady a {
+  display: inline-flex;
+  min-height: 2.85rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: .95rem;
+  background: var(--ink);
+  color: var(--bg) !important;
+  padding: .72rem .95rem;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.spunkyLeadCapture,
+.spunkyAccountReady {
+  display: grid;
+  gap: .65rem;
+  padding: .8rem;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 28%, var(--line));
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--accent-2) 9%, var(--surface));
+}
+
+.spunkyLeadCapture strong,
+.spunkyAccountReady strong {
+  color: var(--ink);
+  font-weight: 760;
+  letter-spacing: -.018em;
+}
+
+.spunkyLeadCapture p,
+.spunkyAccountReady p {
+  margin: 0 !important;
+  max-width: none !important;
+  color: var(--muted) !important;
+  font-size: .84rem !important;
+  line-height: 1.45 !important;
+}
+
+.spunkyLeadGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.spunkyConsent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .48rem;
+  align-items: start;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.spunkyConsent input {
+  margin-top: .18rem;
+  accent-color: var(--accent);
+}
+
+.spunkyError {
+  color: #ff7a7a !important;
+}
+
+.spunkyAccountReady code {
+  color: var(--accent-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .78rem;
+}
+
+.page[data-theme="dark"] .spunkyBubble,
+.page[data-theme="dark"] .spunkyComposer input,
+.page[data-theme="dark"] .spunkyLeadGrid input {
+  background: rgba(255,255,255,.055);
+  color: #fff8ea;
+}
+
+.page[data-theme="dark"] .spunkyBubble[data-role="visitor"] {
+  background: rgba(119,217,170,.14);
+}
+
+.page[data-theme="dark"] .spunkyBubble p,
+.page[data-theme="dark"] .spunkyLeadCapture strong,
+.page[data-theme="dark"] .spunkyAccountReady strong {
+  color: #fff8ea !important;
+}
+
+@media (max-width: 760px) {
+  .heroAiPanel {
+    display: grid !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    margin: 1.2rem 0 .35rem !important;
+    transform: none !important;
+  }
+
+  .heroAiPanel[data-open="false"] .spunkyThread,
+  .heroAiPanel[data-open="false"] .spunkyLeadCapture,
+  .heroAiPanel[data-open="false"] .spunkyAccountReady {
+    display: none;
+  }
+
+  .spunkyThread {
+    max-height: 18rem;
+  }
+
+  .spunkyLeadGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .spunkyComposer {
+    grid-template-columns: 1fr;
+  }
+
+  .spunkyComposer button,
+  .spunkyLeadCapture button,
+  .spunkyAccountReady a {
+    width: 100%;
+  }
+}
+
+/* Pass 59: Spunky chat is embedded content, not a popup overlay over the page. */
+@media (min-width: 981px) {
+  .heroAiPanel {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: min(100%, 42rem) !important;
+    margin: 1.35rem 0 .5rem !important;
+    justify-self: stretch !important;
+    transform: none !important;
+  }
+
+  .intro {
+    align-items: center !important;
+    min-height: auto !important;
+    padding-top: clamp(3rem, 5vw, 5rem) !important;
+  }
+
+  .actions,
+  .trustBar,
+  .valueProof {
+    max-width: 42rem !important;
+  }
+}
+
+/* Pass 60: Telegram-like Spunky chat UX — compact, fast, keyboard-safe. */
+.heroAiPanel {
+  overflow: hidden;
+}
+
+.heroAiPanel[data-open="true"] {
+  border-radius: 1.7rem;
+}
+
+.spunkyThread {
+  min-height: 12rem;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.spunkyBubble {
+  position: relative;
+  border: 0 !important;
+  box-shadow: 0 .35rem 1.4rem rgba(0,0,0,.06) !important;
+}
+
+.spunkyBubble[data-role="spunky"] {
+  justify-self: start;
+  border-bottom-left-radius: .35rem;
+  background: color-mix(in srgb, var(--surface) 78%, var(--bg)) !important;
+}
+
+.spunkyBubble[data-role="visitor"] {
+  border-bottom-right-radius: .35rem;
+  background: color-mix(in srgb, #d9f8d0 82%, var(--accent)) !important;
+  color: #08100b;
+}
+
+.spunkyBubble[data-role="visitor"] span,
+.spunkyBubble[data-role="visitor"] p {
+  color: #08100b !important;
+}
+
+.spunkyBubble[data-typing="true"] p {
+  color: var(--muted) !important;
+  font-style: italic;
+}
+
+.spunkyComposer {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 3.05rem !important;
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem;
+  margin: .05rem -.45rem -.45rem;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-radius: 1.35rem;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.spunkyComposer input {
+  min-height: 2.8rem !important;
+  border: 0 !important;
+  border-radius: 1.4rem !important;
+  background: transparent !important;
+  padding: .35rem .55rem !important;
+  font-size: 1rem !important;
+}
+
+.spunkyComposer button {
+  width: 3.05rem !important;
+  min-width: 3.05rem;
+  min-height: 3.05rem !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  font-size: 1.15rem;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--ink), color-mix(in srgb, var(--ink) 86%, var(--accent-2))) !important;
+}
+
+.spunkyComposer button:disabled {
+  opacity: .38;
+  cursor: default;
+}
+
+.heroAiControls[data-chat-controls="true"] {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: .38rem;
+  overflow-x: auto;
+  padding-bottom: .12rem;
+  scrollbar-width: none;
+}
+
+.heroAiControls[data-chat-controls="true"]::-webkit-scrollbar { display: none; }
+
+.heroAiControls[data-chat-controls="true"] .heroAiModes {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: max-content;
+  border-radius: 999px;
+}
+
+.heroAiControls[data-chat-controls="true"] button,
+.heroAiControls[data-chat-controls="true"] a {
+  flex: 0 0 auto;
+  min-height: 2.35rem !important;
+  border-radius: 999px !important;
+  padding: .55rem .82rem !important;
+  font-size: .82rem !important;
+  white-space: nowrap;
+}
+
+.spunkyLeadCapture {
+  margin-top: .2rem;
+  border-radius: 1.25rem !important;
+  background: color-mix(in srgb, #fff7ea 86%, var(--accent-2)) !important;
+}
+
+.spunkyLeadCapture::before {
+  content: "🔐 Account + opvolging";
+  width: max-content;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+  padding: .32rem .55rem;
+  color: var(--ink);
+  font-size: .7rem;
+  font-weight: 760;
+}
+
+.spunkyLeadGrid {
+  grid-template-columns: 1fr !important;
+}
+
+.spunkyLeadGrid input {
+  min-height: 2.65rem !important;
+  border-radius: 1rem !important;
+  background: rgba(255,255,255,.62) !important;
+}
+
+.spunkyConsent {
+  padding: .55rem .62rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,.48);
+}
+
+.page[data-theme="dark"] .spunkyComposer {
+  border-color: rgba(255,255,255,.1);
+  background: rgba(16,20,18,.82);
+}
+
+.page[data-theme="dark"] .spunkyBubble[data-role="visitor"] {
+  background: rgba(185,255,190,.82) !important;
+}
+
+.page[data-theme="dark"] .spunkyBubble[data-role="spunky"] {
+  background: rgba(255,255,255,.075) !important;
+}
+
+.page[data-theme="dark"] .spunkyLeadCapture {
+  background: rgba(255,248,234,.09) !important;
+}
+
+.page[data-theme="dark"] .spunkyLeadGrid input,
+.page[data-theme="dark"] .spunkyConsent {
+  background: rgba(255,255,255,.07) !important;
+}
+
+@media (min-width: 981px) {
+  .heroAiPanel {
+    max-width: 40rem;
+  }
+
+  .spunkyThread {
+    max-height: min(42svh, 23rem) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .heroAiPanel {
+    gap: .62rem !important;
+    max-height: calc(100svh - 8.8rem);
+    padding: .68rem !important;
+    border-radius: 1.28rem !important;
+  }
+
+  .heroAiTopline {
+    padding: .1rem .15rem .15rem;
+  }
+
+  .heroAiTopline strong {
+    font-size: .95rem;
+    line-height: 1.2;
+  }
+
+  .spunkyThread {
+    min-height: 11.5rem;
+    max-height: min(46svh, 22rem) !important;
+    padding: .15rem .05rem .2rem !important;
+  }
+
+  .spunkyBubble {
+    width: min(88%, 22.5rem) !important;
+    padding: .62rem .72rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .spunkyBubble p {
+    font-size: .93rem !important;
+    line-height: 1.38 !important;
+  }
+
+  .spunkyComposer {
+    grid-template-columns: minmax(0, 1fr) 2.85rem !important;
+    margin: 0 -.18rem -.18rem;
+    padding: .38rem;
+    border-radius: 1.35rem;
+  }
+
+  .spunkyComposer input {
+    font-size: 1rem !important;
+  }
+
+  .spunkyComposer button {
+    width: 2.85rem !important;
+    min-width: 2.85rem;
+    min-height: 2.85rem !important;
+  }
+
+  .heroAiControls[data-chat-controls="true"] button,
+  .heroAiControls[data-chat-controls="true"] a {
+    min-height: 2.08rem !important;
+    padding: .46rem .68rem !important;
+    font-size: .75rem !important;
+  }
+
+  .spunkyLeadCapture {
+    gap: .48rem !important;
+    padding: .68rem !important;
+  }
+
+  .spunkyLeadCapture p,
+  .spunkyConsent {
+    font-size: .76rem !important;
+    line-height: 1.32 !important;
+  }
+
+  .spunkyLeadGrid input {
+    min-height: 2.42rem !important;
+    font-size: .9rem !important;
+  }
+}
+
+/* Pass 61: remove mobile chip clutter and lift desktop chat into first viewport. */
+@media (min-width: 981px) {
+  .heroAiPanel {
+    margin-top: .95rem !important;
+    max-width: 38rem !important;
+  }
+
+  .spunkyThread {
+    min-height: 8rem !important;
+    max-height: 14rem !important;
+  }
+
+  .spunkyBubble {
+    padding: .62rem .76rem !important;
+  }
+
+  .spunkyBubble p {
+    font-size: .86rem !important;
+    line-height: 1.38 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .heroAiControls[data-chat-controls="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: .42rem !important;
+    overflow: visible !important;
+  }
+
+  .heroAiControls[data-chat-controls="true"] .heroAiModes {
+    min-width: 0 !important;
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .heroAiControls[data-chat-controls="true"] .heroAiModes button {
+    min-width: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .heroAiControls[data-chat-controls="true"] .heroAiApply {
+    display: none !important;
+  }
+
+  .heroAiControls[data-chat-controls="true"] .heroAiAsk {
+    min-width: 4.2rem;
+  }
+}
+
+/* Pass 62: desktop Spunky belongs on the right hero visual, not under the headline. */
+@media (min-width: 981px) {
+  .heroVideo {
+    overflow: visible !important;
+    isolation: isolate;
+  }
+
+  .heroVideo::after {
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .heroVideo video {
+    z-index: 0;
+  }
+
+  .heroVideo figcaption {
+    z-index: 2;
+    max-width: 72%;
+  }
+
+  .heroVideo .heroAiPanel {
+    position: absolute !important;
+    z-index: 5;
+    top: clamp(.85rem, 2.2vw, 1.45rem) !important;
+    right: clamp(.85rem, 2vw, 1.35rem) !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: min(26.5rem, 52%) !important;
+    max-width: 26.5rem !important;
+    margin: 0 !important;
+    padding: .72rem !important;
+    gap: .52rem !important;
+    border-radius: 1.35rem !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(119,217,170,.12), transparent 12rem),
+      rgba(10,14,12,.72) !important;
+    color: #fff8ea !important;
+    box-shadow: 0 1.4rem 4.5rem rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.12) !important;
+    backdrop-filter: blur(22px) saturate(1.12);
+  }
+
+  .heroVideo .heroAiTopline {
+    gap: .55rem !important;
+  }
+
+  .heroVideo .heroAiPulse {
+    width: 2.08rem !important;
+    height: 2.08rem !important;
+    font-size: .64rem !important;
+  }
+
+  .heroVideo .heroAiTopline small {
+    color: rgba(255,248,234,.62) !important;
+    font-size: .66rem !important;
+  }
+
+  .heroVideo .heroAiTopline strong {
+    color: #fff8ea !important;
+    font-size: .9rem !important;
+    line-height: 1.18 !important;
+    letter-spacing: -.018em !important;
+  }
+
+  .heroVideo .spunkyThread {
+    min-height: 7.2rem !important;
+    max-height: 11.2rem !important;
+    padding: .08rem .02rem .18rem !important;
+    gap: .42rem !important;
+  }
+
+  .heroVideo .spunkyBubble {
+    width: min(93%, 21rem) !important;
+    padding: .52rem .62rem !important;
+    border-radius: .92rem !important;
+    box-shadow: 0 .28rem 1.1rem rgba(0,0,0,.16) !important;
+  }
+
+  .heroVideo .spunkyBubble span {
+    margin-bottom: .08rem !important;
+    font-size: .58rem !important;
+  }
+
+  .heroVideo .spunkyBubble p {
+    font-size: .78rem !important;
+    line-height: 1.32 !important;
+  }
+
+  .heroVideo .spunkyComposer {
+    grid-template-columns: minmax(0, 1fr) 2.45rem !important;
+    padding: .32rem !important;
+    margin: .02rem 0 0 !important;
+    border-radius: 1.18rem !important;
+    background: rgba(255,255,255,.08) !important;
+    border-color: rgba(255,255,255,.1) !important;
+  }
+
+  .heroVideo .spunkyComposer input {
+    min-height: 2.35rem !important;
+    color: #fff8ea !important;
+    font-size: .88rem !important;
+  }
+
+  .heroVideo .spunkyComposer input::placeholder {
+    color: rgba(255,248,234,.48) !important;
+  }
+
+  .heroVideo .spunkyComposer button {
+    width: 2.45rem !important;
+    min-width: 2.45rem !important;
+    min-height: 2.45rem !important;
+    background: linear-gradient(135deg, #77d9aa, #d9a463) !important;
+    color: #0b0d0b !important;
+  }
+
+  .heroVideo .heroAiControls[data-chat-controls="true"] {
+    display: none !important;
+  }
+
+  .heroVideo .spunkyLeadCapture,
+  .heroVideo .spunkyAccountReady {
+    max-height: 18rem;
+    overflow: auto;
+    background: rgba(255,248,234,.11) !important;
+  }
+
+  .heroCopy .heroAiPanel {
+    display: none !important;
+  }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+  .heroVideo .heroAiPanel {
+    width: min(24rem, 58%) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .heroVideo .heroAiPanel {
+    display: none !important;
+  }
+}
+
+/* Pass 63: prevent desktop hero overflow at laptop widths. */
+@media (min-width: 981px) {
+  .intro {
+    width: min(1280px, calc(100% - clamp(1.25rem, 3vw, 3rem))) !important;
+    grid-template-columns: minmax(25rem, .86fr) minmax(32rem, 1.14fr) !important;
+    gap: clamp(1.6rem, 3.2vw, 3.8rem) !important;
+  }
+
+  .heroVideo {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .intro {
+    width: min(1380px, calc(100% - clamp(2rem, 4vw, 4rem))) !important;
+    grid-template-columns: minmax(27rem, .84fr) minmax(38rem, 1.16fr) !important;
+    gap: clamp(2rem, 3.8vw, 4.8rem) !important;
+  }
+
+  .intro > div:first-child,
+  .story .copyBlock,
+  .sectionHead > :not(p.eyebrow),
+  .routerCopy {
+    max-width: 40rem !important;
+  }
+}
+
+@media (min-width: 1680px) {
+  .intro {
+    width: min(1540px, calc(100% - 7rem)) !important;
+    grid-template-columns: minmax(31rem, .78fr) minmax(50rem, 1.22fr) !important;
+    gap: clamp(3rem, 5vw, 7rem) !important;
+  }
+}
+
+/* Pass 64: make desktop hero chat visibly premium, not hidden in the dark image. */
+@media (min-width: 981px) {
+  .heroVideo .heroAiPanel {
+    border: 1px solid rgba(255,248,234,.24) !important;
+    background:
+      radial-gradient(circle at 6% 0%, rgba(119,217,170,.20), transparent 13rem),
+      linear-gradient(145deg, rgba(24,32,27,.92), rgba(9,12,10,.84)) !important;
+    box-shadow:
+      0 1.6rem 4.8rem rgba(0,0,0,.42),
+      0 0 0 1px rgba(119,217,170,.08),
+      inset 0 1px 0 rgba(255,255,255,.18) !important;
+  }
+
+  .heroVideo .heroAiPanel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.10), transparent 42%, rgba(119,217,170,.08));
+  }
+
+  .heroVideo .heroAiTopline,
+  .heroVideo .spunkyThread,
+  .heroVideo .spunkyComposer,
+  .heroVideo .spunkyLeadCapture,
+  .heroVideo .spunkyAccountReady {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Pass 65: mobile chat fix. The only Spunky node lives in the hero figure now, so it must be visible and reachable on mobile. */
+@media (max-width: 760px) {
+  .heroVideo {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding-top: clamp(13.8rem, 44svh, 22rem) !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .heroVideo video {
+    top: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    height: clamp(13.8rem, 44svh, 22rem) !important;
+    min-height: 0 !important;
+  }
+
+  .heroVideo::after {
+    top: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    height: clamp(13.8rem, 44svh, 22rem) !important;
+    border-radius: inherit;
+  }
+
+  .heroVideo .heroAiPanel {
+    display: grid !important;
+    position: relative !important;
+    z-index: 6 !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: calc(100% - .9rem) !important;
+    max-width: none !important;
+    margin: .72rem auto .55rem !important;
+    transform: none !important;
+    padding: .68rem !important;
+    gap: .62rem !important;
+    border-radius: 1.28rem !important;
+  }
+
+  .heroVideo .heroAiPanel[data-open="false"] .spunkyThread,
+  .heroVideo .heroAiPanel[data-open="false"] .spunkyLeadCapture,
+  .heroVideo .heroAiPanel[data-open="false"] .spunkyAccountReady {
+    display: none !important;
+  }
+
+  .heroVideo figcaption {
+    position: relative !important;
+    z-index: 5 !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 .8rem .8rem !important;
+  }
+}
+
+/* Pass 66: keep mobile composer clear of the floating bottom nav after chat replies. */
+@media (max-width: 760px) {
+  .heroVideo .heroAiPanel {
+    scroll-margin-top: 5.8rem !important;
+    scroll-margin-bottom: 8.5rem !important;
+    margin-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .heroVideo .spunkyComposer {
+    margin-bottom: calc(4.8rem + env(safe-area-inset-bottom)) !important;
   }
 }

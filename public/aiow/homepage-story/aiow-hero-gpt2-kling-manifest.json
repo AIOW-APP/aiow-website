@@ -1,0 +1,30 @@
+[
+  {
+    "device": "desktop",
+    "src": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-hero-gpt-image-2-keyframe-desktop.jpg",
+    "aspect": "16:9",
+    "out": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-hero-gpt2-kling-desktop-10s.mp4",
+    "status": "ok",
+    "url": "https://v16-kling-fdl.klingai.com/bs2/upload-ylab-stunt-sgp/muse/871489121187930144/VIDEO/20260507/34e101b15e014f29ae29b6d66c617573-606f5f91-4f3a-49b6-a65a-97a5dc19874d.mp4?cacheKey=ChtzZWN1cml0eS5rbGluZy5tZXRhX2VuY3J5cHQSsAF4etpUQMTc9CqPj_0dI8iMQLfw3HDSDgVsYrTor5NcSj_NZQnFYjj9TXsn-Q8BcwZ-WX199cHZNiGzjpzXcuyl0CwWyxc-q5R5_ImsgVkiwjXSHXSii9MRipqsfQ-dVfUuZSDWxBiVk3t56T_nIh8L7g63Jq5a-S6UH6N5V2D8_hafWEqPmGKjX5kbfwhOefwM-9se-fuK9DyUTjAUf5w1mt7GpZ0rt2jnc5xmtjXFVhoSf6vJMx190TgGD4GP2nZFxCPDIiAjbZJa2Qnqott57ffDbnM2qy0B7-OADhneigItpQxO6igFMAE&x-kcdn-pid=112781&ksSecret=d1be1d08c1488ad43a8750a28d5843bb&ksTime=6a231a4f",
+    "final": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-hero-gpt2-kling-desktop-12s-with-sound.mp4",
+    "bytes": 8871010,
+    "seconds": 483.2,
+    "model": "kling-v2-1-master",
+    "duration_requested": 10,
+    "audio_added_seconds": 12
+  },
+  {
+    "device": "mobile",
+    "src": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-hero-gpt-image-2-keyframe-mobile.jpg",
+    "aspect": "9:16",
+    "out": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-hero-gpt2-kling-mobile-10s.mp4",
+    "status": "ok",
+    "url": "https://v16-kling-fdl.klingai.com/bs2/upload-ylab-stunt-sgp/muse/871489121187930144/VIDEO/20260507/b16526b5fc065505d0e893f59b8c1020-1807c541-07ed-49fe-8bcd-96c0ff729e6d.mp4?cacheKey=ChtzZWN1cml0eS5rbGluZy5tZXRhX2VuY3J5cHQSsAEfMlL8IEN81TWpT5kW8XctxEctfbErpGSVitlnVdX77SgqFK5zG-Bf60vUaw1eu5ig6a_wqC3AZOe2b-1JmlXMMcx4t6H9zscie7cOgZXn1lnM9ZjqCcu00MwIK959R4ZJ6V6z3JEo-jTopBlxacf8CY5Xibof-SoIsKzvpAOqq_6NXHl42aS_xWWg_Q1Epzh5XBe3hnefhmqZRbnEeV8ymYz6qraDNp5ECcMSYS__NRoS0dDQ6WvEt8pqXaoyQyeDsp12IiBKjML4Ca2d6msMCj1EwGIKEDD1jtHpVlzim8QjUQE3ISgFMAE&x-kcdn-pid=112781&ksSecret=adffaffab9cdec638799c97511b2b07d&ksTime=6a231c31",
+    "final": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-hero-gpt2-kling-mobile-12s-with-sound.mp4",
+    "bytes": 9013038,
+    "seconds": 481.2,
+    "model": "kling-v2-1-master",
+    "duration_requested": 10,
+    "audio_added_seconds": 12
+  }
+]

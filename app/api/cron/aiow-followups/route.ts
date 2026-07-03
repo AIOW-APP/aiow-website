@@ -42,6 +42,11 @@ type PersonalizationSnapshot = {
   recommendedAngle?: string;
   proofPoint?: string;
   safeCta?: string;
+  subject?: string;
+  body?: string;
+  nextAction?: string;
+  decision?: string;
+  accountId?: string;
 };
 
 type ProcessedJob = {
@@ -119,8 +124,12 @@ async function processJob(job: EmailJob, dryRun: boolean): Promise<ProcessedJob>
   )) || [])[0];
   if (!consent) return markSkipped(job, "consent_missing_or_revoked", dryRun, lead);
 
-  const subject = buildSubject(lead);
-  const html = renderFollowUpEmail(lead, job.personalization_snapshot || {});
+  const snapshot = job.personalization_snapshot || {};
+  const usesCustomDraft = Boolean(snapshot.subject && snapshot.body) && ["admin_decision_followup", "spunky_review_followup"].includes(job.job_type);
+  const subject = usesCustomDraft && snapshot.subject ? snapshot.subject.slice(0, 120) : buildSubject(lead);
+  const html = usesCustomDraft && snapshot.body
+    ? renderAdminDecisionEmail(lead, snapshot)
+    : renderFollowUpEmail(lead, snapshot);
   if (dryRun) return { jobId: job.id, leadId: job.lead_id, email: maskEmail(lead.email), status: "dry_run", reason: subject };
 
   const sent = await sendResend({ to: lead.email, subject, html, replyTo: "hello@aiow.ai" });
@@ -234,6 +243,18 @@ function renderFollowUpEmail(lead: Lead, snapshot: PersonalizationSnapshot): str
     ${lead.intent_text ? `<p style="color:#A7A7B2; line-height:1.65; margin:0 0 18px;">Context die we meenemen: “${escapeHtml(lead.intent_text.slice(0, 320))}”</p>` : ""}
     <div style="padding:16px; border-radius:14px; background:#111114; border:1px solid rgba(255,255,255,.10); color:#F8F8FA; line-height:1.6;">Volgende stap: ${escapeHtml(safeCta)}</div>
     <p style="color:#7A7A84; font-size:12px; line-height:1.5; margin:18px 0 0;">Geen nieuwsbrief. Je ontvangt dit omdat je toestemming gaf voor persoonlijke opvolging van je AIOW-aanvraag.</p>
+  `);
+}
+
+function renderAdminDecisionEmail(lead: Lead, snapshot: PersonalizationSnapshot): string {
+  const name = lead.name || lead.company || "daar";
+  const body = snapshot.body || "Team Richard heeft je aanvraag beoordeeld.";
+  return renderShell(`
+    <p style="color:#91ffd2; letter-spacing:.14em; text-transform:uppercase; font-size:12px; margin:0 0 18px;">AIOW review update</p>
+    <h1 style="font-size:30px; line-height:1.05; margin:0 0 18px;">Hoi ${escapeHtml(name)}, update vanuit Team Richard.</h1>
+    ${body.split("\n").map((line) => line.trim() ? `<p style="color:#D7D7DE; line-height:1.65; margin:0 0 14px;">${escapeHtml(line)}</p>` : `<div style="height:8px"></div>`).join("")}
+    ${snapshot.nextAction ? `<div style="padding:16px; border-radius:14px; background:#101C18; border:1px solid rgba(145,255,210,.22); color:#F8F8FA; line-height:1.6; margin-top:16px;">Interne volgende actie: ${escapeHtml(snapshot.nextAction)}</div>` : ""}
+    <p style="color:#7A7A84; font-size:12px; line-height:1.5; margin:18px 0 0;">Je ontvangt dit omdat je toestemming gaf voor persoonlijke opvolging van je AIOW-aanvraag. Geen nieuwsbrief.</p>
   `);
 }
 

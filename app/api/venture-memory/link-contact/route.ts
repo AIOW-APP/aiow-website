@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { buildVentureDealCard, captureVentureMemoryEvent, normalizeEmail } from "@/lib/aiow-venture-memory";
+import { buildVentureCanvasSnapshot, buildVentureDealCard, captureVentureMemoryEvent, normalizeEmail } from "@/lib/aiow-venture-memory";
 import { aiowDurableStoreMode } from "@/lib/aiow-durable-store";
 import { captureAiowLead, validLeadEmail, type AiowLeadCaptureInput } from "@/lib/aiow-lead-capture";
+import { createAiowCustomerAccount } from "@/lib/aiow-customer-accounts";
 
 type LinkContactPayload = {
   sessionId?: unknown;
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
     });
 
     const dealCard = await buildVentureDealCard(sessionId, canvas);
+    const canvasSnapshot = await buildVentureCanvasSnapshot(sessionId, canvas);
 
     const leadInput: AiowLeadCaptureInput = {
       email,
@@ -77,6 +79,24 @@ export async function POST(req: Request) {
     };
 
     const leadCapture = await captureAiowLead(leadInput, "LOCAL_CAPTURED");
+    const workspace = await createAiowCustomerAccount({
+      companyName: company || name,
+      legalName: company || name,
+      contactName: name,
+      contactEmail: email,
+      projectName: dealCard.title,
+      projectType: dealCard.likelyRoute,
+      moduleInterests: ["Venture Memory", "Deal Card", "AI follow-up"],
+      addOns: ["Private workspace"],
+      ideaSummary: transcript || dealCard.problem,
+      coreOffer: dealCard.opportunity,
+      painPoints: dealCard.problem,
+      aiowBuildScope: dealCard.nextStep,
+      risks: dealCard.missing.join(", "),
+      budgetRange: dealCard.missing.includes("budgetindicatie") ? "Nog onbekend" : "In gesprek genoemd",
+      onboardingId: sessionId,
+    });
+    const portalUrl = `/portal/customer/${workspace.account.accountId}`;
 
     return NextResponse.json({
       ok: true,
@@ -86,11 +106,20 @@ export async function POST(req: Request) {
       leadCapturePath: leadCapture.path,
       followUp: leadCapture.record.followUp,
       dealCard,
+      canvas: canvasSnapshot,
+      ventureSnapshot: canvasSnapshot,
+      workspace: {
+        accountId: workspace.account.accountId,
+        accessCode: workspace.accessCode,
+        portalUrl,
+        status: workspace.account.status,
+        previewLogin: true,
+      },
       privacy: {
         retention: "account_linked",
         deletion: "Op verzoek verwijdert AIOW tijdelijke Venture Memory wanneer er geen samenwerking ontstaat.",
       },
-      message: "Venture Memory gekoppeld. AIOW bewaart deze context alleen voor persoonlijke beoordeling en opvolging van deze kans.",
+      message: "Venture Memory gekoppeld. Je private AIOW workspace is klaar als preview login-link. Geen productie of contract is gestart.",
     });
   } catch (error) {
     console.error("[venture-memory/link-contact] POST error", error);

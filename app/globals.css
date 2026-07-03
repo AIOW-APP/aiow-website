@@ -12,7 +12,7 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-body);
-  cursor: none;  /* replaced by CustomCursor, fallback with cursor-enabled for a11y */
+  cursor: auto;
 }
 
 @media (pointer: coarse) {
@@ -149,10 +149,14 @@ body {
 .container { max-width: var(--container); margin: 0 auto; padding-inline: var(--page-padding); }
 .container-wide { max-width: var(--container-wide); margin: 0 auto; padding-inline: var(--page-padding); }
 
-/* Hide cursor when using custom */
+/* Hide cursor only while a page-mounted custom cursor explicitly opts in. */
 @media (hover: hover) and (pointer: fine) {
-  body { cursor: none; }
-  a, button { cursor: none; }
+  html.aiow-cursor-ready body,
+  html.aiow-cursor-ready a,
+  html.aiow-cursor-ready button,
+  html.aiow-cursor-ready input,
+  html.aiow-cursor-ready textarea,
+  html.aiow-cursor-ready select { cursor: none; }
 }
 
 /* Reduced motion */

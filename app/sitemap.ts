@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { generateSitemap } from "@/core/seo/sitemap";
+import { aiowKnowledgePages } from "@/lib/aiow-knowledge-pages";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aiow.ai";
 
@@ -44,6 +45,7 @@ const nlSeoRoutes = [
   "/nl/ai-automatisering-logistiek-transport",
   "/nl/lokale-private-ai",
   "/nl/ai-systeemscan",
+  "/nl/ai-governance-checklist",
   "/nl/regio/amsterdam",
   "/nl/regio/rotterdam",
   "/nl/regio/schiphol-haarlemmermeer",
@@ -55,6 +57,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return generateSitemap(SITE_URL, [
     { path: "/", priority: 1.0, changeFreq: "weekly" },
     { path: "/aiow-nl-authority.md", priority: 0.72, changeFreq: "weekly" },
+    { path: "/nl/kennis", priority: 0.9, changeFreq: "weekly" },
+    { path: "/nl/aanmelden", priority: 0.25, changeFreq: "monthly" },
+    ...aiowKnowledgePages.map((page) => ({
+      path: `/nl/kennis/${page.slug}`,
+      priority: page.serviceSlug === "ai-implementatie" || page.serviceSlug === "ai-agents" ? 0.78 : 0.72,
+      changeFreq: "weekly" as const,
+    })),
     ...nlSeoRoutes.map((path, index) => ({
       path,
       priority: path.includes("ai-systeemscan") ? 0.9 : 0.82,

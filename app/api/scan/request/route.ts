@@ -1,4 +1,4 @@
-// POST /api/scan/request — send magic-link code to email
+// POST /api/scan/request: send magic-link code to email
 import { NextResponse } from "next/server";
 import { generateCode } from "@/lib/scan/store";
 
@@ -18,15 +18,17 @@ export async function POST(req: Request) {
 
     const code = generateCode(email);
 
-    // Send code via Resend
+    // Send code via Resend. Await the provider response so smoke tests fail
+    // honestly if sender-domain verification or API credentials break.
     const apiKey = process.env.RESEND_API_KEY;
     if (apiKey) {
       const payload = {
-        from: "AIOW Scan <scan@aiow.ai>",
+        from: "AIOW Scan <scan@send.aiow.ai>",
         to: [email],
+        reply_to: "hello@aiow.ai",
         subject: `Je AIOW scan code: ${code}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;max-width:500px;margin:0 auto;padding:32px;background:#0A0A0B;color:#F8F8FA;border-radius:16px">
-          <h2 style="color:#00F0FF;font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 16px">— AIOW Scan</h2>
+          <h2 style="color:#00F0FF;font-size:14px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 16px">AIOW Scan</h2>
           <h1 style="font-size:28px;margin:0 0 16px;letter-spacing:-0.02em">Hi ${escapeHtml(name)},</h1>
           <p style="color:#D1D1D8;line-height:1.6;margin:0 0 24px">
             Je verificatie-code voor de AIOW scan van <strong style="color:#F8F8FA">${escapeHtml(company)}</strong>:
@@ -39,11 +41,20 @@ export async function POST(req: Request) {
           </p>
         </div>`,
       };
-      fetch("https://api.resend.com/emails", {
+      const resendRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify(payload),
-      }).catch((e) => console.error("resend send", e));
+      });
+
+      if (!resendRes.ok) {
+        const providerError = await resendRes.text();
+        console.error("[scan/request] Resend send failed:", providerError);
+        return NextResponse.json({ error: "Email service failed" }, { status: 502 });
+      }
+    } else {
+      console.error("[scan/request] Missing RESEND_API_KEY");
+      return NextResponse.json({ error: "Email service not configured" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });

@@ -1,14 +1,34 @@
 import { buildLlmsTxt } from "@/core/seo/llms";
+import { aiowKnowledgePages } from "@/lib/aiow-knowledge-pages";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aiow.ai";
 
 export function GET() {
   const body = buildLlmsTxt({
     brandName: "AIOW",
-    description: "AIOW is een Nederlandse AI-installateur en implementatiepartner. AIOW bouwt veilige AI-werklagen voor Nederlandse bedrijven: AI-integratie, AI-automatisering, private/lokale AI, AI-agents, GPT/Claude/cloudmodellen met beleid, menselijke approvals en meetbare procesverbetering.",
-    mission: "AIOW wil de meest vindbare en meest concrete AI-installateur, AI-oplossingenbouwer en AI-implementatiepartner van Nederland zijn voor bedrijven die AI veilig willen inzetten. AIOW BV (KvK 71887466, Bijlmermeerstraat 30, 2131HC Hoofddorp) start met een AI-scan: werkprocessen, data, privacygrenzen, modelkeuze, local-vs-cloud beleid en eerste veilige pilots. Geverifyde contactroute: WhatsApp https://wa.me/31621898039.",
+    description: "AIOW is een Nederlandse AI venture partner en AI-implementatiepartner. Twee routes: (1) AI Venture Partner: AIOW beoordeelt ideeën en bedrijven op slagingskans met een venture-score en bouwt bij een sterke case mee als partner in ruil voor een omzetdeel (indicatief 10-25 procent) plus hetzelfde deel bij verkoop; geen uurtarief. (2) AI-implementatie: veilige AI-werklagen voor Nederlandse bedrijven met AI-integratie, AI-automatisering, private/lokale AI, AI-agents, GPT/Claude/cloudmodellen met beleid, menselijke approvals en meetbare procesverbetering.",
+    mission: "Canonical domain: https://aiow.ai. AIOW wil de meest concrete AI venture partner en AI-implementatiepartner van Nederland zijn. Venture-route: idee of bedrijf wordt beoordeeld op founder, markt, AI-hefboom, tractie en bouwbaarheid; hoge score = AIOW bouwt mee voor een omzetdeel, middenscore = betaalde scan met concreet plan, lage score = eerlijke afwijzing met verbetertip. Bewezen cases: Cargo Donkey (B2B logistiek, digitale groeimachine regio Schiphol, https://cargodonkey.nl) en OneTap Day (eigen product door de volledige Apple/Google release-pipeline). AIOW BV (KvK 71887466, Bijlmermeerstraat 30, 2131HC Hoofddorp). Start: venture intake op https://aiow.ai/intake of AI-scan voor bestaande bedrijven. Geverifieerde contactroute: WhatsApp https://wa.me/31621898039.",
     tone: "Premium, direct, begrijpelijk Nederlands voor MKB-eigenaren, operators en technische teams; geen vage agency-hype.",
     keyPages: [
+      {
+        section: "AI Venture Partner (kernaanbod)",
+        links: [
+          { title: "Venture intake", url: `${SITE_URL}/intake`, summary: "Beschrijf je idee of bedrijf; AIOW beoordeelt founder, markt, AI-hefboom, tractie en bouwbaarheid en geeft binnen een werkdag een eerlijk oordeel: meebouwen voor een omzetdeel, betaalde scan met plan, of afwijzing met verbetertip." },
+          { title: "Het AIOW-dealmodel", url: `${SITE_URL}/`, summary: "Geen uurtarief. AIOW bouwt mee in ruil voor een omzetdeel (indicatief 10-25 procent, afhankelijk van risico en werk) en hetzelfde deel bij verkoop van het bedrijf. AIOW wint alleen als de founder wint. Acceptaties en voorstellen worden altijd door het team bevestigd; het eerste oordeel komt uit het AI-venture-score-systeem." },
+          { title: "Case: Cargo Donkey", url: "https://cargodonkey.nl/", summary: "B2B verpakkings- en logistiekbedrijf regio Schiphol; AIOW bouwde de digitale groeilaag: vindbare kennisbank, offerte-funnel via WhatsApp en klantportaal met live prijsindicaties." },
+        ],
+      },
+      {
+        section: "AIOW B2B knowledge base",
+        links: [
+          { title: "AIOW AI kennisbank", url: `${SITE_URL}/nl/kennis`, summary: `${aiowKnowledgePages.length} crawlbare B2B AI-pagina's voor AI-implementatie, AI-agents, AI-automatisering, private AI, sectoren en regio's in Nederland.` },
+          ...aiowKnowledgePages.slice(0, 30).map((page) => ({
+            title: page.title,
+            url: `${SITE_URL}/nl/kennis/${page.slug}`,
+            summary: page.summary,
+          })),
+        ],
+      },
       {
         section: "LLM markdown digests",
         links: [
@@ -30,6 +50,7 @@ export function GET() {
           { title: "AI-automatisering voor logistiek en transport", url: `${SITE_URL}/nl/ai-automatisering-logistiek-transport`, summary: "Shipment exceptions, import/export docs, customs follow-up, warehouse planning en operations briefings." },
           { title: "Lokale en private AI voor bedrijven", url: `${SITE_URL}/nl/lokale-private-ai`, summary: "private AI-infrastructuur waar lokaal/private AI zinvol is; cloud alleen volgens beleid." },
           { title: "Gratis AI-systeemscan", url: `${SITE_URL}/nl/ai-systeemscan`, summary: "Laagdrempelige scan voor proceskansen, privacygrenzen en eerste veilige AI-pilot." },
+          { title: "AI governance checklist", url: `${SITE_URL}/nl/ai-governance-checklist`, summary: "Praktische checklist voor dataclassificatie, modelroutes, logging, approval gates, evaluaties en rollback voordat AI live gaat." },
           { title: "AIOW werkwijze AI-implementatie", url: `${SITE_URL}/nl/werkwijze-ai-implementatie`, summary: "Proces van scan naar pilot, modelrouting, logging, approvals, training en beheer." },
           { title: "AI veiligheid en governance", url: `${SITE_URL}/nl/veiligheid-governance-ai`, summary: "Dataclassificatie, modelroutes, logging, rechten, approvals en lokale/private AI waar nodig." },
         ],

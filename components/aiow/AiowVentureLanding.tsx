@@ -12,7 +12,18 @@ const proofCards = [
   },
   {
     title: "Wat gebeurt er daarna?",
-    text: "Sprinky doet een Venture Intake en helpt bepalen of samenwerking logisch is voor AIOW en voor jou.",
+    text: "Spunky doet een Venture Intake en helpt bepalen of samenwerking logisch is voor AIOW en voor jou.",
+  },
+];
+
+const caseCards = [
+  {
+    title: "Case: Cargo Donkey",
+    text: "B2B verpakkings- en logistiekbedrijf regio Schiphol. AIOW bouwde de digitale groeilaag: honderden vindbare kennis- en dienstpagina's, lokale SEO/GEO-dekking en een offerte-funnel via WhatsApp en e-mail.",
+  },
+  {
+    title: "Case: OneTap Day",
+    text: "Eigen product, van nul gebouwd en door de volledige release-pipeline van Apple en Google gebracht, inclusief store-metadata, testkanalen en release-proof.",
   },
 ];
 
@@ -42,8 +53,6 @@ export function AiowVentureLanding() {
         <nav className={styles.nav} aria-label="AIOW navigation">
           <Link href="/intake">Start intake</Link>
           <Link href="/app">Login</Link>
-          <button type="button">NL</button>
-          <button type="button">Dark</button>
         </nav>
       </header>
 
@@ -63,12 +72,15 @@ export function AiowVentureLanding() {
           <div className={styles.routes} aria-label="Start routes">
             <Link href="/intake?route=startup">Ik heb een startup of idee</Link>
             <Link href="/intake?route=company">Ik heb al een bedrijf</Link>
-            <Link href="/intake?route=how">Ik wil weten hoe AIOW werkt</Link>
+            <a href="https://wa.me/31621898039" rel="noopener">Liever direct contact? WhatsApp</a>
           </div>
 
           <div className={styles.notice}>
             <span>Geen gratis chatbot</span>
-            <p>Sprinky beoordeelt of jouw idee of bedrijf interessant is als mogelijke AIOW-case.</p>
+            <p>
+              Spunky beoordeelt of jouw idee of bedrijf interessant is als mogelijke AIOW-case. Intake gestart? Je
+              krijgt binnen één werkdag reactie.
+            </p>
           </div>
         </div>
 
@@ -79,7 +91,7 @@ export function AiowVentureLanding() {
             <em />
           </div>
           <div className={styles.presencePanel}>
-            <span>Sprinky online</span>
+            <span>Spunky online</span>
             <h2>Venture Intake Partner</h2>
             <p>Ik toets idee, markt, founder, AI-potentie, risico en partnership fit voordat AIOW dieper meebouwt.</p>
             <div className={styles.signalGrid}>
@@ -105,8 +117,18 @@ export function AiowVentureLanding() {
         ))}
       </section>
 
+      <section className={styles.cards} aria-label="AIOW cases">
+        {caseCards.map((card) => (
+          <article key={card.title}>
+            <span />
+            <h2>{card.title}</h2>
+            <p>{card.text}</p>
+          </article>
+        ))}
+      </section>
+
       <div className={styles.startBar}>
-        <p>Laat Sprinky eerst bepalen welke route past: startup, groei, digitalisering, AI, partner of niet relevant.</p>
+        <p>Laat Spunky eerst bepalen welke route past: startup, groei, digitalisering, AI, partner of niet relevant.</p>
         <Link href="/intake">Start Venture Intake</Link>
       </div>
     </main>

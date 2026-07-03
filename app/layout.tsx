@@ -4,31 +4,27 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "AIOW — jouw persoonlijke AI-medewerker",
+    default: "AIOW, AI venture & growth partner",
     template: "%s · AIOW",
   },
   description:
-    "AIOW installeert persoonlijke AI-medewerkers voor Nederlandse ondernemers en teams: AI die je bedrijf leert kennen, helpt met klantvragen, offertes, planning en administratie, en veilig blijft door menselijke approval.",
+    "AIOW.ai bouwt AI, software, automatisering, marketing en digitale groeisystemen in startups en gevestigde bedrijven via private intake, AI Deal Card, contract, projectgroep met Spunky en resultaatgedreven samenwerking.",
   keywords: [
     "AIOW",
-    "AI-systeem",
-    "AI-systeemscan",
-    "AI integratie Nederland",
-    "AI agents bedrijven",
-    "AI advies bedrijf",
-    "AI consultant Nederland",
-    "AI implementatie Nederland",
-    "AI oplossingen bedrijven",
-    "AI-installateur bedrijf",
-    "AI installateur Nederland",
+    "AI venture studio",
+    "AI growth partner",
+    "AI voor startups",
+    "AI voor bedrijven",
+    "AI softwareontwikkeling",
     "AI automatisering Nederland",
-    "AI agents Nederland",
-    "private AI Nederland",
-    "lokale AI Nederland",
-    "MKB AI",
-    "Schiphol logistics AI",
-    "private AI",
-    "private AI infrastructure",
+    "AI revenue share",
+    "AI agents bedrijven",
+    "AI implementatie Nederland",
+    "AI platform bouwen",
+    "AI marketing automation",
+    "private AI intake",
+    "venture builder AI",
+    "digitale groeipartner",
   ],
   metadataBase: new URL("https://aiow.ai"),
   alternates: { canonical: "/", languages: { nl: "/", "nl-NL": "/", en: "/en", "x-default": "/" } },
@@ -37,28 +33,29 @@ export const metadata: Metadata = {
     locale: "nl_NL",
     url: "https://aiow.ai/",
     siteName: "AIOW",
-    title: "AIOW — jouw persoonlijke AI-medewerker",
-    description: "Persoonlijke AI-medewerkers voor Nederlandse ondernemers en teams — lokaal waar nodig, cloud waar het mag, met menselijke approvals.",
+    title: "AIOW, AI venture & growth partner",
+    description: "AIOW bouwt AI, software, automatisering en growth in startups en gevestigde bedrijven met private intake, Deal Card, contract en resultaatgedreven samenwerking.",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     creator: "@handsomebstrd",
-    title: "AIOW — jouw persoonlijke AI-medewerker",
-    description: "Persoonlijke AI-medewerkers voor klantvragen, offertes, planning en administratie — veilig geïnstalleerd voor Nederlandse bedrijven.",
+    title: "AIOW, AI venture & growth partner",
+    description: "AI, software, automatisering, marketing en digitale groeisystemen voor startups en gevestigde bedrijven.",
     images: ["/opengraph-image"],
   },
   authors: [{ name: "AIOW BV" }],
   creator: "AIOW BV",
   publisher: "AIOW BV",
-  category: "AI-systemen, AI-automatisering, private AI",
+  category: "AI venture studio, AI growth, softwareontwikkeling, automatisering",
   robots: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
   other: {
     "aiow:legal-name": "AIOW BV",
     "aiow:kvk": "71887466",
     "aiow:address": "Bijlmermeerstraat 30, 2131HC Hoofddorp, Netherlands",
     "aiow:whatsapp": "+31 6 21 89 80 39",
-    "aiow:contact-route": "WhatsApp primary; forms and analytics disabled until safely configured",
+    "aiow:email": "info@aiow.ai",
+    "aiow:contact-route": "WhatsApp primary; private intake route for venture/growth inquiries",
   },
 };
 
@@ -77,8 +74,9 @@ const organizationJsonLd = {
   url: "https://aiow.ai/",
   logo: "https://aiow.ai/opengraph-image",
   image: "https://aiow.ai/opengraph-image",
-  description: "AIOW installeert persoonlijke AI-medewerkers en veilige AI-werklagen voor Nederlandse bedrijven: klantvragen, offertes, planning, administratie, private/lokale AI, modelrouting, menselijke approvals en meetbare procesverbetering.",
+  description: "AIOW is een AI-gedreven venture & growth partner die AI, software, automatisering, marketing en digitale groeisystemen bouwt voor startups en gevestigde bedrijven.",
   identifier: { "@type": "PropertyValue", propertyID: "KvK", value: "71887466" },
+  email: "info@aiow.ai",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Bijlmermeerstraat 30",
@@ -87,7 +85,7 @@ const organizationJsonLd = {
     addressRegion: "Noord-Holland",
     addressCountry: "NL",
   },
-  contactPoint: [{ "@type": "ContactPoint", contactType: "sales", telephone: "+31621898039", areaServed: "NL", availableLanguage: ["nl", "en"] }],
+  contactPoint: [{ "@type": "ContactPoint", contactType: "sales", telephone: "+316****8039", email: "info@aiow.ai", areaServed: "NL", availableLanguage: ["nl", "en"] }],
 };
 
 const localBusinessJsonLd = {
@@ -98,7 +96,8 @@ const localBusinessJsonLd = {
   url: "https://aiow.ai/",
   image: "https://aiow.ai/opengraph-image",
   priceRange: "€€€",
-  telephone: "+31621898039",
+  telephone: "+316****8039",
+  email: "info@aiow.ai",
   areaServed: ["Nederland", "Amsterdam", "Rotterdam", "Utrecht", "Schiphol", "Haarlemmermeer", "Eindhoven", "Den Haag"],
   address: {
     "@type": "PostalAddress",
@@ -109,9 +108,9 @@ const localBusinessJsonLd = {
     addressCountry: "NL",
   },
   makesOffer: [
-    { "@type": "Offer", itemOffered: { "@type": "Service", name: "AI-systeemscan", serviceType: "AI scan voor processen, data, privacygrenzen en quick wins" } },
-    { "@type": "Offer", itemOffered: { "@type": "Service", name: "Persoonlijke AI Starter", serviceType: "Persoonlijke AI-medewerker voor klantvragen, offertes, content, planning en administratie" } },
-    { "@type": "Offer", itemOffered: { "@type": "Service", name: "Private en lokale AI", serviceType: "Lokale/private AI, cloudmodelbeleid, approvals en governance" } }
+    { "@type": "Offer", itemOffered: { "@type": "Service", name: "Private Venture Intake", serviceType: "AI due diligence, Deal Card en venture/growth advies" } },
+    { "@type": "Offer", itemOffered: { "@type": "Service", name: "AI Platform Build", serviceType: "Software, agents, automatisering, dashboards en klantportalen" } },
+    { "@type": "Offer", itemOffered: { "@type": "Service", name: "Growth Partner", serviceType: "AI, marketing automation, KPI-sturing en resultaatgedreven groei" } }
   ],
 };
 
@@ -125,7 +124,7 @@ const websiteJsonLd = {
   publisher: { "@id": "https://aiow.ai/#organization" },
   potentialAction: {
     "@type": "CommunicateAction",
-    name: "Plan een AI-scan via WhatsApp",
+    name: "Start private intake via WhatsApp",
     target: "https://wa.me/31621898039",
   },
 };
@@ -133,14 +132,14 @@ const websiteJsonLd = {
 const serviceJsonLd = {
   "@context": "https://schema.org",
   "@type": "Service",
-  "@id": "https://aiow.ai/#ai-system-scan-service",
-  name: "Persoonlijke AI-medewerker en AI-scan",
+  "@id": "https://aiow.ai/#ai-venture-growth-service",
+  name: "AI venture & growth partner",
   provider: { "@id": "https://aiow.ai/#organization" },
   areaServed: "NL",
-  serviceType: "Persoonlijke AI-medewerker, AI-installateur Nederland, AI-oplossingen voor bedrijven, AI-integratie, AI-automatisering, AI agents, private AI, lokale AI en AI governance",
-  description: "AIOW is een Nederlandse AI-installateur die persoonlijke AI-medewerkers en veilige AI-werklagen installeert voor ondernemers en teams: klantvragen, offertes, planning, administratie, lokale/private AI en menselijke approvals.",
-  audience: { "@type": "BusinessAudience", audienceType: "Nederlandse MKB-bedrijven en technische teams" },
-  offers: { "@type": "Offer", url: "https://aiow.ai/#scan", availability: "https://schema.org/InStock", itemOffered: { "@type": "Service", name: "AI-systeemscan" } },
+  serviceType: "AI venture studio, AI growth partner, softwareontwikkeling, AI automatisering, AI agents, marketing automation, private venture intake en Deal Card",
+  description: "AIOW helpt startups en gevestigde bedrijven groeien door AI, software, automatisering, marketing en digitale strategie te bouwen en mee te sturen op resultaat.",
+  audience: { "@type": "BusinessAudience", audienceType: "Founders, startups, ondernemers en gevestigde bedrijven" },
+  offers: { "@type": "Offer", url: "https://aiow.ai/#scan", availability: "https://schema.org/InStock", itemOffered: { "@type": "Service", name: "Private Venture Intake" } },
 };
 
 export default function RootLayout({

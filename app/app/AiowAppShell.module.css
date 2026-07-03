@@ -92,7 +92,7 @@
   margin: 8px 0 0;
   font-size: clamp(32px, 4vw, 58px);
   line-height: 0.98;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.035em;
 }
 
 .topbar a,
@@ -108,6 +108,10 @@
   text-decoration: none;
   font-weight: 850;
 }
+.topActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.topActions a:last-child,
+.inlineAction { border: 1px solid rgba(255,255,255,0.16); color: #f7fbff; background: rgba(255,255,255,0.07); }
+.inlineAction { width: fit-content; margin-top: 16px; }
 
 .grid {
   display: grid;
@@ -305,6 +309,9 @@
     width: 100%;
     margin-top: 16px;
   }
+
+  .topActions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px; }
+  .topActions a { margin-top: 0; }
 
   .grid {
     grid-template-columns: 1fr;

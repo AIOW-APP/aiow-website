@@ -1,0 +1,13 @@
+{
+  "model": "kling-v2-1-master",
+  "reference": "/Users/handsomebastard/projects/aiow-website/public/aiow/references/aiow-live-reference-20260506.jpg",
+  "raw": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-live-active-business-worklayer-kling-mobile-10s.mp4",
+  "lite": "/Users/handsomebastard/projects/aiow-website/public/aiow/homepage-story/aiow-live-active-business-worklayer-kling-mobile-lite.mp4",
+  "status": "ok",
+  "prompt": "Use the provided image as the exact art-direction and first-frame reference. Create a premium AIOW mobile homepage video that feels truly live and operational, not static. Keep the business office environment calm, realistic and trustworthy. Add purposeful action: subtle cinematic push-in, people moving naturally at desks, hands opening a laptop, dashboards updating, document cards routing between systems, approval chips lighting up, a client request becoming a task, summary, approval and CRM update. The AI worklayer should feel active through elegant transparent routing lines and soft UI cards, but never sci-fi, never neon, never robots, no readable fake text. Make the motion richer than a simple parallax: foreground movement, screen glow, human handoffs, small operational details, premium consulting/product-film energy. Smooth continuous motion suitable for muted website autoplay. No fast cuts, no shaky camera, no gimmicks.",
+  "negative": "space, galaxy, stars, spaceship, robot, robot mascot, cyberpunk, neon, sci-fi city, hologram overload, readable text, captions, subtitles, logos, watermark, crypto, distorted hands, uncanny faces, chaotic camera, shaky camera, fast cuts, low quality, blurry, warped UI, fantasy interface, empty office, static image, frozen people",
+  "url": "https://v16-kling-fdl.klingai.com/bs2/upload-ylab-stunt-sgp/muse/871489121187930144/VIDEO/20260507/123252262088e63c293a4d0eccfd5edc-2530c148-26a8-4a56-9a5a-d9cc8a32a37d.mp4?cacheKey=ChtzZWN1cml0eS5rbGluZy5tZXRhX2VuY3J5cHQSsAFfohYjKLRwd3rHoinHqHHFZhop3ivrW3yG2rfL6xbx5R0WNEHl4o0_euBsrfLCSWLqRDOgrm44at7-OPAwcUbMC99TAtEkyd_ZWBrQL43rGxLHoDGxRqNqXAFAm5lGZgxB6Ir9Vilygs3Ybyvrx2PaG2DcTf1YcklzZ-qM8jGqpGRVAm7oulqG97fAtrwueUTaiO2ei1K9FVGYkvvwdlzm6uwHvpuMBM-HWFdyd6bkxxoSk8Q9wF5iLa3FHD-a4yQLv8RpIiAsVcDiGvRanuVyA8awZQcWQKgD9qfqurFcCD4-D3aCrigFMAE&x-kcdn-pid=112781&ksSecret=7024597b99569b859949425ef2f05510&ksTime=6a233f0c",
+  "rawBytes": 18075721,
+  "liteBytes": 3218629,
+  "seconds": 480.9
+}

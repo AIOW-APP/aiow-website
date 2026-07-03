@@ -278,7 +278,7 @@ export function AiowMobileFlagshipPage() {
       <section id="scan" className={styles.scanCta}>
         <p className={styles.eyebrow}>Gratis eerste stap</p>
         <h2>Laat één proces doorlichten.</h2>
-        <p>We kiezen samen klantcontact, offertes, planning of documenten — en laten zien waar AI veilig tijd terugwint.</p>
+        <p>We kiezen samen klantcontact, offertes, planning of documenten, en laten zien waar AI veilig tijd terugwint.</p>
         <a className={styles.primary} href={WHATSAPP_URL} target="_blank" rel="noopener">Plan de AI-systeemscan via WhatsApp</a>
       </section>
     </main>

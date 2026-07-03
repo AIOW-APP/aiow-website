@@ -34,6 +34,26 @@ type Canvas = {
   automationScore: number;
 };
 
+type DealCard = {
+  title?: string;
+  founder?: string;
+  company?: string;
+  problem?: string;
+  opportunity?: string;
+  likelyRoute?: string;
+  missing?: string[];
+  nextStep?: string;
+  confidence?: number;
+};
+
+type WorkspaceLink = {
+  accountId: string;
+  accessCode: string;
+  portalUrl: string;
+  status?: string;
+  previewLogin?: boolean;
+};
+
 const initialCanvas: Canvas = {
   project: "Nog niet ingevuld",
   founder: "Nog niet ingevuld",
@@ -94,10 +114,11 @@ const memorySteps = [
 ];
 
 const firstMessage =
-  "Hey, ik ben Spunky, AI Venture Intake Partner van AIOW. Kom je met een startup of idee, een bestaand bedrijf, een AI-groeivraag of als mogelijke partner?";
+  "Hey, I’m Spunky, AIOW’s AI Venture Intake Partner. Talk to me in any language you want. I’ll reply in that language. Are you here with a startup idea, an existing company, an AI growth question or a possible partnership?";
 
 export function AiowAiHomepage() {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const threadRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<IntakeState>("idle");
   const [input, setInput] = useState("");
   const [canvas, setCanvas] = useState<Canvas>(initialCanvas);
@@ -105,10 +126,13 @@ export function AiowAiHomepage() {
   const [sessionId, setSessionId] = useState("");
   const [memoryStatus, setMemoryStatus] = useState<MemoryStatus>("temporary");
   const [dealCardTitle, setDealCardTitle] = useState("");
+  const [dealCard, setDealCard] = useState<DealCard | null>(null);
+  const [workspaceLink, setWorkspaceLink] = useState<WorkspaceLink | null>(null);
   const [composerFocused, setComposerFocused] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: "m0", role: "ai", text: firstMessage, time: "nu" },
+    { id: "m0", role: "ai", text: firstMessage, time: "now" },
   ]);
+  const [chatLanguage, setChatLanguage] = useState("en");
 
   const userCount = messages.filter((message) => message.role === "user").length;
   const activeCanvas = useMemo(() => mergeCanvas(canvas, input), [canvas, input]);
@@ -122,8 +146,18 @@ export function AiowAiHomepage() {
     const nextSessionId = stored || `aiow_session_${crypto.randomUUID()}`;
     window.localStorage.setItem("aiow:ventureSessionId", nextSessionId);
     setSessionId(nextSessionId);
-    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    if (window.matchMedia("(min-width: 881px) and (pointer: fine)").matches) {
+      requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    }
   }, []);
+
+  useEffect(() => {
+    const thread = threadRef.current;
+    if (!thread) return;
+    requestAnimationFrame(() => {
+      thread.scrollTo({ top: thread.scrollHeight, behavior: "smooth" });
+    });
+  }, [messages.length, state]);
 
   function onInput(event: ChangeEvent<HTMLTextAreaElement>) {
     setInput(event.target.value);
@@ -141,6 +175,8 @@ export function AiowAiHomepage() {
     const text = (prompt || input).trim();
     if (!text) return;
 
+    const detectedLanguage = detectChatLanguage(text, chatLanguage);
+    setChatLanguage(detectedLanguage);
     const nextCanvas = mergeCanvas(canvas, text, true);
     setCanvas(nextCanvas);
     setInput("");
@@ -159,6 +195,8 @@ export function AiowAiHomepage() {
           message: text,
           mode: conversationMode === "workflow_scan" || conversationMode === "lead_machine" ? "company" : "idea",
           conversationMode,
+          language: detectedLanguage,
+          responseLanguage: detectedLanguage,
           relationshipStage: memoryStatus === "linked" ? "account" : "anonymous",
           visitorMessageCount: userCount + 1,
           sessionId,
@@ -167,11 +205,24 @@ export function AiowAiHomepage() {
           page: "aiow-v4-ai-venture-experience",
         }),
       });
-      const data = (await response.json()) as { reply?: string; leadGate?: boolean; memorySessionId?: string };
+      const data = (await response.json()) as { reply?: string; language?: string; leadGate?: boolean; memorySessionId?: string; dealCard?: DealCard; workspace?: WorkspaceLink; canvas?: Partial<Canvas>; ventureSnapshot?: Partial<Canvas> };
+      if (data.language) setChatLanguage(data.language);
       const reply = refineReply(data.reply, text, userCount + 1);
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "ai", text: reply, time: "nu" }]);
       if (data.memorySessionId && data.memorySessionId !== sessionId) setSessionId(data.memorySessionId);
-      setState(data.leadGate || userCount >= 2 ? "consent" : "briefing");
+      const serverCanvas = toCanvas(data.ventureSnapshot || data.canvas);
+      if (serverCanvas) setCanvas(serverCanvas);
+      if (data.workspace) {
+        setMemoryStatus("linked");
+        setDealCard(data.dealCard || null);
+        setDealCardTitle(data.dealCard?.title || "Deal Card aangemaakt");
+        setWorkspaceLink(data.workspace);
+        window.localStorage.setItem("aiow:lastAccountId", data.workspace.accountId);
+        window.localStorage.setItem("aiow:lastAccessCode", data.workspace.accessCode);
+        setState("review");
+      } else {
+        setState(data.leadGate || userCount >= 2 ? "consent" : "briefing");
+      }
     } catch {
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "ai", text: localReply(text, userCount + 1), time: "nu" }]);
       setState(userCount >= 2 ? "consent" : "briefing");
@@ -199,12 +250,20 @@ export function AiowAiHomepage() {
           transcript: messages.map((message) => `${message.role}: ${message.text}`).join("\n"),
         }),
       });
-      const data = (await response.json()) as { ok?: boolean; dealCard?: { title?: string } };
+      const data = (await response.json()) as { ok?: boolean; dealCard?: DealCard; workspace?: WorkspaceLink; canvas?: Partial<Canvas>; ventureSnapshot?: Partial<Canvas> };
       const nextDealCardTitle = data.dealCard?.title || "Deal Card aangemaakt";
       if (response.ok && data.ok) {
         finalDealCardTitle = nextDealCardTitle;
         setMemoryStatus("linked");
         setDealCardTitle(nextDealCardTitle);
+        setDealCard(data.dealCard || null);
+        if (data.workspace) {
+          setWorkspaceLink(data.workspace);
+          window.localStorage.setItem("aiow:lastAccountId", data.workspace.accountId);
+          window.localStorage.setItem("aiow:lastAccessCode", data.workspace.accessCode);
+        }
+        const serverCanvas = toCanvas(data.ventureSnapshot || data.canvas);
+        if (serverCanvas) setCanvas(serverCanvas);
       }
     } catch {
       finalDealCardTitle = "Deal Card lokaal voorbereid";
@@ -248,7 +307,7 @@ export function AiowAiHomepage() {
           <div className={styles.mission}>
             <p>THE AI IS THE HOMEPAGE</p>
             <h1>Laat je case beoordelen.</h1>
-            <span>Sprinky bouwt je Venture Memory op en toetst of AIOW als partner waarde kan toevoegen.</span>
+            <span>Spunky bouwt je Venture Memory op en toetst of AIOW als partner waarde kan toevoegen.</span>
           </div>
 
           <div className={styles.presencePanel} aria-label="AI Presence">
@@ -305,7 +364,7 @@ export function AiowAiHomepage() {
             <span />
           </div>
 
-          <div className={styles.thread} aria-live="polite">
+          <div ref={threadRef} className={styles.thread} aria-live="polite">
             {messages.map((message) => (
               <article key={message.id} className={message.role === "ai" ? styles.aiBubble : styles.userBubble}>
                 <p>{message.text}</p>
@@ -314,6 +373,13 @@ export function AiowAiHomepage() {
             ))}
             {state === "thinking" ? <ThinkingCard progress={thinkingProgress} /> : null}
           </div>
+
+          <section className={styles.mobileCards} aria-label="Compacte Venture Memory">
+            <MobileCard title="Business" value={activeCanvas.project} detail={activeCanvas.businessModel} score={activeCanvas.confidence} />
+            <MobileCard title="Probleem" value={activeCanvas.problem} detail={activeCanvas.solution} score={activeCanvas.marketScore} />
+            <MobileCard title="AI kans" value={activeCanvas.aiOpportunities} detail={activeCanvas.automation} score={activeCanvas.aiScore} />
+            <MobileCard title="Risico" value={activeCanvas.risk} detail={activeCanvas.collaboration} score={activeCanvas.riskScore} />
+          </section>
 
           <div className={styles.quickActions} aria-label="Slimme vervolgstappen">
             {quickActions.map((action) => (
@@ -332,12 +398,12 @@ export function AiowAiHomepage() {
               onFocus={() => setComposerFocused(true)}
               onBlur={() => setComposerFocused(false)}
               onKeyDown={onComposerKeyDown}
-              placeholder="Startup, bedrijf, markt of groeikans..."
+              placeholder="Startup, company, market or growth chance..."
               rows={2}
             />
             <div className={styles.composerActions} aria-label="Input opties">
               <button type="button" title="Tools">+</button>
-              <button type="button" title="Voice input">Praat</button>
+              <button type="button" title="Voice input">Speak</button>
               <button type="button" title="Website analyseren">Website</button>
               <button type="button" title="Pitchdeck uploaden">Pitchdeck</button>
             </div>
@@ -395,13 +461,6 @@ export function AiowAiHomepage() {
         </aside>
       </section>
 
-      <section className={styles.mobileCards} aria-label="Swipeable Venture Canvas">
-        <MobileCard title="Business" value={activeCanvas.project} detail={activeCanvas.businessModel} score={activeCanvas.confidence} />
-        <MobileCard title="Probleem" value={activeCanvas.problem} detail={activeCanvas.solution} score={activeCanvas.marketScore} />
-        <MobileCard title="AI kansen" value={activeCanvas.aiOpportunities} detail={activeCanvas.automation} score={activeCanvas.aiScore} />
-        <MobileCard title="Risico" value={activeCanvas.risk} detail={activeCanvas.collaboration} score={activeCanvas.riskScore} />
-      </section>
-
       <section className={styles.thinkingDock} aria-label="AI thinking analyse">
         {thinkingSteps.map((step, index) => (
           <div key={step} className={styles.thinkingTile}>
@@ -412,12 +471,12 @@ export function AiowAiHomepage() {
         ))}
       </section>
 
-      {showContact ? (
-        <section className={styles.contactGate} aria-label="Magic link account">
+      {showContact && !workspaceLink ? (
+        <section className={styles.contactGate} aria-label="Preview workspace account">
           <div>
-            <p>Magic link account</p>
-            <h2>Wil je dat AIOW deze venture intake bewaart?</h2>
-            <span>Je tijdelijke Venture Memory wordt gekoppeld aan je account. We mailen alleen persoonlijk over deze kans als jij toestemming geeft.</span>
+            <p>Private workspace</p>
+            <h2>Wil je dat AIOW deze Venture Memory bewaart?</h2>
+            <span>Je tijdelijke Venture Memory wordt gekoppeld aan een preview workspace. We mailen alleen persoonlijk over deze kans als jij toestemming geeft.</span>
           </div>
           <form onSubmit={submitContact}>
             <input aria-label="Naam" placeholder="Naam" value={contact.name} onChange={(event) => setContact({ ...contact, name: event.target.value })} />
@@ -425,13 +484,48 @@ export function AiowAiHomepage() {
             <input aria-label="Bedrijf" placeholder="Bedrijf optioneel" value={contact.company} onChange={(event) => setContact({ ...contact, company: event.target.value })} />
             <label>
               <input type="checkbox" checked={contact.consent} onChange={(event) => setContact({ ...contact, consent: event.target.checked })} />
-              <span>AIOW mag deze context opslaan en mij gericht mailen over deze kans.</span>
+              <span>AIOW mag deze context opslaan en mij persoonlijk mailen over deze kans. Geen nieuwsbrief of generieke marketing zonder aparte toestemming.</span>
             </label>
-            <button type="submit" disabled={!contact.name.trim() || !contact.email.trim() || !contact.consent}>Maak private intake</button>
+            <button type="submit" disabled={!contact.name.trim() || !contact.email.trim() || !contact.consent}>Maak private workspace</button>
           </form>
         </section>
       ) : null}
+
+      {workspaceLink ? <DealCardPanel dealCard={dealCard} workspace={workspaceLink} title={dealCardTitle} /> : null}
     </main>
+  );
+}
+
+function DealCardPanel({ dealCard, workspace, title }: { dealCard: DealCard | null; workspace: WorkspaceLink; title: string }) {
+  return (
+    <section className={styles.dealCardPanel} aria-label="AIOW Deal Card en private workspace">
+      <div>
+        <p>Deal Card klaar</p>
+        <h2>{dealCard?.title || title || "AIOW Venture Memory"}</h2>
+        <span>{dealCard?.likelyRoute || "Team AIOW review"}</span>
+      </div>
+      <div className={styles.dealGrid}>
+        <article>
+          <strong>{dealCard?.confidence ?? 0}%</strong>
+          <span>Venture confidence</span>
+        </article>
+        <article>
+          <strong>{workspace.status || "INTAKE"}</strong>
+          <span>Workspace status</span>
+        </article>
+      </div>
+      <p>{dealCard?.problem || "Je context is opgeslagen als Venture Memory."}</p>
+      <p>{dealCard?.nextStep || "Open je private workspace om ontbrekende context aan te vullen."}</p>
+      {dealCard?.missing?.length ? <div className={styles.missingList}>{dealCard.missing.map((item) => <span key={item}>{item}</span>)}</div> : null}
+      <div className={styles.workspaceAccess}>
+        <div>
+          <span>Preview toegangscode</span>
+          <strong>{workspace.accessCode}</strong>
+        </div>
+        <a href={workspace.portalUrl}>Open private workspace</a>
+      </div>
+      <small>Preview login-link, nog geen echte Magic Link. Productie, contract en betalingen starten pas na AIOW review en akkoord.</small>
+    </section>
   );
 }
 
@@ -492,14 +586,39 @@ function ThinkingCard({ progress }: { progress: number[] }) {
 }
 
 function MobileCard({ title, value, detail, score }: { title: string; value: string; detail: string; score: number }) {
+  const hasValue = value && !value.toLowerCase().includes("nog niet");
   return (
-    <article className={styles.mobileCard}>
-      <span>{title}</span>
-      <h3>{value}</h3>
-      <p>{detail}</p>
-      <strong>{score}/100</strong>
-    </article>
+    <details className={styles.mobileCard}>
+      <summary>
+        <span>{title}</span>
+        <strong>{hasValue ? value : "Nog leeg"}</strong>
+        <b>{score || 0}</b>
+      </summary>
+      <p>{detail && !detail.toLowerCase().includes("nog niet") ? detail : "Spunky vult dit zodra je meer context geeft."}</p>
+    </details>
   );
+}
+
+
+function toCanvas(value?: Partial<Canvas>): Canvas | null {
+  if (!value || typeof value !== "object") return null;
+  return {
+    ...initialCanvas,
+    ...value,
+    confidence: cleanPercent(value.confidence),
+    marketScore: cleanTen(value.marketScore),
+    riskScore: cleanTen(value.riskScore),
+    aiScore: cleanTen(value.aiScore),
+    automationScore: cleanTen(value.automationScore),
+  };
+}
+
+function cleanPercent(value: unknown): number {
+  return Math.min(100, Math.max(0, Number(value || 0) || 0));
+}
+
+function cleanTen(value: unknown): number {
+  return Math.min(10, Math.max(0, Number(value || 0) || 0));
 }
 
 function mergeCanvas(current: Canvas, text: string, committed = false): Canvas {
@@ -553,6 +672,16 @@ function getThinkingProgress(canvas: Canvas, state: IntakeState, input: string):
 function refineReply(reply: string | undefined, text: string, count: number): string {
   if (reply?.trim()) return reply.trim().replace(/\u2014/g, ", ").replace(/\u2013/g, "-");
   return localReply(text, count);
+}
+
+function detectChatLanguage(text: string, fallback = "en"): string {
+  const lower = text.toLowerCase();
+  if (/\b(hallo|hoi|goedemorgen|goedemiddag|goedenavond|bedrijf|idee|groei|klant|klanten|omzet|afspraak|mijn|ik wil|wij willen|kun je)\b/.test(lower)) return "nl";
+  if (/\b(bonjour|salut|merci|entreprise|idée|croissance)\b/.test(lower)) return "fr";
+  if (/\b(hola|gracias|empresa|idea|crecimiento)\b/.test(lower)) return "es";
+  if (/\b(hallo|guten|danke|unternehmen|idee|wachstum)\b/.test(lower)) return "de";
+  if (/\b(hello|hey|hi|company|startup|idea|growth|customer|customers|revenue|meeting)\b/.test(lower)) return "en";
+  return fallback || "en";
 }
 
 function classifyConversationMode(text: string, transcript = "") {

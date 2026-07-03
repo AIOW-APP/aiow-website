@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-// POST /api/contact — receive AI-scan form, send via Resend.
+// POST /api/contact: receive AI-scan form, send via Resend.
 export async function POST(req: Request) {
   if (process.env.NEXT_PUBLIC_AIOW_ENABLE_FORMS !== "true") {
     return NextResponse.json({ error: "AIOW contact form disabled; use WhatsApp" }, { status: 503 });
@@ -22,13 +22,13 @@ export async function POST(req: Request) {
 
     // Email to AIOW team
     const teamPayload = {
-      from: "AIOW Scan <scan@aiow.ai>",
+      from: "AIOW Scan <scan@send.aiow.ai>",
       to: ["hello@aiow.ai"],
       reply_to: email,
       subject: `[AI-scan aanvraag] ${company} · ${sector}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #0A0A0B; color: #F8F8FA; border-radius: 16px;">
-          <h2 style="color: #00F0FF; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 24px;">— Nieuwe AI-scan aanvraag</h2>
+          <h2 style="color: #00F0FF; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 24px;">Nieuwe AI-scan aanvraag</h2>
           <h1 style="font-size: 28px; margin: 0 0 32px; letter-spacing: -0.02em;">${escapeHtml(company)}</h1>
 
           <table style="width: 100%; border-collapse: collapse; color: #D1D1D8;">
@@ -45,19 +45,20 @@ export async function POST(req: Request) {
           </div>
           ` : ""}
 
-          <p style="margin-top: 32px; color: #8A8A94; font-size: 12px;">Verstuurd via aiow.ai — contactformulier veilig geconfigureerd.</p>
+          <p style="margin-top: 32px; color: #8A8A94; font-size: 12px;">Verstuurd via aiow.ai, contactformulier veilig geconfigureerd.</p>
         </div>
       `,
     };
 
     // Confirmation email to sender
     const userPayload = {
-      from: "AIOW <hello@aiow.ai>",
+      from: "AIOW <hello@send.aiow.ai>",
       to: [email],
-      subject: "Je AI-scan aanvraag is binnen — we reageren binnen 24 uur",
+      reply_to: "hello@aiow.ai",
+      subject: "Je AI-scan aanvraag is binnen, we reageren binnen 24 uur",
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #0A0A0B; color: #F8F8FA; border-radius: 16px;">
-          <h2 style="color: #00F0FF; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 24px;">— AIOW</h2>
+          <h2 style="color: #00F0FF; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 24px;">AIOW</h2>
           <h1 style="font-size: 32px; margin: 0 0 24px; letter-spacing: -0.02em; line-height: 1.05;">Bedankt, ${escapeHtml(name)}.</h1>
 
           <p style="color: #D1D1D8; line-height: 1.6; margin: 0 0 20px;">
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
             In de tussentijd: wil je een indruk van ons werk? Stuur direct een WhatsApp via <a style="color:#00F0FF" href="https://wa.me/31621898039">+31 6 21 89 80 39</a> als je sneller wilt schakelen.
           </p>
 
-          <p style="color: #8A8A94; font-size: 13px; margin: 32px 0 0;">— Team AIOW</p>
+          <p style="color: #8A8A94; font-size: 13px; margin: 32px 0 0;">Team AIOW</p>
         </div>
       `,
     };
@@ -99,9 +100,11 @@ export async function POST(req: Request) {
 
     if (!teamRes.ok) {
       console.error("[contact] Team email failed:", await teamRes.text());
+      return NextResponse.json({ error: "Team email failed" }, { status: 502 });
     }
     if (!userRes.ok) {
       console.error("[contact] Confirmation email failed:", await userRes.text());
+      return NextResponse.json({ error: "Confirmation email failed" }, { status: 502 });
     }
 
     return NextResponse.json({ ok: true });

@@ -27,6 +27,62 @@ export type VentureMemoryEvent = VentureMemoryEventInput & {
   privacyNote: string;
 };
 
+
+export type VentureCanvasSnapshot = {
+  project: string;
+  founder: string;
+  problem: string;
+  solution: string;
+  businessModel: string;
+  audience: string;
+  aiOpportunities: string;
+  risk: string;
+  automation: string;
+  growth: string;
+  collaboration: string;
+  confidence: number;
+  marketScore: number;
+  riskScore: number;
+  aiScore: number;
+  automationScore: number;
+  lastUpdatedAt: string;
+  memoryEventCount: number;
+};
+
+export async function buildVentureCanvasSnapshot(sessionId: string, incomingCanvas?: Record<string, unknown>): Promise<VentureCanvasSnapshot> {
+  const events = await listVentureMemoryEvents(sessionId, 300);
+  const latestCanvas = [...events].reverse().find((event) => event.canvas)?.canvas || {};
+  const canvas = { ...latestCanvas, ...(incomingCanvas || {}) };
+  const userMessages = events.filter((event) => event.role === "user" && event.type === "message").map((event) => event.content);
+  const combined = userMessages.join("\n").toLowerCase();
+  const linked = [...events].reverse().find((event) => event.type === "contact_linked" || Boolean(event.personEmail));
+  const confidence = Math.round(Math.min(95, Math.max(
+    Number(canvas.confidence || 0) || 0,
+    10 + userMessages.length * 9 + Math.min(30, combined.length / 35) + signalBoost(combined),
+  )));
+
+  return {
+    project: asCanvasText(canvas, "project") || inferTitle(combined) || "Nog niet ingevuld",
+    founder: linked?.personName || asCanvasText(canvas, "founder") || "Nog niet ingevuld",
+    problem: asCanvasText(canvas, "problem") || inferProblem(combined),
+    solution: asCanvasText(canvas, "solution") || inferSolution(combined),
+    businessModel: asCanvasText(canvas, "businessModel") || inferBusinessModel(combined),
+    audience: asCanvasText(canvas, "audience") || inferAudience(combined),
+    aiOpportunities: asCanvasText(canvas, "aiOpportunities") || inferOpportunity(combined),
+    risk: asCanvasText(canvas, "risk") || inferRisk(combined, confidence),
+    automation: asCanvasText(canvas, "automation") || inferAutomation(combined),
+    growth: asCanvasText(canvas, "growth") || inferGrowth(combined),
+    collaboration: asCanvasText(canvas, "collaboration") || inferCollaboration(confidence, Boolean(linked?.personEmail)),
+    confidence,
+    marketScore: numberScore(canvas.marketScore, combined, ["markt", "niche", "doelgroep", "concurrent", "makelaar", "b2b"]),
+    riskScore: numberScore(canvas.riskScore, combined, ["risico", "legal", "privacy", "budget", "bewijs", "scope"]),
+    aiScore: numberScore(canvas.aiScore, combined, ["ai", "agent", "automatis", "data", "crm", "mail", "opvolg"]),
+    automationScore: numberScore(canvas.automationScore, combined, ["proces", "workflow", "planning", "administratie", "support", "handwerk"]),
+    lastUpdatedAt: [...events].reverse()[0]?.createdAt || new Date().toISOString(),
+    memoryEventCount: events.length,
+  };
+}
+
 export type VentureDealCard = {
   sessionId: string;
   title: string;
@@ -106,7 +162,7 @@ export async function listVentureMemoryEvents(sessionId?: string, limit = 200): 
 export async function buildVentureDealCard(sessionId: string, canvas?: Record<string, unknown>): Promise<VentureDealCard> {
   const events = await listVentureMemoryEvents(sessionId, 300);
   const userMessages = events.filter((event) => event.role === "user" && event.type === "message").map((event) => event.content);
-  const linked = [...events].reverse().find((event) => event.type === "contact_linked");
+  const linked = [...events].reverse().find((event) => event.type === "contact_linked" || Boolean(event.personEmail));
   const combined = userMessages.join("\n").toLowerCase();
   const title = asCanvasText(canvas, "project") || inferTitle(combined) || "Nieuwe AIOW venture intake";
   const problem = asCanvasText(canvas, "problem") || inferProblem(combined);
@@ -171,6 +227,75 @@ export async function buildVentureDealCard(sessionId: string, canvas?: Record<st
   }
 
   return card;
+}
+
+export 
+function signalBoost(text: string): number {
+  let boost = 0;
+  if (includesAny(text, ["lead", "sales", "crm", "offerte", "opvolg"])) boost += 12;
+  if (includesAny(text, ["startup", "idee", "app", "platform", "product"])) boost += 8;
+  if (includesAny(text, ["bedrijf", "omzet", "klanten", "b2b", "mkb"])) boost += 8;
+  if (includesAny(text, ["budget", "website", "tractie", "doelgroep", "markt"])) boost += 10;
+  return boost;
+}
+
+function numberScore(value: unknown, text: string, terms: string[]): number {
+  const current = Number(value || 0) || 0;
+  const hits = terms.filter((term) => text.includes(term)).length;
+  return Math.min(10, Math.max(current, hits ? 4 + hits * 2 : text.length > 120 ? 3 : 0));
+}
+
+function inferSolution(text: string): string {
+  if (includesAny(text, ["lead", "sales", "crm", "offerte", "opvolg"])) return "AI lead intake, scoring en persoonlijke opvolging";
+  if (includesAny(text, ["planning", "administratie", "support", "proces", "workflow"])) return "AI workflowlaag met menselijke controle";
+  if (includesAny(text, ["startup", "idee", "app", "platform"])) return "MVP en validatiepad moeten nog scherp worden";
+  return "Nog niet ingevuld";
+}
+
+function inferBusinessModel(text: string): string {
+  if (includesAny(text, ["revenue share", "revenue", "equity", "participatie"])) return "Upside model alleen na scope, bewijs en afspraak";
+  if (includesAny(text, ["omzet", "klanten", "bedrijf", "b2b"])) return "Bestaande omzet plus digitale groeilaag";
+  if (includesAny(text, ["startup", "idee", "app", "platform"])) return "Te valideren venture model";
+  return "Nog niet ingevuld";
+}
+
+function inferAudience(text: string): string {
+  if (text.includes("makelaar")) return "Makelaars en vastgoedteams";
+  if (text.includes("installatie")) return "Installatiebedrijven";
+  if (text.includes("logistiek")) return "Logistiek en operatie";
+  if (text.includes("zorg")) return "Zorgorganisaties";
+  if (text.includes("agency")) return "Agencies en consultants";
+  if (includesAny(text, ["b2b", "mkb", "bedrijf"])) return "B2B markt";
+  return "Nog niet ingevuld";
+}
+
+function inferRisk(text: string, confidence: number): string {
+  if (confidence < 35) return "Nog te weinig context voor serieuze beoordeling";
+  if (!includesAny(text, ["budget", "tractie", "website", "bewijs"])) return "Bewijs, budget en scope nog toetsen";
+  return "Eerste risico's zichtbaar, review door Team AIOW nodig";
+}
+
+function inferAutomation(text: string): string {
+  if (includesAny(text, ["planning", "administratie", "support", "mail", "crm", "proces", "workflow", "handwerk"])) return "Hoge automatiseringskans";
+  if (includesAny(text, ["lead", "offerte", "opvolg"])) return "Leadflow kan grotendeels worden geautomatiseerd";
+  return "Nog niet ingevuld";
+}
+
+function inferGrowth(text: string): string {
+  if (includesAny(text, ["lead", "sales", "marketing", "websitebezoeker", "retentie"])) return "Groei via intake, opvolging en conversieverbetering";
+  if (includesAny(text, ["startup", "markt", "doelgroep", "tractie"])) return "Validatie en distributie zijn de eerste groeivragen";
+  return "Nog niet ingevuld";
+}
+
+function inferCollaboration(confidence: number, linked: boolean): string {
+  if (linked && confidence >= 70) return "Klaar voor Team AIOW Deal Card review";
+  if (confidence >= 70) return "Proof Sprint of Growth Partner review";
+  if (confidence >= 45) return "Paid Venture Scan kandidaat";
+  return "Nog niet bepaald";
+}
+
+function includesAny(value: string, terms: string[]): boolean {
+  return terms.some((term) => value.includes(term));
 }
 
 export function normalizeEmail(value?: string): string {

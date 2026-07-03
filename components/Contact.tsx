@@ -14,10 +14,21 @@ export function Contact() {
     const body = Object.fromEntries(fd.entries());
 
     try {
-      const r = await fetch("/api/contact", {
+      const r = await fetch("/api/leads", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          ...body,
+          consentAccepted: body.consentAccepted === "on",
+          consentText: "AIOW mag mijn contactgegevens en intakecontext gebruiken om mijn aanvraag persoonlijk per e-mail op te volgen. Geen nieuwsbrief of generieke marketing zonder aparte toestemming.",
+          consentVersion: "aiow-followup-v1",
+          source: "aiow.ai",
+          sourceRoute: typeof window !== "undefined" ? window.location.pathname : "/",
+          sourceComponent: "homepage-scan-contact",
+          intentType: "scan",
+          intentText: body.message,
+          projectType: body.sector,
+        }),
       });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
@@ -51,7 +62,7 @@ export function Contact() {
             className="md:col-span-5"
           >
             <p className="font-mono text-xs tracking-[var(--tracking-wider)] uppercase text-[var(--color-accent)] mb-6">
-              — {finalCta.eyebrow}
+              {finalCta.eyebrow}
             </p>
             <h2
               className="font-display font-medium tracking-[var(--tracking-tight)] leading-[1.02] mb-6"
@@ -98,6 +109,7 @@ export function Contact() {
               onSubmit={onSubmit}
               className="p-6 md:p-10 rounded-[var(--radius-2xl)] border border-[var(--color-line)] bg-[var(--color-canvas-soft)] flex flex-col gap-5"
             >
+              <input className="hidden" tabIndex={-1} autoComplete="off" name="honeyWebsite" aria-hidden="true" />
               <div className="grid sm:grid-cols-2 gap-5">
                 <Field label="Naam" name="name" required />
                 <Field label="Bedrijf" name="company" required />
@@ -113,6 +125,13 @@ export function Contact() {
                 textarea
                 placeholder="Kort wat speelt, wat je probeert op te lossen, wat je hebt geprobeerd…"
               />
+
+              <label className="flex gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-canvas)]/70 p-4 text-sm text-[var(--color-ink-soft)]">
+                <input type="checkbox" name="consentAccepted" required className="mt-1 h-4 w-4 accent-[var(--color-accent)]" />
+                <span>
+                  AIOW mag mijn e-mail en aanvraagcontext gebruiken om mij persoonlijk op te volgen over deze AI-scan. Geen nieuwsbrief of generieke marketing zonder aparte toestemming.
+                </span>
+              </label>
 
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between pt-2">
                 <p className="text-xs text-[var(--color-ink-muted)]">

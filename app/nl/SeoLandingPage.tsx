@@ -12,6 +12,7 @@ const pillarLinks = [
   ["AI-implementatie voor bedrijven", "/nl/ai-implementatie-bedrijf"],
   ["AI-agents voor bedrijven", "/nl/ai-agents-bedrijven"],
   ["Lokale en private AI", "/nl/lokale-private-ai"],
+  ["AI governance checklist", "/nl/ai-governance-checklist"],
   ["Gratis quick check", "/nl/ai-systeemscan"],
 ] as const;
 
@@ -42,7 +43,7 @@ export function schemaForPage(page: SeoPageData) {
         },
         contactPoint: { "@type": "ContactPoint", contactType: "AI-systeemscan", telephone: PHONE_DISPLAY, url: WHATSAPP_URL, availableLanguage: ["nl", "en"] },
         areaServed: "NL",
-        knowsAbout: ["AI-installateur", "AI-oplossingen voor bedrijven", "AI-implementatie", "AI-agents", "AI-automatisering", "lokale AI", "private AI", "AI governance"],
+        knowsAbout: ["AI-installateur", "AI-oplossingen voor bedrijven", "AI-implementatie", "AI-agents", "AI-automatisering", "lokale AI", "private AI", "AI governance", "AI dataclassificatie", "AI approval gates"],
       },
       {
         "@type": "LocalBusiness",

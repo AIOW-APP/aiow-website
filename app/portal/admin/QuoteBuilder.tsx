@@ -49,6 +49,7 @@ export default function QuoteBuilder() {
     <header className={styles.header}>
       <Link href="/portal" className={styles.back}>← Klantportal</Link>
       <div><strong>AIOW Admin Quote Builder</strong><small>manual-safe · geen opslag · geen verzending</small></div>
+      <Link href="/portal/admin/accounts" className={styles.back}>Klantaccounts →</Link>
     </header>
 
     <section className={styles.hero}>

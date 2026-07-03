@@ -9,6 +9,11 @@ node_modules/
 .DS_Store
 *.log
 .vercel
+.quarantine/
+tmp/
+test-results/
+*.tsbuildinfo
+supabase/.temp/
 
 # Python cache
 __pycache__/

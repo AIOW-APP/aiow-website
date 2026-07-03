@@ -80,14 +80,14 @@ const copy: Record<Lang, Copy> = {
     nav: ["What it is", "Systems", "Privacy", "Scan"],
     heroTitle: "Not a chatbot. Your own AI system.",
     heroBody:
-      "AIOW designs personal AI systems that remember context, route work, use approved tools and connect local or hybrid AI hardware — from MKB operations around Schiphol logistics to private smart homes with Sonos and Philips Hue.",
+      "AIOW designs personal AI systems that remember context, route work, use approved tools and connect local or hybrid AI hardware, from MKB operations around Schiphol logistics to private smart homes with Sonos and Philips Hue.",
     primaryCta: "Plan a free AI system scan",
     secondaryCta: "Explore AI systems",
     placeholder: "WhatsApp is the verified contact route. Forms and analytics remain disabled until their destinations are safely configured.",
     problemTitle: "Chatbots answer. A real AI system carries context across your life and work.",
     problemBody:
       "Most AI tools live in one browser tab. They do not understand your company, devices, routines, approvals or handoffs. AIOW maps the AI work layer around you: people, workflows, data, hardware, home devices and safety rules.",
-    whatTitle: "A personal AI work layer — local where useful, cloud where approved.",
+    whatTitle: "A personal AI work layer, local where useful, cloud where approved.",
     whatBody:
       "AIOW can combine team AI workers, workflow automation, local private AI-infrastructuur AI hardware, smart-home controls and human approval gates. The result is not loose automation; it is a governed AI system with ownership, memory and proof.",
     stepsTitle: "How the free AI system scan works",
@@ -147,14 +147,14 @@ const copy: Record<Lang, Copy> = {
     nav: ["Wat het is", "Systemen", "Privacy", "Scan"],
     heroTitle: "Geen chatbot. Uw eigen AI-systeem.",
     heroBody:
-      "AIOW ontwerpt persoonlijke AI-systemen die context onthouden, werk routeren, goedgekeurde tools gebruiken en lokale of hybride AI-hardware koppelen — van MKB-operatie rond Schiphol/logistics tot privé smart homes met Sonos en Philips Hue.",
+      "AIOW ontwerpt persoonlijke AI-systemen die context onthouden, werk routeren, goedgekeurde tools gebruiken en lokale of hybride AI-hardware koppelen, van MKB-operatie rond Schiphol/logistics tot privé smart homes met Sonos en Philips Hue.",
     primaryCta: "Plan een gratis AI-systeemscan",
     secondaryCta: "Bekijk AI-systemen",
     placeholder: "WhatsApp is de geverifieerde contactroute. Formulieren en analytics blijven uit tot bestemmingen veilig zijn geconfigureerd.",
     problemTitle: "Chatbots geven antwoord. Een echt AI-systeem draagt context door werk en leven heen.",
     problemBody:
       "De meeste AI-tools zitten in één browservenster. Ze begrijpen uw bedrijf, apparaten, routines, approvals en overdrachten niet. AIOW brengt de AI-werklaag in kaart rond mensen, workflows, data, hardware, smart-home devices en veiligheidsregels.",
-    whatTitle: "Een persoonlijke AI-werklaag — lokaal waar zinvol, cloud waar goedgekeurd.",
+    whatTitle: "Een persoonlijke AI-werklaag, lokaal waar zinvol, cloud waar goedgekeurd.",
     whatBody:
       "AIOW combineert team-AI-workers, workflowautomatisering, lokale private AI-infrastructuur AI-hardware, smart-home aansturing en menselijke goedkeuring. Geen losse automatisering, maar een bestuurbaar AI-systeem met eigenaarschap, geheugen en bewijs.",
     stepsTitle: "Hoe de gratis AI-systeemscan werkt",

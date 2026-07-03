@@ -13,7 +13,7 @@ const copy = {
   nl: {
     badge: "WebGPU + WASM physics",
     title: "Control Room",
-    subtitle: "Zie hoe data, beleid en agents gecontroleerd samenkomen — scroll en cursor sturen de laag.",
+    subtitle: "Zie hoe data, beleid en agents gecontroleerd samenkomen, scroll en cursor sturen de laag.",
     fallback: "Canvas fallback actief",
     stages: [
       "AI-chaos wordt zichtbaar",
@@ -26,7 +26,7 @@ const copy = {
   en: {
     badge: "WebGPU + WASM physics",
     title: "Control Room",
-    subtitle: "See data, policy and agents come together under control — scroll and cursor drive the layer.",
+    subtitle: "See data, policy and agents come together under control, scroll and cursor drive the layer.",
     fallback: "Canvas fallback active",
     stages: [
       "AI chaos becomes visible",

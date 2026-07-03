@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIOW — Living Landing Prototype v1</title>
+<style>
+  :root{
+    --bg:#060609; --ink:#eee9df; --dim:rgba(238,233,223,.55);
+    --ember:#ff7a3c; --cyan:#59e3ff; --violet:#8b6cff;
+    --breath:0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,sans-serif;
+    line-height:1.6; overflow-x:hidden; cursor:none;
+  }
+  @media (pointer:coarse){ body{cursor:auto} .cursor{display:none} }
+
+  /* ambient breathing gradient */
+  .veil{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(60% 50% at 20% 10%, rgba(139,108,255,calc(.10 + var(--breath)*.06)), transparent 60%),
+      radial-gradient(50% 40% at 85% 20%, rgba(255,122,60,calc(.08 + var(--breath)*.05)), transparent 60%),
+      radial-gradient(70% 60% at 50% 110%, rgba(89,227,255,calc(.05 + var(--breath)*.04)), transparent 60%);
+    transition:background .2s linear;
+  }
+  /* film grain */
+  .grain{position:fixed;inset:-50%;z-index:3;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain 8s steps(10) infinite;
+  }
+  @keyframes grain{
+    0%,100%{transform:translate(0,0)} 10%{transform:translate(-5%,-6%)} 20%{transform:translate(-13%,3%)}
+    30%{transform:translate(7%,-14%)} 40%{transform:translate(-5%,15%)} 50%{transform:translate(-11%,6%)}
+    60%{transform:translate(13%,0)} 70%{transform:translate(0,10%)} 80%{transform:translate(3%,15%)} 90%{transform:translate(-9%,10%)}
+  }
+  canvas#life{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+  /* custom cursor */
+  .cursor{position:fixed;z-index:9;width:14px;height:14px;border-radius:50%;
+    background:radial-gradient(circle, rgba(89,227,255,.9), rgba(89,227,255,0) 70%);
+    pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .25s,height .25s}
+  .cursor.hot{width:56px;height:56px}
+
+  main{position:relative;z-index:2}
+  .wrap{width:min(1120px,90vw);margin:auto}
+
+  header{display:flex;justify-content:space-between;align-items:center;padding:26px 0}
+  .brand{display:flex;gap:12px;align-items:center;font-weight:800;letter-spacing:-.02em}
+  .brand .mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--ember),var(--violet));color:#0a0a0f;font-weight:900;
+    animation:markpulse 4s ease-in-out infinite}
+  @keyframes markpulse{50%{box-shadow:0 0 34px rgba(255,122,60,.45)}}
+  nav a{color:var(--dim);text-decoration:none;margin-left:22px;font-size:14px;font-weight:600}
+  nav a:hover{color:var(--ink)}
+
+  /* hero */
+  .hero{min-height:86vh;display:grid;align-content:center;padding:6vh 0 8vh}
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--dim);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);
+    animation:dotbreath 4s ease-in-out infinite}
+  @keyframes dotbreath{50%{transform:scale(1.8);opacity:.5}}
+  h1{
+    margin:26px 0 22px;font-size:clamp(44px,7.4vw,104px);line-height:.96;letter-spacing:-.045em;font-weight:800;
+    transform:scale(calc(1 + var(--breath)*0.008));transform-origin:left center;
+  }
+  h1 .line{display:block;overflow:hidden}
+  h1 .line span{display:inline-block;transform:translateY(110%);animation:rise 1.1s cubic-bezier(.2,.7,.1,1) forwards}
+  h1 .line:nth-child(2) span{animation-delay:.12s;background:linear-gradient(90deg,var(--ember),var(--violet) 60%,var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  @keyframes rise{to{transform:translateY(0)}}
+  .lead{max-width:640px;color:var(--dim);font-size:clamp(17px,1.8vw,21px)}
+
+  /* idea input — de site beoordeelt je terwijl je typt */
+  .probe{margin-top:44px;max-width:640px}
+  .probe .field{display:flex;gap:10px;padding:10px;border:1px solid rgba(238,233,223,.14);border-radius:999px;
+    background:rgba(255,255,255,.03);backdrop-filter:blur(10px);transition:border-color .3s, box-shadow .3s}
+  .probe .field:focus-within{border-color:rgba(89,227,255,.5);box-shadow:0 0 44px rgba(89,227,255,.12)}
+  .probe input{flex:1;background:none;border:0;outline:0;color:var(--ink);font-size:16px;padding:8px 14px;cursor:none}
+  .probe button{border:0;border-radius:999px;padding:14px 22px;font-weight:800;font-size:15px;
+    background:linear-gradient(135deg,var(--ember),#ffb35c);color:#1c0d02;cursor:none;transition:transform .2s}
+  .probe .meta{display:flex;justify-content:space-between;margin:12px 6px 0;font-size:13px;color:var(--dim)}
+  .score{display:inline-flex;align-items:center;gap:8px}
+  .score b{color:var(--cyan);font-variant-numeric:tabular-nums}
+
+  /* sections */
+  section{padding:12vh 0}
+  .kicker{color:var(--dim);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  h2{font-size:clamp(30px,4vw,52px);letter-spacing:-.03em;margin:14px 0 18px;line-height:1.05}
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.7,.1,1),transform .9s cubic-bezier(.2,.7,.1,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  .cases{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:34px}
+  .case{border:1px solid rgba(238,233,223,.12);border-radius:26px;padding:30px;background:rgba(255,255,255,.025);
+    transition:transform .35s cubic-bezier(.2,.7,.1,1), border-color .35s;position:relative;overflow:hidden}
+  .case:hover{transform:translateY(-6px);border-color:rgba(255,122,60,.4)}
+  .case h3{font-size:22px;margin-bottom:10px;letter-spacing:-.02em}
+  .case p{color:var(--dim);font-size:15px}
+  .case .tag{position:absolute;top:22px;right:22px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan)}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}
+  .step{border-top:1px solid rgba(238,233,223,.14);padding-top:20px}
+  .step em{font-style:normal;color:var(--ember);font-weight:800;font-size:13px;letter-spacing:.12em}
+  .step h3{margin:10px 0 8px;font-size:19px}
+  .step p{color:var(--dim);font-size:14.5px}
+
+  .cta-bar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:36px}
+  .btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:16px 26px;font-weight:800;
+    text-decoration:none;font-size:15px;transition:transform .25s;cursor:none}
+  .btn.solid{background:linear-gradient(135deg,var(--ember),#ffb35c);color:#1c0d02}
+  .btn.ghost{border:1px solid rgba(238,233,223,.2);color:var(--ink)}
+
+  /* heartbeat footer */
+  .heartbeat{position:relative;padding:8vh 0 6vh;color:var(--dim);font-size:13px}
+  .ecg{width:100%;height:44px;opacity:.5}
+  .ecg path{stroke:var(--cyan);stroke-width:1.5;fill:none;stroke-dasharray:600;stroke-dashoffset:600;
+    animation:beat 5s linear infinite}
+  @keyframes beat{to{stroke-dashoffset:0}}
+
+  @media(max-width:760px){.cases,.steps{grid-template-columns:1fr}.hero{min-height:74vh}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    canvas#life,.grain{display:none}
+    h1 .line span{transform:none}
+    .reveal{opacity:1;transform:none}
+    body{cursor:auto}.cursor{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="veil"></div>
+<canvas id="life"></canvas>
+<div class="grain"></div>
+<div class="cursor" id="cursor"></div>
+
+<main>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="mark">A</span><span>AIOW.ai <span style="color:var(--dim);font-weight:600">— AI Venture Partner</span></span></div>
+      <nav><a href="#model">Model</a><a href="#bewijs">Bewijs</a><a href="#" class="hot">Login</a></nav>
+    </header>
+
+    <section class="hero">
+      <span class="eyebrow"><span class="pulse-dot"></span> Dit systeem leeft — Spunky is wakker</span>
+      <h1>
+        <span class="line"><span>Wij bouwen niet vóór bedrijven.</span></span>
+        <span class="line"><span>Wij bouwen mee aan bedrijven.</span></span>
+      </h1>
+      <p class="lead">AIOW stapt in als venture partner: AI, software en groei in ruil voor een deel van de omzet. Geen offertes, geen uurtjes — een deal als jouw idee het waard is.</p>
+
+      <div class="probe">
+        <div class="field">
+          <input id="idea" type="text" placeholder="Typ je idee in één zin — het systeem begint al te wegen…" autocomplete="off">
+          <button id="probeBtn" class="hot" type="button">Laat Spunky beoordelen</button>
+        </div>
+        <div class="meta">
+          <span class="score">Venture-signaal: <b id="scoreVal">—</b></span>
+          <span id="probeState">wachtend op eerste hartslag…</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="bewijs">
+      <div class="reveal">
+        <span class="kicker">Bewijs, geen beloftes</span>
+        <h2>Gebouwd. Live. Draait.</h2>
+      </div>
+      <div class="cases">
+        <div class="case reveal hot"><span class="tag">B2B — live</span>
+          <h3>Cargo Donkey</h3>
+          <p>Verpakkings- en logistiekbedrijf regio Schiphol. AIOW bouwde de digitale groeilaag: honderden vindbare kennis- en dienstpagina's, lokale SEO/GEO-dekking en een offerte-funnel via WhatsApp en e-mail.</p>
+        </div>
+        <div class="case reveal hot"><span class="tag">Product — release</span>
+          <h3>OneTap Day</h3>
+          <p>Eigen product, van nul gebouwd en door de volledige release-pipeline van Apple en Google gebracht — store-metadata, testkanalen en release-proof inbegrepen.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="model">
+      <div class="reveal">
+        <span class="kicker">Het model</span>
+        <h2>Idee in. Oordeel. Deal.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><em>01 — SCAN</em><h3>Spunky weegt je idee</h3><p>Founder, markt, AI-hefboom, tractie. Onderzocht en ge-red-teamd — niet alleen jouw verhaal, ook het bewijs erachter.</p></div>
+        <div class="step reveal"><em>02 — SCORE</em><h3>Eerlijk oordeel</h3><p>Hoog genoeg? Dan bouwen we mee. Bijna? Dan krijg je een betaalde scan met een concreet plan. Te laag? Dan hoor je eerlijk waarom.</p></div>
+        <div class="step reveal"><em>03 — DEAL</em><h3>Wij winnen als jij wint</h3><p>Geen facturen per uur. Een percentage van omzet en exit — dus wij bouwen alsof het ons eigen bedrijf is. Want dat is het dan ook.</p></div>
+      </div>
+      <div class="cta-bar reveal">
+        <a class="btn solid hot" href="#">Start Venture Intake</a>
+        <a class="btn ghost hot" href="https://wa.me/31621898039">Liever direct? WhatsApp</a>
+        <span style="color:var(--dim);font-size:13px">Reactie binnen één werkdag.</span>
+      </div>
+    </section>
+
+    <footer class="heartbeat">
+      <svg class="ecg" viewBox="0 0 600 44" preserveAspectRatio="none">
+        <path d="M0,22 L90,22 L104,22 L112,8 L120,36 L128,22 L240,22 L254,22 L262,4 L272,40 L282,22 L420,22 L434,22 L442,10 L450,34 L458,22 L600,22"/>
+      </svg>
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <span>AIOW.ai — het systeem draait, ook nu.</span>
+        <span>Amsterdam / Hoofddorp · Prototype v1 — 2026-07-02</span>
+      </div>
+    </footer>
+  </div>
+</main>
+
+<script>
+(function(){
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* global breath: 4.8s cycle drives CSS var */
+  let t0 = performance.now();
+  function breathe(now){
+    const b = (Math.sin((now - t0) / 4800 * Math.PI * 2) + 1) / 2;
+    document.documentElement.style.setProperty('--breath', b.toFixed(3));
+    requestAnimationFrame(breathe);
+  }
+  if(!reduced) requestAnimationFrame(breathe);
+
+  /* cursor */
+  const cur = document.getElementById('cursor');
+  let cx = innerWidth/2, cy = innerHeight/2, tx = cx, ty = cy;
+  addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+  document.querySelectorAll('.hot, a, button, input').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('hot'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hot'));
+  });
+  (function moveCur(){ cx += (tx-cx)*.2; cy += (ty-cy)*.2;
+    cur.style.left = cx+'px'; cur.style.top = cy+'px'; requestAnimationFrame(moveCur); })();
+
+  /* living particle field — plankton drift + cursor bioluminescence */
+  const cv = document.getElementById('life'), ctx = cv.getContext('2d');
+  let W,H,parts=[], excite=0;
+  function size(){ W=cv.width=innerWidth*devicePixelRatio; H=cv.height=innerHeight*devicePixelRatio;
+    cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; }
+  size(); addEventListener('resize', size);
+  const N = innerWidth < 760 ? 70 : 150;
+  for(let i=0;i<N;i++) parts.push({
+    x:Math.random(), y:Math.random(), a:Math.random()*Math.PI*2,
+    s:.00006+Math.random()*.00012, r:(.6+Math.random()*1.8),
+    hue: Math.random()<.6 ? 190 : (Math.random()<.5 ? 22 : 258)
+  });
+  function field(x,y,t){ return Math.sin(x*3.1+t*.00021)+Math.cos(y*2.7-t*.00017)+Math.sin((x+y)*1.9+t*.00013); }
+  function tick(now){
+    ctx.clearRect(0,0,W,H);
+    const b=(Math.sin((now-t0)/4800*Math.PI*2)+1)/2;
+    excite*= .97;
+    const mx = tx/innerWidth, my = ty/innerHeight;
+    for(const p of parts){
+      p.a += field(p.x,p.y,now)*.02;
+      const dx = mx-p.x, dy = my-p.y, d = Math.hypot(dx,dy);
+      if(d<.16){ p.a = Math.atan2(dy,dx)+Math.PI*.5; } /* orbit the cursor */
+      const sp = p.s*(1+excite*3);
+      p.x = (p.x + Math.cos(p.a)*sp*innerWidth/900 + 1)%1;
+      p.y = (p.y + Math.sin(p.a)*sp*innerWidth/900 + 1)%1;
+      const glow = (d<.16 ? 1 : .45) * (.35+b*.65) * (1+excite);
+      ctx.beginPath();
+      ctx.arc(p.x*W, p.y*H, p.r*devicePixelRatio*(1+b*.35), 0, 7);
+      ctx.fillStyle = `hsla(${p.hue}, 90%, 70%, ${Math.min(.5, .12*glow)})`;
+      ctx.fill();
+    }
+    if(!reduced) requestAnimationFrame(tick);
+  }
+  if(!reduced) requestAnimationFrame(tick);
+
+  /* idea probe — demo: system visibly starts weighing while you type */
+  const idea = document.getElementById('idea'), sv = document.getElementById('scoreVal'), st = document.getElementById('probeState');
+  let target = 0, shown = 0;
+  idea.addEventListener('input', ()=>{
+    excite = 1.4;
+    const len = idea.value.trim().length;
+    target = len===0 ? 0 : Math.min(38 + len*1.1, 74);
+    st.textContent = len===0 ? 'wachtend op eerste hartslag…'
+      : len<18 ? 'signaal opgevangen — vertel meer…'
+      : len<50 ? 'het systeem weegt founder, markt en AI-hefboom…'
+      : 'sterk signaal — start de intake voor het echte oordeel.';
+  });
+  (function count(){ shown += (target-shown)*.06;
+    sv.textContent = target===0 ? '—' : Math.round(shown)+' / 100';
+    requestAnimationFrame(count); })();
+  document.getElementById('probeBtn').addEventListener('click', ()=>{ excite=2.2;
+    st.textContent = 'demo — in productie start hier de echte Venture Intake.'; });
+
+  /* scroll reveals */
+  const io = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }),{threshold:.18});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+})();
+</script>
+</body>
+</html>
