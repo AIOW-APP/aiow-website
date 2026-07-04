@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AiowReveal } from "@/components/aiow/AiowReveal";
 import { aiowKnowledgePages, getAiowKnowledgePage } from "@/lib/aiow-knowledge-pages";
 import styles from "../styles.module.css";
+
+const revealOrder = (order: number) => ({ "--reveal-order": order } as CSSProperties);
 
 const SITE_URL = "https://aiow.ai";
 
@@ -112,6 +116,7 @@ export default async function AiowKnowledgePage({ params }: Props) {
 
   return (
     <main className={styles.page}>
+      <AiowReveal />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
@@ -119,11 +124,11 @@ export default async function AiowKnowledgePage({ params }: Props) {
 
       <article className={styles.article}>
         <Link className={styles.back} href="/nl/kennis">← AIOW kennisbank</Link>
-        <p className={styles.eyebrow}>AIOW B2B AI · {page.service} · {page.region}</p>
-        <h1>{page.h1}</h1>
-        <p className={styles.lead}>{page.summary}</p>
+        <p className={styles.eyebrow} data-reveal>AIOW B2B AI · {page.service} · {page.region}</p>
+        <h1 data-reveal="wipe">{page.h1}</h1>
+        <p className={styles.lead} data-reveal style={revealOrder(1)}>{page.summary}</p>
 
-        <section className={styles.answerBox} aria-labelledby="aiow-answer-heading">
+        <section className={styles.answerBox} aria-labelledby="aiow-answer-heading" data-reveal style={revealOrder(2)}>
           <p className={styles.eyebrow}>Kort antwoord voor AI-antwoordsystemen</p>
           <h2 id="aiow-answer-heading">Wat moet een bedrijf hierover onthouden?</h2>
           <p id="aiow-answer-summary">{shortAnswer}</p>
@@ -132,7 +137,7 @@ export default async function AiowKnowledgePage({ params }: Props) {
           </p>
         </section>
 
-        <div className={styles.metaGrid}>
+        <div className={styles.metaGrid} data-reveal style={revealOrder(3)}>
           <span><strong>Thema</strong>{page.service}</span>
           <span><strong>Sector</strong>{page.sector}</span>
           <span><strong>Regio</strong>{page.region}</span>
@@ -140,14 +145,14 @@ export default async function AiowKnowledgePage({ params }: Props) {
         </div>
 
         {page.sections.map(([heading, body]) => (
-          <section className={styles.contentSection} key={heading}>
-            <h2>{heading}</h2>
+          <section className={styles.contentSection} key={heading} data-reveal>
+            <h2 data-reveal="wipe">{heading}</h2>
             <p>{body}</p>
           </section>
         ))}
 
-        <section className={styles.faq}>
-          <h2>Veelgestelde vragen</h2>
+        <section className={styles.faq} data-reveal>
+          <h2 data-reveal="wipe">Veelgestelde vragen</h2>
           {page.faq.map(([question, answer]) => (
             <details key={question}>
               <summary>{question}</summary>
@@ -157,10 +162,10 @@ export default async function AiowKnowledgePage({ params }: Props) {
         </section>
 
         <section className={styles.related} aria-labelledby="related-knowledge-heading">
-          <h2 id="related-knowledge-heading">Gerelateerde AIOW kennis</h2>
+          <h2 id="related-knowledge-heading" data-reveal="wipe">Gerelateerde AIOW kennis</h2>
           <div className={styles.relatedGrid}>
-            {relatedPages.map((related) => (
-              <Link href={`/nl/kennis/${related.slug}`} key={related.slug}>
+            {relatedPages.map((related, index) => (
+              <Link href={`/nl/kennis/${related.slug}`} key={related.slug} data-reveal style={revealOrder(index % 3)}>
                 <span>{related.service} · {related.region}</span>
                 <strong>{related.title}</strong>
               </Link>
@@ -168,7 +173,7 @@ export default async function AiowKnowledgePage({ params }: Props) {
           </div>
         </section>
 
-        <section className={styles.ctaBox}>
+        <section className={styles.ctaBox} data-reveal>
           <p className={styles.eyebrow}>Eerste stap</p>
           <h2>Start met een AI-systeemscan.</h2>
           <p>We bepalen samen welk proces als eerste waarde bewijst, welke data wel/niet naar AI mag, en welke route (lokaal, private of cloud) de beste is.</p>

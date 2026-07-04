@@ -1,5 +1,9 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
+import { AiowReveal } from "./AiowReveal";
 import styles from "./AiowVentureLanding.module.css";
+
+const revealOrder = (order: number) => ({ "--reveal-order": order } as CSSProperties);
 
 const proofCards = [
   {
@@ -36,6 +40,7 @@ const signalRows = [
 export function AiowVentureLanding() {
   return (
     <main className={styles.page} data-aiow-public-landing="venture-partner-v1">
+      <AiowReveal />
       <div className={styles.ambient} aria-hidden="true">
         <span />
         <span />
@@ -58,24 +63,24 @@ export function AiowVentureLanding() {
 
       <section className={styles.hero} aria-label="AIOW AI Venture Partner">
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>AI Venture Partner voor startups en groeiende bedrijven</p>
-          <h1>
+          <p className={styles.eyebrow} data-reveal>AI Venture Partner voor startups en groeiende bedrijven</p>
+          <h1 data-reveal="wipe">
             <span>Wij bouwen niet voor bedrijven.</span>
             <span>Wij bouwen mee aan bedrijven.</span>
           </h1>
-          <p className={styles.lead}>
+          <p className={styles.lead} data-reveal style={revealOrder(1)}>
             AIOW helpt startups en bestaande bedrijven groeien met AI, software, automatisering en digitale strategie.
             Wij stappen in als digitale venture partner en bouwen mee in ruil voor een passende samenwerking: project,
             revenue share, profit share, equity of exit percentage.
           </p>
 
-          <div className={styles.routes} aria-label="Start routes">
+          <div className={styles.routes} aria-label="Start routes" data-reveal style={revealOrder(2)}>
             <Link href="/intake?route=startup">Ik heb een startup of idee</Link>
             <Link href="/intake?route=company">Ik heb al een bedrijf</Link>
             <a href="https://wa.me/31621898039" rel="noopener">Liever direct contact? WhatsApp</a>
           </div>
 
-          <div className={styles.notice}>
+          <div className={styles.notice} data-reveal style={revealOrder(3)}>
             <span>Geen gratis chatbot</span>
             <p>
               Spunky beoordeelt of jouw idee of bedrijf interessant is als mogelijke AIOW-case. Intake gestart? Je
@@ -84,7 +89,7 @@ export function AiowVentureLanding() {
           </div>
         </div>
 
-        <aside className={styles.presence} aria-label="Living AI Presence">
+        <aside className={styles.presence} aria-label="Living AI Presence" data-reveal style={revealOrder(2)}>
           <div className={styles.orb} aria-hidden="true">
             <i />
             <b />
@@ -108,9 +113,9 @@ export function AiowVentureLanding() {
       </section>
 
       <section className={styles.cards} aria-label="AIOW uitleg">
-        {proofCards.map((card) => (
-          <article key={card.title}>
-            <span />
+        {proofCards.map((card, index) => (
+          <article key={card.title} data-reveal style={revealOrder(index)}>
+            <span aria-hidden="true" />
             <h2>{card.title}</h2>
             <p>{card.text}</p>
           </article>
@@ -118,16 +123,16 @@ export function AiowVentureLanding() {
       </section>
 
       <section className={styles.cards} aria-label="AIOW cases">
-        {caseCards.map((card) => (
-          <article key={card.title}>
-            <span />
+        {caseCards.map((card, index) => (
+          <article key={card.title} data-reveal style={revealOrder(index)}>
+            <span aria-hidden="true" />
             <h2>{card.title}</h2>
             <p>{card.text}</p>
           </article>
         ))}
       </section>
 
-      <div className={styles.startBar}>
+      <div className={styles.startBar} data-reveal>
         <p>Laat Spunky eerst bepalen welke route past: startup, groei, digitalisering, AI, partner of niet relevant.</p>
         <Link href="/intake">Start Venture Intake</Link>
       </div>
