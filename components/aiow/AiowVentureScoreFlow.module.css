@@ -1,0 +1,414 @@
+/* Venture-score aanvraagflow — signature-element (zie DESIGN-DNA.md, concept "Aurora Verdict").
+   Rustig: max 1 ambient glow, geen loops behalve de succes-badge; reduced-motion volledig gedekt. */
+
+.flow,
+.success {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 22px;
+}
+
+/* Voortgang: drie lichtsegmenten die vollopen in aurora-cyaan */
+
+.progress p {
+  margin: 0 0 10px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.progress p span {
+  color: rgba(247, 251, 255, 0.55);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.progress p strong {
+  color: #f7fbff;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+
+.progressTrack {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.progressTrack i {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.progressTrack i[data-active] {
+  background: linear-gradient(90deg, #00e5ff, #7b4bff);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
+}
+
+/* Vraaggroep per stap */
+
+.group {
+  margin: 0;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(20px);
+  display: grid;
+  gap: 16px;
+}
+
+.group legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  color: #f7fbff;
+  font-size: clamp(22px, 5.6vw, 26px);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.subQuestion {
+  margin: 6px 0 0;
+  color: #f7fbff;
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+/* Velden: labels zichtbaar, inputs 16px (geen iOS-zoom), 1 kolom */
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  color: rgba(247, 251, 255, 0.72);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field span em {
+  color: rgba(247, 251, 255, 0.45);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  color: #f7fbff;
+  background: rgba(4, 7, 19, 0.55);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 128px;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(247, 251, 255, 0.34);
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+  border-color: rgba(0, 229, 255, 0.5);
+}
+
+/* Keuzekaarten (radio) — tap-doel volledig, >= 48px */
+
+.options {
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(4, 7, 19, 0.45);
+  cursor: pointer;
+  transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.option strong {
+  color: #f7fbff;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.option span {
+  color: rgba(247, 251, 255, 0.55);
+  font-size: 13px;
+}
+
+.option[data-checked] {
+  border-color: rgba(0, 229, 255, 0.55);
+  background: rgba(0, 229, 255, 0.08);
+  box-shadow: 0 0 22px rgba(0, 229, 255, 0.14);
+}
+
+.option:has(input:focus-visible) {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+}
+
+/* Fout: magenta hairline, zegt wat er mist (state-design, DESIGN-DNA.md) */
+
+.error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 56, 214, 0.4);
+  border-radius: 14px;
+  color: #ffb7ea;
+  background: rgba(255, 56, 214, 0.07);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Acties: knoppen >= 48px, pil, actieve labels */
+
+.actions {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+
+.primary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.primary {
+  border: 0;
+  color: #061018;
+  background: linear-gradient(135deg, #fff, #b9f6ff 48%, #bba1ff);
+}
+
+.primary:hover {
+  box-shadow: 0 0 28px rgba(0, 229, 255, 0.35);
+}
+
+.ghost {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(247, 251, 255, 0.78);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ghost:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.primary:focus-visible,
+.ghost:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 3px;
+}
+
+.altContact {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.55);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.altContact a {
+  color: #b9f6ff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.altContact a:hover,
+.altContact a:focus-visible {
+  text-decoration: underline;
+}
+
+/* Succes: het score-badge-moment (signature) */
+
+.success {
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 12px 0 24px;
+}
+
+.success h2 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: clamp(30px, 8vw, 42px);
+  font-weight: 950;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+}
+
+.eyebrow {
+  width: fit-content;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 999px;
+  color: #b9f6ff;
+  background: rgba(0, 229, 255, 0.07);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.badge {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
+.badge i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from 180deg, #00e5ff, #7b4bff, #ff38d6, #00e5ff);
+  filter: blur(1px);
+  animation: badgeSpin 14s linear infinite;
+}
+
+.badge strong {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #f7fbff;
+  background: #040713;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 0 34px rgba(0, 229, 255, 0.18);
+}
+
+.successLead {
+  margin: 0;
+  max-width: 26rem;
+  color: rgba(247, 251, 255, 0.68);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.successActions {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.successActions .primary,
+.successActions .ghost {
+  width: 100%;
+}
+
+.back {
+  margin-top: 6px;
+  color: rgba(247, 251, 255, 0.55);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.back:hover,
+.back:focus-visible {
+  color: #b9f6ff;
+  text-decoration: underline;
+}
+
+@keyframes badgeSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (min-width: 640px) {
+  .badge {
+    width: 128px;
+    height: 128px;
+  }
+
+  .badge strong {
+    width: 104px;
+    height: 104px;
+  }
+
+  .successActions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .badge {
+    width: 96px;
+    height: 96px;
+  }
+
+  .badge strong {
+    width: 78px;
+    height: 78px;
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge i {
+    animation: none;
+  }
+}

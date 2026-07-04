@@ -56,7 +56,7 @@ export function AiowVentureLanding() {
           </div>
         </Link>
         <nav className={styles.nav} aria-label="AIOW navigation">
-          <Link href="/intake">Start intake</Link>
+          <Link href="/nl/venture-score-aanvragen">Venture-score</Link>
           <Link href="/app">Login</Link>
         </nav>
       </header>
@@ -75,16 +75,16 @@ export function AiowVentureLanding() {
           </p>
 
           <div className={styles.routes} aria-label="Start routes" data-reveal style={revealOrder(2)}>
-            <Link href="/intake?route=startup">Ik heb een startup of idee</Link>
-            <Link href="/intake?route=company">Ik heb al een bedrijf</Link>
+            <Link href="/nl/venture-score-aanvragen">Ik heb een startup of idee</Link>
+            <Link href="/nl/venture-score-aanvragen">Ik heb al een bedrijf</Link>
             <a href="https://wa.me/31621898039" rel="noopener">Liever direct contact? WhatsApp</a>
           </div>
 
           <div className={styles.notice} data-reveal style={revealOrder(3)}>
             <span>Geen gratis chatbot</span>
             <p>
-              Spunky beoordeelt of jouw idee of bedrijf interessant is als mogelijke AIOW-case. Intake gestart? Je
-              krijgt binnen één werkdag reactie.
+              Spunky beoordeelt jouw idee of bedrijf met de venture-score. Aanvraag gestuurd? Je weet binnen 48 uur
+              of je idee venture-waardig is.
             </p>
           </div>
         </div>
@@ -133,8 +133,8 @@ export function AiowVentureLanding() {
       </section>
 
       <div className={styles.startBar} data-reveal>
-        <p>Laat Spunky eerst bepalen welke route past: startup, groei, digitalisering, AI, partner of niet relevant.</p>
-        <Link href="/intake">Start Venture Intake</Link>
+        <p>Leg je idee in drie stappen voor. Je weet binnen 48 uur of je idee venture-waardig is.</p>
+        <Link href="/nl/venture-score-aanvragen">Vraag je venture-score aan</Link>
       </div>
     </main>
   );

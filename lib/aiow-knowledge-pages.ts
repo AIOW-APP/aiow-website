@@ -35347,6 +35347,134 @@ export const aiowKnowledgePages = [
         "Een korte proces- en datamap, prioriteitenlijst, pilotvoorstel, governance-afspraken en meetbare KPI’s."
       ]
     ]
+  },
+  {
+    "slug": "ai-bedrijf-starten-zonder-technische-co-founder",
+    "kind": "knowledge",
+    "serviceSlug": "venture-partner",
+    "service": "AI Venture Partner",
+    "sectorSlug": "startups-mkb",
+    "sector": "Startups en MKB",
+    "regionSlug": "nederland",
+    "region": "Nederland",
+    "intent": "hoe start ik",
+    "title": "AI-bedrijf starten zonder technische co-founder: zo kan het wel",
+    "h1": "Hoe start je een AI-bedrijf zonder technische co-founder?",
+    "summary": "Een AI-bedrijf starten zonder technische co-founder kan via een venture partner: AIOW bouwt product, AI en groei mee voor een omzetdeel (indicatief 10 tot 25 procent) in plaats van aandelen of uurtarief, en selecteert vooraf met een venture-score.",
+    "sections": [
+      [
+        "Kan je een AI-bedrijf starten zonder technische co-founder?",
+        "Ja, maar niet door eindeloos naar die ene ontwikkelaar te blijven zoeken die voor aandelen wil instappen. Een alternatief is een venture partner zoals AIOW: die bouwt het product, de AI en de groei mee in ruil voor een omzetdeel, indicatief 10 tot 25 procent, in plaats van een uurtarief. AIOW selecteert daarbij met een venture-score en stapt alleen in bij een sterke case."
+      ],
+      [
+        "Waarom de co-founder-zoektocht meestal vastloopt",
+        "Goede ontwikkelaars hebben werk genoeg en stappen voor aandelen meestal alleen in bij mensen die ze al jaren kennen. Voor founders zonder technisch netwerk betekent dat maanden zoeken, een half toegezegde bekende, of een overhaaste keuze voor de eerste die ja zegt. Aandelen weggeven aan de verkeerde persoon is moeilijk terug te draaien en een van de duurste fouten die een jong bedrijf kan maken."
+      ],
+      [
+        "Wat een venture partner anders doet dan een bureau",
+        "Een bureau bouwt wat je vraagt, factureert uren en accepteert vrijwel elk idee, want het verdient aan het bouwen zelf. Een venture partner beoordeelt je idee eerst zoals een investeerder dat doet en bouwt alleen mee als er een echte case ligt. AIOW levert dan de technische kant die je anders bij een co-founder zou zoeken: product, AI-automatisering en groei, zonder dat je aandelen hoeft weg te geven."
+      ],
+      [
+        "Hoe een omzetdeel de prikkels gelijk zet",
+        "AIOW werkt met een omzetdeel, indicatief 10 tot 25 procent afhankelijk van risico en werk, plus hetzelfde deel bij verkoop. Geen omzet betekent geen beloning voor AIOW. Er is dus geen prikkel om uren te schrijven of een project te rekken: de enige manier waarop AIOW verdient, is als jouw bedrijf betalende klanten krijgt en houdt. Founder en partner willen daardoor exact hetzelfde."
+      ],
+      [
+        "Wanneer AIOW nee zegt",
+        "AIOW zegt vaker nee dan ja. Elke aanvraag krijgt een venture-score op founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Hoge score: een voorstel om mee te bouwen. Middenscore: een betaalde scan met concreet verbeterplan. Lage score: een eerlijke afwijzing met een tip om later sterker terug te komen."
+      ],
+      [
+        "Eerste stap",
+        "Beschrijf je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen een werkdag een eerlijk antwoord: meebouwen, een scan met plan, of een onderbouwde nee met verbetertip."
+      ]
+    ],
+    "faq": [
+      [
+        "Kan ik een AI-bedrijf starten zonder zelf te kunnen programmeren?",
+        "Ja. Je hebt een technische kant nodig, maar die hoeft geen co-founder met aandelen te zijn. Een venture partner zoals AIOW bouwt product, AI en groei mee in ruil voor een omzetdeel, indicatief 10 tot 25 procent, en beoordeelt vooraf met een venture-score of je case sterk genoeg is."
+      ],
+      [
+        "Wat is het verschil tussen een venture partner en een technische co-founder?",
+        "Een co-founder krijgt aandelen en zeggenschap en is moeilijk te vervangen als het niet werkt. Een venture partner krijgt een omzetdeel, geen aandelen: jij houdt de eigendom en de zeggenschap, terwijl de prikkel hetzelfde blijft, want de partner verdient alleen als het bedrijf omzet draait."
+      ],
+      [
+        "Is een venture partner niet gewoon een duur bureau?",
+        "Nee, het verdienmodel is omgekeerd. Een bureau factureert uren en verdient ook als je product geen klanten krijgt. Een venture partner verdient uitsluitend een deel van de omzet die het bedrijf werkelijk draait, en selecteert daarom streng aan de poort."
+      ],
+      [
+        "Wat gebeurt er als AIOW mijn idee afwijst?",
+        "Je krijgt altijd een eerlijke uitleg en een concrete verbetertip. Bij een middenscore kan een betaalde scan met verbeterplan een startpunt zijn. Founders die later met meer tractie terugkomen, worden opnieuw beoordeeld."
+      ],
+      [
+        "Hoeveel omzetdeel vraagt AIOW?",
+        "Indicatief 10 tot 25 procent van de omzet, afhankelijk van risico en hoeveel werk AIOW inbrengt, plus hetzelfde deel bij verkoop van het bedrijf. De precieze verdeling is onderdeel van het voorstel na de venture-score."
+      ]
+    ]
+  },
+  {
+    "slug": "venture-studio-vs-venture-partner-verschil",
+    "kind": "knowledge",
+    "serviceSlug": "venture-partner",
+    "service": "AI Venture Partner",
+    "sectorSlug": "startups-mkb",
+    "sector": "Startups en MKB",
+    "regionSlug": "nederland",
+    "region": "Nederland",
+    "intent": "wat is",
+    "title": "Venture studio vs venture partner: wat is het verschil?",
+    "h1": "Wat is het verschil tussen een venture studio en een venture partner?",
+    "summary": "Een venture studio bouwt eigen ideeën uit en neemt daarvoor een fors aandelenbelang; een venture partner zoals AIOW bouwt jouw idee mee voor een omzetdeel (indicatief 10 tot 25 procent), zonder aandelen, en selecteert vooraf met een venture-score.",
+    "sections": [
+      [
+        "Wat is het verschil tussen een venture studio en een venture partner?",
+        "Een venture studio bedenkt eigen startup-ideeën, bouwt die intern uit en neemt daarvoor een fors aandelenbelang; jij stapt in op hun idee. Een venture partner werkt andersom: jij komt met het idee of bedrijf, de partner bouwt het product en de groei mee en wordt beloond met een deel van de omzet in plaats van aandelen. AIOW is een venture partner: het bouwt AI-producten mee voor een omzetdeel, indicatief 10 tot 25 procent, en selecteert vooraf met een venture-score."
+      ],
+      [
+        "Hoe een venture studio werkt",
+        "Een venture studio is een soort startup-fabriek: de studio bedenkt doorgaans zelf de ideeën, valideert ze intern, zet er een team op en zoekt er daarna een founder of CEO bij. Omdat idee, startkapitaal en vaak het eerste team van de studio komen, houdt de studio meestal een groot aandelenbelang. De studio spreidt risico over een portfolio van eigen bedrijven. Voor een founder met een eigen idee is dat zelden het passende model: je levert veel eigendom en zeggenschap in bij een partij wiens aandacht over een heel portfolio verdeeld is."
+      ],
+      [
+        "Hoe een venture partner werkt",
+        "Een venture partner begint bij jouw idee of bedrijf. AIOW beoordeelt elke aanvraag eerst met een venture-score op founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Alleen bij een sterke case bouwt AIOW mee: product, AI-automatisering en groei. De beloning is een omzetdeel, indicatief 10 tot 25 procent, plus hetzelfde deel bij verkoop. Jij houdt je aandelen en je zeggenschap; geen omzet betekent geen beloning voor AIOW."
+      ],
+      [
+        "Waar een bureau in dit spectrum zit",
+        "Een bureau bouwt wat je vraagt, factureert per uur of project en verdient aan het bouwen zelf, of je product nu klanten krijgt of niet. Daarom accepteert een bureau vrijwel elk idee en stopt de betrokkenheid meestal bij oplevering. Studio en partner delen juist in het resultaat en zijn daardoor selectief. De simpelste toets: vraag hoe de partij verdient als jouw product geen omzet draait. Een bureau verdient dan gewoon door, een venture partner verdient dan niets."
+      ],
+      [
+        "Wanneer past welk model?",
+        "Een venture studio past als je geen eigen idee hebt maar wel als founder op het idee van een ander wilt bouwen, met een minderheidsbelang als startpunt. Een bureau past als je precies weet wat er gebouwd moet worden en het budget hebt. Een venture partner past als je een eigen idee of bestaand bedrijf hebt met een echte AI-kans, de eigendom wilt houden en liever een deel van je omzet deelt dan aandelen weggeeft."
+      ],
+      [
+        "Eerste stap",
+        "Twijfel je welk model bij jouw situatie past, beschrijf dan je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen een werkdag een eerlijk antwoord: meebouwen, een betaalde scan met verbeterplan, of een onderbouwde nee met verbetertip."
+      ]
+    ],
+    "faq": [
+      [
+        "Wat is een venture studio?",
+        "Een venture studio bedenkt doorgaans eigen startup-ideeën, bouwt die intern uit met eigen team en kapitaal, en zoekt er daarna een founder bij. In ruil houdt de studio meestal een groot aandelenbelang. Het model draait om een portfolio van eigen ideeën, niet om het idee van een externe founder."
+      ],
+      [
+        "Wat is een venture partner?",
+        "Een venture partner bouwt mee aan jouw idee of bedrijf en wordt beloond met een deel van de omzet in plaats van aandelen of uurtarief. AIOW werkt zo: het bouwt AI-producten mee voor een omzetdeel, indicatief 10 tot 25 procent, en beoordeelt vooraf met een venture-score of de case sterk genoeg is."
+      ],
+      [
+        "Neemt een venture partner aandelen in mijn bedrijf?",
+        "AIOW niet. Jij houdt de eigendom en de zeggenschap; AIOW ontvangt een omzetdeel, indicatief 10 tot 25 procent, plus hetzelfde deel bij verkoop van het bedrijf. Bij een venture studio is een fors aandelenbelang juist de kern van het model."
+      ],
+      [
+        "Is een venture partner hetzelfde als een bureau met een andere prijs?",
+        "Nee. Een bureau verdient aan het bouwen zelf en accepteert daarom vrijwel elk idee. Een venture partner verdient uitsluitend een deel van de omzet die het bedrijf werkelijk draait, en selecteert daarom streng aan de poort. Zonder omzet verdient AIOW niets; een bureau verdient dan gewoon door."
+      ],
+      [
+        "Voor wie is een venture studio wel de betere keuze?",
+        "Voor wie geen eigen idee heeft maar wel een bedrijf wil leiden: de studio levert het idee, het startkapitaal en vaak het eerste team, en zoekt daar een founder of CEO bij. Wie een eigen idee heeft en eigendom wil houden, past doorgaans beter bij een venture partner."
+      ],
+      [
+        "Hoe weet ik of mijn idee sterk genoeg is voor een venture partner?",
+        "AIOW beoordeelt elke aanvraag met een venture-score op founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Beschrijf je idee in de venture intake op aiow.ai/intake; je krijgt binnen een werkdag een eerlijk antwoord."
+      ]
+    ]
   }
 ] satisfies AiowKnowledgePage[];
 
