@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "AIOW",
+    "slug": "aiow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "aiow",
+    "backgroundColor": "#FAF9F6",
+    "splash": {
+      "backgroundColor": "#FAF9F6"
+    },
+    "ios": {
+      "bundleIdentifier": "ai.aiow.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "ai.aiow.app",
+      "permissions": []
+    }
+  }
+}

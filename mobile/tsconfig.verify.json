@@ -1,0 +1,17 @@
+{
+  "//": "Sandbox-verify zonder volledige expo-install: zelfde opties als expo/tsconfig.base, hier uitgeschreven. De echte tsconfig.json blijft expo/tsconfig.base volgen.",
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react-native",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "esnext",
+    "strict": true
+  },
+  "include": ["App.tsx", "src/**/*.ts", "src/**/*.tsx"]
+}
