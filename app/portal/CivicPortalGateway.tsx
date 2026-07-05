@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "../civicPortal.module.css";
+import styles from "./portalGlass.module.css";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 /*
@@ -10,8 +10,15 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
  * 1. Klant vult alleen e-mail in → Supabase magic link in de mail.
  * 2. Klant klikt de link → komt hier terug met een geverifieerde sessie.
  * 3. Wij halen de dossiers bij dat e-mailadres op en openen ze zonder toegangscode.
- * Kwijt = gewoon opnieuw je e-mail invullen; volledig self-service, geen WhatsApp nodig.
+ * Kwijt = gewoon opnieuw je e-mail invullen; volledig self-service.
  * De toegangscode blijft alleen als fallback voor wie de mail niet in kan zien.
+ *
+ * Vormgeving: clean-glass merk-moment (DESIGN-DNA.md v2.1).
+ * - Wachten als verhaal (les A17): één fase-chip op een vaste plek benoemt de
+ *   échte fases (link verstuurd → wacht op klik of code → controleren →
+ *   dossiers ophalen) en eindigt als uitnodiging of resultaat.
+ * - Eén gevulde CTA per fase, morfend label; al het secundaire is tekstlink
+ *   (les A16). Rood alleen voor validatie (les A14).
  */
 
 type AccountOption = { accountId: string; companyName: string; projectName: string; status: string; loginToken: string };
@@ -22,6 +29,16 @@ type Phase =
   | { name: "choose"; accounts: AccountOption[] }
   | { name: "none"; email: string }
   | { name: "error"; message: string };
+
+function FaseChip({ nr, busy, children }: { nr: string; busy?: boolean; children: React.ReactNode }) {
+  return (
+    <p className={styles.faseChip} role="status" aria-live="polite">
+      <span className={styles.faseDot} data-busy={busy ? "" : undefined} aria-hidden="true" />
+      <b>{nr}</b>
+      {children}
+    </p>
+  );
+}
 
 export function CivicPortalGateway() {
   const router = useRouter();
@@ -88,19 +105,29 @@ export function CivicPortalGateway() {
     }
   }
 
+  /* Fase: dossiers ophalen (na geverifieerde sessie) */
   if (phase.name === "listing") {
-    return <section className={styles.card}><p className={styles.meta}>e-mail geverifieerd · dossiers ophalen…</p></section>;
+    return (
+      <section className={`${styles.card} cg-glass`}>
+        <FaseChip nr="03" busy>e-mail geverifieerd · dossiers ophalen</FaseChip>
+        <h2 className={styles.cardTitle}>Even geduld.</h2>
+        <p className={styles.cardBody}>We leggen je dossier klaar.</p>
+      </section>
+    );
   }
 
+  /* Resultaat: meerdere dossiers, kies er een */
   if (phase.name === "choose") {
     return (
-      <section className={styles.card}>
-        <p className={styles.meta}>e-mail geverifieerd · kies je dossier</p>
-        <div className={styles.ctaRow} style={{ flexDirection: "column", alignItems: "stretch" }}>
+      <section className={`${styles.card} cg-glass`}>
+        <FaseChip nr="04">geverifieerd · kies je dossier</FaseChip>
+        <h2 className={styles.cardTitle}>Kies je dossier.</h2>
+        <div className={styles.dossierList}>
           {phase.accounts.map((account) => (
-            <a key={account.accountId} className={styles.ctaLine}
+            <a key={account.accountId}
               href={`/portal/customer/${encodeURIComponent(account.accountId)}?lt=${encodeURIComponent(account.loginToken)}`}>
-              <strong>{account.companyName}</strong> · {account.projectName}
+              <strong>{account.companyName}</strong>
+              <span>{account.projectName}</span>
             </a>
           ))}
         </div>
@@ -108,20 +135,32 @@ export function CivicPortalGateway() {
     );
   }
 
+  /* Resultaat: geverifieerd, maar nog geen dossier op dit adres */
   if (phase.name === "none") {
     return (
-      <section className={styles.card}>
-        <p className={styles.lead}>Er staat nog geen dossier op {phase.email}.</p>
-        <div className={styles.ctaRow}><a className={styles.ctaSolid} href="/intake">Start je venture intake</a></div>
+      <section className={`${styles.card} cg-glass`}>
+        <FaseChip nr="04">geverifieerd · geen dossier</FaseChip>
+        <h2 className={styles.cardTitle}>Nog geen dossier op {phase.email}.</h2>
+        <p className={styles.cardBody}>
+          Start met je idee. De weging is eerlijk, we zeggen vaker nee dan ja.
+        </p>
+        <a className={styles.primary} href="/nl/venture-score-aanvragen">Vraag je venture-score aan</a>
       </section>
     );
   }
 
+  /* Fase: link en code onderweg, wachten als verhaal (les A17) */
   if (phase.name === "sent") {
     return (
-      <section className={styles.card} aria-live="polite">
-        <span className={styles.stamp}>CHECK JE MAIL</span>
-        <p className={styles.lead}>We hebben een inlogcode en -link gestuurd naar <strong>{phase.email}</strong>. Klik op de link, of vul hier de code uit de mail in.</p>
+      <section className={`${styles.card} cg-glass`}>
+        <FaseChip nr="02" busy={!busy}>
+          {busy ? "code wordt gecontroleerd" : "link onderweg · check je mail"}
+        </FaseChip>
+        <h2 className={styles.cardTitle}>Check je mail.</h2>
+        <p className={styles.cardBody}>
+          De link en de code zijn onderweg naar <strong>{phase.email}</strong>.
+          Klik op de link, of vul de code hier in.
+        </p>
         <form
           onSubmit={async (event) => {
             event.preventDefault();
@@ -133,14 +172,16 @@ export function CivicPortalGateway() {
               if (error) throw error;
               /* sessie is nu actief; onAuthStateChange haalt de dossiers op en stuurt door */
             } catch (error) {
-              setOtpError(error instanceof Error ? error.message : "Code klopt niet of is verlopen.");
+              setOtpError(error instanceof Error ? error.message : "Code klopt niet of is verlopen. Vraag zo nodig een nieuwe aan.");
             } finally {
               setBusy(false);
             }
           }}
         >
-          <label className={styles.field}>Inlogcode
+          <label className={styles.field}>
+            Inlogcode
             <input
+              className={styles.codeInput}
               value={otpCode}
               onChange={(event) => setOtpCode(event.target.value)}
               inputMode="numeric"
@@ -149,46 +190,61 @@ export function CivicPortalGateway() {
             />
           </label>
           {otpError && <p className={styles.error}>{otpError}</p>}
-          <button className={styles.submit} type="submit" disabled={busy || otpCode.trim().length < 6}>
-            {busy ? "Controleren..." : "Log in met code"}
-          </button>
+          <p className={styles.actionRow}>
+            <button className={styles.primary} type="submit" disabled={busy || otpCode.trim().length < 6}>
+              {busy ? "Wordt gecontroleerd..." : "Log in met code"}
+            </button>
+          </p>
         </form>
-        <p className={styles.note}>Geen mail? Kijk in je spam, of <button type="button" onClick={() => setPhase({ name: "email" })} style={{ background: "none", border: 0, color: "#B05C34", fontWeight: 700, cursor: "pointer", padding: 0 }}>probeer opnieuw</button>.</p>
+        <p className={styles.note}>
+          Geen mail? Kijk in je spam, of{" "}
+          <button type="button" className={styles.quiet} onClick={() => setPhase({ name: "email" })}>
+            vraag een nieuwe link aan
+          </button>.
+        </p>
       </section>
     );
   }
 
+  /* Rust-fase: e-mail invullen, één CTA */
   return (
-    <>
-      <form className={styles.card} onSubmit={sendLink}>
+    <section className={`${styles.card} cg-glass`}>
+      {busy && <FaseChip nr="01" busy>link wordt verstuurd</FaseChip>}
+      <form onSubmit={sendLink}>
         {phase.name === "error" && <p className={styles.error}>{phase.message}</p>}
         {!supabase && (
-          <p className={styles.error}>E-mail-login wordt geactiveerd. Gebruik zolang de toegangscode-route hieronder.</p>
+          <p className={styles.cardBody}>E-mail-login wordt geactiveerd. Gebruik zolang de toegangscode-route hieronder.</p>
         )}
-        <label className={styles.field}>E-mailadres
+        <label className={styles.field}>
+          E-mailadres
           <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="jij@bedrijf.nl" required />
         </label>
-        <button className={styles.submit} type="submit" disabled={busy || !supabase || !/\S+@\S+\.\S+/.test(email.trim())}>
-          {busy ? "Versturen..." : "Stuur mij een inloglink"}
-        </button>
-        <p className={styles.note}>Je krijgt een e-mail met een link; daarmee log je zonder wachtwoord in. Code kwijt of nieuw toestel? Gewoon opnieuw je e-mail invullen.</p>
+        <p className={styles.actionRow}>
+          <button className={styles.primary} type="submit" disabled={busy || !supabase || !/\S+@\S+\.\S+/.test(email.trim())}>
+            {busy ? "Wordt verstuurd..." : "Stuur mijn inloglink"}
+          </button>
+        </p>
+        <p className={styles.note}>Nieuw toestel of link kwijt, gewoon opnieuw je e-mail invullen.</p>
       </form>
 
-      <p className={styles.note} style={{ marginTop: -40, marginBottom: 40 }}>
-        <button type="button" onClick={() => setShowCodeFallback(!showCodeFallback)} style={{ background: "none", border: 0, color: "rgba(33,28,22,.55)", textDecoration: "underline", cursor: "pointer", padding: 0, font: "inherit" }}>
+      <p className={styles.note}>
+        <button type="button" className={styles.quiet} onClick={() => setShowCodeFallback(!showCodeFallback)}>
           Ik heb een accountnummer en toegangscode
         </button>
       </p>
 
       {showCodeFallback && (
-        <form className={styles.card} style={{ marginTop: -30 }} onSubmit={(event) => { event.preventDefault(); if (accountId.trim()) router.push(`/portal/customer/${encodeURIComponent(accountId.trim())}`); }}>
-          <label className={styles.field}>Accountnummer
+        <form onSubmit={(event) => { event.preventDefault(); if (accountId.trim()) router.push(`/portal/customer/${encodeURIComponent(accountId.trim())}`); }}>
+          <label className={styles.field}>
+            Accountnummer
             <input value={accountId} onChange={(event) => setAccountId(event.target.value)} placeholder="aiow_acct_..." />
           </label>
-          <button className={styles.submit} type="submit" disabled={!accountId.trim()}>Open met toegangscode</button>
+          <p className={styles.actionRow}>
+            <button className={styles.primary} type="submit" disabled={!accountId.trim()}>Open met toegangscode</button>
+          </p>
           <p className={styles.note}>Op de volgende pagina vul je je toegangscode in.</p>
         </form>
       )}
-    </>
+    </section>
   );
 }

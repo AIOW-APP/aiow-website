@@ -1,0 +1,350 @@
+/* AIOW klantportaal-login als merk-moment (DESIGN-DNA.md v2.1, De Weging).
+ *
+ * Was: civic beige (civicPortal.module.css, home-v3-tijdperk), viel buiten de
+ * v2-scope ("portal/app buiten scope"). Deze module trekt de login het
+ * clean-glass tokensysteem in:
+ * - chapter-statement in Literata, links uitgelijnd (les A2);
+ * - de orb aanwezig als beoordelaar, het glas van de kaart ligt over zijn
+ *   kleur en is dus functioneel, nooit glas op kaal wit (Grondwet);
+ * - één CTA per fase, vaste plek, morfend label (les A16);
+ * - wachten als verhaal: één fase-chip die de echte stappen benoemt (les A17);
+ * - kleurgrammatica: petrol = primair, rood = alleen validatie (les A14);
+ * - mobiel 390px eerst, tap-doelen 44px, reduced-motion compleet stil.
+ */
+
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--cg-canvas);
+  color: var(--cg-ink);
+  font-family: var(--cg-font-body);
+  font-size: var(--cg-text-body);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+}
+
+.page :is(h1, h2, h3) {
+  font-family: var(--cg-font-display);
+  font-weight: 520;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.wrap {
+  width: min(var(--cg-container), 100%);
+  margin-inline: auto;
+  padding-inline: var(--cg-gutter);
+}
+
+/* ===== Hoofdstuk-kop (les A2): microlabel, statement, één sub-regel ===== */
+
+.hero {
+  padding: calc(var(--cg-nav-h) + clamp(48px, 9vh, 96px)) 0 clamp(20px, 4vh, 36px);
+  max-width: 46ch;
+}
+
+.hero h1 {
+  font-size: var(--cg-text-chapter);
+  line-height: 1.08;
+  margin-top: 14px;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--cg-accent);
+}
+
+.lead {
+  margin: 14px 0 0;
+  max-width: 42ch;
+  color: var(--cg-ink-soft);
+  font-size: var(--cg-text-lead);
+  letter-spacing: -0.01em;
+}
+
+/* ===== De beoordelaar + het glas ===== */
+
+.presence {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding-bottom: clamp(48px, 7vh, 88px);
+}
+
+/* De orb staat achter de kaart; de kaart (glas) leent zijn kleur. */
+.presence > :global(div[data-ambient]) {
+  margin-bottom: clamp(-96px, -12vw, -150px);
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100%);
+  border-radius: var(--cg-radius-lg);
+  padding: clamp(22px, 4vw, 34px);
+  display: grid;
+  gap: 14px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: cardIn var(--cg-dur-slow) var(--cg-ease) both;
+  }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cardTitle {
+  font-size: var(--cg-text-card);
+}
+
+.cardBody {
+  margin: 0;
+  color: var(--cg-ink-soft);
+}
+
+.cardBody strong {
+  color: var(--cg-ink);
+  font-weight: 600;
+}
+
+/* ===== Fase-chip (les A17): één vast geplaatst status-element ===== */
+
+.faseChip {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: var(--cg-radius-pill);
+  border: 1px solid var(--cg-line);
+  background: var(--cg-surface);
+  font-family: var(--cg-font-mono);
+  font-size: var(--cg-text-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cg-ink-soft);
+}
+
+.faseChip b {
+  font-weight: 400;
+  color: var(--cg-accent-strong);
+}
+
+.faseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cg-accent);
+  flex: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .faseDot[data-busy] {
+    animation: faseBreathe 1.6s var(--cg-ease) infinite;
+  }
+}
+
+@keyframes faseBreathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* ===== Formulier ===== */
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.field input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--cg-line-strong);
+  border-radius: var(--cg-radius-md);
+  background: var(--cg-surface);
+  color: var(--cg-ink);
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color var(--cg-dur-fast) var(--cg-ease);
+}
+
+.field input:focus-visible {
+  outline: 2px solid var(--cg-accent);
+  outline-offset: 1px;
+  border-color: var(--cg-accent);
+}
+
+.field input::placeholder {
+  color: var(--cg-ink-faint);
+}
+
+.codeInput {
+  font-family: var(--cg-font-mono);
+  letter-spacing: 0.3em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Eén gevulde knop per scherm (les A16), druk-fysica uit De Weging */
+.primary {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--cg-radius-md);
+  background: var(--cg-accent);
+  color: var(--cg-on-accent);
+  font-weight: 650;
+  font-size: 1rem;
+  padding: 12px 24px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--cg-dur-base) var(--cg-ease), transform var(--cg-dur-fast) var(--cg-ease);
+}
+
+.primary:hover { background: var(--cg-accent-strong); }
+.primary:active { transform: scale(0.985); }
+.primary:focus-visible { outline: 2px solid var(--cg-accent-strong); outline-offset: 2px; }
+.primary:disabled { opacity: 0.55; cursor: default; transform: none; }
+
+/* Secundair register: tekstlink, nooit een tweede knop (les A16) */
+.quiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--cg-ink-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.quiet:hover { color: var(--cg-ink); }
+.quiet:focus-visible { outline: 2px solid var(--cg-accent); outline-offset: 2px; border-radius: 4px; }
+
+.actionRow {
+  margin: 14px 0 0;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--cg-ink-soft);
+}
+
+/* Validatie: rood alleen hier (les A14), zin zegt wat er mist en hoe verder */
+.error {
+  margin: 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--cg-error);
+  color: var(--cg-error);
+  font-size: 0.9rem;
+}
+
+/* ===== Dossierkeuze ===== */
+
+.dossierList {
+  display: grid;
+  gap: 8px;
+}
+
+.dossierList a {
+  display: grid;
+  gap: 2px;
+  min-height: 48px;
+  align-content: center;
+  padding: 12px 16px;
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-md);
+  background: var(--cg-surface);
+  color: var(--cg-ink);
+  text-decoration: none;
+  transition: border-color var(--cg-dur-fast) var(--cg-ease), transform var(--cg-dur-fast) var(--cg-ease);
+}
+
+.dossierList a:hover { border-color: var(--cg-accent); }
+.dossierList a:active { transform: scale(0.985); }
+.dossierList a:focus-visible { outline: 2px solid var(--cg-accent); outline-offset: 2px; }
+
+.dossierList a strong { font-weight: 650; }
+
+.dossierList a span {
+  font-size: 0.85rem;
+  color: var(--cg-ink-soft);
+}
+
+/* ===== Stappen onder de kaart: kale typografie, geen dozen (les A10) ===== */
+
+.steps {
+  display: grid;
+  gap: clamp(24px, 4vw, 40px);
+  padding: 0 0 var(--cg-rest);
+  max-width: 62rem;
+}
+
+@media (min-width: 720px) {
+  .steps { grid-template-columns: repeat(3, 1fr); }
+}
+
+.step {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding-top: 14px;
+  border-top: 1px solid var(--cg-line);
+}
+
+.step h3 {
+  font-size: 1.1rem;
+  font-weight: 560;
+}
+
+.step p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--cg-ink-soft);
+}
+
+/* ===== Footer ===== */
+
+.footer {
+  margin-top: auto;
+  border-top: 1px solid var(--cg-line);
+  padding: 22px 0 max(22px, env(safe-area-inset-bottom));
+  color: var(--cg-ink-soft);
+  font-size: 0.85rem;
+}
+
+/* ===== 404 ===== */
+
+.notFound {
+  flex: 1;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding-block: calc(var(--cg-nav-h) + 40px) var(--cg-rest);
+  max-width: 46ch;
+}
+
+.notFoundActions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}

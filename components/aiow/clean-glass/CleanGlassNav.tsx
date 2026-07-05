@@ -99,7 +99,7 @@ export function CleanGlassNav({ journey = "static", badgeHref }: CleanGlassNavPr
 
         <nav className={styles.links} aria-label="AIOW navigatie">
           <Link href="/nl/kennis">Kennisbank</Link>
-          <Link href="/app">Login</Link>
+          <Link href="/portal">Login</Link>
         </nav>
 
         <Link className={styles.cta} href="/nl/venture-score-aanvragen">
@@ -122,7 +122,7 @@ export function CleanGlassNav({ journey = "static", badgeHref }: CleanGlassNavPr
 
       <div id="cg-nav-menu" className={styles.menuPanel} data-open={menuOpen ? "" : undefined} hidden={!menuOpen}>
         <Link href="/nl/kennis" onClick={closeMenu}>Kennisbank</Link>
-        <Link href="/app" onClick={closeMenu}>Login</Link>
+        <Link href="/portal" onClick={closeMenu}>Login</Link>
         <Link href="/nl/venture-score-aanvragen" onClick={closeMenu}>Venture-score aanvragen</Link>
       </div>
     </header>
