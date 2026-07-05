@@ -1,6 +1,9 @@
 # DESIGN-DNA: AIOW (aiow.ai)
 
-Status: v2, opgesteld 2026-07-05 door Fable. Vervangt v1 (Aurora Verdict, zie git-historie).
+Status: v2.1, opgesteld 2026-07-05 door Fable. Vervangt v1 (Aurora Verdict, zie git-historie).
+v2.1 (zelfde dag): de belevingslaag "De Weging", na Richards diagnose van v2
+("DNA-correct maar dood"). Alle v2-regels blijven gelden; v2.1 vult de expressie-slots
+met leven in. Zie sectie "v2.1: De Weging" onderaan.
 Aanleiding: besluit Richard 2026-07-05: AIOW gaat naar de clean-glass v3-Grondwet
 (~/TeamVault/Operations/brand-dna-master-prompt-v3-clean-glass.md). Dit bestand is wet:
 wijzigen = eerst hier, dan code.
@@ -171,3 +174,61 @@ Eerlijk, selectief, mede-eigenaar. Actieve knoppen. Elke sectie één zin met zi
 5. States als merk-momenten: ja (zie hierboven).
 6. Budgets: LCP is tekst, geen video/canvas op de homepage; JS-toevoeging beperkt tot
    nav-condens + badge-voortgang (kleine client-componenten). Meting bij Hermes-verify.
+
+## v2.1: De Weging (belevingslaag, 2026-07-05)
+
+Diagnose van v2 door Richard: DNA-correct maar dood. De homepage beweerde het merk
+("wij wegen, wij zeggen vaker nee dan ja") maar liet het niet meemaken. v2.1 maakt de
+homepage het oordeel zelf: er ligt een aanvraag op tafel en de bezoeker kijkt mee hoe
+AIOW weegt, van intake tot verdict.
+
+### De kern-interactie (les A11)
+
+Scroll = de weging van dossier #217, een voorbeeldweging samengesteld uit echte
+aanvragen (zo benoemd op de pagina, geen fictie die zich als klant voordoet).
+Drie hoofdstukken zijn de drie assen; elk hoofdstuk eindigt in een weegmoment:
+founder +28, venture +17, partner fit +21. Totaal 66, de lat ligt op 70.
+Het verdict is nee, met de concrete tip erbij, en draait dan naar de bezoeker:
+"wij zeggen vaker nee dan ja, daarom is ons ja iets waard". De merkbelofte wordt
+niet beweerd maar gedemonstreerd, inclusief de eerlijkheid van een afwijzing.
+
+### Slot 3 aangescherpt: de score-badge weegt zichtbaar mee
+
+- De badge in de nav is op de homepage een levend weeginstrument: mono-cijfer (00 → 66)
+  plus conic-ring met een vaste lat-markering op 70. Hij telt per weegmoment discreet
+  op (geen scroll-scrubbing, les B2), volledig omkeerbaar bij terugscrollen (A12).
+- Elk weegmoment in de pagina is een sentinel ([data-weging]); een kleine conductor
+  (client) berekent de gepasseerde wegingen, zet data-aiow-stage op <html> en telt de
+  cijfers. Alles rijdt op de bestaande reveal-gate (data-aiow-reveal): zonder JS of met
+  reduced-motion staat overal direct de eindstand (66) en zijn de weegregels compleet.
+- Op flow en kennisbank blijft de badge het rustende instrument (VS, ring vol) en linkt
+  hij naar de aanvraagflow.
+
+### Slot 1 aangescherpt: de orb is een wezen, geen decoratie
+
+De orb reageert: de kern kijkt op desktop richting de cursor (rAF, gedempt) en kijkt
+op elk apparaat de pagina in naarmate je scrolt (touch-equivalent met hetzelfde
+verhaal, les A11/B4). De iris pulseert zacht als "denken". Orb-systeem = ambient-loop
+1 van 2 (ademhaling + iris horen bij één wezen); verdict-gloed = loop 2. Loops
+pauzeren off-screen (AmbientGuard), reduced-motion: stil en compleet.
+
+### Header conform header-standaard.md v1 (bindend)
+
+Logo + 2 tekstlinks (Kennisbank, Login) + één CTA-knop (Venture-score) + badge-
+instrument = 5 elementen. Mobiel: logo + instrument (in de logo-zone, zoals de
+testversie-chip-regel) + CTA + hamburger; de links verhuizen naar een solide
+menu-paneel (knop 44px, links ≥48px, aria-expanded, sluit bij klik/Escape/scroll).
+Dit vervangt de v2-keuze "geen hamburger nodig"; de standaard wint.
+
+### Micro-interactielaag (overal, kalm water)
+
+Druk-fysica op elke knop en optie (scale .985 bij :active), zachte kaart-lift op
+hover die in rust terugkeert, weegregels die aanklikken bij passage. Flow en
+kennisbank ademen mee: stap-wissel-choreografie in de flow (CSS-only entrance),
+zelfde druk-fysica en focus-states, geen extra loops.
+
+### Verdict-sectie uitgebreid
+
+Het ene donkere moment (A8) toont nu de weging zelf: score-rail 0-100 met marker op
+66 en de lat op 70, verdict-statement, de tip aan #217, en dan de draai naar de
+bezoeker met de CTA. Microcopy benoemt eerlijk dat #217 een voorbeeldweging is.

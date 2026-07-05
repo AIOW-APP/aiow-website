@@ -1,0 +1,11 @@
+PASS  16.44 ink op canvas
+PASS   4.77 ink-soft (62%) op canvas
+PASS   4.86 ink-soft (62%) op surface
+FAIL   2.85 ink-faint (45%) op canvas [alleen placeholders/decor]
+PASS   6.27 accent op canvas (CTA-tekstlink, delta +28)
+PASS   6.60 accent op surface
+PASS   6.33 on-accent op accent (CTA-knop)
+PASS  17.54 verdict-ink op verdict
+PASS   7.11 verdict-ink-soft (62%) op verdict
+PASS   8.84 verdict-glow op verdict (scoreFill, decor)
+PASS  17.54 verdict (CTA-tekst) op verdict-ink (knop)

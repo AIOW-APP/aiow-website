@@ -69,6 +69,14 @@
   border: 0;
   display: grid;
   gap: 16px;
+  /* Stap-wissel-choreografie (v2.1): de nieuwe vraaggroep komt kalm binnen.
+     CSS-only op remount; reduced-motion zet hem uit (zie onderaan). */
+  animation: stepIn var(--cg-dur-slow) var(--cg-ease);
+}
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .group legend {
@@ -146,10 +154,11 @@
   border: 1px solid var(--cg-line-strong);
   border-radius: var(--cg-radius-md);
   cursor: pointer;
-  transition: border-color var(--cg-dur-fast) var(--cg-ease), background var(--cg-dur-fast) var(--cg-ease);
+  transition: border-color var(--cg-dur-fast) var(--cg-ease), background var(--cg-dur-fast) var(--cg-ease), transform var(--cg-dur-fast) var(--cg-ease);
 }
 
 .option:hover { border-color: var(--cg-ink-faint); }
+.option:active { transform: scale(0.985); }
 
 .option[data-checked] {
   border-color: var(--cg-accent);
@@ -212,8 +221,12 @@
   font-weight: 560;
   text-decoration: none;
   cursor: pointer;
-  transition: background var(--cg-dur-fast) var(--cg-ease), color var(--cg-dur-fast) var(--cg-ease), border-color var(--cg-dur-fast) var(--cg-ease);
+  transition: background var(--cg-dur-fast) var(--cg-ease), color var(--cg-dur-fast) var(--cg-ease), border-color var(--cg-dur-fast) var(--cg-ease), transform var(--cg-dur-fast) var(--cg-ease);
 }
+
+/* Druk-fysica (v2.1): elke bewuste druk is voelbaar, keert in rust terug */
+.primary:active,
+.ghost:active { transform: scale(0.985); }
 
 .primary {
   border: 0;
@@ -330,4 +343,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .badge i { animation: none; }
+  .group { animation: none; }
+  .option:active,
+  .primary:active,
+  .ghost:active { transform: none; }
 }

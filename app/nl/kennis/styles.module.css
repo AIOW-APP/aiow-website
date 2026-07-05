@@ -95,12 +95,23 @@
   background: var(--cg-surface);
   color: inherit;
   text-decoration: none;
-  transition: border-color var(--cg-dur-fast) var(--cg-ease), box-shadow var(--cg-dur-fast) var(--cg-ease);
+  transition: border-color var(--cg-dur-fast) var(--cg-ease), box-shadow var(--cg-dur-fast) var(--cg-ease), transform var(--cg-dur-base) var(--cg-ease);
 }
 
-.card:hover {
-  border-color: color-mix(in oklch, var(--cg-accent) 45%, transparent);
-  box-shadow: 0 8px 24px color-mix(in oklch, var(--cg-ink) 7%, transparent);
+/* v2.1: zachte lift die in rust terugkeert (les A12), druk-fysica bij tap */
+@media (hover: hover) {
+  .card:hover {
+    border-color: color-mix(in oklch, var(--cg-accent) 45%, transparent);
+    box-shadow: 0 8px 24px color-mix(in oklch, var(--cg-ink) 7%, transparent);
+    transform: translateY(-3px);
+  }
+}
+
+.card:active { transform: scale(0.99); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card:active { transform: none; transition: none; }
 }
 
 .card span {

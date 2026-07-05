@@ -29,19 +29,41 @@ export function AiowReveal() {
     const elements = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
     if (elements.length === 0) return;
 
+    const reveal = (element: Element) => element.setAttribute("data-reveal-visible", "");
+    const isInViewport = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      const height = window.innerHeight || document.documentElement.clientHeight;
+      return rect.top < height * 0.96 && rect.bottom > 0;
+    };
+
+    // Safety net: above-the-fold content must never remain invisible if the
+    // observer callback is delayed or skipped by browser/background throttling.
+    for (const element of elements) {
+      if (isInViewport(element)) reveal(element);
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.setAttribute("data-reveal-visible", "");
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            reveal(entry.target);
             observer.unobserve(entry.target);
           }
         }
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
+      { rootMargin: "0px 0px -4% 0px", threshold: 0 },
     );
 
-    for (const element of elements) observer.observe(element);
+    for (const element of elements) {
+      if (!element.hasAttribute("data-reveal-visible")) observer.observe(element);
+    }
+
+    window.setTimeout(() => {
+      for (const element of elements) {
+        if (isInViewport(element)) reveal(element);
+      }
+    }, 250);
+
     return () => observer.disconnect();
   }, []);
 
