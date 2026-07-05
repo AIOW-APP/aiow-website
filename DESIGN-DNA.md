@@ -1,148 +1,173 @@
-# DESIGN-DNA — AIOW (aiow.ai)
+# DESIGN-DNA: AIOW (aiow.ai)
 
-Status: v1, opgesteld 2026-07-04 door Fable (fase 1-2 gereconstrueerd uit bestaande code en copy).
-Proces: Brand-DNA Master Prompt v2 (teamstandaard). Dit bestand is wet: wijzigen = eerst hier, dan code.
-Scope: publieke site (landing, kennisbank, venture-score-aanvraagflow). Portal/app buiten scope v1.
+Status: v2, opgesteld 2026-07-05 door Fable. Vervangt v1 (Aurora Verdict, zie git-historie).
+Aanleiding: besluit Richard 2026-07-05: AIOW gaat naar de clean-glass v3-Grondwet
+(~/TeamVault/Operations/brand-dna-master-prompt-v3-clean-glass.md). Dit bestand is wet:
+wijzigen = eerst hier, dan code.
+Bronnen: Grondwet v3 · design-referentie-lessen.md (R1-R4) · aiow-referentievideo-analyse-
+clean-glass-2026-07-05.md · referentievideo-analyse-emons-sphere-2026-07-05.md · DESIGN-DNA v1.
+Scope: publieke site (homepage, venture-score-aanvraagflow, kennisbank). Portal/app buiten scope.
 
-## Fase 0 — Intake
+## Conceptnaam
 
-- Merk: AIOW BV, AI venture partner. Geen bureau, geen klassieke investeerder: bouwt AI-producten
-  en groeisystemen mee in ruil voor een omzetdeel (indicatief 10-25%), zelfde deel bij verkoop.
-- Publiek: founders met een idee of vroeg product, en ondernemers met bewezen omzet. NL-first,
-  mobiel zwaar vertegenwoordigd (founders lezen dit op de bank, niet achter een bureau).
-- DE ENE TAAK van deze site: een founder laat zijn idee beoordelen via de venture-score-aanvraag.
-  Alles op de site leidt daarheen. Route: /nl/venture-score-aanvragen.
-- Platform: Next.js App Router + CSS-modules, statisch waar mogelijk.
-- Durf-niveau: 3 van 5. Het merk durft (void + aurora, grote koppen, strakke selectie-taal) maar de
-  site moet zakelijk vertrouwen wekken bij ondernemers die geld en bedrijf inbrengen. Durf zit in
-  het signature-element, de rest blijft stil.
-- Situatie: doorontwikkeling van bestaande build (venture-partner-v1 landing is live-kandidaat).
-  Bestaande assets zijn wet (fase 1-regel).
+**"Het Oordeel bij Daglicht"**: de beoordelaar van v1 blijft (orb, score, verdict-taal),
+maar het theater verhuist van de donkere void naar een bijna-witte, Apple-clean studio.
+Licht is niet langer decor; het enige donkere moment van de site is het verdict zelf.
 
-## Fase 1 — Brand World Research (uit bestaande code en copy)
+## Wat blijft uit v1 (swap-test-versterkers, besluit Richard)
 
-### Materiaal-inventaris (waar de wereld van AIOW uit bestaat)
-1. Deep-space void: bijna-zwart canvas (#040713 / #0A0A0B), diepte via radiale gloed, geen vlak zwart.
-2. Aurora-licht: cyaan, violet en magenta als lichtbronnen die uit de rand van het canvas komen.
-3. Glas: panelen met backdrop-blur en 1px witte hairlines (8-16% alpha), nooit dichte kaarten.
-4. Raster: fijn 58px grid als technische onderlaag, weggemaskeerd naar de randen.
-5. De orb: levende AI-presence (Spunky), concentrische ringen, conic-gradient, wit kernlicht.
-6. Het brandmark: vierkant met conic-gradient (cyaan-violet-magenta) en een donkere A.
-7. Filmkorrel: 4% noise-overlay voor cinema-gevoel.
-8. Signaal-groen (#00E6A8): de "Spunky online"-indicator, live en wakker.
-9. Amber/goud (#FFB840): warning/waardering-signaal uit de token-set, spaarzaam aanwezig.
-10. Pillen: elke knop en badge is een volledige ronding (999px), nergens harde hoeken op interactie.
+1. De orb (Spunky, de beoordelaar) als levende AI-presence.
+2. De score-badge en de verdict-taal (venture-score, "vaker nee dan ja", cornerstones).
+3. De merkstem: eerlijk, selectief, mede-eigenaar. Geen em-dashes, geen uitroeptekens.
 
-### Vernacular (insider-woorden, letterlijk uit de copy)
-venture-score, omzetdeel, venture intake, Deal Card, Spunky, AI-hefboom, tractie, bouwbaarheid,
-partner fit, huid in het spel, "vaker nee dan ja", best-route-first, AI-systeemscan, cornerstones
-(founder / venture / partner fit als vaste beoordelingsassen), "geen gratis chatbot".
+Alles daaromheen (void, aurora-gradiënten, raster, noise, glas-als-basis) vervalt.
 
-### Concurrent-scan (wat we NIET mogen lijken)
-1. Het AI-bureau met uurtarief-taal ("wij ontzorgen", "vrijblijvende offerte"): AIOW selecteert,
-   verkoopt niet. Copy zegt vaker nee dan ja.
-2. De accelerator/VC-site (deal-flow-jargon, portfolio-grids, term sheets): AIOW bouwt zelf mee,
-   het is een werkplaats, geen fonds.
-3. De generieke AI-SaaS-landing (gecentreerde H1 + twee knoppen + productscreenshot): AIOW heeft
-   geen product-screenshot, het product is het oordeel en de samenwerking.
+## Fase 2: Design-DNA v2
 
-### Categorie-cliché (max 1, bewust verdraaid)
-De "AI-gloed op donker" blijft, maar verdraaid: het licht is geen decoratie maar een wezen (de orb
-is Spunky, de beoordelaar). Licht = aandacht van de beoordelaar.
+### Palet (OKLCH, licht, één accent)
 
-### Emotionele kern (3 seconden)
-"Dit is geen leverancier, dit is een partner die mij gaat beoordelen zoals een investeerder dat
-doet, en die alleen ja zegt als hij er zelf in gelooft." Gevoel: serieus genomen worden + gezonde
-spanning van een selectieproces.
+| Token | OKLCH | Rol / materiaalbron |
+|---|---|---|
+| --cg-canvas | oklch(0.982 0.004 95) | bijna-wit, licht warm: papier van het dossier |
+| --cg-surface | oklch(1 0 0) | kaarten, formulieren, nav-fallback |
+| --cg-ink | oklch(0.22 0.015 260) | bijna-zwart, koel: de inkt van het oordeel |
+| --cg-accent | oklch(0.47 0.10 220) | HET accent: verdict-petrol, het kernlicht van de orb bij daglicht ingedikt. AA op canvas en surface |
+| --cg-verdict | oklch(0.17 0.02 250) | canvas van de ene donkere verdict-sectie |
+| --cg-verdict-ink | oklch(0.97 0.005 220) | tekst in de verdict-sectie |
 
-## Fase 2 — Design DNA
-
-### Conceptnaam
-**"Aurora Verdict"** : een donkere void waarin aurora-licht de aandacht van de beoordelaar is, en
-alles toewerkt naar één moment: het oordeel (de venture-score).
-
-### Palette (bron: bestaande code; OKLCH benaderd vanaf hex, hex blijft leidend tot Richard anders beslist)
-| Token | Hex (bron in code) | OKLCH (≈) | Materiaalbron |
-|---|---|---|---|
-| void / canvas | #040713 (landing), #0A0A0B (tokens) | oklch(0.13 0.03 265) | deep-space void |
-| ink | #F7FBFF / #F8F8FA | oklch(0.98 0.005 220) | wit kernlicht van de orb |
-| cyaan (primair accent) | #00E5FF / #00F0FF | oklch(0.85 0.14 200) | aurora, actieve rand |
-| violet | #7B4BFF | oklch(0.55 0.25 285) | aurora, diepte |
-| magenta | #FF38D6 / #FF4FD8 | oklch(0.70 0.26 335) | aurora, waarschuwing "geen gratis chatbot" |
-| amber | #FFB840 | oklch(0.83 0.15 75) | goud/waardering, spaarzaam (score-momenten) |
-| signaal-groen | #00E6A8 | oklch(0.85 0.17 165) | "Spunky online", succes |
-
-Contrast: ink op void haalt AA ruim; cyaan/amber alleen op void of als tekstkleur >= 14px bold;
-donkere tekst (#061018) op lichte gradientknoppen is de AA-veilige route voor primaire CTA's.
+- Tekst-hiërarchie via opacity-trappen van --cg-ink: 100 / 62 / 45% (les A4).
+  Bodem: microcopy haalt AA of gaat een trap omhoog (les B6).
+- Het accent leeft primair in content (orb-kern, score-ring, verdict-status) en in UI
+  alleen voor CTA, actieve staat en focus (les A5). Nooit op decoratie.
+- Succes = accent; fout = oklch(0.51 0.19 25), alleen in validatie, nooit decoratief.
 
 ### Typografie
-- Display en body: Inter (systeem-fallback), zware gewichten (850-950) met sterk negatieve tracking
-  (-0.05 tot -0.075em) voor koppen; dat samengeperste zwart-op-void is nu het typografische gezicht.
-- Mono: JetBrains Mono in de token-set, vrijwel ongebruikt; reserveren voor score-cijfers en
-  KvK/data-details.
-- Fluid clamp() overal (zie --text-* tokens in globals.css).
-- OPEN PUNT (Richard): Inter als display staat op de verboden-defaults-lijst van het masterproces.
-  Huidige situatie werkt door tracking/gewicht, maar een karaktervolle display-familie is de meest
-  kansrijke upgrade van dit merk. Niet wijzigen zonder besluit.
 
-### Surface & structuur-taal
-- Panelen zijn glas: rgba-wit 4-7% vulling, 1px hairline 8-12%, backdrop-blur 18-26px, radius 16-26px.
-- Interactie is altijd een pil (999px). Vierkant = inhoud, rond = actie.
-- Accentstreepjes: 28-32px gradient-balkje (cyaan-violet-magenta) als kaartmarkering, geen iconen.
-- Het raster en de noise blijven onder alles liggen: techniek + cinema.
+- **VOORLOPIG, Richard kan overrulen. Display: Literata** (variabel, opsz 7-72, wght
+  200-900, staat al in public/fonts, dus nul netwerk en één asset-systeem, les A9).
+  Motivatie: Inter als display staat op de verboden-defaults-lijst; Richards eigen
+  home-v3-rewrite koos al een serif-display (Georgia). Literata op opsz 36+, wght 460-560,
+  is het "dossier bij daglicht": editorial, beoordelend, geen SaaS-genericiteit.
+- Body: rustige systeem-sans stack (-apple-system, system-ui). Kalm, Apple-clean,
+  geen webfont-gewicht voor leesregisters.
+- Mono: DM Mono (public/fonts) uitsluitend voor score-cijfers, microlabels en data.
+- Registers: display (Literata, clamp, text-wrap: balance) · body (sans, max 3 regels
+  per sectie) · microlabel (DM Mono, caps, tracking 0.14em, nooit body, les B5).
 
-### Layout-concept (hero als these)
-Website-these: de beoordelaar voorop. Links de claim ("Wij bouwen niet voor bedrijven. Wij bouwen
-mee aan bedrijven."), rechts de levende orb met het beoordelingspaneel (founder / venture / partner
-fit). De bezoeker ziet in één beeld: hier wordt geselecteerd. Elke pagina eindigt in dezelfde
-afslag: vraag je venture-score aan.
+### Glasrecept (v3, functioneel, nooit de basis)
 
-### SIGNATURE-ELEMENT: de venture-score-aanvraag + score-badge
-Het ene element dat geen concurrent heeft: je idee wordt hier niet "aangevraagd" maar VOORGELEGD.
-- De aanvraagflow (/nl/venture-score-aanvragen) is een rustige driestaps-beoordelingsintake:
-  1 idee + branche, 2 fase + doel, 3 founder-gegevens. Eén vraaggroep per stap, voortgang als
-  drie lichtsegmenten die vollopen in aurora-cyaan.
-- De score-badge: conic-gradient ring (zelfde gradient als het brandmark) rond een donkere kern.
-  Succes-staat van de flow = de badge licht op ("aanvraag voorgelegd, binnen 48 uur je uitslag").
-  Hetzelfde motief is later herbruikbaar voor de echte score-uitslag (cijfer in de ring, mono-font).
-- Mobiel gedrag (ontworpen, niet gekrompen): stappen full-width, max 30rem, inputs 16px (geen
-  iOS-zoom), knoppen >= 48px, voortgangsbalk blijft boven de vouw, badge schaalt naar 96px.
+```css
+background: color-mix(in oklch, var(--cg-surface) 62%, transparent);
+-webkit-backdrop-filter: blur(18px) saturate(160%);
+backdrop-filter: blur(18px) saturate(160%);
+box-shadow: inset 0 0 0 1px color-mix(in oklch, white 55%, transparent),
+            0 8px 28px color-mix(in oklch, var(--cg-ink) 8%, transparent);
+```
 
-### Motion-concept
-- Eén fysica-karakter: uitgedempt licht. Alles beweegt met ease-out cubic-bezier(0.16, 1, 0.3, 1);
-  reveals zijn fade + rise 18px, koppen krijgen een clip-wipe. Stagger 90ms via --reveal-order.
-- Content is zonder JS altijd zichtbaar (AiowReveal gate-script, teamregel).
-- Het ene georkestreerde moment: de succes-badge van de aanvraagflow.
-- OPEN PUNT (Richard): teamregel is max 2 ambient-loops per pagina. De landing heeft er nu meer
-  (3x breathe-glow + orbPulse + slowSpin in de orb). Voorstel: de orb telt als 1 samengesteld
-  signature-loop en de 3 breathe-glows worden er 1, of we accepteren de landing expliciet als
-  uitzondering. Besluit nodig; nieuwe pagina's (waaronder de aanvraagflow) houden zich al aan
-  max 1 ambient + reduced-motion.
+Regels (Grondwet): glas alleen als laag boven beeld/kleur (nav boven de hero-orb en de
+verdict-sectie, zwevende chips), nooit op kaal wit, max 2 glaslagen per viewport,
+korte labels op glas oké, body nooit op glas. Fallbacks verplicht:
+`@supports not (backdrop-filter: blur(1px))` naar solide surface, en
+`prefers-reduced-transparency: reduce` naar solide. Nooit blur-radius animeren;
+glas-oppervlakken krijgen `contain: paint`.
 
-### State-design (staten als merk-momenten)
-- Loading/verzenden: knoptekst wordt "Wordt voorgelegd..." (geen spinner-theater).
+### Expressie-slots
+
+1. **HEADER/HERO. VOORLOPIG, Richard kan overrulen.** Advies gevolgd: de home-v3.html
+   video-rewrite vervalt als homepage; ervoor in de plaats komt een rustige typografische
+   header binnen het app/tokensysteem: microlabel, chapter-statement in Literata, één
+   sub-regel, één CTA, en rechts/onder de orb als enig groot visueel element (slot-1
+   karakter D-licht: het instrument is het beeld). Geen video, geen canvas; LCP is tekst.
+   Mobiel 390px ontworpen: statement boven de vouw, orb daaronder, scroll-hint als
+   microlabel.
+2. **ACCENT**: verdict-petrol (zie palet), uit de merkwereld (orb-kernlicht), OKLCH, AA.
+3. **SIGNATURE**: de **score-badge als persistent instrument** (les A1, FATHOM-meter).
+   Kleine ring rechts in de glas-nav. Reist mee met de scroll: de conic-ring vult zich
+   omkeerbaar met de leesvoortgang van het verhaal en is pas vol in de verdict-sectie,
+   waar de site eindigt op de CTA. Puur cosmetisch: de eindstand staat in de HTML;
+   zonder JS of met reduced-motion toont hij direct de eindstand. Tap-doel 44px;
+   tikken scrollt naar het verdict.
+4. **MOTION-KARAKTER**: "kalm water". Eén easing: cubic-bezier(0.22, 1, 0.36, 1).
+   UI 150-350ms, hero-orkestratie max 700ms. Reveals zijn opacity/transform op reeds
+   aanwezige DOM (AiowReveal-laag, content nooit achter JS). Stagger met betekenis:
+   kaart-elementen 100-150ms in leesvolgorde (les A3), statement-regels 60-90ms.
+   Max 2 ambient-loops per pagina: (1) orb-ademhaling, (2) subtiele gloed in de
+   verdict-sectie. Loops pauzeren off-screen. prefers-reduced-motion: alles staat
+   direct compleet, badge op eindstand. Scroll- en hoverstates omkeerbaar (les A12).
+5. **ASSET-RICHTING**: geen fotografie, geen stock, geen icon-sets. Het beeld van AIOW
+   is de orb en zijn afgeleiden (score-ring, voortgangssegmenten, verdict-gloed): één
+   asset-systeem in code door de hele site (les A9). Cases zijn tekst met naam en bewijs.
+
+### Sectie-anatomie (lessen A2/A6/A7/A10)
+
+Elke sectie = hoofdstuk: microlabel (DM Mono caps, bv. "01 · DE TOETS") → chapter-statement (Literata, één korte zin, links
+uitgelijnd) → max 3 regels body → één bewijs-element. Eén idee per viewport.
+Bewijs-kaarten: kop → sub → stats → één zin met ziel, met stagger.
+Stats altijd als kale typografie: groot getal (DM Mono of Literata licht) +
+hairline-microlabel, geen dozen (les A10). Verticale rust tussen zware secties:
+minimaal 120px desktop, 80px op 390px (les A7).
+
+### Dichtheids-ritme en de verdict-sectie (lessen A8/B1)
+
+Maximaal één rijk moment per pagina. Op de homepage is dat de afsluitende
+**verdict-sectie**: het ene donkere contrastmoment (--cg-verdict) waar de orb-gloed
+en de volle score-badge samenkomen in de CTA "Vraag je venture-score aan".
+Alle overige secties zijn klassiek-rustig op bijna-wit. De nav (glas) blijft leesbaar
+boven beide werelden; UI leeft aan de randen, het centrum is van de content (les A13).
+
+### Navigatie
+
+Sticky glas-nav volgens het glasrecept, condenseert bij scroll van 72px naar 56px
+(alleen height/padding/shadow animeren, geen blur). Inhoud: wordmark links, 2-3 items,
+score-badge rechts als levend element. Actief item: hairline-onderstreepje.
+Mobiel: wordmark + badge + één CTA-link; tap-doelen minimaal 44px; geen hamburger nodig
+zolang er maar 2-3 bestemmingen zijn.
+
+### States als merk-momenten (uit v1, herbevestigd)
+
+- Verzenden: knoptekst "Wordt voorgelegd..." (geen spinner-theater).
 - Succes: score-badge-moment + eerlijke verwachting ("binnen 48 uur", "vaker nee dan ja").
-- Error/validatie: magenta hairline + zin die zegt wat er mist en hoe je verder kunt, in merkstem.
-- Empty (nav zonder JS/mail): altijd een direct alternatief tonen (mail jeroen@aiow.io, WhatsApp).
-
-### Asset-strategie
-Geen stockfoto's, nergens. Het beeld van AIOW is licht, glas, raster en de orb, alles in code.
-Cases worden verteld in tekst met naam en bewijs (Cargo Donkey, OneTap Day), niet met mockups.
+- Validatie: foutkleur-hairline + zin die zegt wat er mist en hoe verder, in merkstem.
+- Zonder JS: pagina compleet leesbaar, formulier-alternatief (mail) altijd zichtbaar.
 
 ### Copy-voice
-Drie woorden: eerlijk, selectief, mede-eigenaar. Vanuit de gebruiker geschreven, actieve knoppen
-("Vraag je venture-score aan", niet "Versturen"). Geen em-dashes in NL-copy (teamregel), geen
-uitroeptekens, geen gratis-beloftes. Voorbeeldkop: "Wij bouwen niet voor bedrijven. Wij bouwen mee
-aan bedrijven."
 
-## Open punten voor Richard (samengevat)
-1. Ambient-loop-budget landing vs teamregel max 2 (zie motion-concept).
-2. Inter als display: houden of upgraden naar karaktervolle display-familie.
-3. BESLUIT Richard 2026-07-05: AIOW gaat naar clean-glass v3-Grondwet. De dark/aurora-taal is niet definitief leidend meer; behoud alleen wat de swap-test echt versterkt (orb/verdict/score), maar breng nieuwe oppervlakken naar Apple-clean, functionele glaslagen, body nooit op glas, maximaal twee ambient-loops en mobiel ontworpen headergedrag.
-4. Mailto-fallback in de aanvraagflow vervangen door echt endpoint (Handsome, zie code-comment).
+Eerlijk, selectief, mede-eigenaar. Actieve knoppen. Elke sectie één zin met ziel
+(les A6, de FATHOM-lat). Geen em-dashes, geen uitroeptekens, geen gratis-beloftes.
 
-## 6-vragentest v1 (na deze build opnieuw draaien)
-1. Logo weg: orb + aurora + verdict-taal blijven herkenbaar. 2. Swap-test: "venture-score" en
-"vaker nee dan ja" passen bij geen enkel bureau. 3. Eén signature-moment: de score-badge.
-4. Mobiel ontworpen: ja, flow is mobiel-eerst. 5. States als merk-momenten: ja (zie state-design).
-6. Budgets: door Handsome te meten bij host-side verify.
+## Fase 3: Anti-generieke poort (te verslaan generic twins)
+
+1. Generieke SaaS-landing (gecentreerde H1 + 2 knoppen + screenshot): verslagen door
+   links uitgelijnde chapter-statements, orb i.p.v. screenshot, score-badge-instrument.
+2. Paars-blauwe SaaS-gradient: verslagen door één petrol-accent op bijna-wit.
+3. Inter/Poppins-display: verslagen door Literata (voorlopig besluit, zie boven).
+4. Icoongrids: verboden; bewijs is typografie en kaart-anatomie.
+5. Swap-test: orb + score-badge + verdict-taal ("vaker nee dan ja") passen bij geen
+   enkel bureau of fonds; de Grondwet-laag mag overleven, dat is de huisstijl.
+
+## Voorlopige keuzes van Fable (Richard kan overrulen)
+
+1. **Display-font = Literata** (variabel, al in repo). Alternatieven als Richard anders
+   wil: Fraunces (warmer, eigenwijzer) of Newsreader (stiller). Niet Inter.
+2. **Homepage-header = rustige typografische header binnen het tokensysteem** (statement
+   + orb + score-badge-instrument), ter vervanging van de home-v3.html-video-rewrite;
+   de rewrite-regel in next.config.ts vervalt zodat app/page.tsx weer / bedient.
+   home-v3.html blijft als bestand bestaan (additief, niets weggegooid).
+
+## Open punten voor Richard
+
+1. De twee voorlopige keuzes hierboven bekrachtigen of overrulen.
+2. Mailto-fallback in de aanvraagflow vervangen door echt endpoint (Handsome,
+   zie code-comment in AiowVentureScoreFlow.tsx, ongewijzigd uit v1).
+3. Kennisbank-artikelpagina's (nl/kennis/[slug]) volgen in een vervolgslag; deze slag
+   restylet de hub. Zelfde tokens, geen nieuw DNA nodig.
+
+## 6-vragentest v2 (na de build ingevuld, zie evidence/)
+
+1. Logo weg: orb + score-ring + verdict-taal blijven herkenbaar.
+2. Swap-test: expressie-slots falen bij elke concurrent; Grondwet-laag overleeft bewust.
+3. Eén signature-moment: de score-badge-reis die eindigt in de verdict-sectie.
+4. Mobiel ontworpen: 390px eerst, tap-doelen 44px, geen horizontale scroll.
+5. States als merk-momenten: ja (zie hierboven).
+6. Budgets: LCP is tekst, geen video/canvas op de homepage; JS-toevoeging beperkt tot
+   nav-condens + badge-voortgang (kleine client-componenten). Meting bij Hermes-verify.

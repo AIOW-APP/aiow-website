@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import Link from "next/link";
 import { AiowReveal } from "@/components/aiow/AiowReveal";
+import { CleanGlassNav } from "@/components/aiow/clean-glass/CleanGlassNav";
 import { AiowVentureScoreFlow } from "@/components/aiow/AiowVentureScoreFlow";
 import styles from "./styles.module.css";
 
@@ -31,22 +31,10 @@ export default function VentureScoreAanvragenPage() {
   return (
     <main className={styles.page}>
       <AiowReveal />
-      <div className={styles.ambient} aria-hidden="true">
-        <span />
-      </div>
-
-      <header className={styles.header}>
-        <Link className={styles.brand} href="/" aria-label="AIOW.ai home">
-          <span>A</span>
-          <div>
-            <strong>AIOW.ai</strong>
-            <em>AI Venture Partner</em>
-          </div>
-        </Link>
-      </header>
+      <CleanGlassNav journey="static" badgeHref="#aanvraag" />
 
       <section className={styles.intro} aria-label="Venture-score aanvragen">
-        <p className={styles.eyebrow} data-reveal>Venture-score</p>
+        <p className="cg-micro" data-reveal>Venture-score</p>
         <h1 data-reveal="wipe">Leg je idee voor. Wij beoordelen het als investeerder.</h1>
         <p className={styles.lead} data-reveal style={revealOrder(1)}>
           Drie stappen, twee minuten werk. Spunky toetst founder, markt, AI-hefboom, tractie en
@@ -55,7 +43,7 @@ export default function VentureScoreAanvragenPage() {
         </p>
       </section>
 
-      <div className={styles.flowWrap} data-reveal style={revealOrder(2)}>
+      <div className={styles.flowWrap} id="aanvraag" data-reveal style={revealOrder(2)}>
         <AiowVentureScoreFlow />
       </div>
     </main>

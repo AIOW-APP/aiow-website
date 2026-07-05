@@ -1,0 +1,396 @@
+/* AIOW homepage, clean-glass v2. Mobiel-eerst (390px), daarna verruimen. */
+
+.page {
+  min-height: 100svh;
+  background: var(--cg-canvas);
+  color: var(--cg-ink);
+  font-family: var(--cg-font-body);
+  font-size: var(--cg-text-body);
+  line-height: 1.55;
+  overflow-x: clip;
+}
+
+.page :is(h1, h2, h3) {
+  font-family: var(--cg-font-display);
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+/* ===== Hero ===== */
+
+.hero {
+  position: relative;
+  width: min(var(--cg-container), 100%);
+  margin-inline: auto;
+  padding: calc(var(--cg-nav-h) + 56px) var(--cg-gutter) 72px;
+  display: grid;
+  gap: 40px;
+}
+
+.heroCopy h1 {
+  margin-top: 18px;
+  max-width: 16ch;
+  font-size: var(--cg-text-hero);
+  font-variation-settings: "opsz" 60;
+  line-height: 1.08;
+}
+
+.heroCopy h1 em {
+  font-style: italic;
+  color: var(--cg-accent);
+}
+
+.lead {
+  margin: 22px 0 0;
+  max-width: 46ch;
+  font-size: var(--cg-text-lead);
+  color: var(--cg-ink-soft);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.primary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: var(--cg-radius-pill);
+  font-size: 0.95rem;
+  font-weight: 560;
+  text-decoration: none;
+  transition: background var(--cg-dur-fast) var(--cg-ease), color var(--cg-dur-fast) var(--cg-ease), border-color var(--cg-dur-fast) var(--cg-ease);
+}
+
+.primary {
+  background: var(--cg-accent);
+  color: var(--cg-on-accent);
+}
+
+.primary:hover { background: var(--cg-accent-strong); }
+
+.ghost {
+  border: 1px solid var(--cg-line-strong);
+  color: var(--cg-ink-soft);
+}
+
+.ghost:hover {
+  border-color: var(--cg-ink);
+  color: var(--cg-ink);
+}
+
+/* De orb: enig groot visueel element, ambient-loop 1 van 2 */
+.presence {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding-block: 8px;
+}
+
+.orb {
+  position: relative;
+  width: clamp(180px, 46vw, 300px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, oklch(0.93 0.03 210), transparent 55%),
+    radial-gradient(circle at 68% 72%, color-mix(in oklch, var(--cg-accent) 55%, white), transparent 60%),
+    radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--cg-accent) 26%, white), oklch(0.97 0.008 220) 78%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--cg-accent) 18%, transparent),
+    0 24px 60px color-mix(in oklch, var(--cg-accent) 18%, transparent);
+  animation: orbBreathe 7s var(--cg-ease) infinite alternate;
+}
+
+.orb i,
+.orb b {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orb i {
+  inset: 14%;
+  border: 1px solid color-mix(in oklch, var(--cg-accent) 30%, transparent);
+}
+
+.orb b {
+  inset: 38%;
+  background: radial-gradient(circle at 42% 38%, white, color-mix(in oklch, var(--cg-accent) 70%, white) 75%);
+  filter: none;
+  box-shadow: 0 6px 24px color-mix(in oklch, var(--cg-accent) 35%, transparent);
+}
+
+@keyframes orbBreathe {
+  from { transform: scale(0.985); }
+  to { transform: scale(1.015); }
+}
+
+/* Kort label op glas boven de orb-kleur: toegestaan, geen body (Grondwet) */
+.presenceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: -52px 0 0;
+  padding: 10px 16px;
+  border-radius: var(--cg-radius-pill);
+  font-family: var(--cg-font-mono);
+  font-size: var(--cg-text-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cg-ink);
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cg-accent);
+}
+
+.scrollHint {
+  margin: 26px 0 0;
+  color: var(--cg-ink-soft);
+}
+
+/* ===== Hoofdstukken (les A2/A7) ===== */
+
+.chapter {
+  width: min(var(--cg-container), 100%);
+  margin-inline: auto;
+  padding: var(--cg-rest) var(--cg-gutter);
+}
+
+.chapter + .chapter {
+  border-top: 1px solid var(--cg-line);
+}
+
+.chapter h2 {
+  margin-top: 14px;
+  max-width: 22ch;
+  font-size: var(--cg-text-chapter);
+  font-variation-settings: "opsz" 44;
+  line-height: 1.14;
+}
+
+.chapterBody {
+  margin: 18px 0 0;
+  max-width: var(--cg-measure);
+  color: var(--cg-ink-soft);
+}
+
+/* Bewijs-kaarten: kop, sub, stats, one-liner (les A3). Solide, geen glas. */
+.cardRow {
+  display: grid;
+  gap: 16px;
+  margin-top: 44px;
+}
+
+.card {
+  background: var(--cg-surface);
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-lg);
+  padding: 26px;
+}
+
+.card h3 {
+  font-size: var(--cg-text-card);
+  font-variation-settings: "opsz" 28;
+}
+
+.cardSub {
+  margin: 8px 0 0;
+  color: var(--cg-ink-soft);
+  font-size: 0.95rem;
+}
+
+.cardStats {
+  margin: 18px 0 0;
+  color: var(--cg-ink-soft);
+}
+
+.cardLine {
+  margin: 14px 0 0;
+  font-family: var(--cg-font-display);
+  font-variation-settings: "opsz" 18;
+  font-style: italic;
+  color: var(--cg-ink);
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+
+/* Stats als kale typografie (les A10): geen dozen */
+.stats {
+  display: grid;
+  gap: 36px;
+  margin: 48px 0 0;
+}
+
+.stats div { display: grid; gap: 10px; }
+
+.stats dt {
+  order: 2;
+  margin: 0;
+}
+
+.stats dd {
+  order: 1;
+  margin: 0;
+  font-family: var(--cg-font-mono);
+  font-size: var(--cg-text-stat);
+  line-height: 1;
+  color: var(--cg-ink);
+}
+
+/* ===== Het verdict: het ene donkere contrastmoment ===== */
+
+.verdict {
+  position: relative;
+  margin-top: var(--cg-rest);
+  background: var(--cg-verdict);
+  color: var(--cg-verdict-ink);
+  overflow: hidden;
+}
+
+.verdictGlow {
+  position: absolute;
+  inset: auto -20% -55% -20%;
+  height: 90%;
+  background: radial-gradient(ellipse at 50% 100%, color-mix(in oklch, var(--cg-verdict-glow) 32%, transparent), transparent 70%);
+  animation: glowBreathe 9s var(--cg-ease) infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes glowBreathe {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+.verdictInner {
+  position: relative;
+  width: min(var(--cg-container), 100%);
+  margin-inline: auto;
+  padding: var(--cg-rest) var(--cg-gutter);
+}
+
+.verdict .verdictInner > p:first-child { color: var(--cg-verdict-ink-soft); }
+
+.verdict h2 {
+  margin-top: 14px;
+  max-width: 20ch;
+  font-size: var(--cg-text-chapter);
+  font-variation-settings: "opsz" 44;
+  line-height: 1.14;
+  color: var(--cg-verdict-ink);
+}
+
+.verdictBody {
+  margin: 18px 0 0;
+  max-width: var(--cg-measure);
+  color: var(--cg-verdict-ink-soft);
+}
+
+.verdictActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.verdictCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: var(--cg-radius-pill);
+  background: var(--cg-verdict-ink);
+  color: var(--cg-verdict);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--cg-dur-fast) var(--cg-ease);
+}
+
+.verdictCta:hover { background: white; }
+
+.verdictAlt {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--cg-verdict-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.verdictAlt:hover { color: var(--cg-verdict-ink); }
+
+/* ===== Footer ===== */
+
+.footer {
+  width: min(var(--cg-container), 100%);
+  margin-inline: auto;
+  padding: 40px var(--cg-gutter) 48px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--cg-ink-soft);
+  font-size: 0.85rem;
+}
+
+.footer p { margin: 0; }
+
+.footer nav {
+  display: flex;
+  gap: 4px;
+}
+
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 10px;
+  color: var(--cg-ink-soft);
+  text-decoration: none;
+}
+
+.footer a:hover { color: var(--cg-ink); }
+
+/* ===== Desktop verruiming ===== */
+
+@media (min-width: 861px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    align-items: center;
+    padding-top: calc(var(--cg-nav-h) + 88px);
+    padding-bottom: 96px;
+  }
+
+  .scrollHint { grid-column: 1 / -1; }
+
+  .cardRow { grid-template-columns: repeat(3, 1fr); }
+  .cardRow[data-two] { grid-template-columns: repeat(2, 1fr); }
+  .stats { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+}
+
+/* ===== Reduced motion: alles staat direct compleet ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .verdictGlow {
+    animation: none;
+  }
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { AiowReveal } from "@/components/aiow/AiowReveal";
+import { CleanGlassNav } from "@/components/aiow/clean-glass/CleanGlassNav";
 import { aiowKnowledgeCategories, aiowKnowledgePages } from "@/lib/aiow-knowledge-pages";
 import styles from "./styles.module.css";
 
@@ -46,6 +47,7 @@ export default function AiowKnowledgeHub() {
   return (
     <main className={styles.page}>
       <AiowReveal />
+      <CleanGlassNav journey="static" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <section className={styles.hero}>

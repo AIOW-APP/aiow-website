@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AiowReveal } from "@/components/aiow/AiowReveal";
+import { CleanGlassNav } from "@/components/aiow/clean-glass/CleanGlassNav";
 import { aiowKnowledgePages, getAiowKnowledgePage } from "@/lib/aiow-knowledge-pages";
 import styles from "../styles.module.css";
 
@@ -117,6 +118,7 @@ export default async function AiowKnowledgePage({ params }: Props) {
   return (
     <main className={styles.page}>
       <AiowReveal />
+      <CleanGlassNav journey="static" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />

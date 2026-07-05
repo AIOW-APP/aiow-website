@@ -1,5 +1,5 @@
-import { AiowVentureLanding } from "@/components/aiow/AiowVentureLanding";
+import { CleanGlassHome } from "@/components/aiow/clean-glass/CleanGlassHome";
 
 export default function Home() {
-  return <AiowVentureLanding />;
+  return <CleanGlassHome />;
 }

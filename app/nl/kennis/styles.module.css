@@ -1,109 +1,126 @@
+/* AIOW kennisbank (hub + artikel), clean-glass v2 (DESIGN-DNA.md v2).
+   Bijna-witte basis, een accent, chapter-statements, solide kaarten. */
+
 .page {
-  /* Focus-ringkleur (globale :focus-visible gebruikt --color-accent) in de amberkleur van deze sectie. */
-  --color-accent: #ffb961;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255, 170, 76, .16), transparent 36rem),
-    radial-gradient(circle at 80% 10%, rgba(94, 151, 255, .14), transparent 34rem),
-    #080706;
-  color: #fff8ed;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Focus-ringkleur: de globale :focus-visible gebruikt --color-accent. */
+  --color-accent: var(--cg-accent);
+  min-height: 100svh;
+  background: var(--cg-canvas);
+  color: var(--cg-ink);
+  font-family: var(--cg-font-body);
+  font-size: var(--cg-text-body);
+  line-height: 1.55;
+  overflow-x: clip;
 }
 
 .hero,
 .article,
 .indexBlock,
 .gridSection {
-  /* 100% i.p.v. 100vw: voorkomt horizontale scroll door scrollbarbreedte. */
-  width: min(1120px, calc(100% - 32px));
-  margin: 0 auto;
+  width: min(var(--cg-container), 100%);
+  margin-inline: auto;
+  padding-inline: var(--cg-gutter);
+  box-sizing: border-box;
 }
 
 .hero {
-  padding: 112px 0 48px;
+  padding-top: calc(var(--cg-nav-h) + 56px);
+  padding-bottom: 40px;
 }
 
 .eyebrow {
   margin: 0 0 14px;
-  color: #ffb961;
-  font-weight: 900;
-  letter-spacing: .14em;
+  font-family: var(--cg-font-mono);
+  font-weight: 400;
+  font-size: var(--cg-text-micro);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-size: .74rem;
+  color: var(--cg-ink-soft);
 }
 
 .hero h1,
 .article h1 {
-  max-width: 900px;
+  max-width: 20ch;
   margin: 0;
-  font-size: clamp(2.7rem, 7vw, 6.7rem);
-  line-height: .88;
-  letter-spacing: -.075em;
+  font-family: var(--cg-font-display);
+  font-weight: 520;
+  font-variation-settings: "opsz" 52;
+  font-size: var(--cg-text-chapter);
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .hero p,
 .lead {
-  max-width: 760px;
-  color: rgba(255, 248, 237, .75);
-  font-size: clamp(1rem, 1.4vw, 1.22rem);
-  line-height: 1.6;
+  max-width: var(--cg-measure);
+  margin-top: 18px;
+  color: var(--cg-ink-soft);
+  font-size: var(--cg-text-lead);
+  line-height: 1.55;
 }
 
+/* Bewijs-cijfers als kale chips, geen dozen-theater */
 .proofRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 30px;
+  gap: 8px;
+  margin-top: 26px;
 }
 
 .proofRow span,
 .metaGrid span {
-  border: 1px solid rgba(255, 248, 237, .14);
-  border-radius: 999px;
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-pill);
   padding: 10px 14px;
-  background: rgba(255, 248, 237, .06);
-  color: rgba(255, 248, 237, .82);
+  background: var(--cg-surface);
+  color: var(--cg-ink-soft);
+  font-size: 0.85rem;
 }
 
 .gridSection {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  padding: 22px 0 80px;
+  padding-top: 18px;
+  padding-bottom: var(--cg-rest);
 }
 
+/* Kaart-anatomie: microlabel, kop, samenvatting (les A3) */
 .card {
-  min-height: 230px;
-  border: 1px solid rgba(255, 248, 237, .13);
-  border-radius: 30px;
-  padding: 22px;
-  background: linear-gradient(135deg, rgba(255, 248, 237, .09), rgba(255, 248, 237, .025));
+  display: block;
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-lg);
+  padding: 24px;
+  background: var(--cg-surface);
   color: inherit;
   text-decoration: none;
-  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  transition: border-color var(--cg-dur-fast) var(--cg-ease), box-shadow var(--cg-dur-fast) var(--cg-ease);
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 185, 97, .45);
-  background: linear-gradient(135deg, rgba(255, 185, 97, .12), rgba(255, 248, 237, .035));
+  border-color: color-mix(in oklch, var(--cg-accent) 45%, transparent);
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--cg-ink) 7%, transparent);
 }
 
 .card span {
   display: block;
-  color: #ffb961;
-  font-size: .76rem;
-  font-weight: 900;
+  margin-bottom: 12px;
+  font-family: var(--cg-font-mono);
+  font-size: var(--cg-text-micro);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: .12em;
-  margin-bottom: 14px;
+  color: var(--cg-accent);
 }
 
 .card strong {
   display: block;
-  font-size: 1.35rem;
-  line-height: 1.08;
-  letter-spacing: -.04em;
+  font-family: var(--cg-font-display);
+  font-weight: 540;
+  font-variation-settings: "opsz" 24;
+  font-size: 1.2rem;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
 }
 
 .card p,
@@ -112,12 +129,13 @@
 .contentSection p,
 .faq p,
 .ctaBox p {
-  color: rgba(255, 248, 237, .72);
+  color: var(--cg-ink-soft);
   line-height: 1.58;
+  max-width: var(--cg-measure);
 }
 
 .indexBlock {
-  padding: 0 0 100px;
+  padding-bottom: var(--cg-rest);
 }
 
 .indexBlock h2,
@@ -126,47 +144,59 @@
 .faq h2,
 .ctaBox h2 {
   margin: 0 0 12px;
-  font-size: clamp(1.8rem, 3vw, 3.1rem);
-  letter-spacing: -.06em;
+  max-width: 26ch;
+  font-family: var(--cg-font-display);
+  font-weight: 530;
+  font-variation-settings: "opsz" 38;
+  font-size: clamp(1.5rem, 1.2rem + 1.6vw, 2.25rem);
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .indexBlock a,
 .ctaBox a,
 .back {
-  color: #ffb961;
+  color: var(--cg-accent);
 }
 
 .article {
-  padding: 92px 0 120px;
+  padding-top: calc(var(--cg-nav-h) + 40px);
+  padding-bottom: var(--cg-rest);
 }
 
 .back {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 560;
 }
+
+.back:hover { color: var(--cg-accent-strong); }
 
 .metaGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin: 34px 0 52px;
+  margin: 34px 0 48px;
 }
 
 .metaGrid span {
-  border-radius: 22px;
+  border-radius: var(--cg-radius-md);
   display: grid;
   gap: 6px;
+  color: var(--cg-ink);
 }
 
 .metaGrid strong {
-  color: #ffb961;
-  font-size: .72rem;
+  font-family: var(--cg-font-mono);
+  font-weight: 400;
+  color: var(--cg-ink-soft);
+  font-size: var(--cg-text-micro);
   text-transform: uppercase;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
 }
 
 .contentSection,
@@ -174,28 +204,27 @@
 .faq,
 .related,
 .ctaBox {
-  border-top: 1px solid rgba(255, 248, 237, .12);
+  border-top: 1px solid var(--cg-line);
   padding: 34px 0;
 }
 
+/* Kort-antwoordkader: solide, accent-hairline links */
 .answerBox {
   margin: 34px 0 18px;
-  padding: 26px;
-  border: 1px solid rgba(255, 185, 97, .22);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255, 185, 97, .14), transparent 18rem),
-    rgba(255, 248, 237, .045);
-}
-
-.answerBox h2 {
-  font-size: clamp(1.55rem, 2.4vw, 2.45rem);
+  padding: 24px 26px;
+  border: 1px solid var(--cg-line);
+  border-left: 2px solid var(--cg-accent);
+  border-radius: var(--cg-radius-md);
+  background: var(--cg-surface);
 }
 
 .related h2 {
   margin: 0 0 18px;
-  font-size: clamp(1.8rem, 3vw, 3.1rem);
-  letter-spacing: -.06em;
+  font-family: var(--cg-font-display);
+  font-weight: 530;
+  font-variation-settings: "opsz" 38;
+  font-size: clamp(1.5rem, 1.2rem + 1.6vw, 2.25rem);
+  letter-spacing: -0.01em;
 }
 
 .relatedGrid {
@@ -205,48 +234,57 @@
 }
 
 .relatedGrid a {
-  border: 1px solid rgba(255, 248, 237, .12);
-  border-radius: 22px;
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-md);
   padding: 16px;
   color: inherit;
   text-decoration: none;
-  background: rgba(255, 248, 237, .045);
+  background: var(--cg-surface);
+  transition: border-color var(--cg-dur-fast) var(--cg-ease);
+}
+
+.relatedGrid a:hover {
+  border-color: color-mix(in oklch, var(--cg-accent) 45%, transparent);
 }
 
 .relatedGrid span {
   display: block;
   margin-bottom: 8px;
-  color: #ffb961;
-  font-size: .72rem;
-  font-weight: 900;
-  letter-spacing: .1em;
+  font-family: var(--cg-font-mono);
+  font-size: var(--cg-text-micro);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--cg-accent);
 }
 
 .relatedGrid strong {
   display: block;
-  line-height: 1.18;
+  line-height: 1.22;
+  font-weight: 560;
 }
 
 .faq details {
-  border: 1px solid rgba(255, 248, 237, .12);
-  border-radius: 22px;
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-md);
   margin: 10px 0;
-  padding: 16px 18px;
-  background: rgba(255, 248, 237, .045);
+  padding: 14px 18px;
+  background: var(--cg-surface);
 }
 
 .faq summary {
   cursor: pointer;
-  font-weight: 850;
+  font-weight: 560;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
 
 .ctaBox {
   margin-top: 24px;
-  padding: 30px;
-  border: 1px solid rgba(255, 185, 97, .28);
-  border-radius: 30px;
-  background: radial-gradient(circle at 12% 0%, rgba(255, 185, 97, .18), transparent 22rem), rgba(255, 248, 237, .045);
+  padding: 28px;
+  border: 1px solid color-mix(in oklch, var(--cg-accent) 35%, transparent);
+  border-radius: var(--cg-radius-lg);
+  background: color-mix(in oklch, var(--cg-accent) 5%, var(--cg-surface));
 }
 
 .ctaBox a {
@@ -254,23 +292,20 @@
   margin-top: 12px;
   min-height: 48px;
   align-items: center;
-  border-radius: 999px;
-  padding: 0 18px;
-  background: #ffb961;
-  color: #150d06;
+  border-radius: var(--cg-radius-pill);
+  padding: 0 20px;
+  background: var(--cg-accent);
+  color: var(--cg-on-accent);
   text-decoration: none;
-  font-weight: 900;
+  font-weight: 560;
+  transition: background var(--cg-dur-fast) var(--cg-ease);
 }
 
+.ctaBox a:hover { background: var(--cg-accent-strong); }
+
 @media (max-width: 860px) {
-  .hero,
-  .article,
-  .indexBlock,
-  .gridSection { width: min(calc(100% - 32px), 680px); }
-  .hero { padding-top: 78px; }
   .gridSection { grid-template-columns: 1fr; padding-bottom: 56px; }
   .relatedGrid { grid-template-columns: 1fr; }
-  .card { min-height: auto; }
   .metaGrid { grid-template-columns: 1fr 1fr; }
   .answerBox { padding: 20px; }
   .ctaBox { padding: 22px; }
@@ -283,10 +318,8 @@
 
 @media (max-width: 520px) {
   .metaGrid { grid-template-columns: 1fr; margin: 26px 0 38px; }
-  .hero { padding-top: 64px; }
-  .article { padding-top: 72px; }
-  .hero h1,
-  .article h1 { font-size: clamp(2.1rem, 11.5vw, 3.2rem); line-height: 0.96; letter-spacing: -0.055em; }
+  .hero { padding-top: calc(var(--cg-nav-h) + 32px); }
+  .article { padding-top: calc(var(--cg-nav-h) + 24px); }
   .contentSection,
   .faq,
   .related { padding: 26px 0; }

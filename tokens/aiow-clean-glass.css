@@ -1,0 +1,131 @@
+/* AIOW Clean Glass tokens, v2 (DESIGN-DNA.md v2, "Het Oordeel bij Daglicht").
+ *
+ * Grondwet: brand-dna-master-prompt-v3-clean-glass.md.
+ * Additieve laag met --cg- prefix; raakt de bestaande dark-tokens niet.
+ * Regels die hier hard in zitten:
+ * - bijna-witte OKLCH-basis, een accent (verdict-petrol);
+ * - tekst-hierarchie via opacity-trappen 100/62/45 (les A4);
+ * - glas alleen functioneel, met solide fallback en reduced-transparency;
+ * - nooit blur-radius animeren; glas-oppervlakken contain: paint;
+ * - motion-karakter "kalm water", een easing, reduced-motion compleet.
+ */
+
+/* Fonts (assets stonden al in public/fonts, les A9: een asset-systeem) */
+@font-face {
+  font-family: "Literata";
+  src: url("/fonts/Literata.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Mono";
+  src: url("/fonts/DM-Mono-400-Latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Basis */
+  --cg-canvas: oklch(0.982 0.004 95);
+  --cg-surface: oklch(1 0 0);
+  --cg-ink: oklch(0.22 0.015 260);
+
+  /* Opacity-trappen (les A4): 100 / 62 / 45 */
+  --cg-ink-soft: color-mix(in oklch, var(--cg-ink) 62%, transparent);
+  --cg-ink-faint: color-mix(in oklch, var(--cg-ink) 45%, transparent);
+
+  /* Het ene accent: verdict-petrol (orb-kernlicht bij daglicht) */
+  --cg-accent: oklch(0.47 0.1 220);
+  --cg-accent-strong: oklch(0.4 0.1 220);
+  --cg-on-accent: oklch(0.985 0.004 95);
+
+  /* De ene donkere verdict-sectie (les A8/B1: een contrastmoment) */
+  --cg-verdict: oklch(0.17 0.02 250);
+  --cg-verdict-ink: oklch(0.97 0.005 220);
+  --cg-verdict-ink-soft: color-mix(in oklch, var(--cg-verdict-ink) 62%, transparent);
+  --cg-verdict-glow: oklch(0.75 0.09 215);
+
+  /* Validatie, nooit decoratief */
+  --cg-error: oklch(0.51 0.19 25);
+
+  /* Lijnen */
+  --cg-line: color-mix(in oklch, var(--cg-ink) 12%, transparent);
+  --cg-line-strong: color-mix(in oklch, var(--cg-ink) 24%, transparent);
+
+  /* Typografie */
+  --cg-font-display: "Literata", Georgia, "Times New Roman", serif;
+  --cg-font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
+  --cg-font-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --cg-text-micro: clamp(0.6875rem, 0.66rem + 0.12vw, 0.75rem);
+  --cg-text-body: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --cg-text-lead: clamp(1.125rem, 1.05rem + 0.4vw, 1.3125rem);
+  --cg-text-card: clamp(1.1875rem, 1.1rem + 0.45vw, 1.375rem);
+  --cg-text-chapter: clamp(1.75rem, 1.3rem + 2.2vw, 3rem);
+  --cg-text-hero: clamp(2.375rem, 1.6rem + 3.9vw, 4.5rem);
+  --cg-text-stat: clamp(2.25rem, 1.7rem + 2.7vw, 3.75rem);
+
+  /* Radius-schaal (concentrisch: binnenradius = buitenradius - padding) */
+  --cg-radius-sm: 10px;
+  --cg-radius-md: 14px;
+  --cg-radius-lg: 20px;
+  --cg-radius-pill: 999px;
+
+  /* Ruimte-ritme (les A7: bewuste leegte) */
+  --cg-section-gap: clamp(5rem, 4rem + 6vw, 10rem);
+  --cg-rest: clamp(80px, 6vw, 120px);
+  --cg-gutter: clamp(1.25rem, 4vw, 3rem);
+  --cg-measure: 60ch;
+  --cg-container: 1120px;
+
+  /* Motion: "kalm water" */
+  --cg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --cg-dur-fast: 180ms;
+  --cg-dur-base: 280ms;
+  --cg-dur-slow: 460ms;
+  --cg-dur-hero: 700ms;
+
+  /* Glasrecept v3 (alleen boven beeld/kleur toepassen, nooit op kaal wit) */
+  --cg-glass-fill: color-mix(in oklch, var(--cg-surface) 62%, transparent);
+  --cg-glass-rim: color-mix(in oklch, white 55%, transparent);
+  --cg-glass-shadow: 0 8px 28px color-mix(in oklch, var(--cg-ink) 8%, transparent);
+
+  /* Nav-instrument */
+  --cg-nav-h: 72px;
+  --cg-nav-h-condensed: 56px;
+}
+
+/* Glas als functionele laag: recept + verplichte fallbacks (Grondwet) */
+.cg-glass {
+  background: var(--cg-surface);
+  box-shadow: inset 0 0 0 1px var(--cg-glass-rim), var(--cg-glass-shadow);
+  contain: paint;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .cg-glass {
+    background: var(--cg-glass-fill);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cg-glass {
+    background: var(--cg-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Microlabel-register (DM Mono caps; nooit body, les B5) */
+.cg-micro {
+  font-family: var(--cg-font-mono);
+  font-size: var(--cg-text-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cg-ink-soft);
+}

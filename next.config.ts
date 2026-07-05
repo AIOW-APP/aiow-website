@@ -8,13 +8,9 @@ const config: NextConfig = {
   // Pre-launch note: `experimental.optimizePackageImports` was removed because
   // Next 15.5 production preview threw `TypeError: a[d] is not a function`
   // on the /en and /nl homepage routes when it touched unused packages.
-  async rewrites() {
-    return {
-      beforeFiles: [
-        { source: "/", destination: "/home-v3.html" },
-      ],
-    };
-  },
+  // DESIGN-DNA v2 (2026-07-05): de home-v3.html-rewrite is vervallen; app/page.tsx
+  // bedient / weer met de clean-glass homepage. home-v3.html blijft als bestand
+  // bestaan in public/ (additief, niets weggegooid).
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
