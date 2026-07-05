@@ -138,9 +138,7 @@ aan bedrijven."
 ## Open punten voor Richard (samengevat)
 1. Ambient-loop-budget landing vs teamregel max 2 (zie motion-concept).
 2. Inter als display: houden of upgraden naar karaktervolle display-familie.
-3. Dark-met-paarse-gloed staat op de generieke verboden-lijst; hier is het bestaand merk-asset.
-   Voorstel: expliciet goedkeuren als bewuste keuze (zelfde redenering als cream/serif bij Cargo
-   Donkey), gedragen door het signature-element.
+3. BESLUIT Richard 2026-07-05: AIOW gaat naar clean-glass v3-Grondwet. De dark/aurora-taal is niet definitief leidend meer; behoud alleen wat de swap-test echt versterkt (orb/verdict/score), maar breng nieuwe oppervlakken naar Apple-clean, functionele glaslagen, body nooit op glas, maximaal twee ambient-loops en mobiel ontworpen headergedrag.
 4. Mailto-fallback in de aanvraagflow vervangen door echt endpoint (Handsome, zie code-comment).
 
 ## 6-vragentest v1 (na deze build opnieuw draaien)
