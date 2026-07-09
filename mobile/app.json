@@ -14,7 +14,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "5"
+      "buildNumber": "6"
     },
     "android": {
       "package": "ai.aiow.app",
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#101C16"
       },
-      "versionCode": 7
+      "versionCode": 8
     },
     "extra": {
       "eas": {
