@@ -12,6 +12,7 @@ const config = [
       ".next.*-*/**",
       ".quarantine/**",
       "node_modules/**",
+      "mobile/**",
       "public/_astro/**",
       "public/**/*.js",
     ],

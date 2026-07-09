@@ -371,7 +371,7 @@ export default function OneTapConciergeIntake() {
           </div>
 
           <button className={styles.submitButton} type="submit" disabled={!canSubmitInterest}>
-            {interestState === "submitting" ? "Interesse vastleggen…" : "Bewaar interesse — geen betaling"}
+            {interestState === "submitting" ? "Interesse vastleggen…" : "Bewaar interesse, geen betaling"}
           </button>
           {interestId ? <p className={styles.savedStamp}>Interest receipt: {interestId}</p> : null}
           {interestMessage ? <p className={interestState === "error" ? styles.errorNote : styles.savedStamp}>{interestMessage}</p> : null}
@@ -507,7 +507,7 @@ export default function OneTapConciergeIntake() {
 
       <aside className={styles.resultPanel} aria-live="polite">
         <p className={styles.eyebrow}>Wat gebeurt hierna</p>
-        <h3>{submitted ? "Intake ontvangen — je aanvraag staat in de queue" : "Nog niet verzonden"}</h3>
+        <h3>{submitted ? "Intake ontvangen, je aanvraag staat in de queue" : "Nog niet verzonden"}</h3>
         <p>
           Na verzenden krijg je een receipt-id. Team Handsome heeft dan genoeg context om je dag te reviewen en de OneTap-flow te verbeteren. Betaling blijft dicht: dit is geen checkout en geen abonnement.
         </p>

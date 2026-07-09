@@ -33,7 +33,7 @@ export default function App({ initieelScherm = 'start' }: { initieelScherm?: Sch
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: 54 }}>
-      <StatusBar style="dark" backgroundColor={theme.bg} />
+      <StatusBar style="dark" />
 
       {/* Kop: wordmark + testversie-chip (Bisnix-regel: testversies zijn
           zichtbaar test) + terug; alles minimaal 44px raakbaar. */}

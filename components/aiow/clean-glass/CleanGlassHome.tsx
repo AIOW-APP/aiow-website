@@ -80,7 +80,7 @@ const chapters = [
 
 const modelStats = [
   { value: "10-25%", label: "omzetdeel in plaats van uurtarief" },
-  { value: "48 uur", label: "van aanvraag tot eerlijke uitslag" },
+  { value: "48 uur", label: "van aanvraag tot eerste oordeel" },
   { value: "3 stappen", label: "intake, twee minuten werk" },
 ];
 
@@ -127,16 +127,21 @@ export function CleanGlassHome() {
               Liever direct contact? WhatsApp
             </a>
           </div>
+          <ul className={styles.heroProof} data-reveal style={revealOrder(3)} aria-label="Controleerbaar bewijs over AIOW">
+            <li><strong>AIOW BV</strong><span>KvK 71887466</span></li>
+            <li><strong>Cargo Donkey</strong><span>gebouwde B2B-groeilaag</span></li>
+            <li><strong>OneTap Day</strong><span>eigen product en release-pipeline</span></li>
+          </ul>
         </div>
 
         <aside className={styles.presence} data-reveal style={revealOrder(2)} aria-label="Spunky, de beoordelaar">
           <LivingOrb />
           <p className={`${styles.presenceChip} cg-glass`}>
             <span className={styles.liveDot} aria-hidden="true" />
-            Aanvraag {DOSSIER} · zojuist binnen
+            Voorbeeldweging {DOSSIER} · demonstratie van ons model
           </p>
           <p className={`${styles.presenceSub} cg-micro`}>
-            Planningstool voor verladers · vraagt een venture-score
+            Planningstool voor verladers · fictief dossier, echte werkwijze
           </p>
         </aside>
 
@@ -239,7 +244,7 @@ export function CleanGlassHome() {
             </a>
           </div>
           <p className={`${styles.verdictNote} cg-micro`}>
-            {DOSSIER} is een voorbeeldweging, samengesteld uit echte aanvragen.
+            {DOSSIER} is een fictief dossier dat laat zien hoe AIOW weegt. Het is geen klantcase.
           </p>
         </div>
       </section>

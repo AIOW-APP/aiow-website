@@ -3,7 +3,7 @@ import OneTapConciergeIntake from "./OneTapConciergeIntake";
 import styles from "./onetap-day.module.css";
 
 export const metadata = {
-  title: "OneTap Day Concierge — 24 uur execution plan",
+  title: "OneTap Day Concierge, 24 uur execution plan",
   description:
     "Stuur je rommelige dag en krijg binnen 24 uur na betaling + complete intake één realistisch execution plan. Founding beta for the first paying users.",
   robots: { index: false, follow: false },

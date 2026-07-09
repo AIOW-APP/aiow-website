@@ -12,7 +12,7 @@ const SITE_URL = "https://aiow.ai";
 export const metadata: Metadata = {
   title: "Vraag je venture-score aan",
   description:
-    "Leg je idee of bedrijf in drie stappen voor aan AIOW. Je weet binnen 48 uur of je idee venture-waardig is: bouwen of groeien voor een omzetdeel, geen uurtarief.",
+    "Leg je idee of bedrijf in drie stappen voor aan AIOW. Binnen 48 uur krijg je een eerlijk eerste oordeel over de venture-fit: bouwen of groeien voor een omzetdeel, geen uurtarief.",
   alternates: { canonical: "/nl/venture-score-aanvragen" },
   robots: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" },
   openGraph: {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/nl/venture-score-aanvragen`,
     title: "Vraag je venture-score aan | AIOW",
     description:
-      "Leg je idee of bedrijf in drie stappen voor. Binnen 48 uur weet je of AIOW wil meebouwen voor een omzetdeel.",
+      "Leg je idee of bedrijf in drie stappen voor. Binnen 48 uur krijg je AIOW's eerste oordeel over meebouwen voor een omzetdeel.",
     siteName: "AIOW",
     images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630 }],
   },
@@ -38,7 +38,7 @@ export default function VentureScoreAanvragenPage() {
         <h1 data-reveal="wipe">Leg je idee voor. Wij beoordelen het als investeerder.</h1>
         <p className={styles.lead} data-reveal style={revealOrder(1)}>
           Drie stappen, twee minuten werk. Spunky toetst founder, markt, AI-hefboom, tractie en
-          bouwbaarheid. Binnen 48 uur weet je of je idee venture-waardig is. We zeggen vaker nee
+          bouwbaarheid. Binnen 48 uur krijg je een eerlijk eerste oordeel. We zeggen vaker nee
           dan ja, en altijd met een eerlijke tip.
         </p>
       </section>

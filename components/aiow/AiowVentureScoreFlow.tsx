@@ -144,7 +144,7 @@ export function AiowVentureScoreFlow() {
         <h2>Je idee is voorgelegd.</h2>
         <p className={styles.successLead}>
           Je mailapp staat klaar met je aanvraag voor {CONTACT_EMAIL}. Verstuur die mail en je weet
-          binnen 48 uur of je idee venture-waardig is. We zeggen vaker nee dan ja, maar altijd
+          binnen 48 uur een eerlijk eerste oordeel. We zeggen vaker nee dan ja, maar altijd
           eerlijk en met een concrete tip.
         </p>
         <div className={styles.successActions}>

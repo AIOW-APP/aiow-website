@@ -116,7 +116,7 @@ export function CivicIntakeForm() {
           <a className={styles.ctaSolid} href={state.portalUrl}>Open mijn dossier</a>
           <a className={styles.ctaLine} href="https://wa.me/31621898039">Vraag via WhatsApp</a>
         </div>
-        <p className={styles.note}>Binnen een werkdag krijg je een eerlijk antwoord: meebouwen voor een omzetdeel, een betaalde scan met plan, of een afwijzing met verbetertip.</p>
+        <p className={styles.note}>Binnen 48 uur krijg je een eerlijk eerste oordeel: meebouwen voor een omzetdeel, een betaalde scan met plan, of een afwijzing met verbetertip.</p>
       </section>
     );
   }
@@ -180,7 +180,7 @@ export function CivicIntakeForm() {
         vervolgvragen en kijk je live mee terwijl ons AI-systeem je plan onderzoekt: marktcheck,
         concurrentie, founder-verificatie en red-team. Elke stap verschijnt in je tijdlijn.
       </p>
-      <p className={styles.note}>Eerlijk oordeel binnen een werkdag. Wij zeggen vaker nee dan ja; daarom betekent onze ja iets.</p>
+      <p className={styles.note}>Eerlijk eerste oordeel binnen 48 uur. Wij zeggen vaker nee dan ja; daarom betekent onze ja iets.</p>
     </form>
   );
 }

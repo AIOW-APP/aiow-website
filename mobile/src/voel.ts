@@ -7,7 +7,6 @@
 
 let H: typeof import('expo-haptics') | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   H = require('expo-haptics');
 } catch {
   H = null;

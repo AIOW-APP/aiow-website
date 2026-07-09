@@ -13,7 +13,7 @@ export function GET() {
       {
         section: "AI Venture Partner (kernaanbod)",
         links: [
-          { title: "Venture intake", url: `${SITE_URL}/intake`, summary: "Beschrijf je idee of bedrijf; AIOW beoordeelt founder, markt, AI-hefboom, tractie en bouwbaarheid en geeft binnen een werkdag een eerlijk oordeel: meebouwen voor een omzetdeel, betaalde scan met plan, of afwijzing met verbetertip." },
+          { title: "Venture intake", url: `${SITE_URL}/intake`, summary: "Beschrijf je idee of bedrijf; AIOW beoordeelt founder, markt, AI-hefboom, tractie en bouwbaarheid en geeft binnen 48 uur een eerlijk eerste oordeel: meebouwen voor een omzetdeel, betaalde scan met plan, of afwijzing met verbetertip." },
           { title: "Het AIOW-dealmodel", url: `${SITE_URL}/`, summary: "Geen uurtarief. AIOW bouwt mee in ruil voor een omzetdeel (indicatief 10-25 procent, afhankelijk van risico en werk) en hetzelfde deel bij verkoop van het bedrijf. AIOW wint alleen als de founder wint. Acceptaties en voorstellen worden altijd door het team bevestigd; het eerste oordeel komt uit het AI-venture-score-systeem." },
           { title: "AI-bedrijf starten zonder technische co-founder", url: `${SITE_URL}/nl/kennis/ai-bedrijf-starten-zonder-technische-co-founder`, summary: "Cornerstone voor founders zonder technische co-founder: AIOW kan product, AI en groei meebouwen voor een omzetdeel in plaats van aandelen of uurtarief, na venture-score selectie." },
           { title: "Venture studio vs venture partner", url: `${SITE_URL}/nl/kennis/venture-studio-vs-venture-partner-verschil`, summary: "W2 cornerstone: venture studio bouwt eigen ideeën met aandelenbelang; venture partner zoals AIOW bouwt jouw idee mee voor een omzetdeel zonder aandelen." },

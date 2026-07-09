@@ -48,7 +48,7 @@ export const aiowKnowledgePages = [
       ],
       [
         "Eerste stap",
-        "Beschrijf je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen een werkdag een eerlijk antwoord. Liever direct contact: WhatsApp via aiow.ai."
+        "Beschrijf je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen 48 uur een eerlijk antwoord. Liever direct contact: WhatsApp via aiow.ai."
       ]
     ],
     "faq": [
@@ -94,7 +94,7 @@ export const aiowKnowledgePages = [
       ],
       [
         "Eerste stap",
-        "Vul de venture intake in op aiow.ai/intake met je idee, je achtergrond en eventueel bewijs. Binnen een werkdag hoor je of AIOW wil meebouwen, een betaalde scan voorstelt, of eerlijk nee zegt met een tip."
+        "Vul de venture intake in op aiow.ai/intake met je idee, je achtergrond en eventueel bewijs. Binnen 48 uur hoor je of AIOW wil meebouwen, een betaalde scan voorstelt, of eerlijk nee zegt met een tip."
       ]
     ],
     "faq": [
@@ -124,7 +124,7 @@ export const aiowKnowledgePages = [
     "intent": "beoordeling",
     "title": "Startup-idee laten beoordelen: zo werkt de AIOW venture-score",
     "h1": "Is mijn idee goed genoeg? Laat het beoordelen met een venture-score",
-    "summary": "AIOW beoordeelt startup-ideeën en groeikansen met een venture-score over zeven dimensies, van founder tot AI-hefboom. Binnen een werkdag een eerlijk oordeel, inclusief verbetertip bij een afwijzing.",
+    "summary": "AIOW beoordeelt startup-ideeën en groeikansen met een venture-score over zeven dimensies, van founder tot AI-hefboom. Binnen 48 uur een eerlijk oordeel, inclusief verbetertip bij een afwijzing.",
     "sections": [
       [
         "Waarom een eerlijke beoordeling waardevol is",
@@ -140,7 +140,7 @@ export const aiowKnowledgePages = [
       ],
       [
         "Eerste stap",
-        "Beschrijf je idee in een paar zinnen op aiow.ai/intake. Het systeem begint direct te wegen en je krijgt binnen een werkdag antwoord."
+        "Beschrijf je idee in een paar zinnen op aiow.ai/intake. Het systeem begint direct te wegen en je krijgt binnen 48 uur antwoord."
       ]
     ],
     "faq": [
@@ -35384,7 +35384,7 @@ export const aiowKnowledgePages = [
       ],
       [
         "Eerste stap",
-        "Beschrijf je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen een werkdag een eerlijk antwoord: meebouwen, een scan met plan, of een onderbouwde nee met verbetertip."
+        "Beschrijf je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen 48 uur een eerlijk antwoord: meebouwen, een scan met plan, of een onderbouwde nee met verbetertip."
       ]
     ],
     "faq": [
@@ -35446,7 +35446,7 @@ export const aiowKnowledgePages = [
       ],
       [
         "Eerste stap",
-        "Twijfel je welk model bij jouw situatie past, beschrijf dan je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen een werkdag een eerlijk antwoord: meebouwen, een betaalde scan met verbeterplan, of een onderbouwde nee met verbetertip."
+        "Twijfel je welk model bij jouw situatie past, beschrijf dan je idee of bedrijf in de venture intake op aiow.ai/intake. Je krijgt binnen 48 uur een eerlijk antwoord: meebouwen, een betaalde scan met verbeterplan, of een onderbouwde nee met verbetertip."
       ]
     ],
     "faq": [
@@ -35472,7 +35472,7 @@ export const aiowKnowledgePages = [
       ],
       [
         "Hoe weet ik of mijn idee sterk genoeg is voor een venture partner?",
-        "AIOW beoordeelt elke aanvraag met een venture-score op founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Beschrijf je idee in de venture intake op aiow.ai/intake; je krijgt binnen een werkdag een eerlijk antwoord."
+        "AIOW beoordeelt elke aanvraag met een venture-score op founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Beschrijf je idee in de venture intake op aiow.ai/intake; je krijgt binnen 48 uur een eerlijk antwoord."
       ]
     ]
   }

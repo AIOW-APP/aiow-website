@@ -6,7 +6,7 @@ import { CivicIntakeForm } from "./CivicIntakeForm";
 export const metadata: Metadata = {
   title: "Venture intake: laat je idee wegen | AIOW",
   description:
-    "Beschrijf je idee of bedrijf. AIOW beoordeelt founder, markt, AI-hefboom en tractie met een venture-score en geeft binnen een werkdag een eerlijk oordeel: meebouwen voor een omzetdeel, een betaalde scan, of een nee met verbetertip.",
+    "Beschrijf je idee of bedrijf. AIOW beoordeelt founder, markt, AI-hefboom en tractie met een venture-score en geeft binnen 48 uur een eerlijk eerste oordeel: meebouwen voor een omzetdeel, een betaalde scan, of een nee met verbetertip.",
 };
 
 export default function IntakePage() {
@@ -29,7 +29,7 @@ export default function IntakePage() {
           <h1 className={styles.title}>Durf je het te laten <i>wegen</i>?</h1>
           <p className={styles.lead}>
             Beschrijf je idee of bedrijf. Het systeem weegt founder, markt, AI-hefboom en tractie,
-            en je krijgt binnen een werkdag een eerlijk oordeel.
+            en je krijgt binnen 48 uur een eerlijk eerste oordeel.
           </p>
         </section>
 

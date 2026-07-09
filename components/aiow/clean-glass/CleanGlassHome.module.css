@@ -96,6 +96,32 @@
   color: var(--cg-ink);
 }
 
+.heroProof {
+  display: grid;
+  gap: 10px;
+  margin: 28px 0 0;
+  padding: 18px 0 0;
+  max-width: 620px;
+  list-style: none;
+  border-top: 1px solid var(--cg-line);
+}
+
+.heroProof li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--cg-ink-soft);
+  font-size: 0.84rem;
+}
+
+.heroProof strong {
+  color: var(--cg-ink);
+  font-weight: 620;
+}
+
+.heroProof span { text-align: right; }
+
 /* ===== De orb: een wezen (ambient-systeem 1 van 2) ===== */
 
 .presence {
@@ -577,6 +603,25 @@
 
   .cardRow { grid-template-columns: repeat(2, 1fr); }
   .stats { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-top: calc(var(--cg-nav-h) + 40px);
+    gap: 32px;
+  }
+
+  .heroActions { align-items: stretch; }
+
+  .primary,
+  .ghost { width: 100%; }
+
+  .heroProof li {
+    display: grid;
+    gap: 2px;
+  }
+
+  .heroProof span { text-align: left; }
 }
 
 /* ===== Reduced motion: alles staat direct compleet ===== */

@@ -63,4 +63,17 @@
 
 .footer { border-top: 1px solid rgba(33,28,22,.10); padding: 22px 0 40px; color: rgba(33,28,22,.5); font-size: 13px; }
 
-@media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .bar { gap: 8px; }
+  .brand { min-height: 44px; display: inline-flex; align-items: center; }
+  .nav { gap: 0; flex: 0 0 auto; }
+  .nav a:not(.loginBtn) { display: none; }
+  .loginBtn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+  }
+}

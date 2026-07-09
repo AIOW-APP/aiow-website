@@ -83,8 +83,8 @@ export function AiowVentureLanding() {
           <div className={styles.notice} data-reveal style={revealOrder(3)}>
             <span>Geen gratis chatbot</span>
             <p>
-              Spunky beoordeelt jouw idee of bedrijf met de venture-score. Aanvraag gestuurd? Je weet binnen 48 uur
-              of je idee venture-waardig is.
+              Spunky beoordeelt jouw idee of bedrijf met de venture-score. Aanvraag gestuurd? Binnen 48 uur
+              krijg je een eerlijk eerste oordeel.
             </p>
           </div>
         </div>
@@ -133,7 +133,7 @@ export function AiowVentureLanding() {
       </section>
 
       <div className={styles.startBar} data-reveal>
-        <p>Leg je idee in drie stappen voor. Je weet binnen 48 uur of je idee venture-waardig is.</p>
+        <p>Leg je idee in drie stappen voor. Binnen 48 uur krijg je een eerlijk eerste oordeel.</p>
         <Link href="/nl/venture-score-aanvragen">Vraag je venture-score aan</Link>
       </div>
     </main>

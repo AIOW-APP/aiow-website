@@ -47,7 +47,7 @@ export default function PortalGatewayPage() {
           </div>
           <div className={styles.step}>
             <p className="cg-micro">Het oordeel</p>
-            <h3>Binnen een werkdag</h3>
+            <h3>Binnen 48 uur</h3>
             <p>Eerlijk antwoord: meebouwen, betaalde scan, of nee met verbetertip.</p>
           </div>
           <div className={styles.step}>

@@ -14,7 +14,6 @@ import { Platform } from 'react-native';
 
 let F: typeof import('expo-font') | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   F = require('expo-font');
 } catch {
   F = null;

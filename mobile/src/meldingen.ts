@@ -6,7 +6,6 @@
 
 let N: typeof import('expo-notifications') | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   N = require('expo-notifications');
 } catch {
   N = null;
@@ -24,6 +23,8 @@ export async function meldingAanzetten(): Promise<boolean> {
       N.setNotificationHandler({
         handleNotification: async () => ({
           shouldShowAlert: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
           shouldPlaySound: false,
           shouldSetBadge: false,
         }),
