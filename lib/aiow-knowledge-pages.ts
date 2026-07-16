@@ -35475,7 +35475,74 @@ export const aiowKnowledgePages = [
         "AIOW beoordeelt elke aanvraag met een venture-score op founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Beschrijf je idee in de venture intake op aiow.ai/intake; je krijgt binnen een werkdag een eerlijk antwoord."
       ]
     ]
+  },
+  {
+    "slug": "omzetdeel-versus-aandelen-wat-geef-je-weg",
+    "kind": "knowledge",
+    "serviceSlug": "venture-partner",
+    "service": "AI Venture Partner",
+    "sectorSlug": "startups-mkb",
+    "sector": "Startups en MKB",
+    "regionSlug": "nederland",
+    "region": "Nederland",
+    "intent": "omzetdeel versus aandelen",
+    "title": "Omzetdeel versus aandelen: wat geef je weg als founder?",
+    "h1": "Omzetdeel of aandelen: wat geef je weg en wat krijg je terug?",
+    "summary": "Een omzetdeel en aandelen lijken allebei op meedelen in succes, maar ze raken andere dingen. Een omzetdeel raakt toekomstige omzet en cashflow. Aandelen raken eigendom, zeggenschap, verwatering en exit. Voor AI-ventures beoordeelt AIOW eerst of het model, de founder en de AI-hefboom sterk genoeg zijn voordat er een dealvoorstel komt.",
+    "sections": [
+      [
+        "Kort antwoord: het verschil in één minuut",
+        "Bij een omzetdeel spreek je af dat een partner een deel van de omzet ontvangt zolang de afspraak loopt of tot een contractuele grens is bereikt. Bij aandelen geef je eigendom in het bedrijf weg, met gevolgen voor zeggenschap, verwatering, toekomstige rondes en verkoop. Het beste model hangt af van risico, fase, cashpositie, bouwlast, tractie en hoeveel strategische waarde de partner echt toevoegt."
+      ],
+      [
+        "Wat geef je weg bij een omzetdeel?",
+        "Een omzetdeel raakt niet direct de aandelenstructuur, maar wel de toekomstige inkomstenstroom. Dat kan aantrekkelijk zijn wanneer je eigendom wilt houden en geen groot bouwbudget hebt. De keerzijde is dat een succesvol product langdurig omzet afdraagt. Daarom moeten definitie van omzet, looptijd, rapportage, uitzonderingen, plafond, terugkoopoptie en beëindiging duidelijk in het contract staan."
+      ],
+      [
+        "Wat geef je weg bij aandelen?",
+        "Aandelen betekenen eigendom. Een partner of investeerder deelt dan mee in waardegroei en exit, maar krijgt mogelijk ook informatie-, stem- of blokkeringsrechten. Aandelen kunnen passen wanneer er kapitaal, netwerk of structurele mede-onderneming nodig is. De keerzijde is verwatering en minder flexibiliteit bij latere investeerders of verkoop."
+      ],
+      [
+        "Waarom dit bij AI-ventures extra scherp ligt",
+        "AI-producten kunnen snel gebouwd lijken, maar productie-kwaliteit vraagt modelkeuze, data-afspraken, evaluaties, beveiliging, kostencontrole, UX, distributie en beheer. Een partner die alleen code levert, is iets anders dan een venture partner die product, AI-implementatie en groei mee draagt. De vergoeding moet passen bij de werkelijke risicoverdeling."
+      ],
+      [
+        "Hoe AIOW ernaar kijkt",
+        "AIOW beoordeelt eerst met een venture-score: founder, markt, probleem en oplossing, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Bij een sterke case kan een omzetdeel logisch zijn omdat AIOW meebouwt en alleen verdient als het bedrijf omzet draait. Bij twijfel kan een betaalde scan of kleiner starttraject verstandiger zijn dan direct een grote deal."
+      ],
+      [
+        "Vragen vóór je tekent",
+        "Vraag altijd: welke omzet telt mee, hoe lang loopt de afspraak, is er een plafond, kan ik terugkopen, wat gebeurt er bij pivot, verkoop of staking, wie betaalt model- en infrastructuurkosten, welke rapportage is nodig, en welke beslissingen blijven bij de founder? Laat juridische en fiscale uitwerking altijd apart controleren."
+      ],
+      [
+        "Eerste stap",
+        "Wie wil weten of een AI-venture geschikt is voor een omzetdeel, kan de venture intake op aiow.ai/intake invullen. Beschrijf founder, klantprobleem, bewijs, data, doelgroep en gewenste rol van AIOW. Het antwoord is geen belofte op acceptatie, maar een eerlijke beoordeling van de kans en de logische volgende stap."
+      ]
+    ],
+    "faq": [
+      [
+        "Wat is het verschil tussen omzetdeel en aandelen?",
+        "Een omzetdeel is een contractuele afspraak over toekomstige omzet. Aandelen zijn eigendom in het bedrijf. Omzetdeel raakt cashflow, aandelen raken zeggenschap, verwatering en exit."
+      ],
+      [
+        "Is een omzetdeel goedkoper dan aandelen?",
+        "Niet automatisch. Bij lage omzet kan een omzetdeel lichter voelen dan aandelen weggeven. Bij sterke groei kan het juist duur worden. Daarom zijn looptijd, plafond, terugkoop en omzetdefinitie belangrijk."
+      ],
+      [
+        "Houd ik zeggenschap als ik voor omzetdeel kies?",
+        "Meestal blijft eigendom bij de founder, maar de contractafspraken kunnen wel invloed hebben op rapportage, prioriteiten en verkoop. Lees dit als zakelijke afweging, niet als juridisch advies."
+      ],
+      [
+        "Kan een omzetdeel gecombineerd worden met aandelen?",
+        "Ja, hybride afspraken bestaan, maar ze moeten zorgvuldig worden ontworpen. Combineer niet zomaar prikkels zonder duidelijkheid over risico, werk, zeggenschap, exit en fiscale gevolgen."
+      ],
+      [
+        "Wanneer past AIOW bij dit model?",
+        "AIOW past vooral bij B2B AI-ventures of bestaande bedrijven met een duidelijke AI-hefboom, serieuze founder, marktbewijs en ruimte om product, automatisering en groei samen te bouwen."
+      ]
+    ]
   }
+
 ] satisfies AiowKnowledgePage[];
 
 export function getAiowKnowledgePage(slug: string) {
