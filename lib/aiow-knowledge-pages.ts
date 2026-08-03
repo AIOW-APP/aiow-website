@@ -35615,7 +35615,81 @@ export const aiowKnowledgePages = [
         "Vooral wanneer een B2B-probleem aantoonbaar is, de founder serieus kan verkopen en uitvoeren, AI een echte hefboom biedt en product, implementatie en groei samen moeten worden gebouwd. AIOW beoordeelt dit vooraf met een venture-score."
       ]
     ]
-  }
+  },
+{
+  "slug": "waarom-bureaus-vaker-ja-zeggen-en-venture-partners-selecteren",
+  "kind": "knowledge",
+  "serviceSlug": "venture-partner",
+  "service": "AI Venture Partner",
+  "sectorSlug": "startups-mkb",
+  "sector": "Startups en MKB",
+  "regionSlug": "nederland",
+  "region": "Nederland",
+  "intent": "verschil bureau en venture partner selectie",
+  "title": "Waarom bureaus vaker ja zeggen en venture partners selecteren",
+  "h1": "Waarom zegt een bureau vaker ja en selecteert een venture partner?",
+  "summary": "Een bureau verkoopt doorgaans een afgebakende opdracht tegen betaling en kan daardoor meer haalbare opdrachten aannemen. Een venture partner deelt uitvoerings- en groeirisico en moet daarom scherper selecteren op founder, markt, bewijs, AI-hefboom en dealkwaliteit. Dat maakt geen van beide modellen beter: de juiste keuze hangt af van wat je nodig hebt en welk risico iedere partij draagt.",
+  "sections": [
+    [
+      "Kort antwoord: het verdienmodel bepaalt de selectie",
+      "Een bureau kan ja zeggen zodra de vraag uitvoerbaar is, de scope duidelijk genoeg is en de klant het werk financiert. Een venture partner investeert ook eigen tijd, productcapaciteit en reputatie in een onzekere uitkomst. Daarom beoordeelt een partner niet alleen of iets gebouwd kan worden, maar vooral of founder, markt, distributie, bewijs, AI-hefboom en afspraken samen sterk genoeg zijn. 'Nee' betekent niet automatisch dat het idee slecht is. Het kan betekenen dat het niet bij het risicomodel, de timing of de expertise van die partner past."
+    ],
+    [
+      "Wat je bij een bureau koopt",
+      "Bij een bureau koop je meestal expertise en capaciteit voor een omschreven opdracht. De klant draagt het marktrisico en betaalt voor strategie, ontwerp, software, automatisering of campagne-uitvoering. Een goed bureau hoort nog steeds onhaalbare, onveilige of onethische verzoeken af te wijzen. Het hoeft alleen niet dezelfde portfolioselectie toe te passen als een partij die afhankelijk is van toekomstige omzet. Dit model past wanneer budget, scope, besluitvorming en gewenste oplevering redelijk duidelijk zijn en je zelf producteigenaarschap en commerciële regie houdt."
+    ],
+    [
+      "Wat een venture partner mee riskeert",
+      "Een venture partner koppelt een deel van de beloning aan toekomstige waarde en neemt daardoor meer uitvoerings- en concentratierisico. Capaciteit voor één venture kan niet tegelijk in een andere worden ingezet. De partner kijkt dus naar verkoopkracht van de founder, urgent klantprobleem, bereikbare markt, toegang tot data, haalbare implementatie, governance, marges en een werkbare samenwerking. Een omzetdeel maakt werk niet gratis. Het verplaatst een deel van de betaling en vergroot de noodzaak om verwachtingen, definities, looptijd, rapportage en exit vooraf vast te leggen."
+    ],
+    [
+      "Waarom enthousiasme geen selectiecriterium is",
+      "Veel ideeën klinken aantrekkelijk in een pitch. Selectie vraagt bewijs: recente klantproblemen, echte beslissers, bereidheid om te betalen, een geloofwaardige distributieroute en een taak waarop AI aantoonbaar waarde kan leveren. Complimenten, wachtlijsten en gratis pilots zijn zwakkere signalen dan een betaalde proef met duidelijke acceptatiecriteria. Een partner moet ook actief tegenbewijs zoeken. Als privacy, foutimpact, datatoegang of inkoop het model blokkeren, is een overtuigende demo niet genoeg."
+    ],
+    [
+      "Founder fit is meer dan een goed idee",
+      "Een partner bouwt niet alleen met een markt, maar met een founder. Daarom tellen beschikbaarheid, domeinkennis, verkoopbereidheid, snelheid van leren, eerlijkheid over bewijs en eigenaarschap van moeilijke beslissingen mee. Uitbesteding van alle commerciële verantwoordelijkheid is een zwak signaal. Een technisch minder ervaren founder kan juist sterk passen wanneer die klanttoegang, domeinkennis en uitvoeringsdiscipline meebrengt. De partner moet aanvullend zijn, niet de hele onderneming vervangen."
+    ],
+    [
+      "Wanneer je beter een bureau kiest",
+      "Kies eerder een bureau als de opdracht afgebakend is, je budget beschikbaar hebt, het marktrisico bewust zelf wilt houden en je een leverancier zoekt die op scope en kwaliteit kan worden aangestuurd. Dat kan sneller en economisch helderder zijn dan een langdurige omzetdeelrelatie. Vraag naar deliverables, acceptatiecriteria, intellectueel eigendom, beheer, veiligheid, data, kosten na oplevering en exitmogelijkheden. Vergelijk niet alleen het startbedrag, maar ook interne inzet, onderhoud en afhankelijkheid."
+    ],
+    [
+      "Wanneer een venture partner logisch kan zijn",
+      "Een venture partner kan passen wanneer er een serieus B2B-probleem, geloofwaardige founder, aantoonbaar marktpad en echte AI-hefboom zijn, maar product, implementatie en groei nog gezamenlijk moeten worden opgebouwd. De samenwerking hoort wederkerig te zijn: duidelijke rollen, begrensde investering, meetpunten, menselijke goedkeuring waar nodig en een eerlijke regeling voor omzet, verkoop en beëindiging. Laat contractuele, fiscale en juridische gevolgen onafhankelijk beoordelen voordat je tekent."
+    ],
+    [
+      "Hoe AIOW selecteert zonder een slagingsgarantie",
+      "AIOW gebruikt een venture-score rond founder, markt, probleem, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. Die score ordent bewijs en risico, maar voorspelt geen gegarandeerd succes. Een sterke uitkomst kan leiden tot verdere diligence of een voorstel; een middenscore kan wijzen op een betaalde scan of extra klantbewijs; een lage score kan tot een gemotiveerde afwijzing leiden. Menselijke beoordeling blijft bepalend. AIOW accepteert niet ieder idee en claimt geen vaste acceptatiegraad."
+    ],
+    [
+      "Volgende stap: stuur bewijs, geen verkooppraat",
+      "Beschrijf je B2B AI-venture via aiow.ai/intake. Vermeld het concrete klantprobleem, wie beslist en betaalt, recente gesprekken of transacties, je distributieroute, benodigde data, foutimpact, jouw eigen rol en waarom AI een echte hefboom is. De intake is geen garantie op samenwerking. Zij helpt wel bepalen of een bureauopdracht, extra validatie, een betaalde scan, een smalle pilot of een venture-partnerschap de meest logische route is."
+    ]
+  ],
+  "faq": [
+    [
+      "Accepteert een bureau werkelijk ieder idee?",
+      "Nee. Een professioneel bureau wijst onhaalbare, onveilige, onethische of slecht passende opdrachten af. Het kan wel meer haalbare opdrachten aannemen omdat de klant het werk financiert en het marktrisico houdt."
+    ],
+    [
+      "Waarom is een venture partner selectiever?",
+      "Omdat de partner eigen schaarse capaciteit en een deel van de beloning riskeert. Daardoor moeten founder, markt, bewijs, AI-hefboom en afspraken als geheel overtuigen."
+    ],
+    [
+      "Betekent een afwijzing dat mijn idee slecht is?",
+      "Niet noodzakelijk. De fit kan ontbreken door timing, sector, bewijs, datarisico, capaciteit of verdienmodel. Vraag welk bewijs of welke aanpassing het oordeel zou kunnen veranderen."
+    ],
+    [
+      "Is omzetdeel altijd goedkoper dan een bureau?",
+      "Nee. Bij sterke groei kan omzetdeel op termijn duurder zijn. Vergelijk looptijd, plafond, omzetdefinitie, terugkoop, verkoopscenario en totale interne en externe kosten."
+    ],
+    [
+      "Hoe beoordeelt AIOW een aanvraag?",
+      "AIOW kijkt naar founder, markt, probleem, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. De score ondersteunt menselijke selectie en is geen succes- of acceptatiegarantie."
+    ]
+  ]
+}
 
 ] satisfies AiowKnowledgePage[];
 
