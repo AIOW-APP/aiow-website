@@ -19,6 +19,7 @@ export function GET() {
           { title: "Venture studio vs venture partner", url: `${SITE_URL}/nl/kennis/venture-studio-vs-venture-partner-verschil`, summary: "W2 cornerstone: venture studio bouwt eigen ideeën met aandelenbelang; venture partner zoals AIOW bouwt jouw idee mee voor een omzetdeel zonder aandelen." },
           { title: "Omzetdeel versus aandelen", url: `${SITE_URL}/nl/kennis/omzetdeel-versus-aandelen-wat-geef-je-weg`, summary: "W3 cornerstone: beslismodel voor founders die omzetdeel en aandelen vergelijken op cashflow, zeggenschap, verwatering, exit en contractuele risicoverdeling." },
           { title: "Van idee naar eerste betalende klant met AI", url: `${SITE_URL}/nl/kennis/van-idee-naar-eerste-betalende-klant-met-ai`, summary: "W4 cornerstone: bewijsgerichte B2B-route van scherp probleem en betaalde pilot naar begrensde AI-automatisering en herhaalbare levering." },
+          { title: "Bureau versus venture partner selectie", url: `${SITE_URL}/nl/kennis/waarom-bureaus-vaker-ja-zeggen-en-venture-partners-selecteren`, summary: "W5 cornerstone: waarom een betaald bureau meer haalbare opdrachten kan aannemen en een venture partner door gedeeld risico selecteert op founder, markt, bewijs, AI-hefboom en dealkwaliteit." },
           { title: "Case: Cargo Donkey", url: "https://cargodonkey.nl/", summary: "B2B verpakkings- en logistiekbedrijf regio Schiphol; AIOW bouwde de digitale groeilaag: vindbare kennisbank, offerte-funnel via WhatsApp en klantportaal met live prijsindicaties." },
         ],
       },
