@@ -35689,6 +35689,80 @@ export const aiowKnowledgePages = [
       "AIOW kijkt naar founder, markt, probleem, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit. De score ondersteunt menselijke selectie en is geen succes- of acceptatiegarantie."
     ]
   ]
+},
+{
+  "slug": "ai-groeikans-in-bestaand-mkb-bedrijf-herkennen",
+  "kind": "knowledge",
+  "serviceSlug": "ai-systeemscan",
+  "service": "AI-systeemscan",
+  "sectorSlug": "mkb",
+  "sector": "MKB",
+  "regionSlug": "nederland",
+  "region": "Nederland",
+  "intent": "AI-groeikans in bestaand MKB-bedrijf herkennen",
+  "title": "AI-groeikans in een bestaand MKB-bedrijf herkennen",
+  "h1": "Hoe herken je een kansrijke AI-groeikans in een bestaand MKB-bedrijf?",
+  "summary": "Een kansrijke AI-groeikans begint niet bij een model of chatbot, maar bij een terugkerend bedrijfsprobleem met meetbare economische waarde, bruikbare data en een eigenaar die het proces kan veranderen. Zoek vooral naar omzetlekkage, trage doorlooptijd, kennis die vastzit bij enkele medewerkers en beslissingen die steeds uit dezelfde informatie worden voorbereid. Valideer daarna klein, met een nulmeting, menselijke controle en een duidelijke stopregel.",
+  "sections": [
+    [
+      "Kort antwoord: zoek een waardeprobleem, geen AI-toepassing",
+      "De sterkste AI-kans is een proces waarin elke week tijd, omzet, marge of klantvertrouwen verloren gaat en waarin betere informatieverwerking aantoonbaar verschil kan maken. Denk aan aanvragen die te laat worden opgevolgd, offertes die blijven liggen, documentcontrole die capaciteit opslokt of servicevragen die telkens dezelfde zoekactie vereisen. Begin met het huidige probleem, volume, foutkosten en beslismoment. Kies pas daarna techniek. Een indrukwekkende demo zonder proces-eigenaar, betrouwbare invoer of meetbare uitkomst is geen groeikans maar een experiment."
+    ],
+    [
+      "Signaal 1: omzet verdwijnt tussen aanvraag en opvolging",
+      "Veel MKB-bedrijven hebben genoeg vraag, maar verliezen omzet door versnipperde intake, onvolledige gegevens of wisselende opvolging. Een kans kan ontstaan wanneer e-mails, formulieren, WhatsApp-berichten en telefoonaantekeningen eerst handmatig moeten worden samengebracht voordat iemand kan kwalificeren of offreren. AI kan informatie structureren, ontbrekende gegevens signaleren en een conceptvervolgstap voorbereiden. De commerciële beslissing blijft bij een medewerker. Meet vóór de pilot hoeveel aanvragen compleet binnenkomen, hoe lang eerste opvolging duurt, hoeveel offertes worden uitgebracht en waar prospects afhaken."
+    ],
+    [
+      "Signaal 2: experts doen veel herhaalbaar voorbereidingswerk",
+      "Schaarse vakmensen horen hun oordeel te gebruiken voor uitzonderingen en kwaliteit, niet voor eindeloos zoeken, kopiëren en samenvatten. Kijk naar terugkerende taken zoals dossiers voorbereiden, specificaties vergelijken, werkbonnen controleren, klantgeschiedenis ophalen of conceptantwoorden maken. AI kan een begrensde voorbereidingslaag vormen wanneer bronnen bekend zijn en uitkomsten controleerbaar blijven. Automatiseer niet meteen de eindbeslissing. Leg vast welke bron is gebruikt, welke onzekerheid resteert en wie goedkeurt voordat iets naar een klant, leverancier of systeem gaat."
+    ],
+    [
+      "Signaal 3: kennis zit in hoofden, inboxen en losse bestanden",
+      "Een bedrijf is kwetsbaar wanneer alleen enkele medewerkers weten welke uitzondering geldt, welk document actueel is of hoe een bijzonder verzoek moet worden behandeld. Een beheerde kennislaag kan relevante informatie vindbaar maken en antwoorden met bronverwijzing voorbereiden. Dat vraagt meer dan bestanden in een chatbot laden: documenten moeten een eigenaar, versie, geldigheidsdatum, toegangsregel en archiefstatus krijgen. Als de bronkwaliteit slecht is, vergroot AI vooral de snelheid waarmee verouderde informatie wordt herhaald. Kennisbeheer is daarom onderdeel van de businesscase, niet alleen een technisch voorportaal."
+    ],
+    [
+      "Signaal 4: wachttijd is duurder dan de handeling zelf",
+      "Soms kost een taak maar vijf minuten, terwijl een dossier twee dagen wacht omdat informatie over meerdere systemen en personen verdeeld is. Dan zit de waarde in kortere doorlooptijd en betere overdracht. Maak de wachtrij zichtbaar: aankomst, ontbrekende gegevens, eerste beoordeling, goedkeuring en uitvoering. Een AI-workflow kan classificeren, prioriteren en een compleet pakket voor de volgende rol klaarzetten. Waarde ontstaat alleen als de organisatie ook bevoegdheden, uitzonderingen en responstijden aanpast; een snellere samenvatting boven op dezelfde wachtrij verandert weinig."
+    ],
+    [
+      "De vijf voorwaarden voor een pilotwaardige kans",
+      "Een kans is pilotwaardig wanneer vijf voorwaarden samen aanwezig zijn: voldoende herhaling, relevante economische impact, toegankelijke en rechtmatig bruikbare data, een proceseigenaar met beslisruimte en een uitkomst die binnen enkele weken meetbaar is. Voeg een zesde voorwaarde toe bij hogere foutimpact: een veilige menselijke controle en terugvalroute. Scoor kandidaatprocessen op waarde, frequentie, datakwaliteit, foutimpact, integratiecomplexiteit en veranderbereidheid. Een proces met iets lagere potentiële opbrengst maar duidelijke eigenaar en betrouwbare data is vaak een betere eerste pilot dan het grootste, politiekste probleem in het bedrijf."
+    ],
+    [
+      "Wat je niet als groeikans moet verkopen",
+      "Een generieke interne chatbot, volledig autonome klantcommunicatie of een model dat zonder bronbewijs belangrijke beslissingen neemt, is geen verantwoord startpunt. Vermijd ook businesscases die alleen op geschatte tijdbesparing rusten terwijl niemand capaciteit kan heralloceren. Privacygevoelige data, personeelsbeoordeling, medische informatie, juridische conclusies en financiële beslissingen vragen aanvullende governance en soms specialistische beoordeling. Stop wanneer data niet rechtmatig beschikbaar is, fouten niet tijdig detecteerbaar zijn, de proceseigenaar ontbreekt of de pilot geen eerlijke vergelijking met de huidige werkwijze kan maken."
+    ],
+    [
+      "Van nulmeting naar begrensde pilot",
+      "Leg eerst twee tot vier weken van de huidige prestatie vast: volume, doorlooptijd, herstelwerk, conversie, foutsoorten en medewerkerstijd. Kies daarna één taak en één gebruikersgroep. Test bij voorkeur in schaduwmodus: het systeem doet een voorstel, maar de bestaande werkwijze blijft leidend terwijl verschillen worden beoordeeld. Definieer vooraf succes, bijvoorbeeld snellere complete intake zonder hogere foutgraad, en een stopregel bij onbekende fouten of datalekrisico. Vergelijk niet alleen gemiddelde snelheid, maar ook uitzonderingen, correcties, gebruikersacceptatie, model- en integratiekosten en onderhoud."
+    ],
+    [
+      "Hoe AIOW een MKB-groeikans beoordeelt",
+      "AIOW begint met een AI-systeemscan van proces, data, risico, eigenaar en economische hefboom. De uitkomst kan zijn: geen AI nodig, eerst proces of data herstellen, een betaalde smalle pilot, of een venture-kans die verdere selectie verdient. Een venture-score ordent founder, markt, probleem, AI-hefboom, tractie, bouwbaarheid en dealkwaliteit, maar garandeert geen acceptatie of resultaat. Beschrijf via aiow.ai/intake één concreet proces, huidig volume, grootste verliespost, beschikbare bronnen, foutimpact en wie intern eigenaar is. Dat levert meer bruikbaar bewijs op dan een brede vraag om 'iets met AI' te doen."
+    ]
+  ],
+  "faq": [
+    [
+      "Welk MKB-proces is meestal geschikt om als eerste te onderzoeken?",
+      "Een frequent, tekst- of documentrijk proces met duidelijke invoer, controleerbare uitkomst en merkbare wachttijd of omzetlekkage. Intake, offertevoorbereiding, dossieropbouw en interne kennisvragen zijn vaak onderzoekbaar, maar geschiktheid moet per bedrijf worden gemeten."
+    ],
+    [
+      "Hoe bereken je de waarde van een AI-groeikans?",
+      "Gebruik een nulmeting met volume, doorlooptijd, conversie, fout- en herstelkosten, medewerkerstijd en gemiste omzet. Trek implementatie, modelgebruik, beheer, controle en veranderkosten af. Behandel niet-vrijgemaakte tijd niet automatisch als gerealiseerde besparing."
+    ],
+    [
+      "Moet een bedrijf eerst alle data perfect op orde hebben?",
+      "Nee, maar de bronnen voor de gekozen pilot moeten voldoende betrouwbaar, toegankelijk, actueel en rechtmatig bruikbaar zijn. Een kleine pilot kan datagaten zichtbaar maken; hij mag slechte bronkwaliteit niet verhullen."
+    ],
+    [
+      "Wanneer is menselijke goedkeuring nodig?",
+      "Wanneer fouten klanten, medewerkers, geld, veiligheid, privacy of rechten kunnen raken. Laat AI dan classificeren of een concept voorbereiden en maak een bevoegde medewerker verantwoordelijk voor goedkeuring en uitzonderingen."
+    ],
+    [
+      "Is een AI-systeemscan een garantie op groei?",
+      "Nee. De scan helpt kansen, bewijs, risico en volgorde te beoordelen. Werkelijke waarde moet blijken uit een begrensde pilot en meting tegen de bestaande werkwijze; acceptatie door AIOW en commercieel resultaat zijn niet gegarandeerd."
+    ]
+  ]
 }
 
 ] satisfies AiowKnowledgePage[];
