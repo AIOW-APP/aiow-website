@@ -122,6 +122,37 @@
 
 .field textarea { resize: vertical; }
 
+.honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+  color: var(--cg-ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.consent input {
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--cg-accent);
+}
+
+.consent a {
+  color: var(--cg-accent);
+  text-underline-offset: 3px;
+}
+
 .field input::placeholder,
 .field textarea::placeholder { color: var(--cg-ink-faint); }
 
@@ -236,6 +267,11 @@
 
 .primary:hover { background: var(--cg-accent-strong); }
 
+.primary:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .ghost {
   background: transparent;
   border: 1px solid var(--cg-line-strong);
@@ -251,6 +287,22 @@
   margin: 0;
   font-size: 0.85rem;
   color: var(--cg-ink-soft);
+}
+
+.mailFallback {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--cg-ink-soft);
+  border-left: 2px solid var(--cg-accent);
+  background: color-mix(in oklch, var(--cg-accent) 5%, var(--cg-surface));
+  border-radius: 0 var(--cg-radius-sm) var(--cg-radius-sm) 0;
+}
+
+.mailFallback a {
+  color: var(--cg-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .altContact a {
@@ -322,6 +374,22 @@
   max-width: 42ch;
   color: var(--cg-ink-soft);
 }
+
+.receipt {
+  width: 100%;
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--cg-line);
+  border-radius: var(--cg-radius-md);
+  background: var(--cg-canvas);
+  color: var(--cg-ink-soft);
+  font-family: var(--cg-font-mono);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.receipt strong { color: var(--cg-ink); }
 
 .successActions {
   display: grid;

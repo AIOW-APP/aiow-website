@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import styles from "./AiowVentureScoreFlow.module.css";
@@ -8,16 +8,8 @@ import styles from "./AiowVentureScoreFlow.module.css";
 /**
  * Venture-score aanvraagflow (signature-element, zie DESIGN-DNA.md).
  *
- * Drie rustige stappen, een vraaggroep per stap:
- *  1. idee/bedrijf in 3 zinnen + branche
- *  2. fase (idee / eerste klanten / omzet) + doel (bouwen / groeien)
- *  3. naam, e-mail, KvK optioneel
- *
- * HANDOFF(Handsome): er is nog geen backend-endpoint zichtbaar in deze repo.
- * Submit werkt daarom via een mailto-fallback naar jeroen@aiow.io met een nette
- * body. Zodra er een echt endpoint is: vervang `openMailto()` in handleSubmit
- * door een fetch/POST en houd de succes-staat (score-badge) intact. De mailto
- * blijft dan als "of mail ons direct"-alternatief staan.
+ * Drie rustige stappen, server-side acceptatie met dossierbewijs en een eerlijke
+ * mailfallback wanneer veilige opslag niet beschikbaar is.
  */
 
 const CONTACT_EMAIL = "jeroen@aiow.io";
@@ -44,6 +36,16 @@ type FormState = {
   name: string;
   email: string;
   kvk: string;
+  consentAccepted: boolean;
+  honeyWebsite: string;
+};
+
+type Receipt = {
+  dossierId: string;
+  acceptedAt: string;
+  reviewStatus: "PENDING_HUMAN_REVIEW";
+  replayed: boolean;
+  retentionDays: number;
 };
 
 const EMPTY_FORM: FormState = {
@@ -54,10 +56,12 @@ const EMPTY_FORM: FormState = {
   name: "",
   email: "",
   kvk: "",
+  consentAccepted: false,
+  honeyWebsite: "",
 };
 
-function optionLabel(options: ReadonlyArray<{ value: string; label: string }>, value: string) {
-  return options.find((option) => option.value === value)?.label ?? value;
+function optionLabel(options: readonly { value: string; label: string }[], value: string): string {
+  return options.find((option) => option.value === value)?.label || "Niet gekozen";
 }
 
 function buildMailto(form: FormState) {
@@ -83,11 +87,15 @@ export function AiowVentureScoreFlow() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState("");
-  const [sent, setSent] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const idempotencyKey = useRef(crypto.randomUUID());
 
-  const update = (field: keyof FormState) => (value: string) => {
+  const update = (field: keyof FormState) => (value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
     setError("");
+    setSubmitFailed(false);
   };
 
   const validateStep = (current: number): string => {
@@ -101,7 +109,9 @@ export function AiowVentureScoreFlow() {
     }
     if (current === 3) {
       if (!form.name.trim()) return "Vul je naam in, we beoordelen founders, geen formulieren.";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return "Dat e-mailadres klopt nog niet helemaal, kijk er even naar.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) return "Dat e-mailadres klopt nog niet helemaal, kijk er even naar.";
+      if (form.kvk.trim() && !/^\d{8}$/.test(form.kvk.replace(/\s/g, ""))) return "Een KvK-nummer bestaat uit 8 cijfers.";
+      if (!form.consentAccepted) return "Geef toestemming voor veilige opslag en persoonlijke opvolging om je aanvraag te versturen.";
     }
     return "";
   };
@@ -121,35 +131,70 @@ export function AiowVentureScoreFlow() {
     setStep((current) => Math.max(current - 1, 1));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const message = validateStep(3);
     if (message) {
       setError(message);
       return;
     }
-    // HANDOFF(Handsome): hier komt later de echte POST; nu mailto-fallback.
-    window.location.href = buildMailto(form);
-    setSent(true);
+    setSubmitting(true);
+    setError("");
+    setSubmitFailed(false);
+    try {
+      const response = await fetch("/api/venture-score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey.current,
+        },
+        body: JSON.stringify({
+          idea: form.idea,
+          industry: form.industry,
+          stage: form.stage,
+          goal: form.goal,
+          name: form.name,
+          email: form.email,
+          kvk: form.kvk,
+          consentAccepted: form.consentAccepted,
+          consentVersion: "aiow-venture-intake-v1",
+          honeyWebsite: form.honeyWebsite,
+          sourceRoute: "/nl/venture-score-aanvragen",
+          sourceComponent: "venture-score-flow-v1",
+        }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { receipt?: Receipt; error?: string };
+      if (!response.ok || !result.receipt) {
+        throw new Error(result.error || "Je aanvraag kon niet veilig worden opgeslagen.");
+      }
+      setReceipt(result.receipt);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Je aanvraag kon niet veilig worden opgeslagen. Probeer opnieuw of mail ons direct.");
+      setSubmitFailed(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (sent) {
+  if (receipt) {
     return (
       <section className={styles.success} aria-live="polite">
         <div className={styles.badge} aria-hidden="true">
           <i />
           <strong>VS</strong>
         </div>
-        <p className={styles.eyebrow}>Venture-score</p>
-        <h2>Je idee is voorgelegd.</h2>
+        <p className={styles.eyebrow}>Ontvangst bevestigd</p>
+        <h2>Je aanvraag staat in de reviewrij.</h2>
         <p className={styles.successLead}>
-          Je mailapp staat klaar met je aanvraag voor {CONTACT_EMAIL}. Verstuur die mail en je weet
-          binnen 48 uur of je idee venture-waardig is. We zeggen vaker nee dan ja, maar altijd
-          eerlijk en met een concrete tip.
+          AIOW beoordeelt je idee menselijk. Dit ontvangstbewijs is geen aanbod, contract of toezegging.
+          We laten binnen 48 uur weten of en welke vervolgstap passend is.
+        </p>
+        <p className={styles.receipt}>
+          Dossier <strong>{receipt.dossierId}</strong><br />
+          Ontvangen op {new Date(receipt.acceptedAt).toLocaleString("nl-NL", { dateStyle: "long", timeStyle: "short" })}
         </p>
         <div className={styles.successActions}>
-          <a className={styles.primary} href={buildMailto(form)}>Mailapp niet geopend? Probeer opnieuw</a>
-          <a className={styles.ghost} href={`mailto:${CONTACT_EMAIL}`}>Of mail ons direct: {CONTACT_EMAIL}</a>
+          <a className={styles.ghost} href={`mailto:${CONTACT_EMAIL}`}>Aanvullende informatie mailen: {CONTACT_EMAIL}</a>
         </div>
         <Link className={styles.back} href="/">Terug naar aiow.ai</Link>
       </section>
@@ -273,10 +318,37 @@ export function AiowVentureScoreFlow() {
               inputMode="numeric"
             />
           </label>
+          <label className={styles.honeypot} aria-hidden="true">
+            <span>Website</span>
+            <input
+              type="text"
+              name="website"
+              value={form.honeyWebsite}
+              onChange={(event) => update("honeyWebsite")(event.target.value)}
+              autoComplete="off"
+              tabIndex={-1}
+            />
+          </label>
+          <label className={styles.consent}>
+            <input
+              type="checkbox"
+              checked={form.consentAccepted}
+              onChange={(event) => update("consentAccepted")(event.target.checked)}
+            />
+            <span>
+              AIOW mag mijn gegevens en intake 30 dagen veilig bewaren voor menselijke beoordeling en persoonlijke opvolging. Ik kan mijn toestemming intrekken via {CONTACT_EMAIL}. Lees het <Link href="/nl/privacy">privacybeleid</Link>.
+            </span>
+          </label>
         </fieldset>
       )}
 
       {error && <p className={styles.error} role="alert">{error}</p>}
+      {submitFailed && (
+        <p className={styles.mailFallback}>
+          Je invoer staat nog in het formulier. Lukt versturen niet?{" "}
+          <a href={buildMailto(form)}>Mail je aanvraag direct (vooringevuld) naar {CONTACT_EMAIL}</a>
+        </p>
+      )}
 
       <div className={styles.actions}>
         {step > 1 ? (
@@ -287,7 +359,9 @@ export function AiowVentureScoreFlow() {
         {step < TOTAL_STEPS ? (
           <button type="button" className={styles.primary} onClick={goNext}>Volgende</button>
         ) : (
-          <button type="submit" className={styles.primary}>Vraag je venture-score aan</button>
+          <button type="submit" className={styles.primary} disabled={submitting}>
+            {submitting ? "Veilig versturen..." : "Vraag je venture-score aan"}
+          </button>
         )}
       </div>
 

@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "audit": "lighthouse http://localhost:3000 --only-categories=performance,accessibility,best-practices,seo",
     "guard:grok-video": "python3 scripts/grok_video_provider_guard.py",
+    "test:venture-intake": "node scripts/test-venture-intake-http.mjs && node scripts/test-venture-intake-fail-closed.mjs",
     "voice:gpt": "node scripts/generate-gpt-voice-briefing.mjs"
   },
   "dependencies": {

@@ -1,312 +1,249 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { analyzeAiowCustomer, type AiowCustomerAnalysisInput } from "@/lib/aiow-customer-analysis";
-import { aiowDurableStoreMode, supabaseInsert } from "@/lib/aiow-durable-store";
-import { buildVentureDealCard, captureVentureMemoryEvent, normalizeEmail } from "@/lib/aiow-venture-memory";
+import {
+  acceptVentureIntake,
+  hashVentureIntakeKey,
+  isValidIdempotencyKey,
+  isValidVentureEmail,
+  requireVentureIntakeHashSecret,
+  VentureIntakeConfigurationError,
+  VENTURE_INTAKE_RATE_LIMIT,
+  ventureIntakeStoreMode,
+  type VentureIntakeDossier,
+} from "@/lib/aiow-venture-intake-store";
 
-type VentureScorePayload = Partial<Record<keyof AiowCustomerAnalysisInput, unknown>> & {
-  sessionId?: unknown;
+export const runtime = "nodejs";
+
+const MAX_BODY_BYTES = 32 * 1024;
+const RETENTION_DAYS = 30;
+const CONSENT_VERSION = "aiow-venture-intake-v1";
+const ALLOWED_STAGES = new Set(["idee", "eerste-klanten", "omzet"]);
+const ALLOWED_GOALS = new Set(["bouwen", "groeien"]);
+
+type VentureScorePayload = {
+  idea?: unknown;
+  ideaSummary?: unknown;
+  industry?: unknown;
+  stage?: unknown;
+  goal?: unknown;
   name?: unknown;
   email?: unknown;
-  companyName?: unknown;
+  kvk?: unknown;
   company?: unknown;
+  companyName?: unknown;
   phone?: unknown;
-  message?: unknown;
-  transcript?: unknown;
   consentAccepted?: unknown;
-  source?: unknown;
+  consentVersion?: unknown;
   sourceRoute?: unknown;
   sourceComponent?: unknown;
-  testMode?: unknown;
   honeyWebsite?: unknown;
 };
 
-type TextAnalysisField = Exclude<keyof AiowCustomerAnalysisInput, "externalSources">;
-
-const RATE_LIMIT = { windowMs: 60 * 60 * 1000, maxAttempts: 12 };
-const buckets = new Map<string, { count: number; resetAt: number }>();
-
-const TEXT_FIELDS: TextAnalysisField[] = [
-  "industry",
-  "ideaSummary",
-  "founderExperience",
-  "industryContacts",
-  "existingAudience",
-  "proofOfDemand",
-  "customerSegments",
-  "acquisitionChannels",
-  "coreOffer",
-  "currentMonthlyRevenue",
-  "targetMonthlyRevenue",
-  "averageOrderValue",
-  "monthlyCustomerVolume",
-  "keyProcesses",
-  "systemsStack",
-  "dataSources",
-  "painPoints",
-  "successMetrics",
-  "competitorNotes",
-  "resalePotential",
-  "moduleRevenueNotes",
-  "executionCapacity",
-  "budgetRange",
-  "risks",
-  "aiowBuildScope",
-];
-
 export async function POST(req: Request) {
   try {
-    const rateLimit = checkRateLimit(rateLimitKey(req));
-    if (!rateLimit.ok) {
-      return NextResponse.json({ error: "Too many venture scoring attempts", retryAfterSeconds: rateLimit.retryAfterSeconds }, { status: 429 });
+    if (ventureIntakeStoreMode() === "unavailable") return serviceUnavailable();
+    const secret = requireVentureIntakeHashSecret();
+    const idempotencyKey = req.headers.get("idempotency-key")?.trim() || "";
+    if (!isValidIdempotencyKey(idempotencyKey)) {
+      return apiError("Ongeldige of ontbrekende aanvraag-ID. Vernieuw de pagina en probeer opnieuw.", 400, "INVALID_REQUEST_ID");
     }
 
-    const payload = (await req.json()) as VentureScorePayload;
-    if (asText(payload.honeyWebsite)) return NextResponse.json({ error: "Rejected" }, { status: 400 });
-
-    const input = normalizeAnalysisInput(payload);
-    const combinedText = [input.ideaSummary, input.coreOffer, input.painPoints, input.aiowBuildScope, asText(payload.message), asText(payload.transcript)]
-      .filter(Boolean)
-      .join("\n");
-    if (combinedText.trim().length < 24) {
-      return NextResponse.json({ error: "Insufficient venture context", missing: ["ideaSummary or message with concrete context"] }, { status: 400 });
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+      return apiError("De aanvraag is te groot.", 413, "PAYLOAD_TOO_LARGE");
+    }
+    const rawBody = await req.text();
+    if (Buffer.byteLength(rawBody, "utf8") > MAX_BODY_BYTES) {
+      return apiError("De aanvraag is te groot.", 413, "PAYLOAD_TOO_LARGE");
     }
 
-    const email = normalizeEmail(asText(payload.email));
-    const personName = clamp(asText(payload.name), 140);
-    const company = clamp(asText(payload.companyName) || asText(payload.company), 160);
-    const consentAccepted = payload.consentAccepted === true;
-    const sessionId = clamp(asText(payload.sessionId), 160) || buildSessionId(email, company, combinedText);
+    let payload: VentureScorePayload;
+    try {
+      payload = JSON.parse(rawBody) as VentureScorePayload;
+    } catch {
+      return apiError("De aanvraag kon niet worden gelezen.", 400, "INVALID_JSON");
+    }
+    if (asText(payload.honeyWebsite)) return apiError("Aanvraag geweigerd.", 400, "BOT_REJECTED");
+
+    const validation = validatePayload(payload);
+    if (!validation.ok) return apiError(validation.message, 400, validation.code);
+
+    const input = buildAnalysisInput(validation.value);
     const analysis = analyzeAiowCustomer(input);
     const review = buildReviewGate(analysis.ventureFitScore);
-    const now = new Date().toISOString();
-    const dossier = {
-      dossierId: `aiow_avs_${createHash("sha256").update(`${sessionId}|${now}`).digest("hex").slice(0, 16)}`,
-      createdAt: now,
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + RETENTION_DAYS * 86_400_000);
+    const dossierId = `aiow_avs_${randomUUID()}`;
+    const sessionId = `aiow_avs_session_${createHash("sha256")
+      .update(`${dossierId}|${validation.value.email}`)
+      .digest("hex")
+      .slice(0, 18)}`;
+
+    const dossier: VentureIntakeDossier = {
+      dossierId,
+      createdAt: createdAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
       sessionId,
-      source: clamp(asText(payload.source), 120) || "aiow.ai",
-      sourceRoute: clamp(asText(payload.sourceRoute), 180) || "/api/venture-score",
-      sourceComponent: clamp(asText(payload.sourceComponent), 120) || "avs-v1",
+      source: "aiow.ai",
+      sourceRoute: validation.value.sourceRoute,
+      sourceComponent: validation.value.sourceComponent,
       contact: {
-        name: personName,
-        email,
-        company,
-        phone: clamp(asText(payload.phone), 80),
-        consentAccepted,
+        name: validation.value.name,
+        email: validation.value.email,
+        company: validation.value.company,
+        phone: validation.value.phone,
+        consentAccepted: true,
+        consentVersion: CONSENT_VERSION,
       },
       input,
-      analysis,
+      analysis: analysis as unknown as Record<string, unknown>,
       review,
-      gates: {
-        contractAutonomy: false,
-        contractGate: "Richard/Jeroen approval plus lawyer-safe template before any contract is sent.",
-        telegramGroupAutonomy: false,
-        telegramGroupGate: "@TeamAIOW_bot can join groups but cannot create groups. Create group manually or add MTProto userbot later.",
-        emailAutonomy: Boolean(process.env.RESEND_API_KEY),
-        emailGate: process.env.RESEND_API_KEY ? "Resend key present in runtime." : "RESEND_API_KEY missing in runtime, store dossier only.",
-      },
-      stakeholders: {
-        richardTelegramId: "521713358",
-        jeroenTelegramHandle: "@TheRambler_eth",
-        spunkyBot: "@TeamAIOW_bot",
+      metadata: {
+        industry: validation.value.industry,
+        stage: validation.value.stage,
+        goal: validation.value.goal,
+        kvk: validation.value.kvk,
+        retentionDays: RETENTION_DAYS,
+        automatedCommercialDecision: false,
       },
     };
 
-    await captureVentureMemoryEvent({
-      sessionId,
-      role: "user",
-      type: "message",
-      content: combinedText,
-      personEmail: email,
-      personName,
-      company,
-      consentAccepted,
-      canvas: {
-        project: input.ideaSummary || input.coreOffer || "AIOW venture intake",
-        founder: personName,
-        problem: input.painPoints || input.proofOfDemand || "Nog te scherpen",
-        solution: input.aiowBuildScope || input.coreOffer || "Nog te scherpen",
-        businessModel: input.moduleRevenueNotes || input.resalePotential || "Nog te bepalen",
-        audience: input.customerSegments || "Nog te scherpen",
-        aiOpportunities: input.aiowBuildScope || "Nog te scherpen",
-        risk: input.risks || "Nog te beoordelen",
-        confidence: analysis.ventureFitScore,
-        marketScore: Math.round(analysis.scorecard.marketScore / 10),
-        riskScore: Math.max(0, 10 - Math.round(analysis.requiredCustomerProof.length)),
-        aiScore: Math.round(analysis.scorecard.aiOpportunityScore / 10),
-        automationScore: Math.round(analysis.scorecard.executionScore / 10),
-      },
-      metadata: { source: "avs-v1-input", dossierId: dossier.dossierId, reviewGate: review.state },
-    });
-
-    await captureVentureMemoryEvent({
-      sessionId,
-      role: "system",
-      type: "deal_card",
-      content: JSON.stringify(dossier),
-      personEmail: email,
-      personName,
-      company,
-      consentAccepted,
-      metadata: { source: "avs-v1-dossier", dossierId: dossier.dossierId, ventureFitScore: analysis.ventureFitScore },
-    });
-
-    const dealCard = await buildVentureDealCard(sessionId, {
-      project: input.ideaSummary || input.coreOffer || "AIOW venture intake",
-      founder: personName,
-      confidence: analysis.ventureFitScore,
-      marketScore: Math.round(analysis.scorecard.marketScore / 10),
-      aiScore: Math.round(analysis.scorecard.aiOpportunityScore / 10),
-      automationScore: Math.round(analysis.scorecard.executionScore / 10),
-      problem: input.painPoints || "Nog te scherpen",
-      solution: input.aiowBuildScope || input.coreOffer || "Nog te scherpen",
-      audience: input.customerSegments || "Nog te scherpen",
-      aiOpportunities: input.aiowBuildScope || "Nog te scherpen",
-      risk: input.risks || analysis.gaps.slice(0, 3).join(", "),
-      businessModel: input.moduleRevenueNotes || input.resalePotential || "Nog te bepalen",
-    });
-
-    const adminEvent = await recordAdminEvent(dossier);
-
-    return NextResponse.json({
-      ok: true,
-      source: "avs-v1",
-      storageMode: aiowDurableStoreMode(),
+    const accepted = await acceptVentureIntake({
+      requestKeyHash: hashVentureIntakeKey("request", idempotencyKey, secret),
+      rateKeyHash: hashVentureIntakeKey("rate", rateLimitIdentity(req), secret),
       dossier,
-      dealCard,
-      adminEvent,
-      richardReviewRequired: review.richardReviewRequired,
-      richardPingTask: review.richardReviewRequired
-        ? buildRichardPingTask(dossier)
-        : null,
-      message: review.message,
     });
-  } catch (error) {
-    console.error("[venture-score] POST error", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
-  }
-}
 
-function normalizeAnalysisInput(payload: VentureScorePayload): AiowCustomerAnalysisInput {
-  const input: AiowCustomerAnalysisInput = {};
-  for (const field of TEXT_FIELDS) {
-    const value = clamp(asText(payload[field]), maxLength(field));
-    if (value) input[field] = value;
-  }
-  if (Array.isArray(payload.externalSources)) input.externalSources = payload.externalSources as AiowCustomerAnalysisInput["externalSources"];
-  if (!input.ideaSummary && asText(payload.message)) input.ideaSummary = clamp(asText(payload.message), 1600);
-  if (!input.coreOffer && asText(payload.companyName)) input.coreOffer = `${asText(payload.companyName)} venture / growth case`;
-  return input;
-}
-
-function buildReviewGate(score: number) {
-  if (score >= 82) {
-    return {
-      state: "STRATEGIC_GO_REVIEW",
-      richardReviewRequired: true,
-      message: "Sterke AIOW-case. Richard/Jeroen review verplicht vóór contract, percentage of projectgroep.",
-      nextAction: "Maak voorstelconcept en bewijscheck klaar voor Richard/Jeroen.",
-    };
-  }
-  if (score >= 70) {
-    return {
-      state: "GO_REVIEW",
-      richardReviewRequired: true,
-      message: "Interessante AIOW-case. Richard review verplicht vóór contract of projectgroep.",
-      nextAction: "Vraag ontbrekend bewijs en zet reviewkaart klaar.",
-    };
-  }
-  if (score >= 48) {
-    return {
-      state: "CONDITIONAL_REVIEW",
-      richardReviewRequired: false,
-      message: "Potentie, maar nog niet contractwaardig. Eerst bewijs/scope aanscherpen.",
-      nextAction: "Laat Spunky gerichte vervolgvragen stellen.",
-    };
-  }
-  return {
-    state: "NO_GO_OR_REWORK",
-    richardReviewRequired: false,
-    message: "Nog niet sterk genoeg voor AIOW venture-route. Eerst propositie, bewijs en doelgroep aanscherpen.",
-    nextAction: "Geen contract, geen projectgroep. Alleen heropenen met beter bewijs.",
-  };
-}
-
-async function recordAdminEvent(dossier: any) {
-  const payload = {
-    event_type: dossier.review.richardReviewRequired ? "avs_richard_review_requested" : "avs_dossier_created",
-    subject_type: "venture_session",
-    subject_id: dossier.sessionId,
-    event_payload: {
-      dossierId: dossier.dossierId,
-      company: dossier.contact.company,
-      email: dossier.contact.email,
-      ventureFitScore: dossier.analysis.ventureFitScore,
-      verdict: dossier.analysis.verdict,
-      reviewState: dossier.review.state,
-      revenueShare: dossier.analysis.recommendedRevenueSharePercent,
-      resaleShare: dossier.analysis.recommendedResaleSharePercent,
-      scoringPipelineEvents: dossier.analysis.scoringPipelineEvents,
-      requiredProof: dossier.analysis.requiredCustomerProof,
-      gates: dossier.gates,
-      stakeholders: dossier.stakeholders,
-    },
-    created_at: dossier.createdAt,
-  };
-
-  if (aiowDurableStoreMode() === "supabase") {
-    try {
-      await supabaseInsert("aiow_admin_events", payload);
-      return { stored: true, storage: "supabase:aiow_admin_events", eventType: payload.event_type };
-    } catch (error) {
-      console.warn("[venture-score] Supabase admin event failed", error);
+    if (accepted.rateLimited) {
+      const retryAfterSeconds = accepted.retryAfterSeconds || VENTURE_INTAKE_RATE_LIMIT.windowSeconds;
+      return NextResponse.json(
+        { ok: false, code: "RATE_LIMITED", error: "Te veel aanvragen vanaf deze verbinding. Probeer het later opnieuw.", retryAfterSeconds },
+        { status: 429, headers: { "Retry-After": String(retryAfterSeconds), "Cache-Control": "no-store" } },
+      );
     }
+    if (!accepted.accepted || !accepted.dossierId || !accepted.createdAt) throw new Error("Intake was not durably accepted");
+
+    return NextResponse.json(
+      {
+        ok: true,
+        receipt: {
+          dossierId: accepted.dossierId,
+          acceptedAt: accepted.createdAt,
+          reviewStatus: "PENDING_HUMAN_REVIEW",
+          replayed: accepted.replayed,
+          retentionDays: RETENTION_DAYS,
+        },
+        message: "Je aanvraag staat veilig in de reviewrij. AIOW beoordeelt hem menselijk; dit is nog geen commerciële toezegging.",
+      },
+      { status: accepted.replayed ? 200 : 201, headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    if (error instanceof VentureIntakeConfigurationError) return serviceUnavailable();
+    console.error("[venture-score] intake failed", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      storageMode: ventureIntakeStoreMode(),
+    });
+    return apiError("Je aanvraag kon niet veilig worden opgeslagen. Je invoer staat nog in het formulier; probeer opnieuw of mail ons direct.", 503, "INTAKE_UNAVAILABLE");
+  }
+}
+
+type ValidatedPayload = {
+  idea: string;
+  industry: string;
+  stage: string;
+  goal: string;
+  name: string;
+  email: string;
+  kvk: string;
+  company: string;
+  phone: string;
+  sourceRoute: string;
+  sourceComponent: string;
+};
+
+function validatePayload(payload: VentureScorePayload): { ok: true; value: ValidatedPayload } | { ok: false; code: string; message: string } {
+  const idea = clamp(asText(payload.idea) || asText(payload.ideaSummary), 1600);
+  const industry = clamp(asText(payload.industry), 160);
+  const stage = asText(payload.stage);
+  const goal = asText(payload.goal);
+  const name = clamp(asText(payload.name), 140);
+  const email = asText(payload.email).toLowerCase();
+  const kvk = asText(payload.kvk).replace(/\s/g, "");
+  const company = clamp(asText(payload.companyName) || asText(payload.company), 160);
+  const phone = clamp(asText(payload.phone), 80);
+  const consentVersion = asText(payload.consentVersion);
+
+  if (idea.length < 24) return invalid("INSUFFICIENT_CONTEXT", "Beschrijf je idee of bedrijf iets concreter.");
+  if (!industry) return invalid("INVALID_INDUSTRY", "Vul je branche in.");
+  if (!ALLOWED_STAGES.has(stage)) return invalid("INVALID_STAGE", "Kies waar je nu staat.");
+  if (!ALLOWED_GOALS.has(goal)) return invalid("INVALID_GOAL", "Kies of je wilt bouwen of groeien.");
+  if (name.length < 2) return invalid("INVALID_NAME", "Vul je naam in.");
+  if (!isValidVentureEmail(email)) return invalid("INVALID_EMAIL", "Vul een geldig e-mailadres in.");
+  if (kvk && !/^\d{8}$/.test(kvk)) return invalid("INVALID_KVK", "Een KvK-nummer bestaat uit 8 cijfers.");
+  if (payload.consentAccepted !== true || consentVersion !== CONSENT_VERSION) {
+    return invalid("CONSENT_REQUIRED", "Geef toestemming voor opslag en persoonlijke opvolging om de aanvraag te versturen.");
   }
 
-  await captureVentureMemoryEvent({
-    sessionId: dossier.sessionId,
-    role: "system",
-    type: "decision",
-    content: JSON.stringify(payload),
-    personEmail: dossier.contact.email,
-    personName: dossier.contact.name,
-    company: dossier.contact.company,
-    consentAccepted: dossier.contact.consentAccepted,
-    metadata: { source: "avs-v1-admin-event", eventType: payload.event_type },
-  });
-  return { stored: true, storage: "venture-memory:decision-event", eventType: payload.event_type };
+  return {
+    ok: true,
+    value: {
+      idea,
+      industry,
+      stage,
+      goal,
+      name,
+      email,
+      kvk,
+      company,
+      phone,
+      sourceRoute: clamp(asText(payload.sourceRoute), 180) || "/nl/venture-score-aanvragen",
+      sourceComponent: clamp(asText(payload.sourceComponent), 120) || "venture-score-flow-v1",
+    },
+  };
 }
 
-function buildRichardPingTask(dossier: any): string {
-  return [
-    `AIOW AVS review nodig: ${dossier.contact.company || dossier.contact.name || dossier.sessionId}`,
-    `Score: ${dossier.analysis.ventureFitScore}/100 (${dossier.analysis.verdict})`,
-    `Advies: ${dossier.analysis.recommendedRevenueSharePercent}% omzetdeel + ${dossier.analysis.recommendedResaleSharePercent}% resale/exit minimum`,
-    `Sterktes: ${dossier.analysis.strengths.slice(0, 4).join(", ") || "n.t.b."}`,
-    `Missing proof: ${dossier.analysis.requiredCustomerProof.slice(0, 4).join("; ")}`,
-    `Gate: geen contract/groep zonder Richard/Jeroen approval. Jeroen: @TheRambler_eth. Spunky: @TeamAIOW_bot.`,
-  ].join("\n");
+function buildAnalysisInput(value: ValidatedPayload): AiowCustomerAnalysisInput {
+  return {
+    industry: value.industry,
+    ideaSummary: value.idea,
+    founderExperience: `Aanvrager: ${value.name}. Fase: ${value.stage}.`,
+    coreOffer: value.idea,
+    customerSegments: value.industry,
+    proofOfDemand: value.stage === "omzet" ? "Aanvrager rapporteert bestaande omzet; bewijs vereist menselijke verificatie." : value.stage === "eerste-klanten" ? "Aanvrager rapporteert eerste klanten; bewijs vereist menselijke verificatie." : "Ideefase; vraagbewijs nog nodig.",
+    executionCapacity: `Doel van samenwerking: ${value.goal}.`,
+    aiowBuildScope: value.goal === "bouwen" ? "Product, AI of software samen bouwen." : "Groei, funnel en schaal samen verbeteren.",
+    risks: "Publieke intake; alle claims, cijfers en tractie vereisen menselijke verificatie.",
+  };
 }
 
-function buildSessionId(email: string, company: string, text: string): string {
-  return `aiow_avs_session_${createHash("sha256").update(`${email}|${company}|${text.slice(0, 400)}`).digest("hex").slice(0, 18)}`;
+function buildReviewGate(score: number): VentureIntakeDossier["review"] {
+  const state = score >= 82 ? "STRATEGIC_GO_REVIEW" : score >= 70 ? "GO_REVIEW" : score >= 48 ? "CONDITIONAL_REVIEW" : "NO_GO_OR_REWORK";
+  return {
+    state,
+    humanReviewRequired: true,
+    message: "AIOW beoordeelt deze intake menselijk. De score is intern advies en geen aanbod, contract of toezegging.",
+    nextAction: "Controleer identiteit, vraagbewijs, scope en privacygrenzen voordat contact of een voorstel volgt.",
+  };
 }
 
-function checkRateLimit(key: string): { ok: true } | { ok: false; retryAfterSeconds: number } {
-  const now = Date.now();
-  const current = buckets.get(key);
-  if (!current || current.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + RATE_LIMIT.windowMs });
-    return { ok: true };
-  }
-  if (current.count >= RATE_LIMIT.maxAttempts) return { ok: false, retryAfterSeconds: Math.ceil((current.resetAt - now) / 1000) };
-  current.count += 1;
-  return { ok: true };
+function rateLimitIdentity(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const address = forwarded || req.headers.get("x-real-ip")?.trim() || "unknown";
+  const userAgent = (req.headers.get("user-agent") || "unknown").slice(0, 200);
+  return `${address}\n${userAgent}`;
 }
 
-function rateLimitKey(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwardedFor || req.headers.get("x-real-ip") || "local";
+function invalid(code: string, message: string) {
+  return { ok: false as const, code, message };
+}
+
+function apiError(message: string, status: number, code: string) {
+  return NextResponse.json({ ok: false, code, error: message }, { status, headers: { "Cache-Control": "no-store" } });
+}
+
+function serviceUnavailable() {
+  return apiError("De beveiligde aanvraagservice is tijdelijk niet beschikbaar. Je invoer blijft in het formulier; probeer opnieuw of mail ons direct.", 503, "INTAKE_UNAVAILABLE");
 }
 
 function asText(value: unknown): string {
@@ -315,10 +252,4 @@ function asText(value: unknown): string {
 
 function clamp(value: string, max: number): string {
   return value.length > max ? value.slice(0, max) : value;
-}
-
-function maxLength(field: TextAnalysisField): number {
-  if (["ideaSummary", "founderExperience", "industryContacts", "proofOfDemand", "keyProcesses", "systemsStack", "dataSources", "painPoints", "risks", "aiowBuildScope"].includes(field)) return 1600;
-  if (["customerSegments", "acquisitionChannels", "coreOffer", "successMetrics", "competitorNotes", "resalePotential", "moduleRevenueNotes", "executionCapacity"].includes(field)) return 1200;
-  return 240;
 }

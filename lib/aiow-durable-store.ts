@@ -74,3 +74,24 @@ export async function supabaseUpdate<T extends Record<string, unknown>>(table: s
   }
   return (await response.json()) as T[];
 }
+
+export async function supabaseRpc<T>(functionName: string, parameters: Record<string, unknown>): Promise<T | null> {
+  const config = getAiowSupabaseConfig();
+  if (!config) return null;
+  const response = await fetch(`${config.url}/rest/v1/rpc/${encodeURIComponent(functionName)}`, {
+    method: "POST",
+    headers: {
+      apikey: config.key,
+      authorization: `Bearer ${config.key}`,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify(parameters),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    await response.text();
+    throw new Error(`Supabase RPC failed for ${functionName}: ${response.status}`);
+  }
+  return (await response.json()) as T;
+}
