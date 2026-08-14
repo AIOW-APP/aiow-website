@@ -101,6 +101,7 @@ export function AiowVentureScoreFlow() {
   const validateStep = (current: number): string => {
     if (current === 1) {
       if (form.idea.trim().length < 20) return "Beschrijf je idee of bedrijf in ongeveer 3 zinnen, dan kan Spunky er echt iets van vinden.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) return "Dat e-mailadres klopt nog niet helemaal, kijk er even naar.";
       if (!form.industry.trim()) return "Vul je branche in, een woord is genoeg.";
     }
     if (current === 2) {
@@ -109,7 +110,6 @@ export function AiowVentureScoreFlow() {
     }
     if (current === 3) {
       if (!form.name.trim()) return "Vul je naam in, we beoordelen founders, geen formulieren.";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) return "Dat e-mailadres klopt nog niet helemaal, kijk er even naar.";
       if (form.kvk.trim() && !/^\d{8}$/.test(form.kvk.replace(/\s/g, ""))) return "Een KvK-nummer bestaat uit 8 cijfers.";
       if (!form.consentAccepted) return "Geef toestemming voor veilige opslag en persoonlijke opvolging om je aanvraag te versturen.";
     }
@@ -133,10 +133,13 @@ export function AiowVentureScoreFlow() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const message = validateStep(3);
-    if (message) {
-      setError(message);
-      return;
+    for (let current = 1; current <= TOTAL_STEPS; current += 1) {
+      const message = validateStep(current);
+      if (message) {
+        setStep(current);
+        setError(message);
+        return;
+      }
     }
     setSubmitting(true);
     setError("");
@@ -229,6 +232,20 @@ export function AiowVentureScoreFlow() {
               autoComplete="off"
             />
           </label>
+          {/* E-mail al in stap 1 (PRIORITIES.md #2): een afhaker na stap 1 is
+              daarmee geen anonieme verdwijning meer zodra opvolging bestaat. */}
+          <label className={styles.field}>
+            <span>Je e-mailadres <em>(hier ontvang je binnen 48 uur je uitslag)</em></span>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={(event) => update("email")(event.target.value)}
+              placeholder="naam@bedrijf.nl"
+              autoComplete="email"
+              inputMode="email"
+            />
+          </label>
           <label className={styles.field}>
             <span>In welke branche zit je?</span>
             <input
@@ -292,18 +309,6 @@ export function AiowVentureScoreFlow() {
               onChange={(event) => update("name")(event.target.value)}
               placeholder="Voor- en achternaam"
               autoComplete="name"
-            />
-          </label>
-          <label className={styles.field}>
-            <span>Je e-mailadres</span>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={(event) => update("email")(event.target.value)}
-              placeholder="naam@bedrijf.nl"
-              autoComplete="email"
-              inputMode="email"
             />
           </label>
           <label className={styles.field}>

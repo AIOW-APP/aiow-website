@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Route-hygiëne conversiepad (PRIORITIES.md #2): de raadbare CTA-URL's mogen
+  // nooit een 404 zijn; alles wijst naar de ene echte aanvraagroute.
+  async redirects() {
+    return [
+      { source: "/venture-score", destination: "/nl/venture-score-aanvragen", permanent: true },
+      { source: "/venturescore", destination: "/nl/venture-score-aanvragen", permanent: true },
+      { source: "/venture-score-aanvragen", destination: "/nl/venture-score-aanvragen", permanent: true },
+      { source: "/nl/venture-score", destination: "/nl/venture-score-aanvragen", permanent: true },
+    ];
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },

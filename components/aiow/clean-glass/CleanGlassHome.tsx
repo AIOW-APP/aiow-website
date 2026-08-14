@@ -84,6 +84,38 @@ const modelStats = [
   { value: "3 stappen", label: "intake, twee minuten werk" },
 ];
 
+/**
+ * Drie herocases (NORTHSTAR.md, "Cases / proof"), tekst-eerst tot de video's er zijn.
+ * `metric` is per case het ene echte, door de klant geaccordeerde cijfer; dat levert
+ * Jeroen aan. Tot die tijd blijft het `null` en toont de kaart een in-aanbouw-badge —
+ * geen verzonnen cijfers (DESIGN-DNA: niets ervan is theater).
+ */
+const heroCases: {
+  title: string;
+  sub: string;
+  line: string;
+  metric: string | null;
+}[] = [
+  {
+    title: "Bruns / Deco AI",
+    sub: "Managed agents op een echte werkvloer",
+    line: "AI die dagelijks in een echt bedrijf draait, met AIOW erbij.",
+    metric: null, // CASE_METRIC: [wachten op Jeroen] — bijv. "12 uur per week terug"
+  },
+  {
+    title: "Speeddryer",
+    sub: "Van idee naar werkend product",
+    line: "Het bouw-bewijs: wat wij beloven, hebben we hier gebouwd.",
+    metric: null, // CASE_METRIC: [wachten op Jeroen] — bijv. "van idee naar product in N maanden"
+  },
+  {
+    title: "DecoStone",
+    sub: "Funnel, offertes en vindbaarheid voor een echt MKB-bedrijf",
+    line: "Het groei-bewijs: de digitale groeilaag die het werk uit handen neemt.",
+    metric: null, // CASE_METRIC: [wachten op Jeroen] — bijv. "N% meer offerte-aanvragen"
+  },
+];
+
 const caseCards = [
   {
     title: "Cargo Donkey",
@@ -191,6 +223,20 @@ export function CleanGlassHome() {
       <section className={styles.chapter} aria-labelledby="chapter-bewijs">
         <p className="cg-micro" data-reveal>Tussen de wegingen · het bewijs</p>
         <h2 id="chapter-bewijs" data-reveal="wipe">Wie hier weegt, bouwt zelf mee. Elke dag.</h2>
+        <div className={styles.cardRow} data-three>
+          {heroCases.map((card, index) => (
+            <article className={styles.card} key={card.title} data-reveal style={revealOrder(index)}>
+              <h3>{card.title}</h3>
+              <p className={styles.cardSub}>{card.sub}</p>
+              {card.metric ? (
+                <p className={`${styles.cardStats} cg-micro`}>{card.metric}</p>
+              ) : (
+                <p className={`${styles.caseBadge} cg-micro`}>In aanbouw · het cijfer volgt</p>
+              )}
+              <p className={styles.cardLine}>{card.line}</p>
+            </article>
+          ))}
+        </div>
         <div className={styles.cardRow} data-two>
           {caseCards.map((card, index) => (
             <article className={styles.card} key={card.title} data-reveal style={revealOrder(index)}>

@@ -223,6 +223,11 @@
   margin-top: 44px;
 }
 
+/* Herocases-rij en tweede rij horen bij elkaar: kleinere onderlinge afstand */
+.cardRow + .cardRow {
+  margin-top: 16px;
+}
+
 .card {
   background: var(--cg-surface);
   border: 1px solid var(--cg-line);
@@ -264,6 +269,16 @@
 .cardStats {
   margin: 18px 0 0;
   color: var(--cg-ink-soft);
+}
+
+/* Herocase zonder geaccordeerd cijfer: eerlijke in-aanbouw-badge op de statregel */
+.caseBadge {
+  display: inline-block;
+  margin: 18px 0 0;
+  padding: 4px 12px;
+  border: 1px solid var(--cg-line);
+  border-radius: 999px;
+  color: var(--cg-ink-faint);
 }
 
 .cardLine {
@@ -576,6 +591,7 @@
   .scrollHint { grid-column: 1 / -1; }
 
   .cardRow { grid-template-columns: repeat(2, 1fr); }
+  .cardRow[data-three] { grid-template-columns: repeat(3, 1fr); }
   .stats { grid-template-columns: repeat(3, 1fr); gap: 24px; }
 }
 
