@@ -1,0 +1,587 @@
+.page {
+  font-family: var(--kr-font);
+  background: var(--kr-white);
+  color: var(--kr-midnight);
+  font-size: var(--kr-body);
+  line-height: 1.6;
+}
+
+.page h1,
+.page h2,
+.page h3 {
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.2;
+  color: inherit;
+}
+
+/* ---------- Hero: fullscreen midnight, product voorop ---------- */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    radial-gradient(120% 90% at 50% 100%, var(--kr-midnight-soft), transparent 60%),
+    var(--kr-midnight);
+  color: var(--kr-white);
+  padding: calc(64px + 3rem) var(--kr-gutter) 4rem;
+}
+
+.heroInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(2.5rem, 6vw, 6rem);
+  align-items: center;
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.heroMicro {
+  color: var(--kr-white-72);
+}
+
+.heroCopy h1 {
+  font-size: var(--kr-h1);
+  max-width: 21ch;
+  margin-top: 1.25rem;
+}
+
+.heroLead {
+  margin: 1.25rem 0 0;
+  max-width: var(--kr-measure);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--kr-white-72);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.25rem;
+}
+
+.heroPrimary,
+.heroGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.6rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 0.2s var(--kr-ease), background 0.2s var(--kr-ease);
+}
+
+.heroPrimary {
+  background: var(--kr-white);
+  color: var(--kr-midnight);
+}
+
+.heroPrimary:hover,
+.heroPrimary:focus-visible {
+  opacity: 0.85;
+}
+
+.heroGhost {
+  color: var(--kr-white);
+  border: 1px solid var(--kr-hairline-dark);
+}
+
+.heroGhost:hover,
+.heroGhost:focus-visible {
+  background: var(--kr-midnight-soft);
+}
+
+/* De productfoto: het dossier. Zichtbaar op elk formaat (#310: chip op mobiel). */
+
+.dossier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.dossierChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  color: var(--kr-white-72);
+  border: 1px solid var(--kr-hairline-dark);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--kr-white);
+}
+
+.dossierCard {
+  background: var(--kr-white);
+  color: var(--kr-midnight);
+  padding: 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.dossierScore {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.dossierScore b {
+  font-size: 3.5rem;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dossierScore span {
+  font-size: 0.875rem;
+  color: var(--kr-grey);
+}
+
+.dossierRail {
+  position: relative;
+  height: 2px;
+  background: var(--kr-hairline);
+}
+
+.dossierFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 66%;
+  background: var(--kr-midnight);
+}
+
+.dossierLat {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: 70%;
+  width: 1px;
+  background: var(--kr-grey);
+}
+
+.dossierVerdict {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--kr-ink-60);
+}
+
+.dossierNote {
+  color: var(--kr-white-72);
+}
+
+/* ---------- Sticky sub-nav ---------- */
+
+.subnav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 56px;
+  padding: 0 var(--kr-gutter);
+  background: var(--kr-white);
+  border-bottom: 1px solid var(--kr-hairline);
+}
+
+.subnavBrand {
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  font-size: 0.875rem;
+}
+
+.subnavLinks {
+  display: flex;
+  gap: 1.75rem;
+  margin-inline: auto;
+}
+
+.subnavLinks a {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kr-grey);
+  text-decoration: none;
+  transition: color 0.2s var(--kr-ease);
+}
+
+.subnavLinks a:hover,
+.subnavLinks a:focus-visible {
+  color: var(--kr-midnight);
+}
+
+.subnavCta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 1.2rem;
+  background: var(--kr-midnight);
+  color: var(--kr-white);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 0.2s var(--kr-ease);
+}
+
+.subnavCta:hover,
+.subnavCta:focus-visible {
+  opacity: 0.85;
+}
+
+/* ---------- Secties: extreme witruimte, haarlijnen, micro-labels ---------- */
+
+.section {
+  padding: var(--kr-space) var(--kr-gutter);
+  max-width: 72rem;
+  margin: 0 auto;
+  scroll-margin-top: 56px;
+}
+
+.section > h2 {
+  font-size: var(--kr-h2);
+  max-width: 24ch;
+  margin-top: 1.1rem;
+}
+
+.sectionLead {
+  max-width: var(--kr-measure);
+  margin: 1.1rem 0 3rem;
+  color: var(--kr-ink-60);
+}
+
+.sectionPaper {
+  max-width: none;
+  background: var(--kr-paper);
+}
+
+.sectionPaper > * {
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.sectionPaper > h2 {
+  font-size: var(--kr-h2);
+  max-width: 72rem;
+  margin-top: 1.1rem;
+}
+
+.sectionPaper > .sectionLead {
+  max-width: 72rem;
+}
+
+.sectionPaper > .sectionLead {
+  margin-bottom: 3rem;
+}
+
+/* Agents: spec-grid met haarlijnen, KIA-modeloverzicht */
+
+.agentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--kr-hairline);
+}
+
+.agent {
+  padding: 1.9rem 1.5rem 2.2rem 0;
+  border-right: 1px solid var(--kr-hairline);
+  padding-left: 1.5rem;
+}
+
+.agent:first-child {
+  padding-left: 0;
+}
+
+.agent:last-child {
+  border-right: 0;
+}
+
+.agent h3 {
+  font-size: 1.375rem;
+  margin: 0.6rem 0 0.7rem;
+}
+
+.agent p:last-child {
+  margin: 0;
+  color: var(--kr-ink-60);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.gate {
+  margin-top: 3rem;
+  border-top: 1px solid var(--kr-hairline);
+  padding-top: 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.gateLine {
+  margin: 0;
+  max-width: var(--kr-measure);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+/* Model-stats: kale typografie */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+  margin: 3rem 0 0;
+  border-top: 1px solid var(--kr-hairline);
+  padding-top: 2.5rem;
+}
+
+.stats dd {
+  margin: 0;
+  font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  font-weight: 500;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats dt {
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--kr-grey);
+}
+
+/* Cases */
+
+.caseGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.caseGrid[data-two] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1.5rem;
+}
+
+.case {
+  background: var(--kr-white);
+  border: 1px solid var(--kr-hairline);
+  padding: 1.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.case h3 {
+  font-size: 1.25rem;
+}
+
+.caseSub {
+  margin: 0;
+  color: var(--kr-ink-60);
+  font-size: 0.9375rem;
+}
+
+.caseMetric {
+  margin: 0;
+  color: var(--kr-midnight);
+}
+
+.caseBadge {
+  margin: 0;
+  align-self: flex-start;
+  border: 1px solid var(--kr-hairline);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+}
+
+.caseLine {
+  margin: 0;
+  color: var(--kr-ink-60);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* Slot */
+
+.closing {
+  background: var(--kr-midnight);
+  color: var(--kr-white);
+  padding: var(--kr-space) var(--kr-gutter);
+  text-align: center;
+}
+
+.closing .kr-micro,
+.closing > p:first-child {
+  color: var(--kr-white-72);
+}
+
+.closing h2 {
+  font-size: var(--kr-h2);
+  max-width: 26ch;
+  margin: 1.1rem auto 0;
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 2.5rem;
+}
+
+.closingCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.6rem;
+  background: var(--kr-white);
+  color: var(--kr-midnight);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 0.2s var(--kr-ease);
+}
+
+.closingCta:hover,
+.closingCta:focus-visible {
+  opacity: 0.85;
+}
+
+.closingAlt {
+  color: var(--kr-white-72);
+  font-size: 0.9375rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.closingAlt:hover,
+.closingAlt:focus-visible {
+  color: var(--kr-white);
+}
+
+/* Footer */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 2.25rem var(--kr-gutter);
+  border-top: 1px solid var(--kr-hairline);
+  font-size: 0.8125rem;
+  color: var(--kr-grey);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer a {
+  color: var(--kr-grey);
+  text-decoration: none;
+}
+
+.footer a:hover,
+.footer a:focus-visible {
+  color: var(--kr-midnight);
+  text-decoration: underline;
+}
+
+/* ---------- Responsief ---------- */
+
+@media (max-width: 960px) {
+  .heroInner {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .hero {
+    justify-content: flex-start;
+    padding-top: calc(64px + 2.5rem);
+  }
+
+  .agentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .agent:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .agent:nth-child(2n + 1) {
+    padding-left: 0;
+  }
+
+  .caseGrid,
+  .caseGrid[data-two] {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .subnavLinks {
+    display: none;
+  }
+
+  .subnavCta {
+    margin-left: auto;
+  }
+
+  .agentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .agent {
+    border-right: 0;
+    padding-left: 0;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroPrimary,
+  .heroGhost,
+  .subnavLinks a,
+  .subnavCta,
+  .closingCta {
+    transition: none;
+  }
+}

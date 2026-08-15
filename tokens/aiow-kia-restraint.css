@@ -1,0 +1,50 @@
+/*
+ * AIOW KIA-restraint tokens — "restraint > expressie" (besluit Jeroen 2026-08-15,
+ * referentie kia.com/nl). Midnight-inkt op wit, hairlines, uppercase micro-labels,
+ * kleine koppen (H1 36-40px w500). Geen glow, geen particles, geen aurora.
+ */
+
+:root {
+  --kr-midnight: #05141f;            /* KIA Midnight Black — basis en inkt */
+  --kr-midnight-soft: #0b1c29;       /* iets lichter voor vlakken op donker */
+  --kr-white: #ffffff;
+  --kr-paper: #f8f8f7;               /* rustgrijs voor afwisselende secties */
+  --kr-grey: #697279;                /* KIA secundair grijs, AA op wit */
+  --kr-ink-60: rgba(5, 20, 31, 0.64);
+  --kr-hairline: rgba(5, 20, 31, 0.14);
+  --kr-hairline-dark: rgba(255, 255, 255, 0.22);
+  --kr-white-72: rgba(255, 255, 255, 0.78);
+
+  --kr-font:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+
+  --kr-h1: clamp(1.9rem, 1.4rem + 1.8vw, 2.5rem);   /* 30-40px */
+  --kr-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);     /* 24-32px */
+  --kr-h3: 1.125rem;
+  --kr-body: 0.9375rem;                              /* 15px, KIA-basis */
+  --kr-micro: 0.75rem;
+
+  --kr-space: clamp(4.5rem, 3rem + 6vw, 8.5rem);     /* sectie-witruimte */
+  --kr-gutter: clamp(1.25rem, 4vw, 4rem);
+  --kr-measure: 34rem;
+
+  --kr-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Uppercase micro-label: het sectie-signaal */
+.kr-micro {
+  font-family: var(--kr-font);
+  font-size: var(--kr-micro);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kr-grey);
+}
+
+/* Haarlijn als sectie-divider */
+.kr-hairline {
+  border: 0;
+  border-top: 1px solid var(--kr-hairline);
+  margin: 0;
+}

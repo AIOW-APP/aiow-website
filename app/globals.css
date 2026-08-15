@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "../tokens/debbie.css";
 @import "../tokens/aiow-clean-glass.css";
+@import "../tokens/aiow-kia-restraint.css";
 
 /* Reset baseline (minimal — Tailwind handles most) */
 html, body {

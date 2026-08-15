@@ -1,5 +1,5 @@
-import { CleanGlassHome } from "@/components/aiow/clean-glass/CleanGlassHome";
+import { RestraintHome } from "@/components/aiow/restraint/RestraintHome";
 
 export default function Home() {
-  return <CleanGlassHome />;
+  return <RestraintHome />;
 }
