@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroVideo } from "./HeroVideo";
 import { RestraintNav } from "./RestraintNav";
 import { ScoreTeaser } from "./ScoreTeaser";
 import styles from "./RestraintHome.module.css";
@@ -90,8 +91,11 @@ const modelStats = [
 export function RestraintHome() {
   return (
     <main className={styles.page} data-aiow-public-landing="kia-restraint-v1">
-      {/* Hero: fullscreen product-shot — het dossier is het product */}
+      {/* Hero: fullscreen cinema — vier agents wegen, een mens beslist */}
       <section className={styles.hero} aria-label="AIOW AI venture partner">
+        <link rel="preload" as="image" href="/aiow/hero/aiow-agents-weging-poster.jpg" />
+        <HeroVideo />
+        <div className={styles.heroScrim} aria-hidden="true" />
         <RestraintNav />
 
         <div className={styles.heroInner}>
@@ -109,36 +113,42 @@ export function RestraintHome() {
                 Bekijk het bewijs
               </a>
             </div>
-          </div>
-
-          {/* De productfoto: dossier #217, eindstand in de DOM */}
-          <aside className={styles.dossier} aria-label={`Voorbeeldweging, aanvraag ${DOSSIER}`}>
             <p className={styles.dossierChip}>
               <span className={styles.liveDot} aria-hidden="true" />
               Aanvraag {DOSSIER} · zojuist gewogen
             </p>
-            <div className={styles.dossierCard}>
-              <p className="kr-micro">Venture-score</p>
-              <p className={styles.dossierScore}>
-                <b>66</b>
-                <span>van 100 · de lat ligt op 70</span>
-              </p>
-              <div
-                className={styles.dossierRail}
-                role="img"
-                aria-label="Score 66 van 100, de lat ligt op 70"
-              >
-                <i className={styles.dossierFill} aria-hidden="true" />
-                <i className={styles.dossierLat} aria-hidden="true" />
-              </div>
-              <p className={styles.dossierVerdict}>
-                Nee. Met een concrete tip: bouw de AI in het hart van de planning, niet ernaast.
-              </p>
-            </div>
-            <p className={`${styles.dossierNote} kr-micro`}>
-              Voorbeeldweging, samengesteld uit echte aanvragen
-            </p>
-          </aside>
+          </div>
+        </div>
+      </section>
+
+      {/* Het dossier: de uitslag van de weging uit de film */}
+      <section className={styles.dossierStrip} aria-label={`Voorbeeldweging, aanvraag ${DOSSIER}`}>
+        <div className={styles.dossierIntro}>
+          <p className="kr-micro">De uitslag</p>
+          <p className={styles.dossierLine}>
+            Dit besliste de beslisgate over aanvraag {DOSSIER}.
+          </p>
+          <p className={`${styles.dossierNote} kr-micro`}>
+            Voorbeeldweging, samengesteld uit echte aanvragen
+          </p>
+        </div>
+        <div className={styles.dossierCard}>
+          <p className="kr-micro">Venture-score</p>
+          <p className={styles.dossierScore}>
+            <b>66</b>
+            <span>van 100 · de lat ligt op 70</span>
+          </p>
+          <div
+            className={styles.dossierRail}
+            role="img"
+            aria-label="Score 66 van 100, de lat ligt op 70"
+          >
+            <i className={styles.dossierFill} aria-hidden="true" />
+            <i className={styles.dossierLat} aria-hidden="true" />
+          </div>
+          <p className={styles.dossierVerdict}>
+            Nee. Met een concrete tip: bouw de AI in het hart van de planning, niet ernaast.
+          </p>
         </div>
       </section>
 
