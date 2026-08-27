@@ -7,7 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "test:aiow-v1": "node --test tests/aiow-v1/*.test.mjs",
+    "lint": "eslint .",
     "audit": "lighthouse http://localhost:3000 --only-categories=performance,accessibility,best-practices,seo"
   },
   "dependencies": {

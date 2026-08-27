@@ -3,9 +3,9 @@ import { OGImage } from "@/core/seo/og-image";
 
 export default async function Image() {
   return OGImage({
-    eyebrow: "Team Handsome",
-    title: "Debbie Starter",
-    subtitle: "FWA-grade Next.js starter template.",
-    brand: "debbie",
+    eyebrow: "AIOW · Warm Precision",
+    title: "Werkende AI voor bedrijf en gebouw",
+    subtitle: "Transparante pilotindicaties. Definitieve scope na een praktische scan.",
+    brand: "aiow",
   });
 }

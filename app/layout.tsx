@@ -1,55 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
-import { SmoothScroll } from "@/components/SmoothScroll";
-import { CustomCursor } from "@/components/CustomCursor";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-family", display: "swap" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
 
 export const metadata: Metadata = {
-  title: {
-    default: "AIOW — Spunky kent jouw bedrijf",
-    template: "%s · AIOW",
-  },
-  description:
-    "Wij maken je bedrijf AI-native. Van A tot Z geregeld: scan, strategie, implementatie, training, groei. 30+ SaaS-producten live.",
-  keywords: ["AI consultancy", "AI transformatie", "MKB", "AI strategie", "AI implementatie", "Nederland"],
-  metadataBase: new URL("https://aiow.io"),
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "nl_NL",
-    url: "https://aiow.io",
-    siteName: "AIOW",
-    title: "AIOW — Spunky kent jouw bedrijf",
-    description:
-      "Wij maken je bedrijf AI-native. Scan, strategie, implementatie, training, groei. 30+ SaaS-producten live.",
-  },
-  twitter: {
-    card: "summary_large_image",
-    creator: "@handsomebstrd",
-    title: "AIOW — Spunky kent jouw bedrijf",
-    description: "Van A tot Z geregeld. Scan, strategie, implementatie.",
-  },
-  robots: { index: true, follow: true },
+  metadataBase: new URL("https://aiow.ai"),
+  title: { default: "AIOW — Werkende AI voor bedrijf en gebouw", template: "%s · AIOW" },
+  description: "AIOW inventariseert, bouwt en beheert praktische AI-systemen voor bedrijven en gebouwen, met transparante prijsindicaties.",
+  applicationName: "AIOW",
+  alternates: { canonical: "https://aiow.ai", languages: { nl: "https://aiow.ai", en: "https://aiow.ai/en", "x-default": "https://aiow.ai" } },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
 };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#14161A" }, { media: "(prefers-color-scheme: light)", color: "#F4EFE6" }] };
+const themeScript = `(function(){try{var t=localStorage.getItem('aiow-theme');document.documentElement.dataset.theme=(t==='light'||t==='dark'||t==='system')?t:'system'}catch(e){document.documentElement.dataset.theme='system'}})()`;
 
-export const viewport: Viewport = {
-  themeColor: "#0A0A0B",
-  width: "device-width",
-  initialScale: 1,
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="nl" className={`${inter.variable} ${mono.variable}`}>
-      <body className="noise">
-        <SmoothScroll>{children}</SmoothScroll>
-        <CustomCursor />
-      </body>
-    </html>
-  );
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = (await headers()).get("x-aiow-locale") === "en" ? "en" : "nl";
+  return <html lang={locale} className={`${inter.variable} ${fraunces.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body>{children}</body></html>;
 }

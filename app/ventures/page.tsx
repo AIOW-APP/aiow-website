@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { pageMetadata } from "@/lib/aiow-v1/seo";
+import styles from "../info.module.css";
+
+export const metadata = pageMetadata({ title: "AIOW Ventures — afzonderlijke productbouw", description: "AIOW Ventures ontwikkelt eigen digitale proposities en staat operationeel los van AIOW Solutions-implementaties.", path: "/ventures" });
+
+export default function VenturesPage() {
+  return <div className={styles.page}><header className={styles.header}><Link className={styles.brand} href="/">AIOW</Link><Link className={styles.back} href="/#ventures">Terug naar Solutions</Link></header><main className={styles.main}><p className={styles.eyebrow}>AIOW Ventures</p><h1>Productbouw is een andere overeenkomst.</h1><p className={styles.lead}>Ventures ontwikkelt eigen digitale proposities en selectieve samenwerkingen. Het is geen verborgen onderdeel van een Solutions-implementatie en heeft een afzonderlijke scope, governance en commerciële afspraak.</p><section className={styles.section}><h2>Wat hier thuishoort</h2><div className={styles.cards}><article className={styles.card}><h3>Eigen producten</h3><p>Proposities die AIOW zelf ontwikkelt, test en beheert als product.</p></article><article className={styles.card}><h3>Selectieve ventures</h3><p>Samenwerkingen waarbij eigenaarschap, investering, risico en opbrengst vooraf expliciet worden vastgelegd.</p></article></div></section><section className={styles.section}><h2>Wat niet automatisch meegaat</h2><p>Een AI-scan, implementatiepakket of maandelijkse Solutions-beheerovereenkomst geeft geen recht op producteigendom, investering, omzetdeling of venturecapaciteit. Zo blijven verwachtingen en verantwoordelijkheden zuiver.</p><p>De eerder opgebouwde venture-ervaring blijft beschikbaar via de <Link href="/legacy-aiow">bestaande venture-omgeving</Link>.</p></section></main><footer className={styles.footer}>AIOW · Solutions en Ventures, bewust gescheiden.</footer></div>;
+}
