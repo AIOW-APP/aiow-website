@@ -22,6 +22,9 @@ ${contextLinks}
 ## Pricing boundary
 Published amounts are non-binding indications/from-prices excluding VAT, hardware, physical installation, cloud, AI and supplier usage. Standard is the default: customers contract and pay third parties directly. Comfort requires automatic direct debit. Subscriptions use actual provider cost +25%; provider price increases are passed through 1-to-1 plus that 25% margin. Hardware uses cost +15% and requires full prepayment or a deposit at least equal to the hardware value before ordering. AIOW never provides interest-free financing. Unknown third-party costs are never presented as a fixed total. Smart Design credits 50% of the Scan when continuing to Blueprint; projects above 10 homes use a quoted project scale, never below the published minima. Definitive scope and price follow after a scan.
 
+## Quote indication
+The calculator configuration is validated and all quote amounts are recomputed on the server; browser-supplied totals are not trusted. The PDF is released only after the configured durable adapter has accepted the lead and then durably accepted the lead, PDF and exactly two transactional mail outbox jobs (customer and internal). Without the adapter, or if either phase fails, no PDF or receipt is returned. Durable outbox acceptance does not claim the messages have already been sent; delivery happens only when the outbox is processed.
+
 ## Contact
 Use the booking intake on ${SITE_URL}/. A booking succeeds only after durable upstream acceptance.
 

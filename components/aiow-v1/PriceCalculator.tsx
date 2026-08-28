@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState, type MouseEvent } from "react";
 import { calculateBuildingPrice, calculateBusinessPrice, formatEuroCents } from "@/lib/aiow-v1/pricing.mjs";
+import type { CalculatorQuoteConfig } from "./QuoteModal";
 import styles from "./AiowV1Homepage.module.css";
 
 type Mode = "business" | "building" | "home";
 type ServiceRoute = "standard" | "comfort";
 
-export function PriceCalculator({ locale = "nl", onBook }: { locale?: "nl" | "en"; onBook: (event: MouseEvent<HTMLButtonElement>) => void }) {
+export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "nl" | "en"; onBook: (event: MouseEvent<HTMLButtonElement>) => void; onQuote: (event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) => void }) {
   const [mode, setMode] = useState<Mode>("business");
   const [people, setPeople] = useState(10);
   const [squareMetres, setSquareMetres] = useState(120);
@@ -23,9 +24,10 @@ export function PriceCalculator({ locale = "nl", onBook }: { locale?: "nl" | "en
   const max = mode === "business" ? 400 : mode === "building" ? 4000 : 1000;
   const unit = mode === "business" ? (en ? "people" : "mensen") : "m²";
   const minimumApplied = result.minimumApplied.setup || result.minimumApplied.monthly;
+  const quoteConfiguration = useMemo<CalculatorQuoteConfig>(() => ({ segment: mode, serviceRoute, ...(mode === "business" ? { people } : { squareMetres }), ...(mode === "home" ? { homeSubtype: homeType } : {}) }), [mode, serviceRoute, people, squareMetres, homeType]);
 
   return (
-    <section className={styles.calculator} aria-labelledby="calculator-title">
+    <section id="booking" className={styles.calculator} aria-labelledby="calculator-title">
       <div className={styles.instrumentTop}><span>{en ? "Live indication" : "Live indicatie"}</span><span className={styles.liveDot} aria-hidden="true" /></div>
       <h2 id="calculator-title" className={styles.srOnly}>{en ? "Price calculator" : "Prijsberekening"}</h2>
       <div role="tablist" aria-label={en ? "Select calculation" : "Kies berekening"} className={styles.tabs}>
@@ -46,6 +48,7 @@ export function PriceCalculator({ locale = "nl", onBook }: { locale?: "nl" | "en
       </div>
       <p className={styles.disclaimer}>{en ? "From indication excluding VAT, hardware and installation, cloud and AI usage. Final scope and price follow the scan." : "Vanafindicatie excl. btw, hardware en installatie, cloud- en AI-gebruik. Definitieve scope en prijs volgen na de scan."}</p>
       <Link className={styles.textLink} href="/tarieven" hrefLang="nl">{en ? "Rates and conditions (Dutch)" : "Bekijk alle tarieven en voorwaarden"} ↗</Link>
+      <button type="button" className={styles.quoteButton} onClick={(event) => onQuote(event, quoteConfiguration)}>{en ? "Download quote indication (PDF)" : "Download offerte-indicatie (PDF)"}<span aria-hidden="true">↓</span></button>
       <button type="button" className={styles.primaryButton} onClick={onBook}>{en ? "Book a scan" : "Plan een scan"}<span aria-hidden="true">↗</span></button>
     </section>
   );

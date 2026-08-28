@@ -1,5 +1,6 @@
 import { webkit } from "/opt/homebrew/lib/node_modules/playwright/index.mjs";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 const base = "http://127.0.0.1:4321";
 const contextSlugs = ["accountants", "logistiek", "bouw", "makelaars", "advocatuur", "zorg", "horeca-retail", "industrie", "vermogende-particulieren", "kantoorpand", "bedrijfshal-industrie", "woning", "villa-signature", "woonproject-vve", "nieuwbouwproject"];
@@ -12,6 +13,17 @@ function flatten(value) {
 async function schemas(page) {
   const texts = await page.locator('script[type="application/ld+json"]').allTextContents();
   return texts.flatMap((text) => flatten(JSON.parse(text)));
+}
+
+async function fillBusinessQuote(page, name = "Browser Proof") {
+  const dialog = page.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." });
+  await dialog.getByLabel("Context (optioneel)").selectOption("accountants");
+  await dialog.getByLabel("Naam", { exact: true }).fill(name);
+  await dialog.getByLabel("E-mail", { exact: true }).fill("browser@example.com");
+  await dialog.getByLabel("Telefoon", { exact: true }).fill("+31 20 123 4567");
+  await dialog.getByLabel("Bedrijfsnaam", { exact: true }).fill("Browser Proof BV");
+  await dialog.getByLabel(/Ik ga ermee akkoord/).check();
+  return dialog;
 }
 
 function luminance(hex) {
@@ -30,6 +42,30 @@ try {
     const geometry = await page.evaluate(() => ({ innerWidth, scrollWidth: document.documentElement.scrollWidth }));
     assert.ok(geometry.scrollWidth <= geometry.innerWidth + 1, `homepage horizontal overflow at ${width}: ${JSON.stringify(geometry)}`);
 
+    const quoteTrigger = page.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true });
+    await quoteTrigger.click();
+    let quoteDialog = page.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." });
+    await quoteDialog.waitFor({ state: "visible" });
+    assert.equal(await quoteDialog.getByText("Bedrijf", { exact: true }).count(), 1);
+    assert.equal(await quoteDialog.getByText("10 mensen", { exact: true }).count(), 1);
+    assert.equal(await quoteDialog.getByText("Standaard", { exact: true }).count(), 1);
+    assert.equal(await quoteDialog.getByLabel("Bedrijfsnaam", { exact: true }).getAttribute("required"), "");
+    assert.equal(await quoteDialog.getByLabel("Postcode", { exact: true }).count(), 0);
+    const quoteGeometry = await quoteDialog.evaluate((node) => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, right: node.getBoundingClientRect().right, viewport: innerWidth }));
+    assert.ok(quoteGeometry.scrollWidth <= quoteGeometry.clientWidth + 1 && quoteGeometry.right <= quoteGeometry.viewport + 1, `quote form overflow at ${width}: ${JSON.stringify(quoteGeometry)}`);
+    await quoteDialog.getByLabel("Scan", { exact: true }).check();
+    assert.equal(await quoteDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).count(), 1);
+    assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
+    await quoteDialog.getByLabel("Blauwdruk", { exact: true }).check();
+    assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 1);
+    const quoteClose = quoteDialog.getByRole("button", { name: "Offerteformulier sluiten" });
+    const quoteSubmit = quoteDialog.getByRole("button", { name: "Genereer en download PDF" });
+    await quoteSubmit.focus(); await page.keyboard.press("Tab"); assert.equal(await quoteClose.evaluate((node) => node === document.activeElement), true, `quote forward focus trap ${width}`);
+    await quoteClose.focus(); await page.keyboard.press("Shift+Tab"); assert.equal(await quoteSubmit.evaluate((node) => node === document.activeElement), true, `quote reverse focus trap ${width}`);
+    await page.keyboard.press("Escape"); assert.equal(await quoteDialog.count(), 0, `quote Escape close ${width}`);
+    await page.waitForTimeout(50);
+    assert.equal(await quoteTrigger.evaluate((node) => node === document.activeElement), true, `quote focus restore ${width}`);
+
     await page.getByRole("tab", { name: "Pand" }).click();
     assert.equal(await page.getByRole("button", { name: "Signature", exact: true }).count(), 0, `Pand exposes Signature at ${width}`);
     await page.getByRole("slider").fill("2001");
@@ -41,6 +77,14 @@ try {
     await page.getByRole("button", { name: "Signature", exact: true }).click();
     await page.getByRole("slider").fill("400");
     await page.getByText("AIOW Signature", { exact: true }).waitFor();
+
+    await quoteTrigger.click();
+    quoteDialog = page.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." });
+    await quoteDialog.waitFor();
+    assert.equal(await quoteDialog.getByLabel("Postcode", { exact: true }).getAttribute("required"), "");
+    assert.equal(await quoteDialog.getByLabel("Bedrijfsnaam", { exact: true }).count(), 0);
+    await quoteDialog.getByRole("button", { name: "Offerteformulier sluiten" }).click();
+    assert.equal(await quoteDialog.count(), 0, `home quote close ${width}`);
 
     const trigger = page.getByRole("button", { name: "Plan een scan", exact: true }).first();
     await trigger.click();
@@ -57,6 +101,70 @@ try {
     assert.equal(await trigger.evaluate((node) => node === document.activeElement), true, `focus restore ${width}`);
     await page.close();
   }
+
+  const tinyPdf = Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n");
+  const successPage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  let submittedQuote;
+  await successPage.route("**/api/quote", async (route) => {
+    submittedQuote = JSON.parse(route.request().postData());
+    await route.fulfill({ status: 200, body: tinyPdf, headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="AIOW-2026-0042.pdf"', "x-aiow-quote-number": "AIOW-2026-0042", "x-aiow-request-id": "browser-proof-request", "cache-control": "no-store" } });
+  });
+  await successPage.goto(base, { waitUntil: "networkidle" });
+  await successPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  const successDialog = await fillBusinessQuote(successPage);
+  await successDialog.getByLabel("Scan", { exact: true }).check();
+  await successDialog.getByLabel("Blauwdruk", { exact: true }).check();
+  await successDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).fill("300");
+  await successDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).fill("80000");
+  await successDialog.getByLabel("Blauwdruk", { exact: true }).uncheck();
+  assert.equal(await successDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
+  const [download] = await Promise.all([
+    successPage.waitForEvent("download"),
+    successDialog.getByRole("button", { name: "Genereer en download PDF" }).click(),
+  ]);
+  assert.equal(download.suggestedFilename(), "AIOW-2026-0042.pdf");
+  assert.deepEqual(await readFile(await download.path()), tinyPdf);
+  assert.equal(submittedQuote.configuration.people, 10);
+  assert.equal(submittedQuote.configuration.serviceRoute, "standard");
+  assert.equal(submittedQuote.configuration.contextSlug, "accountants");
+  assert.deepEqual(submittedQuote.configuration.smartDesign.modules, ["scan"]);
+  assert.equal("technologyBudgetEuros" in submittedQuote.configuration.smartDesign, false);
+  await successPage.getByText("Duurzaam geaccepteerd", { exact: true }).waitFor();
+  assert.equal(await successPage.getByText("AIOW-2026-0042", { exact: true }).count(), 1);
+  await successPage.getByRole("button", { name: "Sluiten", exact: true }).click();
+  await successPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  assert.equal(await successPage.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." }).count(), 1);
+  assert.equal(await successPage.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
+  await successPage.close();
+
+  const failurePage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  let failedDownloads = 0;
+  failurePage.on("download", () => { failedDownloads += 1; });
+  await failurePage.route("**/api/quote", (route) => route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ ok: false, error: "rejected", requestId: "browser-proof-failure" }) }));
+  await failurePage.goto(base, { waitUntil: "networkidle" });
+  await failurePage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  const failureDialog = await fillBusinessQuote(failurePage, "Preserved Input");
+  await failureDialog.getByRole("button", { name: "Genereer en download PDF" }).click();
+  await failureDialog.getByText(/Duurzame acceptatie van lead, PDF en beide mailtaken mislukte/).waitFor();
+  assert.equal(await failureDialog.getByLabel("Naam", { exact: true }).inputValue(), "Preserved Input");
+  assert.equal(await failureDialog.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
+  await failurePage.waitForTimeout(100);
+  assert.equal(failedDownloads, 0, "502 response triggered a download");
+  await failurePage.close();
+
+  const malformedPdfPage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  let malformedDownloads = 0;
+  malformedPdfPage.on("download", () => { malformedDownloads += 1; });
+  await malformedPdfPage.route("**/api/quote", (route) => route.fulfill({ status: 200, body: "not-a-pdf", headers: { "content-type": "application/pdf", "x-aiow-quote-number": "AIOW-2026-0043" } }));
+  await malformedPdfPage.goto(base, { waitUntil: "networkidle" });
+  await malformedPdfPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  const malformedDialog = await fillBusinessQuote(malformedPdfPage, "Malformed PDF");
+  await malformedDialog.getByRole("button", { name: "Genereer en download PDF" }).click();
+  await malformedDialog.getByText(/De aanvraag is niet geaccepteerd/).waitFor();
+  assert.equal(await malformedDialog.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
+  await malformedPdfPage.waitForTimeout(100);
+  assert.equal(malformedDownloads, 0, "malformed PDF response triggered a download");
+  await malformedPdfPage.close();
 
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const publicRoutes = ["/", "/en", "/tarieven", "/ai-automatisering", "/lokale-ai", "/smart-office", "/home", "/ventures", "/privacy"];
@@ -191,7 +299,7 @@ try {
     assert.ok(group.includes("Disallow: /portal/admin"), `${bot} exposes admin`);
   }
   await page.close();
-  console.log("BROWSER_SMOKE_PASS homepage=4-widths calculator=PASS tariffs=4-widths/6-tables themes=PASS contexts=15 schema=PASS locale=PASS booking=PASS links=PASS robots=PASS");
+  console.log("BROWSER_SMOKE_PASS homepage=4-widths calculator=PASS quote=4-widths+download+fail-closed tariffs=4-widths/6-tables themes=PASS contexts=15 schema=PASS locale=PASS booking=PASS links=PASS robots=PASS");
 } finally {
   await browser.close();
 }
