@@ -117,6 +117,13 @@ try {
     });
     assert.equal(lightTokens[0].toLowerCase(), "#795000");
     for (const background of lightTokens.slice(1)) assert.ok(contrast(lightTokens[0], background) >= 4.5, `shared light accent contrast ${lightTokens[0]} on ${background} at ${width}`);
+    const smartDesignContrast = await page.locator("#smart-design").evaluate((section) => {
+      const hex = (value) => `#${value.match(/\d+/g).slice(0, 3).map((part) => Number(part).toString(16).padStart(2, "0")).join("")}`;
+      const note = section.querySelector(":scope > p:last-child");
+      return { background: hex(getComputedStyle(section).backgroundColor), text: hex(getComputedStyle(section).color), note: hex(getComputedStyle(note).color) };
+    });
+    assert.ok(contrast(smartDesignContrast.text, smartDesignContrast.background) >= 4.5, `Smart Design text contrast at ${width}`);
+    assert.ok(contrast(smartDesignContrast.note, smartDesignContrast.background) >= 4.5, `Smart Design note contrast at ${width}`);
     await theme.selectOption("dark", { force: true });
     assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
     const darkCopper = await page.locator("main").evaluate((node) => getComputedStyle(node.parentElement).getPropertyValue("--copper").trim());

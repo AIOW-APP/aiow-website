@@ -20,8 +20,12 @@ test("light-theme pricing accent meets WCAG AA on every light surface", async ()
     assert.ok(contrast("#795000", background) >= 4.5, `#795000 contrast on ${background} is ${contrast("#795000", background)}`);
   }
   const shared = await read("components/aiow-v1/AiowV1Homepage.module.css");
+  const tariffs = await read("components/aiow-v1/TariffsPage.module.css");
   assert.match(shared, /html\[data-theme="light"\][^}]*--copper:#795000/);
   assert.match(shared, /prefers-color-scheme:light[\s\S]*--copper:#795000/);
+  assert.match(tariffs, /\.smartDesign\{[^}]*background:#d9a441;color:#14161a/);
+  assert.ok(contrast("#14161a", "#D9A441") >= 4.5);
+  assert.ok(contrast("#302C26", "#D9A441") >= 4.5);
 });
 
 test("all tariff row headers have row scope and all six regions have unique names", async () => {
