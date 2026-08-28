@@ -23,6 +23,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[2]
 MOCK = ROOT / "tests/aiow-v1/mock-quote-webhook.py"
 BASE_PORT = int(os.environ.get("AIOW_QUOTE_PROOF_PORT", "4610"))
+WEBHOOK_SECRET = "proof-webhook-secret-0123456789abcdef"
 
 
 def payload(note="HTTP proof"):
@@ -113,7 +114,7 @@ def case_server(name, offset, mode=None):
     try:
         if mode:
             adapter = subprocess.Popen(
-                [sys.executable, str(MOCK), "--port", str(adapter_port), "--mode", mode, "--log", str(adapter_log)],
+                [sys.executable, str(MOCK), "--port", str(adapter_port), "--mode", mode, "--log", str(adapter_log), "--secret", WEBHOOK_SECRET],
                 cwd=ROOT, stdout=adapter_output, stderr=subprocess.STDOUT, start_new_session=True,
             )
             processes.append(adapter)
@@ -131,8 +132,12 @@ def case_server(name, offset, mode=None):
         env = os.environ.copy()
         if mode:
             env["AIOW_QUOTE_WEBHOOK_URL"] = f"http://127.0.0.1:{adapter_port}/quote"
+            env["AIOW_QUOTE_WEBHOOK_SECRET"] = WEBHOOK_SECRET
+            env["AIOW_QUOTE_ADAPTER_TEST_MODE"] = "1"
         else:
             env.pop("AIOW_QUOTE_WEBHOOK_URL", None)
+            env.pop("AIOW_QUOTE_WEBHOOK_SECRET", None)
+            env.pop("AIOW_QUOTE_ADAPTER_TEST_MODE", None)
         next_process = subprocess.Popen(
             ["bun", "x", "next", "start", "-p", str(port)], cwd=ROOT, env=env,
             stdout=next_output, stderr=subprocess.STDOUT, start_new_session=True,

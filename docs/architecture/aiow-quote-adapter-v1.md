@@ -2,7 +2,11 @@
 
 ## Status and trust boundary
 
-`POST /api/quote` is preview-safe and fail-closed. It never calls Google Workspace, SMTP, a database, or any other production provider directly. `AIOW_QUOTE_WEBHOOK_URL` must identify one durable adapter. If it is absent, the API returns `503` and does not parse a successful quote request. The same URL, `idempotency-key` header, `x-aiow-request-id` header, request ID and idempotency key are used for both phases.
+`POST /api/quote` is preview-safe and fail-closed. It never calls Google Workspace or SMTP directly. `AIOW_QUOTE_WEBHOOK_URL` identifies one durable adapter and `AIOW_QUOTE_WEBHOOK_SECRET` authenticates every exact body. If either is absent, the API returns `503`. The same URL, `idempotency-key`, `x-aiow-request-id`, request ID and idempotency key are used for both phases.
+
+Every adapter request carries `x-aiow-webhook-timestamp` and `x-aiow-webhook-signature`. The signature is lowercase HMAC-SHA256 over a v1 canonical string containing method, path/query, Unix timestamp, request ID, idempotency key and SHA-256 of the exact transmitted JSON bytes. The adapter verifies it in constant time before parsing JSON and rejects more than five minutes of clock skew.
+
+The built-in disabled adapter endpoint is `POST /api/internal/quote-adapter`. It calls only security-definer PostgREST RPCs using server-side `AIOW_SUPABASE_URL` and `AIOW_SUPABASE_SERVICE_ROLE_KEY`; it performs no direct table writes and is `503` until all required variables exist.
 
 The adapter is the authority for sequential quote numbers, durable leads, PDFs and both mail-outbox jobs. A `2xx` alone is insufficient: every response must be JSON and contain the exact acceptance shape below.
 
@@ -28,10 +32,10 @@ Request body:
 The country is copied only from Vercel's trusted `x-vercel-ip-country` header. No raw IP belongs in this contract. In one database transaction the adapter must reserve the next yearly number and create or return the initial lead. Success is only:
 
 ```json
-{"accepted":true,"quoteNumber":"AIOW-2026-0001","leadId":"safe-id"}
+{"accepted":true,"quoteNumber":"AIOW-2026-0001","leadId":"uuid","receivedAt":"2026-08-28T14:15:16.123Z"}
 ```
 
-The API validates that the number year equals the current Europe/Amsterdam year. IDs are bounded to 128 safe characters. Any timeout, non-2xx, non-JSON or malformed body becomes `502`.
+`receivedAt` is the first durable receipt timestamp. A retry may have a new transport request ID and wall-clock time, but the adapter returns the original stored timestamp so the internal transactional mail and commit payload remain byte-stable. Idempotency hashes the immutable commercial request (quote, contact, consent, source and country), not transport metadata. The API validates that the number year equals the current Europe/Amsterdam year. IDs and timestamps are strictly bounded. Any timeout, non-2xx, non-JSON or malformed body becomes `502`.
 
 ## Phase 2 — commit
 
@@ -102,8 +106,24 @@ Prepare should lock/upsert `quote_sequences` and insert `quote_leads` in one tra
 
 ## Outbox state machine
 
-`pending → claimed → sent` is the happy path. Workers claim with `FOR UPDATE SKIP LOCKED` and an expiring lease. A transient provider error moves `claimed → retry` with bounded exponential backoff; `retry → claimed` when due. Permanent failure or an attempt ceiling moves to `dead` and alerts an operator. A stale claim is recoverable to `retry`. Never mark sent before provider acceptance, and never delete the durable lead/PDF when delivery fails.
+`pending → claimed → sent` is the happy path. Workers claim with `FOR UPDATE SKIP LOCKED` and an expiring lease. A transient pre-acceptance provider error moves `claimed → retry` with bounded exponential backoff; `retry → claimed` when due. Permanent failure or an attempt ceiling moves to `dead`. An expired claimed lease is recovered in a bounded `SKIP LOCKED` batch directly to `review` with a delivery-attempt audit row: after a worker crash the system cannot prove whether provider submission began, so it must never auto-resend.
 
-## Future Google Workspace boundary
+`review` is a non-resend quarantine. A lost Gmail send response may mean the provider accepted the message; any failure reading, parsing or validating a Gmail 2xx response is equally ambiguous; and a Gmail success followed by database-finalization failure is ambiguous too. None is automatically retried: the worker calls `aiow_quote_outbox_review_v1`, preserves the known provider ID when available and requires operator reconciliation. Gmail does not guarantee deduplication from `Message-ID`, so this quarantine is mandatory to avoid blind duplicate customer mail. Never delete the durable lead/PDF when delivery fails.
 
-A future worker may translate the two stored mail payloads into Google Workspace API messages from `offerte@aiow.ai`, attaching the stored PDF to the customer mail only. OAuth/service-account credentials, DKIM/SPF/DMARC setup, group configuration and provider message IDs live exclusively in that adapter/worker boundary—not in Next.js, client code or this repository's preview environment. Provider message IDs should be stored on the outbox row for audit and deduplication. Enabling that boundary requires separate owner-approved Workspace and production work.
+## Google Workspace outbox worker
+
+`POST /api/internal/quote-outbox/run` is disabled until the Supabase variables, `AIOW_QUOTE_WORKER_SECRET`, service-account email/private key and delegated subject are present. Authorization is constant-time bearer comparison against the worker secret or `CRON_SECRET`. No cron is registered by this branch: scheduling is a separate owner-approved activation step.
+
+The worker claims at most five jobs through `aiow_quote_claim_outbox_v1` with `FOR UPDATE SKIP LOCKED` and expiring leases. The customer job includes the stored PDF; the internal lead job is forbidden from carrying an attachment. It creates an RS256 service-account assertion for domain-wide delegation to exactly `offerte@aiow.ai`, requests only `gmail.send`, then calls Gmail `users/me/messages/send`. Provider acceptance is recorded with `aiow_quote_outbox_sent_v1`; 408/429/5xx and documented 403 rate-limit reasons retry, permanent 4xx/schema/config failures go dead, and send-network/post-acceptance ambiguity goes review. Finalization always requires the active lease token.
+
+Production variables are listed by name only in `.env.example`. Google Admin domain-wide delegation, the service account, `offerte@aiow.ai`, SPF/DKIM/DMARC, provider credentials and scheduling are **not configured by this code**.
+
+## Activation, observability and rollback
+
+1. Apply `supabase/migrations/20260828_aiow_quote_adapter_v1.sql` to the intended isolated Supabase project and run the PostgreSQL proof against a disposable database first.
+2. Configure Supabase service-role variables and a fresh 32+ byte webhook secret; point `AIOW_QUOTE_WEBHOOK_URL` to the HTTPS internal adapter endpoint. Production adapter, PostgREST, OAuth and Gmail requests require HTTPS and reject redirects. Plain HTTP is accepted only for explicit localhost proof mode. Verify prepare/commit with a non-customer test address before enabling UI traffic.
+3. Separately configure Google Workspace domain-wide delegation and worker variables. Invoke the worker manually and prove customer attachment plus internal no-attachment delivery before scheduling.
+4. Monitor counts by `mail_outbox.state`, oldest `available_at`, expired leases, attempt count, dead/review jobs and provider delivery attempts. `review` requires reconciliation before any deliberate resend. Never log contact or mail bodies.
+5. Rollback is fail-closed: unset webhook URL/secret to stop new quote success; unset worker/Google variables to stop delivery while preserving leads, PDFs and outbox rows. Do not delete durable records. DNS/MX and the existing website remain untouched.
+
+No production, Workspace, DNS, mail-routing or provider activation is part of this branch.

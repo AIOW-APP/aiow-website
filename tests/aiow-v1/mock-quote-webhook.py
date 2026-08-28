@@ -5,6 +5,7 @@ import argparse
 import base64
 import datetime as dt
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -32,10 +33,11 @@ def is_safe_mail(mail, expected_from, expected_to):
 
 
 class State:
-    def __init__(self, mode, log_path, delay):
+    def __init__(self, mode, log_path, delay, secret):
         self.mode = mode
         self.log_path = Path(log_path)
         self.delay = delay
+        self.secret = secret
         self.prepared = {}
 
     def record(self, item):
@@ -77,7 +79,19 @@ class Handler(BaseHTTPRequestHandler):
         operation = payload.get("operation") if isinstance(payload, dict) else None
         request_header = self.headers.get("x-aiow-request-id", "")
         key_header = self.headers.get("idempotency-key", "")
+        timestamp_header = self.headers.get("x-aiow-webhook-timestamp", "")
+        signature_header = self.headers.get("x-aiow-webhook-signature", "")
+        body_hash = hashlib.sha256(raw).hexdigest()
+        canonical = f"AIOW-QUOTE-WEBHOOK-V1\nPOST\n{self.path}\n{timestamp_header}\n{request_header}\n{key_header}\n{body_hash}".encode()
+        expected_signature = hmac.new(state.secret.encode(), canonical, hashlib.sha256).hexdigest()
         reasons = []
+        try:
+            if not re.fullmatch(r"[0-9]{10}", timestamp_header) or abs(int(time.time()) - int(timestamp_header)) > 300:
+                reasons.append("timestamp")
+        except ValueError:
+            reasons.append("timestamp")
+        if not re.fullmatch(r"[0-9a-f]{64}", signature_header) or not hmac.compare_digest(signature_header, expected_signature):
+            reasons.append("signature")
         if not isinstance(payload, dict):
             reasons.append("body not object")
         else:
@@ -165,15 +179,15 @@ class Handler(BaseHTTPRequestHandler):
         elif operation == "prepare" and state.mode == "prepare-reject":
             self.send_json(409, {"accepted": False})
         elif operation == "prepare" and state.mode == "malformed-number":
-            self.send_json(200, {"accepted": True, "quoteNumber": "AIOW-NOT-A-NUMBER", "leadId": LEAD_ID})
+            self.send_json(200, {"accepted": True, "quoteNumber": "AIOW-NOT-A-NUMBER", "leadId": LEAD_ID, "receivedAt": payload["receivedAt"]})
         elif operation == "prepare" and state.mode == "prepare-extra":
-            self.send_json(200, {"accepted": True, "quoteNumber": QUOTE_NUMBER, "leadId": LEAD_ID, "unexpected": True})
+            self.send_json(200, {"accepted": True, "quoteNumber": QUOTE_NUMBER, "leadId": LEAD_ID, "receivedAt": payload["receivedAt"], "unexpected": True})
         elif operation == "commit" and state.mode == "commit-reject":
             self.send_json(409, {"accepted": False})
         elif operation == "commit" and state.mode == "commit-extra":
             self.send_json(200, {"accepted": True, "unexpected": True})
         elif operation == "prepare":
-            self.send_json(200, {"accepted": True, "quoteNumber": QUOTE_NUMBER, "leadId": LEAD_ID})
+            self.send_json(200, {"accepted": True, "quoteNumber": QUOTE_NUMBER, "leadId": LEAD_ID, "receivedAt": payload["receivedAt"]})
         else:
             self.send_json(200, {"accepted": True})
 
@@ -188,9 +202,12 @@ def main():
     parser.add_argument("--log", default=os.environ.get("AIOW_MOCK_LOG", "/tmp/aiow-quote-mock.jsonl"))
     parser.add_argument("--mode", choices=("accepted", "prepare-reject", "commit-reject", "malformed-number", "prepare-extra", "commit-extra", "delay"), default=os.environ.get("AIOW_MOCK_MODE", "accepted"))
     parser.add_argument("--delay", type=float, default=float(os.environ.get("AIOW_MOCK_DELAY", "11")))
+    parser.add_argument("--secret", default=os.environ.get("AIOW_QUOTE_WEBHOOK_SECRET", "proof-webhook-secret-0123456789abcdef"))
     args = parser.parse_args()
+    if not 32 <= len(args.secret.encode()) <= 256:
+        raise SystemExit("mock secret must be 32..256 bytes")
     server = QuoteServer((args.host, args.port), Handler)
-    server.state = State(args.mode, args.log, args.delay)
+    server.state = State(args.mode, args.log, args.delay, args.secret)
     print(json.dumps({"ready": True, "host": args.host, "port": args.port, "mode": args.mode, "log": args.log}), flush=True)
     server.serve_forever()
 

@@ -1,0 +1,12 @@
+export const AIOW_WEBHOOK_TIMESTAMP_HEADER: "x-aiow-webhook-timestamp";
+export const AIOW_WEBHOOK_SIGNATURE_HEADER: "x-aiow-webhook-signature";
+export const AIOW_REQUEST_ID_HEADER: "x-aiow-request-id";
+export const AIOW_IDEMPOTENCY_HEADER: "idempotency-key";
+export const AIOW_WEBHOOK_MAX_SKEW_SECONDS: 300;
+export type QuoteAdapterSignable = { method: string; path: string; timestamp: string; requestId: string; idempotencyKey: string; bodyBytes?: Uint8Array; bodySha256?: string };
+export function sha256Hex(bodyBytes: Uint8Array): string;
+export function canonicalQuoteAdapterRequest(input: QuoteAdapterSignable): string;
+export function signQuoteAdapterRequest(input: QuoteAdapterSignable & { secret: string }): string;
+export function verifyQuoteAdapterRequest(input: QuoteAdapterSignable & { secret: string; signature: string; now?: number; maxSkewSeconds?: number }): boolean;
+export function authorizationBearerMatches(header: string | null, secrets: readonly (string | undefined)[]): boolean;
+export function secureServiceUrl(value: string, testMode?: boolean): URL;
