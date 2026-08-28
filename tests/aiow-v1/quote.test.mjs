@@ -50,6 +50,17 @@ test("Smart Design modules use highest-anchor pricing and each is listed", () =>
   assert.equal(quote.smartDesign[1].totalCents, 1200000); assert.deepEqual(quote.smartDesign[1].determiningAnchors, ["technology-budget", "square-metres"]);
 });
 
+test("English quote artifacts use English Smart Design labels and booking route", () => {
+  const data = valid({ ...base, source: { ...base.source, route: "/en", locale: "en" }, configuration: { ...base.configuration, smartDesign: { modules: ["blueprint", "supervision"], squareMetres: 300, technologyBudgetEuros: 80000 } } });
+  const snapshot = buildQuoteSnapshot(data, { issueDate: "2026-08-28" });
+  assert.deepEqual(snapshot.smartDesign.map((item) => item.label), ["Smart Design Blueprint", "Smart Design Supervision"]);
+  assert.equal(snapshot.bookingUrl, "https://aiow.ai/en#booking");
+  const mails = buildQuoteMailContent({ quoteNumber: "AIOW-2026-0042", snapshot, contact: data.contact, source: data.source, receivedAt: "2026-08-28T12:00:00.000Z" });
+  assert.match(mails.customerMail.text, /Smart Design Blueprint/);
+  assert.match(mails.customerMail.text, /https:\/\/aiow\.ai\/en#booking/);
+  assert.doesNotMatch(mails.customerMail.text, /Blauwdruk|Regie/);
+});
+
 test("types, enums, bounds, dates, context, consent and honeypot are strict", () => {
   const mutations = [
     { configuration: { ...base.configuration, people: "8" } }, { configuration: { ...base.configuration, people: 10001 } }, { configuration: { ...base.configuration, serviceRoute: "easy" } },

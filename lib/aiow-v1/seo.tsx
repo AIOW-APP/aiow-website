@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { PricingContext, PricingPackage } from "./pricing-contexts";
+import type { AiowLocale } from "./locale";
+import { localizedSchema } from "./seo-schema-localized";
 
 export const SITE_URL = "https://aiow.ai";
 export const homeFaq = [
@@ -8,10 +10,10 @@ export const homeFaq = [
   { question: "Levert AIOW hardware voor kantoor of woning?", answer: "Niet binnen deze gepubliceerde prijs. Fysieke levering en installatie worden apart gescoped en vereisen waar nodig een gekwalificeerde partner." },
 ];
 
-export function pageMetadata({ title, description, path, locale = "nl" }: { title: string; description: string; path: string; locale?: "nl" | "en" }): Metadata {
+export function pageMetadata({ title, description, path, pairedPaths, locale = "nl" }: { title: string; description: string; path: string; pairedPaths: { nl: string; en: string }; locale?: AiowLocale }): Metadata {
   const canonical = `${SITE_URL}${path}`;
-  const homeAlternates = path === "/" || path === "/en" ? { nl: SITE_URL, en: `${SITE_URL}/en`, "x-default": SITE_URL } : undefined;
-  return { title, description, alternates: { canonical, languages: homeAlternates }, openGraph: { type: "website", siteName: "AIOW", title, description, url: canonical, locale: locale === "nl" ? "nl_NL" : "en_GB", images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: "AIOW — Working AI, precisely installed" }] }, twitter: { card: "summary_large_image", title, description, images: [`${SITE_URL}/opengraph-image`] } };
+  const languages = { nl: `${SITE_URL}${pairedPaths.nl}`, en: `${SITE_URL}${pairedPaths.en}`, "x-default": `${SITE_URL}${pairedPaths.nl}` };
+  return { title, description, alternates: { canonical, languages }, openGraph: { type: "website", siteName: "AIOW", title, description, url: canonical, locale: locale === "nl" ? "nl_NL" : "en_GB", alternateLocale: [locale === "nl" ? "en_GB" : "nl_NL"], images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: "AIOW — Working AI, precisely installed" }] }, twitter: { card: "summary_large_image", title, description, images: [`${SITE_URL}/opengraph-image`] } };
 }
 
 export function homeSchemas(locale: "nl" | "en" = "nl") {
@@ -19,18 +21,19 @@ export function homeSchemas(locale: "nl" | "en" = "nl") {
   return [
     { "@context": "https://schema.org", "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "AIOW", url: SITE_URL, description: en ? "AI for business processes, buildings and homes — designed and managed by one party." : "AI voor bedrijfsprocessen, gebouwen en woningen — ontworpen en beheerd door één partij." },
     { "@context": "https://schema.org", "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "AIOW", inLanguage: ["nl-NL", "en"] },
-    { "@context": "https://schema.org", "@type": "Service", "@id": `${SITE_URL}/#service`, provider: { "@id": `${SITE_URL}/#organization` }, name: en ? "Practical AI implementation and management" : "Praktische AI-implementatie en beheer", areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", price: "2950", description: en ? "Published starting indication excluding VAT and third-party costs; final after scan." : "Gepubliceerde vanaf-indicatie excl. btw en derde-kosten; definitief na scan." } },
+    { "@context": "https://schema.org", "@type": "Service", "@id": en ? `${SITE_URL}/en#service` : `${SITE_URL}/#service`, url: en ? `${SITE_URL}/en` : SITE_URL, inLanguage: en ? "en-GB" : "nl-NL", provider: { "@id": `${SITE_URL}/#organization` }, name: en ? "Practical AI implementation and management" : "Praktische AI-implementatie en beheer", areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", price: "2950", description: en ? "Published starting indication excluding VAT and third-party costs; final after scan." : "Gepubliceerde vanaf-indicatie excl. btw en derde-kosten; definitief na scan." } },
   ];
 }
 
-export function pillarSchemas(data: { slug: string; title: string; answer: string; pricing: { headline: string; note: string }; faq: { question: string; answer: string }[] }) {
-  const url = `${SITE_URL}/${data.slug}`;
+export function pillarSchemas(data: { slug: string; title: string; answer: string; pricing: { headline: string; note: string }; faq: { question: string; answer: string }[] }, locale: AiowLocale = "nl") {
+  const url = `${SITE_URL}/${locale === "en" ? `en/${data.slug}` : data.slug}`;
+  const language = locale === "en" ? "en-GB" : "nl-NL";
   return [
-    { "@context": "https://schema.org", "@type": "Service", "@id": `${url}/#service`, name: data.title, description: data.answer, url, provider: { "@id": `${SITE_URL}/#organization` }, areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", description: `${data.pricing.headline}. ${data.pricing.note}` } },
-    { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: data.faq.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) },
+    { "@context": "https://schema.org", "@type": "Service", "@id": `${url}/#service`, name: data.title, description: data.answer, url, inLanguage: language, provider: { "@id": `${SITE_URL}/#organization` }, areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", description: `${data.pricing.headline}. ${data.pricing.note}` } },
+    { "@context": "https://schema.org", "@type": "FAQPage", inLanguage: language, mainEntity: data.faq.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) },
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
-      { "@type": "ListItem", position: 1, name: "AIOW", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Oplossingen", item: `${SITE_URL}/#oplossingen` },
+      { "@type": "ListItem", position: 1, name: "AIOW", item: locale === "en" ? `${SITE_URL}/en` : SITE_URL },
+      { "@type": "ListItem", position: 2, name: locale === "en" ? "Solutions" : "Oplossingen", item: locale === "en" ? `${SITE_URL}/en#solutions` : `${SITE_URL}/#oplossingen` },
       { "@type": "ListItem", position: 3, name: data.title, item: url },
     ] },
   ];
@@ -59,11 +62,12 @@ const packageOffers: Record<PricingPackage, object> = {
   "smart-design-blueprint": { "@type":"Offer",name:"Smart Design Blauwdruk",description:"Hoogste van €12,50 per m² BVO, 12% technologiebudget of €9.500. Vanafprijs; boven 10 woningen offerte, nooit onder minimum.",priceSpecification:[unitPrice("Blauwdruk per m² BVO","12.50","MTK","vierkante meter","Eenmalig; hoogste anker geldt."),fixedPrice("Minimum Blauwdruk","9500","Hard minimum; 12% van technologiebudget kan hoger zijn.")] },
 };
 
-export function tariffSchemas() {
-  const url = `${SITE_URL}/tarieven`;
+export function tariffSchemas(locale: AiowLocale = "nl") {
+  const en = locale === "en";
+  const url = `${SITE_URL}${en ? "/en/rates" : "/tarieven"}`;
   const serviceOffers = Object.values(packageOffers);
-  return [
-    { "@context":"https://schema.org", "@type":"Service", "@id":`${url}/#service`, name:"AIOW implementatie, beheer en Smart Design", description:"AI voor bedrijfsprocessen, gebouwen en woningen met publieke vanafprijzen, eenheden, cadans en minima.", url, provider:{"@id":`${SITE_URL}/#organization`}, areaServed:"NL", offers:[
+  const schemas = [
+    { "@context":"https://schema.org", "@type":"Service", "@id":`${url}/#service`, name:en ? "AIOW implementation, management and Smart Design" : "AIOW implementatie, beheer en Smart Design", description:en ? "AI for business processes, buildings and homes with public starting prices, units, cadence and minimums." : "AI voor bedrijfsprocessen, gebouwen en woningen met publieke vanafprijzen, eenheden, cadans en minima.", url, inLanguage:en ? "en-GB" : "nl-NL", provider:{"@id":`${SITE_URL}/#organization`}, areaServed:"NL", offers:[
       ...serviceOffers,
       { "@type":"Offer",name:"Comfort",description:"Optioneel en alleen met verplichte automatische incasso. Abonnementen: werkelijke providerkostprijs +25%. Providerprijsstijgingen worden 1-op-1 doorbelast plus die 25% marge. Hardware: kostprijs +15%, met volledige vooruitbetaling of een aanbetaling van ten minste de hardwarewaarde vóór bestelling. AIOW financiert nooit renteloos voor. Onbekende derde-kosten vormen geen vast eindbedrag.",additionalProperty:[{"@type":"PropertyValue",name:"Abonnementenmarge",value:25,unitText:"PERCENT"},{"@type":"PropertyValue",name:"Hardwaremarge",value:15,unitText:"PERCENT"},{"@type":"PropertyValue",name:"Automatische incasso",value:"verplicht"}] },
       { "@type":"Offer",name:"Regie & engineering",priceSpecification:unitPrice("Meerwerk per uur","135","HUR","uur","Per kwartier, vooraf gemeld.") },
@@ -76,15 +80,17 @@ export function tariffSchemas() {
       { "@type":"Offer",name:"Smart Design Scan",description:"50% van de Scan is verrekenbaar bij doorgang naar Blauwdruk.",priceSpecification:[unitPrice("Scan per m² BVO","3.50","MTK","vierkante meter","Eenmalig."),fixedPrice("Minimum Scan","2950","Hard minimum.")] },
       { "@type":"Offer",name:"Smart Design Regie",description:"Hoogste van €7,50 per m² BVO, 5% technologiebudget of €7.500.",priceSpecification:[unitPrice("Regie per m² BVO","7.50","MTK","vierkante meter","Eenmalig; hoogste anker geldt."),fixedPrice("Minimum Regie","7500","Hard minimum; 5% technologiebudget kan hoger zijn.")] },
     ], termsOfService:`${url}#uitsluitingen` },
-    { "@context":"https://schema.org", "@type":"BreadcrumbList", itemListElement:[{"@type":"ListItem",position:1,name:"AIOW",item:SITE_URL},{"@type":"ListItem",position:2,name:"Tarieven",item:url}] },
+    { "@context":"https://schema.org", "@type":"BreadcrumbList", inLanguage:en ? "en-GB" : "nl-NL", itemListElement:[{"@type":"ListItem",position:1,name:"AIOW",item:en ? `${SITE_URL}/en` : SITE_URL},{"@type":"ListItem",position:2,name:en ? "Rates" : "Tarieven",item:url}] },
   ];
+  return localizedSchema(schemas, locale);
 }
 
-export function pricingContextSchemas(data: PricingContext) {
-  const url = `${SITE_URL}/tarieven/${data.slug}`;
+export function pricingContextSchemas(data: PricingContext, locale: AiowLocale = "nl") {
+  const en = locale === "en";
+  const url = `${SITE_URL}${en ? "/en/rates" : "/tarieven"}/${data.slug}`;
   return [
-    { "@context":"https://schema.org", "@type":"Service", "@id":`${url}/#service`, name:data.title, description:data.introduction, url, inLanguage:"nl-NL", provider:{"@id":`${SITE_URL}/#organization`}, areaServed:"NL", offers:packageOffers[data.package] },
-    { "@context":"https://schema.org", "@type":"BreadcrumbList", itemListElement:[{"@type":"ListItem",position:1,name:"AIOW",item:SITE_URL},{"@type":"ListItem",position:2,name:"Tarieven",item:`${SITE_URL}/tarieven`},{"@type":"ListItem",position:3,name:data.labelNl,item:url}] },
+    { "@context":"https://schema.org", "@type":"Service", "@id":`${url}/#service`, name:data.title, description:data.introduction, url, inLanguage:en ? "en-GB" : "nl-NL", provider:{"@id":`${SITE_URL}/#organization`}, areaServed:"NL", offers:localizedSchema(packageOffers[data.package], locale) },
+    { "@context":"https://schema.org", "@type":"BreadcrumbList", inLanguage:en ? "en-GB" : "nl-NL", itemListElement:[{"@type":"ListItem",position:1,name:"AIOW",item:en ? `${SITE_URL}/en` : SITE_URL},{"@type":"ListItem",position:2,name:en ? "Rates" : "Tarieven",item:`${SITE_URL}${en ? "/en/rates" : "/tarieven"}`},{"@type":"ListItem",position:3,name:en ? data.labelEn : data.labelNl,item:url}] },
   ];
 }
 

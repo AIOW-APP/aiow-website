@@ -30,15 +30,12 @@ test("light-theme pricing accent meets WCAG AA on every light surface", async ()
 
 test("all tariff row headers have row scope and all six regions have unique names", async () => {
   const source = await read("components/aiow-v1/TariffsPage.tsx");
-  const bodyHeaders = [...source.matchAll(/<tbody>(.*?)<\/tbody>/gs)].flatMap(([, body]) => [...body.matchAll(/<th([^>]*)>/g)]);
-  assert.ok(bodyHeaders.length > 0);
-  assert.equal(bodyHeaders.every(([, attributes]) => attributes.includes('scope="row"')), true);
-  const regions = [...source.matchAll(/<div className=\{styles\.tableWrap\}([^>]*)>/g)].map((match) => match[1]);
-  assert.equal(regions.length, 6);
-  assert.equal(regions.every((attributes) => attributes.includes('role="region"') && attributes.includes("onKeyDown={scrollTariffTable}")), true);
-  const names = regions.map((attributes) => attributes.match(/aria-label="([^"]+)"/)?.[1]);
-  assert.equal(names.every(Boolean), true);
-  assert.equal(new Set(names).size, 6);
+  assert.match(source, /<th scope="row">\{row\[0\]\}<\/th>/);
+  assert.match(source, /className=\{styles\.tableWrap\} tabIndex=\{0\} role="region" onKeyDown=\{scrollTariffTable\} aria-label=\{table\.label\}/);
+  for (const localeMarker of ["nl:", "en:"]) assert.ok(source.includes(localeMarker));
+  const labels = [...source.matchAll(/label: "([^"]+(?:scrollbaar|scrollable))"/g)].map((match) => match[1]);
+  assert.equal(labels.length, 12);
+  assert.equal(new Set(labels).size, 12);
 });
 
 test("pricing contexts, sitemap and LLM documents retain all 15 routes", async () => {
@@ -61,12 +58,39 @@ test("tariff and context schema source encodes public commercial terms", async (
   assert.match(source, /billingDuration: month/);
   assert.match(source, /const month = quantity\("MON", "maand"\)/);
   assert.match(source, /Comfort requires|Comfort\",description:\"Optioneel en alleen met verplichte automatische incasso/);
-  assert.match(source, /offers:packageOffers\[data\.package\]/);
+  assert.match(source, /offers:localizedSchema\(packageOffers\[data\.package\], locale\)/);
   assert.match(source, /"@type":"Service"/);
 });
 
-test("tariff pages do not advertise false English alternates", async () => {
-  const [seo, sitemap] = await Promise.all([read("lib/aiow-v1/seo.tsx"), read("app/sitemap.ts")]);
-  assert.match(seo, /path === "\/" \|\| path === "\/en"/);
-  assert.match(sitemap, /path === "" \|\| path === "\/en"/);
+test("every public route publishes reciprocal NL, EN and x-default alternates", async () => {
+  const [seo, sitemap, locale, enContext] = await Promise.all([read("lib/aiow-v1/seo.tsx"), read("app/sitemap.ts"), read("lib/aiow-v1/locale.ts"), read("app/en/rates/[slug]/page.tsx")]);
+  assert.match(seo, /pairedPaths: \{ nl: string; en: string \}/);
+  assert.match(seo, /"x-default": `\$\{SITE_URL\}\$\{pairedPaths\.nl\}`/);
+  assert.match(sitemap, /PUBLIC_ROUTE_PAIRS/);
+  assert.match(sitemap, /PRICING_CONTEXT_SLUGS\.map/);
+  assert.match(sitemap, /alternates: \{ languages \}/);
+  for (const pair of [["/tarieven", "/en/rates"], ["/ai-automatisering", "/en/ai-automation"], ["/lokale-ai", "/en/local-ai"], ["/ventures", "/en/ventures"], ["/privacy", "/en/privacy"]]) {
+    assert.ok(pair.every((path) => locale.includes(`"${path}"`)), `missing locale pair ${pair}`);
+  }
+  assert.match(enContext, /dynamicParams = false/);
+  assert.match(enContext, /generateStaticParams/);
+  assert.match(enContext, /\/en\/rates\/\$\{context\.slug\}/);
+});
+
+test("English routes, complete tariff translation and durable privacy meaning are present", async () => {
+  const [tariffs, info, controls] = await Promise.all([read("components/aiow-v1/TariffsPage.tsx"), read("components/aiow-v1/InfoPage.tsx"), read("components/aiow-v1/ThemeLanguageControls.tsx")]);
+  for (const phrase of ["Automatic direct debit is mandatory", "Provider price increases: passed through 1-to-1 plus the 25% margin", "full prepayment", "never provides interest-free financing", "50% of the Scan", "Above 10 homes", "€ 135/hour", "€ 1,200"]) assert.ok(tariffs.includes(phrase), `English tariff parity missing: ${phrase}`);
+  for (const phrase of ["Release takes place in two phases", "durably accept the lead, PDF and exactly two transactional mail tasks", "no PDF or receipt is issued", "do not constitute a newsletter subscription", "do not process a raw IP address", "no more than 90 days"]) assert.ok(info.includes(phrase), `English privacy parity missing: ${phrase}`);
+  assert.match(controls, /location\.search/);
+  assert.match(controls, /location\.hash/);
+  assert.match(controls, /localStorage\.setItem\("aiow-locale", targetLocale\)/);
+});
+
+test("English tariff JSON-LD browser oracle is independent and fixture-backed", async () => {
+  const [browser, fixture] = await Promise.all([read("tests/aiow-v1/browser-smoke.mjs"), read("tests/aiow-v1/fixtures/dutch-schema-terms.json")]);
+  const terms = JSON.parse(fixture);
+  assert.ok(terms.length >= 74);
+  for (const required of ["Eenmalig.", "Aansluiting", "Beheer per persoon per maand", "vierkante meter", "Smart Design Blauwdruk"]) assert.ok(terms.includes(required), `stable Dutch schema fixture missing ${required}`);
+  assert.match(browser, /fixtures\/dutch-schema-terms\.json/);
+  assert.doesNotMatch(browser, /seo-schema-localized\.ts/);
 });

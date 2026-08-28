@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const base = "http://127.0.0.1:4321";
 const contextSlugs = ["accountants", "logistiek", "bouw", "makelaars", "advocatuur", "zorg", "horeca-retail", "industrie", "vermogende-particulieren", "kantoorpand", "bedrijfshal-industrie", "woning", "villa-signature", "woonproject-vve", "nieuwbouwproject"];
+const translatedDutchSchemaTerms = JSON.parse(await readFile(new URL("./fixtures/dutch-schema-terms.json", import.meta.url), "utf8"));
 const browser = await webkit.launch({ headless: true });
 
 function flatten(value) {
@@ -166,12 +167,37 @@ try {
   assert.equal(malformedDownloads, 0, "malformed PDF response triggered a download");
   await malformedPdfPage.close();
 
+  const englishBookingPage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  let englishBookingPayload;
+  await englishBookingPage.route("**/api/booking", async (route) => { englishBookingPayload = JSON.parse(route.request().postData()); await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok:true,requestId:"english-booking-proof",booking:{ date:"2026-08-30",slot:"09:00",subject:"bedrijf" } }) }); });
+  await englishBookingPage.goto(`${base}/en`, { waitUntil: "networkidle" });
+  await englishBookingPage.getByRole("button", { name: "Book a scan", exact: true }).first().click();
+  await englishBookingPage.getByRole("button", { name: "Continue" }).click();
+  await englishBookingPage.getByLabel("Date").fill("2026-08-30");
+  await englishBookingPage.getByRole("button", { name: "09:00" }).click();
+  await englishBookingPage.getByRole("button", { name: "Continue" }).click();
+  await englishBookingPage.getByLabel("Name").fill("English Booking Proof");
+  await englishBookingPage.getByLabel("E-mail").fill("english@example.com");
+  await englishBookingPage.getByRole("checkbox").check();
+  await englishBookingPage.getByRole("button", { name: "Send request" }).click();
+  await englishBookingPage.getByText("Your scan request is registered.").waitFor();
+  assert.equal(englishBookingPayload.locale, "en");
+  const [calendarDownload] = await Promise.all([englishBookingPage.waitForEvent("download"), englishBookingPage.getByRole("button", { name: "Download calendar file" }).click()]);
+  const calendarText = await readFile(await calendarDownload.path(), "utf8");
+  assert.match(calendarText, /SUMMARY:AIOW introduction/);
+  assert.match(calendarText, /DESCRIPTION:AIOW received your booking request/);
+  assert.doesNotMatch(calendarText, /kennismaking|Boekingsaanvraag/);
+  await englishBookingPage.close();
+
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  const publicRoutes = ["/", "/en", "/tarieven", "/ai-automatisering", "/lokale-ai", "/smart-office", "/home", "/ventures", "/privacy"];
+  const runtimeErrors = [];
+  page.on("pageerror", (error) => runtimeErrors.push(error.message));
+  const publicRoutes = ["/", "/en", "/tarieven", "/en/rates", "/ai-automatisering", "/en/ai-automation", "/lokale-ai", "/en/local-ai", "/smart-office", "/en/smart-office", "/home", "/en/home", "/ventures", "/en/ventures", "/privacy", "/en/privacy"];
   for (const route of publicRoutes) {
     const response = await page.goto(`${base}${route}`, { waitUntil: "networkidle" });
     assert.equal(response?.status(), 200, `${route} not 200`);
-    if (route !== "/tarieven") {
+    assert.equal(await page.locator("html").getAttribute("lang"), route === "/en" || route.startsWith("/en/") ? "en" : "nl", `${route} html lang`);
+    if (route !== "/tarieven" && route !== "/en/rates") {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       assert.ok(overflow <= 1, `${route} overflow ${overflow}`);
     }
@@ -182,17 +208,16 @@ try {
   assert.equal(await page.locator("#solutions").count(), 1);
   assert.equal(await page.locator("#approach").count(), 1);
   assert.equal(await page.locator("#ventures").count(), 1);
-  assert.equal(await page.locator('nav[aria-label="Primary navigation"] a').filter({ hasText: "Ventures" }).getAttribute("href"), "/en#ventures");
-  const ratesLink = page.getByRole("link", { name: "Rates (Dutch)", exact: true }).first();
-  assert.equal(await ratesLink.getAttribute("href"), "/tarieven");
-  assert.equal(await ratesLink.getAttribute("hreflang"), "nl");
-  const pricingCardLabels = await page.locator('a[href^="/tarieven/"] > span').allTextContents();
+  const englishHomeNodes = await schemas(page);
+  assert.ok(englishHomeNodes.some((node) => node["@type"] === "Service" && node.url === "https://aiow.ai/en" && node.inLanguage === "en-GB" && node["@id"] === "https://aiow.ai/en#service"), "English home Service identity missing");
+  assert.equal(await page.locator('nav[aria-label="Primary navigation"] a').filter({ hasText: "Ventures" }).getAttribute("href"), "/en/ventures");
+  const ratesLink = page.getByRole("link", { name: "Rates", exact: true }).first();
+  assert.equal(await ratesLink.getAttribute("href"), "/en/rates");
+  const pricingCardLabels = await page.locator('a[href^="/en/rates/"] > span').allTextContents();
   for (const dutchLabel of ["Logistiek", "Bouw", "Makelaars", "Advocatuur", "Zorg", "Kantoorpand", "Woning", "Nieuwbouwproject"]) assert.equal(pricingCardLabels.includes(dutchLabel), false, `Dutch pricing card leaked on EN: ${dutchLabel}`);
   for (const englishLabel of ["Logistics", "Construction", "Real estate agents", "Legal practices", "Healthcare", "Office building", "Home", "New-build project"]) assert.equal(pricingCardLabels.filter((label) => label === englishLabel).length, 1, `English pricing card missing: ${englishLabel}`);
-  const dutchSolutionLinks = page.locator('#solutions a[href="/ai-automatisering"], #solutions a[href="/lokale-ai"], #solutions a[href="/smart-office"], #solutions a[href="/home"]');
-  assert.equal(await dutchSolutionLinks.count(), 4);
-  assert.equal((await dutchSolutionLinks.evaluateAll((links) => links.map((link) => ({ language: link.getAttribute("hreflang"), text: link.textContent })))).every((link) => link.language === "nl" && link.text.includes("Dutch page")), true);
-  assert.equal(await page.getByRole("link", { name: /Visit Ventures · Dutch page/ }).getAttribute("hreflang"), "nl");
+  const englishSolutionLinks = page.locator('#solutions a[href="/en/ai-automation"], #solutions a[href="/en/local-ai"], #solutions a[href="/en/smart-office"], #solutions a[href="/en/home"]');
+  assert.equal(await englishSolutionLinks.count(), 4);
   await page.getByRole("button", { name: "Book a scan", exact: true }).first().click();
   assert.equal(await page.getByLabel("Subject").count(), 1);
   assert.equal(await page.getByText("Onderwerp", { exact: true }).count(), 0);
@@ -217,6 +242,7 @@ try {
       assert.ok(after > before, `ArrowRight did not scroll tariff table at ${width}: ${before} -> ${after}`);
     }
     const theme = page.getByLabel("Thema");
+    assert.equal(await theme.isVisible(), true, `theme control hidden at ${width}`);
     await theme.selectOption("light", { force: true });
     assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
     const lightTokens = await page.locator("main").evaluate((node) => {
@@ -237,6 +263,31 @@ try {
     const darkCopper = await page.locator("main").evaluate((node) => getComputedStyle(node.parentElement).getPropertyValue("--copper").trim());
     assert.equal(darkCopper.toLowerCase(), "#d9a441");
   }
+
+  await page.goto(`${base}/tarieven`, { waitUntil: "networkidle" });
+  await page.getByLabel("Thema").selectOption("light");
+  await page.goto(`${base}/en/rates`, { waitUntil: "networkidle" });
+  assert.equal(await page.locator("html").getAttribute("data-theme"), "light", "theme did not persist across locale navigation");
+  for (const id of ["business", "building", "home", "additional-work", "advice"]) assert.equal(await page.locator(`#${id}`).count(), 1, `English tariff anchor missing: ${id}`);
+  const englishTariffSchemaText = JSON.stringify(await schemas(page));
+  for (const dutchTerm of translatedDutchSchemaTerms) assert.equal(englishTariffSchemaText.includes(dutchTerm), false, `Dutch tariff schema term leaked: ${dutchTerm}`);
+  await page.getByLabel("Theme").selectOption("system");
+  await page.emulateMedia({ colorScheme: "light" });
+  assert.equal((await page.locator("main").evaluate((node) => getComputedStyle(node.parentElement).getPropertyValue("--bg").trim())).toLowerCase(), "#f4efe6");
+  await page.emulateMedia({ colorScheme: "dark" });
+  assert.equal((await page.locator("main").evaluate((node) => getComputedStyle(node.parentElement).getPropertyValue("--bg").trim())).toLowerCase(), "#14161a");
+
+  await page.goto(`${base}/tarieven/accountants?utm_test=1#toepassingen`, { waitUntil: "networkidle" });
+  const englishToggle = page.getByRole("link", { name: "Bekijk deze pagina in het Engels" });
+  await page.waitForFunction(() => document.querySelector('a[aria-label="Bekijk deze pagina in het Engels"]')?.getAttribute("href")?.includes("utm_test=1"));
+  assert.equal(await englishToggle.getAttribute("href"), "/en/rates/accountants?utm_test=1#toepassingen");
+  await englishToggle.click();
+  await page.waitForLoadState("networkidle");
+  assert.equal(page.url(), `${base}/en/rates/accountants?utm_test=1#toepassingen`);
+  assert.equal(await page.evaluate(() => localStorage.getItem("aiow-locale")), "en");
+  const dutchToggle = page.getByRole("link", { name: "View this page in Dutch" });
+  await page.waitForFunction(() => document.querySelector('a[aria-label="View this page in Dutch"]')?.getAttribute("href")?.includes("utm_test=1"));
+  assert.equal(await dutchToggle.getAttribute("href"), "/tarieven/accountants?utm_test=1#toepassingen");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}/tarieven`, { waitUntil: "networkidle" });
@@ -267,10 +318,18 @@ try {
     const contextNodes = await schemas(page);
     assert.ok(contextNodes.some((node) => node["@type"] === "Service" && node.url === `https://aiow.ai/tarieven/${slug}`), `${slug} Service schema missing`);
     assert.ok(contextNodes.some((node) => node["@type"] === "PriceSpecification" || node["@type"] === "UnitPriceSpecification"), `${slug} price schema missing`);
+    const englishResponse = await page.goto(`${base}/en/rates/${slug}`, { waitUntil: "networkidle" });
+    assert.equal(englishResponse?.status(), 200, `/en/rates/${slug} not 200`);
+    assert.equal(await page.locator("html").getAttribute("lang"), "en");
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), `https://aiow.ai/en/rates/${slug}`);
+    const englishNodes = await schemas(page);
+    assert.ok(englishNodes.some((node) => node["@type"] === "Service" && node.url === `https://aiow.ai/en/rates/${slug}` && String(node.inLanguage).startsWith("en")), `${slug} English Service schema missing`);
+    const englishSchemaText = JSON.stringify(englishNodes);
+    for (const dutchTerm of ["Aansluiting", "Beheer per", "vierkante meter", "Hard maandminimum"]) assert.equal(englishSchemaText.includes(dutchTerm), false, `${slug} Dutch schema term leaked: ${dutchTerm}`);
   }
   await page.goto(`${base}/tarieven/accountants`, { waitUntil: "networkidle" });
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://aiow.ai/tarieven/accountants");
-  assert.equal(await page.locator('link[rel="alternate"][hreflang]').count(), 0);
+  assert.equal(await page.locator('link[rel="alternate"][hreflang]').count(), 3);
   assert.ok(await page.locator("#toepassingen article").count() >= 2 && await page.locator("#toepassingen article").count() <= 3);
   assert.equal(await page.getByText("Pakketadvies", { exact: true }).count(), 1);
   assert.equal(await page.getByText("Transparant gerekend", { exact: true }).count(), 1);
@@ -281,7 +340,7 @@ try {
 
   await page.goto(`${base}/ai-automatisering`, { waitUntil: "networkidle" });
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://aiow.ai/ai-automatisering");
-  assert.equal(await page.locator('link[rel="alternate"][hreflang]').count(), 0);
+  assert.equal(await page.locator('link[rel="alternate"][hreflang]').count(), 3);
 
   await page.goto(base, { waitUntil: "networkidle" });
   const homeSchema = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -291,6 +350,7 @@ try {
     const response = await page.request.get(`${base}${route}`);
     assert.ok(response.status() < 400, `broken public link ${route}: ${response.status()}`);
   }
+  assert.deepEqual(runtimeErrors, [], `runtime page errors: ${runtimeErrors.join(" | ")}`);
 
   const robots = await (await page.request.get(`${base}/robots.txt`)).text();
   for (const bot of ["GPTBot", "ClaudeBot", "PerplexityBot"]) {
@@ -299,7 +359,7 @@ try {
     assert.ok(group.includes("Disallow: /portal/admin"), `${bot} exposes admin`);
   }
   await page.close();
-  console.log("BROWSER_SMOKE_PASS homepage=4-widths calculator=PASS quote=4-widths+download+fail-closed tariffs=4-widths/6-tables themes=PASS contexts=15 schema=PASS locale=PASS booking=PASS links=PASS robots=PASS");
+  console.log("BROWSER_SMOKE_PASS homepage=4-widths calculator=PASS quote=4-widths+download+fail-closed tariffs=NL+EN/4-widths themes=system+light+dark+persistence contexts=15x2 schema=PASS locale=route+query+hash booking=PASS links=PASS robots=PASS");
 } finally {
   await browser.close();
 }

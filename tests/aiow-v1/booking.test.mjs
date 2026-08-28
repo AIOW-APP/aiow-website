@@ -10,6 +10,17 @@ test("valid booking is trimmed and normalized", () => {
   assert.equal(result.ok, true);
   assert.equal(result.data.name, "Ada Lovelace");
   assert.equal(result.data.email, "ada@example.com");
+  assert.equal(result.data.locale, "nl");
+});
+
+test("English booking locale is preserved and field errors stay English", () => {
+  const validEnglish = validateBooking({ ...valid, locale: "en" }, { now });
+  assert.equal(validEnglish.ok, true);
+  assert.equal(validEnglish.data.locale, "en");
+  const invalidEnglish = validateBooking({ ...valid, locale: "en", email: "bad", date: "2026-08-27" }, { now });
+  assert.equal(invalidEnglish.ok, false);
+  assert.equal(invalidEnglish.errors.email, "Enter a valid email address.");
+  assert.equal(invalidEnglish.errors.date, "Choose a future date.");
 });
 
 test("malformed input is rejected", () => {
