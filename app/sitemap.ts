@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { PRICING_CONTEXT_SLUGS } from "@/lib/aiow-v1/pricing-contexts";
 
 const SITE_URL = "https://aiow.ai";
-const routes = ["", "/en", "/ai-automatisering", "/lokale-ai", "/smart-office", "/home"];
+const routes = ["", "/en", "/tarieven", ...PRICING_CONTEXT_SLUGS.map((slug) => `/tarieven/${slug}`), "/ai-automatisering", "/lokale-ai", "/smart-office", "/home"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-08-27T00:00:00.000Z");
+  const lastModified = new Date("2026-08-28T00:00:00.000Z");
   return routes.map((path, index) => ({
     url: `${SITE_URL}${path}`,
     lastModified,
