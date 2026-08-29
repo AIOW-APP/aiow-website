@@ -1,7 +1,12 @@
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { listVentureAccounts, type VentureAccount } from "@/lib/aiow-venture-accounts";
 import styles from "../Portal.module.css";
 
 export default async function AdminPage() {
+  const requestHeaders = await headers();
+  if (requestHeaders.get("x-aiow-operator-id") !== "richard" || requestHeaders.get("x-aiow-operator-role") !== "ops_admin") notFound();
+
   const accounts = await listVentureAccounts();
   const stats = summarize(accounts);
 
