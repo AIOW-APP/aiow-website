@@ -36,6 +36,23 @@ function deref(schema) {
   }
   return schema;
 }
+function validatorForRef(ref) {
+  return ajv.compile({ $schema:"https://json-schema.org/draft/2020-12/schema", $defs:contract.$defs, $ref:ref });
+}
+function assertSqlValue(name, arg, value) {
+  if (value === null) return assert.equal(arg.nullable, true, `${name}/${arg.name} unexpected null`);
+  const ok = {
+    uuid: typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value),
+    text: typeof value === "string",
+    integer: Number.isInteger(value),
+    bigint: Number.isSafeInteger(value),
+    boolean: typeof value === "boolean",
+    date: typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value),
+    timestamptz: typeof value === "string" && !Number.isNaN(Date.parse(value)),
+    jsonb: value !== null && typeof value === "object",
+  }[arg.sqlType];
+  assert.equal(ok, true, `${name}/${arg.name} SQL ${arg.sqlType}`);
+}
 function applyFixtureConstraints(value, input) {
   const schema = deref(input);
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
@@ -209,18 +226,23 @@ function sha256(value) {
 function validateOpsMutationAck(value, persistedReplay = value) {
   if (!validateRoot(value)) return false;
   if (value.revision !== value.previousRevision + 1 || value.projection.revision !== value.revision) return false;
-  const effectFields = { mark_read:"unread", set_priority:"priority", transition_status:"status", set_next_action:"nextActionAt", set_legal_hold:"legalHold" };
+  const effectFields = { mark_read:"unread", set_priority:"priority", transition_status:"status", set_next_action:"nextActionAt", set_legal_hold:"legalHold", set_active_customer_relation:"activeCustomerRelation" };
   const field = effectFields[value.operation];
   if (field && value.effect[field] !== value.projection[field]) return false;
   return !value.replayed || stableJson(value) === stableJson(persistedReplay);
+}
+function validateOutboxBatchAck(value) {
+  if (!validateRoot(value) || value.itemCount !== value.items.length || value.items.length > value.requestedLimit) return false;
+  return new Set(value.items.map((item) => item.id)).size === value.items.length && new Set(value.items.map((item) => item.leaseToken)).size === value.items.length;
 }
 function providerGateBinding(record) {
   const fields = contract["x-aiow-provider-gate"].approvalBinding;
   return sha256(Object.fromEntries(fields.map((field) => [field, record[field]])));
 }
-function validateCurrentProviderGate(record, serverNow) {
+function validateCurrentProviderGate(record, serverNow, target = record) {
   if (!validateRoot(record)) return false;
   if (!["approved", "activated"].includes(record.state)) return false;
+  for (const field of ["tenantId","applicationId","mailbox","sender","controlMailbox"]) if (record[field] !== target[field]) return false;
   const now = Date.parse(serverNow), approved = Date.parse(record.approvedAt), expires = Date.parse(record.expiresAt);
   return approved <= now && now < expires && record.approvalBindingSha256 === providerGateBinding(record);
 }
@@ -229,12 +251,12 @@ test("canonical fixture registry contains exactly 70 independently frozen record
   const expectedCounts = { requests:11, acks:5, errors:7, projections:10, events:12, providerResults:4, rpcBoundaries:19, migrationScenarios:2 };
   const expectedDigests = {
     requests:"991e4fde39e0144c7a378f7a5ceb194fca400286c9a1ab5abebd83fd62e877d2",
-    acks:"ed50fe7d0b0a34b3081023f36688e45b6b38424571118bd9fba47c202b15f73a",
-    errors:"90d706434488ca273ac20edc683eb55412bcda0572a67c930e17acdecaeaaa8e",
-    projections:"249b2607169e69ff2c1ff5b9bebdfc9808a9cb8dddcfae829701e893cdeb86c3",
+    acks:"bb222942fb530f65b0abfa31d57eb220001212bafb535a7bbca18113cbfbaacd",
+    errors:"431fca98f45b3acb589ebc39402c4c63042c0b67f8062f6c5a0abe6368a59e3d",
+    projections:"01a4d4ef2134a4f0a779d2ed946556bda56afb5f2a64f8e684ca8c16e0fdaeeb",
     events:"ea4aced2945e90e903d95f27514e90f4b366df6ea4913e028f9029dd51df5d83",
     providerResults:"ce715ea6a8c88bbe647e2ec182fe3e2b691e01706ffb279d52c10df7b377c12d",
-    rpcBoundaries:"905baad2eebb0f08fdfa9fc7c00cd072aba37f3e5e45c0daf37504be136b0c9b",
+    rpcBoundaries:"5f5fad8b03d12c99222796dfded005024b90a31e39df4b8faf58a473c86a0868",
     migrationScenarios:"4cd373a06b638959ecc151112882dd3ed6513b06f15c87f4cd839292589e69de",
   };
   assert.equal(canonicalFixtures.fixtureVersion, 1);
@@ -245,15 +267,31 @@ test("canonical fixture registry contains exactly 70 independently frozen record
   }
   const records = Object.entries(expectedCounts).flatMap(([group]) => Object.entries(canonicalFixtures[group]).map(([name, value]) => ({group,name,value}))).sort((a,b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
   assert.equal(records.length, 70);
-  assert.equal(sha256(records), "633b5b68cf6b76107bde5c33899107273efa42eed351b428d35c7501a583a6fe");
+  assert.equal(sha256(records), "8a3a42dfaa39cb42421e208015d0c5ab8da58ccdf6f34041f9f44492cbdf4d67");
   for (const group of ["requests","acks","errors","projections","events","providerResults"])
     for (const [name, value] of Object.entries(canonicalFixtures[group])) assert.equal(validateRoot(value), true, `${group}/${name}: ${ajv.errorsText(validateRoot.errors)}`);
+  const ops = contract["x-aiow-operations"];
+  for (const [name, boundary] of Object.entries(canonicalFixtures.rpcBoundaries)) {
+    for (const arg of boundary.args) {
+      const validateArg = validatorForRef(arg.validationRef);
+      assert.equal(validateArg(arg.value), true, `${name}/${arg.name}: ${ajv.errorsText(validateArg.errors)}`);
+      assertSqlValue(name, arg, arg.value);
+    }
+    for (const error of Object.values(boundary.errorMap)) {
+      const validateError = validatorForRef(error.schemaRef);
+      const candidate = {schemaKind:"error",code:error.code,message:"x",requestId:uuid};
+      assert.equal(validateError(candidate), true, `${name}/${error.code}: ${ajv.errorsText(validateError.errors)}`);
+      const statusByCode = {invalid_request:[400],idempotency_conflict:[409],revision_conflict:[409],unauthenticated:[401],forbidden:[403],not_found:[404],rate_limited:[429],unavailable:[503],provider_failure:[502,503]};
+      assert.ok(statusByCode[error.code]?.includes(error.httpStatus), `${name}/${error.code}/${error.httpStatus}`);
+    }
+    assert.equal(boundary.returnSchemaRef, ops[name].ackRef, `${name} return`);
+  }
 });
 
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
   assert.equal(Object.keys(ops).length, 28);
-  assert.equal(sha256(ops), "9c9f00b645f4c3a39e825c66d96735ad71e3769dd27a6481d361cff635ead05f");
+  assert.equal(sha256(ops), "a176ae7fa6da5db307f29c56304b1859ac08721e533929d4acc9d6056d7911ca");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
@@ -268,7 +306,8 @@ test("operation and RPC registries freeze typed order, private service-role auth
       if (arg.validationRef.startsWith("#/")) deref({$ref:arg.validationRef});
       assert.doesNotMatch(arg.name, /operator|actor|jwt/i);
     }
-    assert.deepEqual(op.returns, {sqlType:"jsonb",schemaRef:op.ackRef,cardinality:"exactly_one"});
+    const expectedCardinality = ["aiow_mail_outbox_claim_v2","aiow_mail_outbox_recover_stale_v2"].includes(name) ? "exactly_one_batch_ack" : "exactly_one";
+    assert.deepEqual(op.returns, {sqlType:"jsonb",schemaRef:op.ackRef,cardinality:expectedCardinality});
     assert.deepEqual(canonicalFixtures.rpcBoundaries[name].args.map(({value,...arg}) => arg), op.args, `${name} canonical boundary`);
   }
   assert.equal(hmac.algorithm,"HMAC-SHA256"); assert.equal(hmac.encoding,"lowercase hexadecimal"); assert.equal(hmac.toleranceSeconds,300);
@@ -294,6 +333,34 @@ test("mutation ACK custom verifier rejects crossed arithmetic, projection and re
   assert.equal(contract.$defs.OpsMutationACK["x-aiow-custom-validator"],"opsMutationAckV1");
 });
 
+test("active-customer relation ACK is closed, revision-correlated and replay-stable", () => {
+  const base = structuredClone(canonicalFixtures.acks.OpsMutationACK);
+  const ack = {...base,replayed:false,operation:"set_active_customer_relation",effect:{activeCustomerRelation:true},projection:{...base.projection,activeCustomerRelation:true}};
+  assert.equal(validateOpsMutationAck(ack),true);
+  assert.equal(validateRoot({...ack,effect:{activeCustomerRelation:true,injected:true}}),false);
+  assert.equal(validateOpsMutationAck({...ack,effect:{activeCustomerRelation:false}}),false);
+  assert.equal(validateOpsMutationAck({...ack,projection:{...ack.projection,revision:3}}),false);
+  assert.equal(validateOpsMutationAck({...ack,replayed:true},{...ack,replayed:true,auditId:"123e4567-e89b-42d3-a456-426614174099"}),false);
+  assert.match(contract["x-aiow-operations"].aiow_active_customer_relation_set_v1.effect,/previousRevision \+ 1 = revision = projection.revision/);
+});
+
+test("outbox batch ACK is exact for zero, one and multiple ordered leases", () => {
+  const cases=canonicalFixtures.rpcBoundaries.aiow_mail_outbox_claim_v2.canonicalResults;
+  for (const [name,value] of Object.entries(cases)) assert.equal(validateOutboxBatchAck(value),true,name);
+  const multi=structuredClone(cases.multi);
+  assert.equal(validateOutboxBatchAck({...multi,itemCount:1}),false);
+  assert.equal(validateOutboxBatchAck({...multi,requestedLimit:1}),false);
+  assert.equal(validateRoot({...multi,requestedLimit:0}),false);
+  assert.equal(validateRoot({...multi,requestedLimit:51}),false);
+  assert.equal(validateOutboxBatchAck({...multi,items:[multi.items[0],{...multi.items[1],id:multi.items[0].id}]}),false);
+  assert.equal(validateOutboxBatchAck({...multi,items:[multi.items[0],{...multi.items[1],leaseToken:multi.items[0].leaseToken}]}),false);
+  const {payloadSha256,...incomplete}=multi.items[0];
+  assert.equal(validateRoot({...cases.one,items:[incomplete]}),false);
+  assert.equal(contract["x-aiow-operations"].aiow_mail_outbox_claim_v2.ackRef,"#/$defs/OutboxBatchACK");
+  assert.equal(contract["x-aiow-operations"].aiow_mail_outbox_recover_stale_v2.ackRef,"#/$defs/OutboxBatchACK");
+  assert.equal(contract["x-aiow-operations"].mail_run.responses["200"],"#/$defs/OutboxBatchACK");
+});
+
 test("outbox state machine, leases and Graph-only provider outcomes reject hostile crossings", () => {
   const outbox = contract["x-aiow-outbox"], ops = contract["x-aiow-operations"];
   const edges = outbox.transitions.flatMap((transition) => transition.from.flatMap((from) => (Array.isArray(transition.to) ? transition.to : [transition.to]).map((to) => `${from}->${to}@${transition.rpc}`))).sort();
@@ -315,32 +382,42 @@ test("outbox state machine, leases and Graph-only provider outcomes reject hosti
   assert.equal(validateRoot({...accepted,category:"ambiguous"}), false);
   assert.equal(validateRoot({...canonicalFixtures.providerResults.transient_pre_acceptance,code:"invalid_recipient"}), false);
   assert.equal(validateRoot({...canonicalFixtures.providerResults.permanent_pre_acceptance,code:"timeout_before_response"}), false);
+  const operationCategories={aiow_mail_outbox_sent_v2:"accepted",aiow_mail_outbox_retry_v2:"transient_pre_acceptance",aiow_mail_outbox_dead_v2:"permanent_pre_acceptance",aiow_mail_outbox_review_v2:"ambiguous"};
+  for (const [rpc,category] of Object.entries(operationCategories)) {
+    const result=canonicalFixtures.rpcBoundaries[rpc].args.find((arg)=>arg.name==="p_result").value;
+    assert.equal(result.category,category,rpc);
+    for (const other of Object.values(operationCategories).filter((value)=>value!==category)) assert.notEqual(result.category,other,rpc);
+  }
   assert.deepEqual(contract["x-aiow-provider-gate"].v2Providers,["microsoft_graph"]);
   assert.equal(validateRoot({...accepted,receipt:{...accepted.receipt,provider:"gmail_legacy_test_only"}}),false);
 });
 
 test("provider owner gate binds exact Graph target, RBAC evidence, revision and trusted time", () => {
-  const gate = {...canonicalFixtures.projections.ProviderGateRecord,state:"activated",secretPresent:true,oauthClientCredentialsPresent:true,exchangeRbacSenderInScope:true,exchangeRbacControlMailboxInScope:false,entraUnscopedMailSendAssigned:false,ownerApprovedBy:"richard",approvedAt:"2026-08-30T12:00:00.000Z",expiresAt:"2026-08-31T12:00:00.000Z"};
+  const gate = {...canonicalFixtures.projections.ProviderGateRecord,state:"activated",secretPresent:true,oauthClientCredentialsPresent:true,controlMailbox:"negative-control@example.com",exchangeRbacSenderInScope:true,exchangeRbacControlMailboxInScope:false,entraUnscopedMailSendAssigned:false,ownerApprovedBy:"richard",approvedAt:"2026-08-30T12:00:00.000Z",expiresAt:"2026-08-31T12:00:00.000Z"};
   gate.approvalBindingSha256 = providerGateBinding(gate);
-  assert.equal(validateCurrentProviderGate(gate,"2026-08-30T13:00:00.000Z"),true);
-  assert.equal(validateRoot({...gate,ownerApprovedBy:"arbitrary"}),false);
-  assert.equal(validateRoot({...gate,exchangeRbacSenderInScope:false}),false);
-  assert.equal(validateRoot({...gate,exchangeRbacControlMailboxInScope:true}),false);
-  assert.equal(validateRoot({...gate,entraUnscopedMailSendAssigned:true}),false);
-  assert.equal(validateCurrentProviderGate({...gate,sender:"attacker@example.com"},"2026-08-30T13:00:00.000Z"),false);
-  assert.equal(validateCurrentProviderGate({...gate,evidenceSha256:"b".repeat(64)},"2026-08-30T13:00:00.000Z"),false);
-  assert.equal(validateCurrentProviderGate({...gate,revision:2},"2026-08-30T13:00:00.000Z"),false);
+  const now="2026-08-30T13:00:00.000Z";
+  assert.equal(validateCurrentProviderGate(gate,now),true);
+  const mutations={
+    gateId:"other_gate",environment:"preview",provider:"gmail_legacy_test_only",tenantId:"123e4567-e89b-42d3-a456-426614174099",applicationId:"123e4567-e89b-42d3-a456-426614174098",
+    mailbox:"other@example.com",sender:"attacker@example.com",controlMailbox:"different-control@example.com",secretPresent:false,oauthClientCredentialsPresent:false,
+    exchangeApplicationRole:"Mail.Read",exchangeRbacSenderInScope:false,exchangeRbacControlMailboxInScope:true,entraUnscopedMailSendAssigned:true,evidenceSha256:"b".repeat(64),revision:2,
+    ownerApprovedBy:"arbitrary",approvedAt:"2026-08-30T12:00:01.000Z",expiresAt:"2026-08-31T12:00:01.000Z",runtimeCapability:"mail_read",fallbackProvider:"gmail_legacy_test_only"
+  };
+  assert.deepEqual(Object.keys(mutations),contract["x-aiow-provider-gate"].approvalBinding);
+  for (const [field,value] of Object.entries(mutations)) assert.equal(validateCurrentProviderGate({...gate,[field]:value},now),false,field);
+  assert.equal(validateCurrentProviderGate(gate,now,{...gate,controlMailbox:"provider-control@example.com"}),false,"provider target mismatch");
   assert.equal(validateCurrentProviderGate(gate,"2026-08-29T13:00:00.000Z"),false);
   assert.equal(validateCurrentProviderGate(gate,gate.expiresAt),false);
-  assert.equal(validateCurrentProviderGate({...gate,state:"revoked"},"2026-08-30T13:00:00.000Z"),false);
+  assert.equal(validateCurrentProviderGate({...gate,state:"revoked"},now),false);
   assert.equal(contract.$defs.ProviderGateRecord["x-aiow-custom-validator"],"providerGateCurrentV1");
+  assert.match(contract["x-aiow-provider-gate"].runtimeVerifier,/every listed current persisted fact/);
   assert.match(contract["x-aiow-provider-gate"].microsoftAuthority.unionRiskRule,/MUST NOT/);
 });
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"2c326e2515f8b00c9467b6cfc78ae78cc659040aedeeb9dde6b9768eab26fa4d");
-  assert.equal(sha256(db.sourceMappings),"ef2cd092dcb45b9836f4c91c40008c461a6894ee0d422544003ec7c03308f7c4");
+  assert.equal(sha256(db),"4098866b316d609e8ef08db8fffb9dafeb9ef31ca1aa8ae47cbe296be152779f");
+  assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {
     const mapping=db.sourceMappings[source];
@@ -356,6 +433,31 @@ test("persistence mappings and retention anchors are exact and exception-complet
   assert.deepEqual(retention.exceptionScope.legal_hold,["lead PII","quote PDFs","outbox payloads","provider receipts"]);
   assert.deepEqual(retention.exceptionScope.active_customer_relation,retention.exceptionScope.legal_hold);
   assert.match(retention.exceptionScope.effect,/anchor age does not reset/); assert.match(retention.orphanDocuments,/FK.*ON DELETE RESTRICT/);
+});
+
+test("terminal and abandonment anchors have trusted CAS writers and exact no-op boundaries", () => {
+  const life=contract["x-aiow-lifecycle"].terminalAnchors, abandonment=contract["x-aiow-retention"].abandonment;
+  function transition(row,to,serverTime,{replay=false}={}) {
+    if (replay || row.status===to) return row;
+    const next={...row,status:to,revision:row.revision+1};
+    if (row.status==="lost" && to==="qualified") next.terminalAt=null;
+    else if (!["won","lost"].includes(row.status) && ["won","lost"].includes(to)) next.terminalAt=serverTime;
+    return next;
+  }
+  const active={status:"proposal",revision:1,terminalAt:null,abandonedAt:null,legalHold:false,activeCustomerRelation:false};
+  const terminal=transition(active,"lost","2026-01-01T00:00:00.000Z");
+  assert.equal(terminal.terminalAt,"2026-01-01T00:00:00.000Z");
+  assert.deepEqual(transition(terminal,"lost","2026-02-01T00:00:00.000Z"),terminal,"terminal no-op does not restamp");
+  assert.deepEqual(transition(terminal,"lost","2026-02-01T00:00:00.000Z",{replay:true}),terminal,"replay does not restamp");
+  const reopened=transition(terminal,"qualified","2026-02-01T00:00:00.000Z"); assert.equal(reopened.terminalAt,null);
+  const reterminal=transition(reopened,"won","2026-03-01T00:00:00.000Z"); assert.equal(reterminal.terminalAt,"2026-03-01T00:00:00.000Z");
+  const abandon=(row,serverTime,eligible)=>eligible && !row.abandonedAt && !row.legalHold && !row.activeCustomerRelation ? {...row,abandonedAt:serverTime} : row;
+  const abandoned=abandon(active,"2026-04-01T00:00:00.000Z",true); assert.equal(abandoned.abandonedAt,"2026-04-01T00:00:00.000Z");
+  assert.deepEqual(abandon(abandoned,"2026-05-01T00:00:00.000Z",true),abandoned);
+  assert.deepEqual(abandon({...active,legalHold:true},"2026-04-01T00:00:00.000Z",true),{...active,legalHold:true});
+  assert.deepEqual(abandon({...active,activeCustomerRelation:true},"2026-04-01T00:00:00.000Z",true),{...active,activeCustomerRelation:true});
+  assert.match(life.trustedWriter,/server time.*expectedRevision CAS/); assert.match(life.lostReopen,/clears terminal_at/); assert.match(life.reterminalization,/fresh terminal_at/);
+  assert.match(abandonment.trustedWriter,/aiow_quote_abandon_expired_v1 only/); assert.match(abandonment.replayOrNoOp,/legal-hold/);
 });
 
 test("analytics route/locale, experiment dimensions and NULL identity remain correlated", () => {

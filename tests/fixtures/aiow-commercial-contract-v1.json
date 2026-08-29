@@ -240,7 +240,8 @@
           "hasAmbiguity": true,
           "lastAttemptAt": "2026-08-30T12:00:00.000Z"
         },
-        "legalHold": true
+        "legalHold": true,
+        "activeCustomerRelation": false
       },
       "previousRevision": 1,
       "revision": 2,
@@ -336,6 +337,7 @@
           "hasAmbiguity": true,
           "lastAttemptAt": "2026-08-30T12:00:00.000Z"
         },
+        "activeCustomerRelation": false,
         "legalHold": true
       }
     }
@@ -369,7 +371,8 @@
         "hasAmbiguity": true,
         "lastAttemptAt": "2026-08-30T12:00:00.000Z"
       },
-      "legalHold": true
+      "legalHold": true,
+      "activeCustomerRelation": false
     },
     "DeliverySummary": {
       "schemaKind": "delivery_summary",
@@ -702,7 +705,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/QuoteRequest/properties/country",
-          "value": "fixture"
+          "value": "NL"
         },
         {
           "name": "p_quote",
@@ -766,35 +769,8 @@
           "default": null,
           "validationRef": "#/$defs/QuoteRequest/properties/consent",
           "value": {
-            "schemaKind": "quote_request",
-            "configuration": {
-              "segment": "business",
-              "serviceRoute": "standard",
-              "contextSlug": "accountants",
-              "people": 1,
-              "squareMetres": 1,
-              "homeSubtype": "home",
-              "smartDesignModules": []
-            },
-            "contact": {
-              "name": "x",
-              "email": "operator@example.com",
-              "phone": "xxxxxx",
-              "company": "x",
-              "postcode": "1234 AB",
-              "kvk": "12345678",
-              "startDate": "2026-08-30",
-              "note": "x"
-            },
-            "consent": {
-              "accepted": true,
-              "version": "aiow-quote-v1"
-            },
-            "source": {
-              "route": "/",
-              "locale": "nl"
-            },
-            "country": "NL"
+            "accepted": true,
+            "version": "aiow-quote-v1"
           }
         },
         {
@@ -804,47 +780,20 @@
           "default": null,
           "validationRef": "#/$defs/QuoteRequest/properties/source",
           "value": {
-            "schemaKind": "quote_request",
-            "configuration": {
-              "segment": "business",
-              "serviceRoute": "standard",
-              "contextSlug": "accountants",
-              "people": 1,
-              "squareMetres": 1,
-              "homeSubtype": "home",
-              "smartDesignModules": []
-            },
-            "contact": {
-              "name": "x",
-              "email": "operator@example.com",
-              "phone": "xxxxxx",
-              "company": "x",
-              "postcode": "1234 AB",
-              "kvk": "12345678",
-              "startDate": "2026-08-30",
-              "note": "x"
-            },
-            "consent": {
-              "accepted": true,
-              "version": "aiow-quote-v1"
-            },
-            "source": {
-              "route": "/",
-              "locale": "nl"
-            },
-            "country": "NL"
+            "route": "/",
+            "locale": "nl"
           }
         }
       ],
       "returnSchemaRef": "#/$defs/QuotePrepareACK",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -879,7 +828,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/QuoteCommitRequest/properties/quoteNumber",
-          "value": "fixture"
+          "value": "AIOW-2026-0001"
         },
         {
           "name": "p_lead_id",
@@ -895,7 +844,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/PdfArtifact/properties/filename",
-          "value": "fixture"
+          "value": "AIOW-2026-0001.pdf"
         },
         {
           "name": "p_pdf_mime_type",
@@ -903,7 +852,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/PdfArtifact/properties/mimeType",
-          "value": "fixture"
+          "value": "application/pdf"
         },
         {
           "name": "p_pdf_base64",
@@ -911,7 +860,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/PdfArtifact/properties/base64",
-          "value": "fixture"
+          "value": "x"
         },
         {
           "name": "p_pdf_sha256",
@@ -931,7 +880,7 @@
             "schemaKind": "mail_job",
             "jobId": "123e4567-e89b-42d3-a456-426614174000",
             "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
-            "kind": "customer_booking",
+            "kind": "customer_quote",
             "from": "operator@example.com",
             "to": [
               "operator@example.com"
@@ -942,7 +891,7 @@
             "attachments": [],
             "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "attempt": 1,
-            "leaseOwner": "x",
+            "leaseOwner": "worker-01",
             "leaseToken": "123e4567-e89b-42d3-a456-426614174000",
             "leaseExpiresAt": "2026-08-30T12:00:00.000Z"
           }
@@ -957,7 +906,7 @@
             "schemaKind": "mail_job",
             "jobId": "123e4567-e89b-42d3-a456-426614174000",
             "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
-            "kind": "customer_booking",
+            "kind": "internal_lead",
             "from": "operator@example.com",
             "to": [
               "operator@example.com"
@@ -968,7 +917,7 @@
             "attachments": [],
             "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "attempt": 1,
-            "leaseOwner": "x",
+            "leaseOwner": "worker-01",
             "leaseToken": "123e4567-e89b-42d3-a456-426614174000",
             "leaseExpiresAt": "2026-08-30T12:00:00.000Z"
           }
@@ -1035,35 +984,8 @@
           "default": null,
           "validationRef": "#/$defs/QuoteRequest/properties/source",
           "value": {
-            "schemaKind": "quote_request",
-            "configuration": {
-              "segment": "business",
-              "serviceRoute": "standard",
-              "contextSlug": "accountants",
-              "people": 1,
-              "squareMetres": 1,
-              "homeSubtype": "home",
-              "smartDesignModules": []
-            },
-            "contact": {
-              "name": "x",
-              "email": "operator@example.com",
-              "phone": "xxxxxx",
-              "company": "x",
-              "postcode": "1234 AB",
-              "kvk": "12345678",
-              "startDate": "2026-08-30",
-              "note": "x"
-            },
-            "consent": {
-              "accepted": true,
-              "version": "aiow-quote-v1"
-            },
-            "source": {
-              "route": "/",
-              "locale": "nl"
-            },
-            "country": "NL"
+            "route": "/",
+            "locale": "nl"
           }
         },
         {
@@ -1072,18 +994,18 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/QuoteRequest/properties/country",
-          "value": "fixture"
+          "value": "NL"
         }
       ],
       "returnSchemaRef": "#/$defs/QuoteCommitACK",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1117,7 +1039,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1147,47 +1069,20 @@
           "default": null,
           "validationRef": "#/$defs/QuoteRequest/properties/source",
           "value": {
-            "schemaKind": "quote_request",
-            "configuration": {
-              "segment": "business",
-              "serviceRoute": "standard",
-              "contextSlug": "accountants",
-              "people": 1,
-              "squareMetres": 1,
-              "homeSubtype": "home",
-              "smartDesignModules": []
-            },
-            "contact": {
-              "name": "x",
-              "email": "operator@example.com",
-              "phone": "xxxxxx",
-              "company": "x",
-              "postcode": "1234 AB",
-              "kvk": "12345678",
-              "startDate": "2026-08-30",
-              "note": "x"
-            },
-            "consent": {
-              "accepted": true,
-              "version": "aiow-quote-v1"
-            },
-            "source": {
-              "route": "/",
-              "locale": "nl"
-            },
-            "country": "NL"
+            "route": "/booking",
+            "locale": "nl"
           }
         }
       ],
       "returnSchemaRef": "#/$defs/BookingACK",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1205,7 +1100,7 @@
           "sqlType": "timestamptz",
           "nullable": true,
           "default": null,
-          "validationRef": "#/$defs/QueueCursor/properties/createdAt",
+          "validationRef": "#/$defs/NullableQueueCursorCreatedAt",
           "value": null
         },
         {
@@ -1213,7 +1108,7 @@
           "sqlType": "uuid",
           "nullable": true,
           "default": null,
-          "validationRef": "#/$defs/QueueCursor/properties/id",
+          "validationRef": "#/$defs/NullableQueueCursorId",
           "value": null
         },
         {
@@ -1221,19 +1116,19 @@
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific",
+          "validationRef": "#/$defs/RpcListLimit",
           "value": 1
         }
       ],
       "returnSchemaRef": "#/$defs/QueueProjection",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1259,7 +1154,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1281,12 +1176,12 @@
       "returnSchemaRef": "#/$defs/OpsMutationACK",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1319,12 +1214,12 @@
       "returnSchemaRef": "#/$defs/AnalyticsAggregateReport",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1350,7 +1245,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1373,12 +1268,12 @@
       "returnSchemaRef": "#/$defs/AnalyticsACK",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1396,7 +1291,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100",
+          "validationRef": "#/$defs/WorkerId",
           "value": "worker-01"
         },
         {
@@ -1404,7 +1299,7 @@
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific",
+          "validationRef": "#/$defs/OutboxBatchLimit",
           "value": 1
         },
         {
@@ -1412,19 +1307,19 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only",
+          "validationRef": "#/$defs/TrustedServerTime",
           "value": "2026-08-30T12:00:00.000Z"
         }
       ],
-      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "returnSchemaRef": "#/$defs/OutboxBatchACK",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1432,6 +1327,64 @@
           "code": "idempotency_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
+        }
+      },
+      "canonicalResults": {
+        "zero": {
+          "schemaKind": "outbox_batch_ack",
+          "operation": "claim",
+          "requestedLimit": 2,
+          "itemCount": 0,
+          "items": []
+        },
+        "one": {
+          "schemaKind": "outbox_batch_ack",
+          "operation": "claim",
+          "requestedLimit": 2,
+          "itemCount": 1,
+          "items": [
+            {
+              "id": "123e4567-e89b-42d3-a456-426614174001",
+              "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+              "kind": "customer_booking",
+              "revision": 2,
+              "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "attempts": 1,
+              "leaseOwner": "worker-01",
+              "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+            }
+          ]
+        },
+        "multi": {
+          "schemaKind": "outbox_batch_ack",
+          "operation": "claim",
+          "requestedLimit": 2,
+          "itemCount": 2,
+          "items": [
+            {
+              "id": "123e4567-e89b-42d3-a456-426614174001",
+              "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+              "kind": "customer_booking",
+              "revision": 2,
+              "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "attempts": 1,
+              "leaseOwner": "worker-01",
+              "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+            },
+            {
+              "id": "123e4567-e89b-42d3-a456-426614174002",
+              "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+              "kind": "customer_booking",
+              "revision": 2,
+              "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "attempts": 1,
+              "leaseOwner": "worker-01",
+              "leaseToken": "123e4567-e89b-42d3-a456-426614174012",
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+            }
+          ]
         }
       }
     },
@@ -1442,7 +1395,7 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection",
+          "validationRef": "#/$defs/OutboxJobId",
           "value": "123e4567-e89b-42d3-a456-426614174000"
         },
         {
@@ -1450,7 +1403,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100",
+          "validationRef": "#/$defs/WorkerId",
           "value": "worker-01"
         },
         {
@@ -1466,7 +1419,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1474,7 +1427,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -1489,7 +1442,7 @@
             "code": null,
             "receipt": {
               "provider": "microsoft_graph",
-              "httpStatus": 100,
+              "httpStatus": 202,
               "graphRequestId": "x",
               "providerMessageId": "x",
               "acceptanceKind": "graph_http_202",
@@ -1502,12 +1455,12 @@
       "returnSchemaRef": "#/$defs/OutboxProjection",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1525,7 +1478,7 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection",
+          "validationRef": "#/$defs/OutboxJobId",
           "value": "123e4567-e89b-42d3-a456-426614174000"
         },
         {
@@ -1533,7 +1486,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100",
+          "validationRef": "#/$defs/WorkerId",
           "value": "worker-01"
         },
         {
@@ -1549,7 +1502,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1557,7 +1510,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -1567,15 +1520,15 @@
           "default": null,
           "validationRef": "#/$defs/ProviderResult",
           "value": {
-            "schemaKind": "provider_accepted",
-            "category": "accepted",
-            "code": null,
+            "schemaKind": "provider_transient_pre_acceptance",
+            "category": "transient_pre_acceptance",
+            "code": "timeout_before_response",
             "receipt": {
               "provider": "microsoft_graph",
-              "httpStatus": 100,
+              "httpStatus": 429,
               "graphRequestId": "x",
               "providerMessageId": "x",
-              "acceptanceKind": "graph_http_202",
+              "acceptanceKind": null,
               "attemptReceipt": "x",
               "observedAt": "2026-08-30T12:00:00.000Z"
             }
@@ -1586,19 +1539,19 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "retry_backoff_schedule",
+          "validationRef": "#/$defs/RetryBackoffTime",
           "value": "2026-08-30T12:00:00.000Z"
         }
       ],
       "returnSchemaRef": "#/$defs/OutboxProjection",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1616,7 +1569,7 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection",
+          "validationRef": "#/$defs/OutboxJobId",
           "value": "123e4567-e89b-42d3-a456-426614174000"
         },
         {
@@ -1624,7 +1577,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100",
+          "validationRef": "#/$defs/WorkerId",
           "value": "worker-01"
         },
         {
@@ -1640,7 +1593,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1648,7 +1601,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -1658,15 +1611,15 @@
           "default": null,
           "validationRef": "#/$defs/ProviderResult",
           "value": {
-            "schemaKind": "provider_accepted",
-            "category": "accepted",
-            "code": null,
+            "schemaKind": "provider_permanent_pre_acceptance",
+            "category": "permanent_pre_acceptance",
+            "code": "oauth_authentication_failed",
             "receipt": {
               "provider": "microsoft_graph",
-              "httpStatus": 100,
+              "httpStatus": 403,
               "graphRequestId": "x",
               "providerMessageId": "x",
-              "acceptanceKind": "graph_http_202",
+              "acceptanceKind": null,
               "attemptReceipt": "x",
               "observedAt": "2026-08-30T12:00:00.000Z"
             }
@@ -1676,12 +1629,12 @@
       "returnSchemaRef": "#/$defs/OutboxProjection",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1699,7 +1652,7 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection",
+          "validationRef": "#/$defs/OutboxJobId",
           "value": "123e4567-e89b-42d3-a456-426614174000"
         },
         {
@@ -1707,7 +1660,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100",
+          "validationRef": "#/$defs/WorkerId",
           "value": "worker-01"
         },
         {
@@ -1723,7 +1676,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1731,7 +1684,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -1741,15 +1694,15 @@
           "default": null,
           "validationRef": "#/$defs/ProviderResult",
           "value": {
-            "schemaKind": "provider_accepted",
-            "category": "accepted",
-            "code": null,
+            "schemaKind": "provider_ambiguous",
+            "category": "ambiguous",
+            "code": "timeout_after_request_body",
             "receipt": {
               "provider": "microsoft_graph",
-              "httpStatus": 100,
+              "httpStatus": 504,
               "graphRequestId": "x",
               "providerMessageId": "x",
-              "acceptanceKind": "graph_http_202",
+              "acceptanceKind": null,
               "attemptReceipt": "x",
               "observedAt": "2026-08-30T12:00:00.000Z"
             }
@@ -1759,12 +1712,12 @@
       "returnSchemaRef": "#/$defs/OutboxProjection",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1790,7 +1743,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1798,7 +1751,7 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection",
+          "validationRef": "#/$defs/OutboxJobId",
           "value": "123e4567-e89b-42d3-a456-426614174000"
         },
         {
@@ -1806,7 +1759,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -1814,7 +1767,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "enum_sent_retry_dead",
+          "validationRef": "#/$defs/OutboxResolution",
           "value": "sent"
         },
         {
@@ -1822,7 +1775,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "nonempty_1_500",
+          "validationRef": "#/$defs/NonemptyReason",
           "value": "fixture"
         },
         {
@@ -1830,19 +1783,19 @@
           "sqlType": "text",
           "nullable": true,
           "default": null,
-          "validationRef": "text_1_1000",
+          "validationRef": "#/$defs/OptionalEvidence",
           "value": null
         }
       ],
       "returnSchemaRef": "#/$defs/OutboxProjection",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1860,19 +1813,19 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only",
+          "validationRef": "#/$defs/TrustedServerTime",
           "value": "2026-08-30T12:00:00.000Z"
         }
       ],
       "returnSchemaRef": "#/$defs/RetentionRedactionResult",
       "errorMap": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1890,7 +1843,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100",
+          "validationRef": "#/$defs/WorkerId",
           "value": "worker-01"
         },
         {
@@ -1898,7 +1851,7 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only",
+          "validationRef": "#/$defs/TrustedServerTime",
           "value": "2026-08-30T12:00:00.000Z"
         },
         {
@@ -1906,19 +1859,19 @@
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific",
+          "validationRef": "#/$defs/OutboxBatchLimit",
           "value": 1
         }
       ],
-      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "returnSchemaRef": "#/$defs/OutboxBatchACK",
       "errorMap": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -1931,6 +1884,27 @@
           "code": "idempotency_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
+        }
+      },
+      "canonicalResults": {
+        "one": {
+          "schemaKind": "outbox_batch_ack",
+          "operation": "stale_recovery",
+          "requestedLimit": 1,
+          "itemCount": 1,
+          "items": [
+            {
+              "id": "123e4567-e89b-42d3-a456-426614174001",
+              "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+              "kind": "customer_booking",
+              "revision": 2,
+              "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "attempts": 1,
+              "leaseOwner": "worker-01",
+              "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+            }
+          ]
         }
       }
     },
@@ -1949,7 +1923,7 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection",
+          "validationRef": "#/$defs/OutboxJobId",
           "value": "123e4567-e89b-42d3-a456-426614174000"
         },
         {
@@ -1957,7 +1931,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -1973,7 +1947,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -1981,7 +1955,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "enum_retention_legal_admin",
+          "validationRef": "#/$defs/RetentionCancellationKind",
           "value": "admin"
         },
         {
@@ -1989,19 +1963,19 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "nonempty_1_500",
+          "validationRef": "#/$defs/NonemptyReason",
           "value": "fixture"
         }
       ],
       "returnSchemaRef": "#/$defs/OutboxProjection",
       "errorMap": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -2032,7 +2006,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -2072,12 +2046,12 @@
       "returnSchemaRef": "#/$defs/ProviderGateRecord",
       "errorMap": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -2108,7 +2082,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1",
+          "validationRef": "#/$defs/PositiveRevision",
           "value": 1
         },
         {
@@ -2124,7 +2098,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex",
+          "validationRef": "#/$defs/Sha256LowercaseHex",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         {
@@ -2132,7 +2106,7 @@
           "sqlType": "boolean",
           "nullable": false,
           "default": null,
-          "validationRef": "boolean",
+          "validationRef": "#/$defs/BooleanValue",
           "value": true
         },
         {
@@ -2140,19 +2114,19 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "nonempty_1_500",
+          "validationRef": "#/$defs/NonemptyReason",
           "value": "fixture"
         }
       ],
       "returnSchemaRef": "#/$defs/OpsMutationACK",
       "errorMap": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -2175,7 +2149,7 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only",
+          "validationRef": "#/$defs/TrustedServerTime",
           "value": "2026-08-30T12:00:00.000Z"
         },
         {
@@ -2183,19 +2157,19 @@
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific",
+          "validationRef": "#/$defs/RpcListLimit",
           "value": 1
         }
       ],
       "returnSchemaRef": "#/$defs/RetentionRedactionResult",
       "errorMap": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },

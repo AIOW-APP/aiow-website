@@ -83,6 +83,9 @@
       "$ref": "#/$defs/ProviderResult"
     },
     {
+      "$ref": "#/$defs/OutboxBatchACK"
+    },
+    {
       "$ref": "#/$defs/OutboxProjection"
     },
     {
@@ -1200,6 +1203,9 @@
         },
         "legalHold": {
           "type": "boolean"
+        },
+        "activeCustomerRelation": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -1224,6 +1230,7 @@
         "overdue",
         "exception",
         "deliverySummary",
+        "activeCustomerRelation",
         "legalHold"
       ],
       "allOf": [
@@ -2106,6 +2113,71 @@
               },
               "required": [
                 "legalHold"
+              ]
+            }
+          },
+          "required": [
+            "schemaKind",
+            "accepted",
+            "projection",
+            "previousRevision",
+            "revision",
+            "actorId",
+            "serverTime",
+            "auditId",
+            "replayed",
+            "operation",
+            "effect"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "ops_mutation_ack"
+            },
+            "accepted": {
+              "const": true
+            },
+            "projection": {
+              "$ref": "#/$defs/LeadProjection"
+            },
+            "previousRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "actorId": {
+              "const": "richard"
+            },
+            "serverTime": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "auditId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "replayed": {
+              "type": "boolean"
+            },
+            "operation": {
+              "const": "set_active_customer_relation"
+            },
+            "effect": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "activeCustomerRelation": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "activeCustomerRelation"
               ]
             }
           },
@@ -10695,6 +10767,198 @@
         "attemptReceipt",
         "observedAt"
       ]
+    },
+    "OutboxJobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "OutboxBatchLimit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "RpcListLimit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "PositiveRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "WorkerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "Sha256LowercaseHex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "TrustedServerTime": {
+      "type": "string",
+      "format": "date-time",
+      "x-aiow-trusted-writer": "server clock only; caller values are rejected"
+    },
+    "RetryBackoffTime": {
+      "type": "string",
+      "format": "date-time",
+      "x-aiow-trusted-writer": "server-computed retry schedule only"
+    },
+    "NonemptyReason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "OptionalEvidence": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "RetentionCancellationKind": {
+      "type": "string",
+      "enum": [
+        "retention",
+        "legal_hold",
+        "admin"
+      ]
+    },
+    "OutboxResolution": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "retry",
+        "dead"
+      ]
+    },
+    "BooleanValue": {
+      "type": "boolean"
+    },
+    "NullableQueueCursorCreatedAt": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "NullableQueueCursorId": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "OutboxBatchItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/OutboxJobId"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "customer_booking",
+            "internal_booking",
+            "customer_quote",
+            "internal_lead"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "payloadSha256": {
+          "$ref": "#/$defs/Sha256LowercaseHex"
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "leaseOwner": {
+          "$ref": "#/$defs/WorkerId"
+        },
+        "leaseToken": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leaseExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "commercialLeadId",
+        "kind",
+        "revision",
+        "payloadSha256",
+        "attempts",
+        "leaseOwner",
+        "leaseToken",
+        "leaseExpiresAt"
+      ]
+    },
+    "OutboxBatchACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "outbox_batch_ack"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "claim",
+            "stale_recovery",
+            "mail_run"
+          ]
+        },
+        "requestedLimit": {
+          "$ref": "#/$defs/OutboxBatchLimit"
+        },
+        "itemCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "items": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/OutboxBatchItem"
+          }
+        }
+      },
+      "required": [
+        "schemaKind",
+        "operation",
+        "requestedLimit",
+        "itemCount",
+        "items"
+      ],
+      "x-aiow-custom-validator": "outboxBatchAckV1: itemCount equals items.length; items.length <= requestedLimit; order is database claim order; every id and leaseToken is distinct; response contains every and only transitioned lease"
     }
   },
   "x-aiow-operations": {
@@ -10963,13 +11227,14 @@
         }
       },
       "responses": {
-        "200": "#/$defs/OutboxProjection",
+        "200": "#/$defs/OutboxBatchACK",
         "401": "#/$defs/Error",
         "409": "#/$defs/Error",
         "503": "#/$defs/Error"
       },
       "tlsRequired": true,
-      "authRef": "#/x-aiow-internal-hmac"
+      "authRef": "#/x-aiow-internal-hmac",
+      "batchSemantics": "operation=mail_run; one HTTP 200 OutboxBatchACK; requestedLimit equals request.limit; ordered items length 0..limit and contains every and only claimed/dispatched lease"
     },
     "aiow_quote_prepare_v1": {
       "transport": "sql_rpc",
@@ -11036,12 +11301,12 @@
       "ackRef": "#/$defs/QuotePrepareACK",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11171,12 +11436,12 @@
       "ackRef": "#/$defs/QuoteCommitACK",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11223,7 +11488,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_booking",
@@ -11243,12 +11508,12 @@
       "ackRef": "#/$defs/BookingACK",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11281,32 +11546,32 @@
           "sqlType": "timestamptz",
           "nullable": true,
           "default": null,
-          "validationRef": "#/$defs/QueueCursor/properties/createdAt"
+          "validationRef": "#/$defs/NullableQueueCursorCreatedAt"
         },
         {
           "name": "p_cursor_id",
           "sqlType": "uuid",
           "nullable": true,
           "default": null,
-          "validationRef": "#/$defs/QueueCursor/properties/id"
+          "validationRef": "#/$defs/NullableQueueCursorId"
         },
         {
           "name": "p_limit",
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific"
+          "validationRef": "#/$defs/RpcListLimit"
         }
       ],
       "ackRef": "#/$defs/QueueProjection",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11346,7 +11611,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_mutation",
@@ -11359,12 +11624,12 @@
       "ackRef": "#/$defs/OpsMutationACK",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11410,12 +11675,12 @@
       "ackRef": "#/$defs/AnalyticsAggregateReport",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11455,7 +11720,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_event",
@@ -11468,12 +11733,12 @@
       "ackRef": "#/$defs/AnalyticsACK",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11506,32 +11771,32 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100"
+          "validationRef": "#/$defs/WorkerId"
         },
         {
           "name": "p_limit",
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific"
+          "validationRef": "#/$defs/OutboxBatchLimit"
         },
         {
           "name": "p_now",
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only"
+          "validationRef": "#/$defs/TrustedServerTime"
         }
       ],
-      "ackRef": "#/$defs/OutboxProjection",
+      "ackRef": "#/$defs/OutboxBatchACK",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11544,15 +11809,16 @@
       "visibility": "private_server_only",
       "returns": {
         "sqlType": "jsonb",
-        "schemaRef": "#/$defs/OutboxProjection",
-        "cardinality": "exactly_one"
+        "schemaRef": "#/$defs/OutboxBatchACK",
+        "cardinality": "exactly_one_batch_ack"
       },
       "grants": {
         "PUBLIC": false,
         "anon": false,
         "authenticated": false,
         "service_role": true
-      }
+      },
+      "batchSemantics": "claim: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision"
     },
     "aiow_mail_outbox_sent_v2": {
       "transport": "sql_rpc",
@@ -11564,14 +11830,14 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection"
+          "validationRef": "#/$defs/OutboxJobId"
         },
         {
           "name": "p_lease_owner",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100"
+          "validationRef": "#/$defs/WorkerId"
         },
         {
           "name": "p_lease_token",
@@ -11585,14 +11851,14 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_expected_revision",
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_result",
@@ -11605,12 +11871,12 @@
       "ackRef": "#/$defs/OutboxProjection",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11643,14 +11909,14 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection"
+          "validationRef": "#/$defs/OutboxJobId"
         },
         {
           "name": "p_lease_owner",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100"
+          "validationRef": "#/$defs/WorkerId"
         },
         {
           "name": "p_lease_token",
@@ -11664,14 +11930,14 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_expected_revision",
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_result",
@@ -11685,18 +11951,18 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "retry_backoff_schedule"
+          "validationRef": "#/$defs/RetryBackoffTime"
         }
       ],
       "ackRef": "#/$defs/OutboxProjection",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11729,14 +11995,14 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection"
+          "validationRef": "#/$defs/OutboxJobId"
         },
         {
           "name": "p_lease_owner",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100"
+          "validationRef": "#/$defs/WorkerId"
         },
         {
           "name": "p_lease_token",
@@ -11750,14 +12016,14 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_expected_revision",
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_result",
@@ -11770,12 +12036,12 @@
       "ackRef": "#/$defs/OutboxProjection",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11808,14 +12074,14 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection"
+          "validationRef": "#/$defs/OutboxJobId"
         },
         {
           "name": "p_lease_owner",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100"
+          "validationRef": "#/$defs/WorkerId"
         },
         {
           "name": "p_lease_token",
@@ -11829,14 +12095,14 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_expected_revision",
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_result",
@@ -11849,12 +12115,12 @@
       "ackRef": "#/$defs/OutboxProjection",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11894,53 +12160,53 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_job_id",
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection"
+          "validationRef": "#/$defs/OutboxJobId"
         },
         {
           "name": "p_expected_revision",
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_resolution",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "enum_sent_retry_dead"
+          "validationRef": "#/$defs/OutboxResolution"
         },
         {
           "name": "p_reason",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "nonempty_1_500"
+          "validationRef": "#/$defs/NonemptyReason"
         },
         {
           "name": "p_evidence",
           "sqlType": "text",
           "nullable": true,
           "default": null,
-          "validationRef": "text_1_1000"
+          "validationRef": "#/$defs/OptionalEvidence"
         }
       ],
       "ackRef": "#/$defs/OutboxProjection",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -11973,18 +12239,18 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only"
+          "validationRef": "#/$defs/TrustedServerTime"
         }
       ],
       "ackRef": "#/$defs/RetentionRedactionResult",
       "errors": {
         "P0001": {
-          "code": "conflict_or_policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -12018,37 +12284,37 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "worker_id_1_100"
+          "validationRef": "#/$defs/WorkerId"
         },
         {
           "name": "p_now",
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only"
+          "validationRef": "#/$defs/TrustedServerTime"
         },
         {
           "name": "p_limit",
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific"
+          "validationRef": "#/$defs/OutboxBatchLimit"
         }
       ],
       "returns": {
         "sqlType": "jsonb",
-        "schemaRef": "#/$defs/OutboxProjection",
-        "cardinality": "exactly_one"
+        "schemaRef": "#/$defs/OutboxBatchACK",
+        "cardinality": "exactly_one_batch_ack"
       },
-      "ackRef": "#/$defs/OutboxProjection",
+      "ackRef": "#/$defs/OutboxBatchACK",
       "errors": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -12068,7 +12334,8 @@
         "anon": false,
         "authenticated": false,
         "service_role": true
-      }
+      },
+      "batchSemantics": "stale_recovery: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision"
     },
     "aiow_mail_outbox_cancel_v2": {
       "transport": "sql_rpc",
@@ -12088,14 +12355,14 @@
           "sqlType": "uuid",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/OutboxProjection"
+          "validationRef": "#/$defs/OutboxJobId"
         },
         {
           "name": "p_expected_revision",
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_idempotency_key",
@@ -12109,21 +12376,21 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_cancellation_kind",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "enum_retention_legal_admin"
+          "validationRef": "#/$defs/RetentionCancellationKind"
         },
         {
           "name": "p_reason",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "nonempty_1_500"
+          "validationRef": "#/$defs/NonemptyReason"
         }
       ],
       "returns": {
@@ -12134,12 +12401,12 @@
       "ackRef": "#/$defs/OutboxProjection",
       "errors": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -12179,7 +12446,7 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_gate",
@@ -12197,12 +12464,12 @@
       "ackRef": "#/$defs/ProviderGateRecord",
       "errors": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -12242,7 +12509,7 @@
           "sqlType": "bigint",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_gte_1"
+          "validationRef": "#/$defs/PositiveRevision"
         },
         {
           "name": "p_idempotency_key",
@@ -12256,21 +12523,21 @@
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "sha256_lowercase_hex"
+          "validationRef": "#/$defs/Sha256LowercaseHex"
         },
         {
           "name": "p_enabled",
           "sqlType": "boolean",
           "nullable": false,
           "default": null,
-          "validationRef": "boolean"
+          "validationRef": "#/$defs/BooleanValue"
         },
         {
           "name": "p_reason",
           "sqlType": "text",
           "nullable": false,
           "default": null,
-          "validationRef": "nonempty_1_500"
+          "validationRef": "#/$defs/NonemptyReason"
         }
       ],
       "returns": {
@@ -12281,12 +12548,12 @@
       "ackRef": "#/$defs/OpsMutationACK",
       "errors": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -12306,7 +12573,8 @@
         "anon": false,
         "authenticated": false,
         "service_role": true
-      }
+      },
+      "effect": "set_active_customer_relation ACK; previousRevision + 1 = revision = projection.revision; effect.activeCustomerRelation equals projection.activeCustomerRelation; replay returns byte-equivalent persisted ACK"
     },
     "aiow_quote_abandon_expired_v1": {
       "transport": "sql_rpc",
@@ -12319,14 +12587,14 @@
           "sqlType": "timestamptz",
           "nullable": false,
           "default": null,
-          "validationRef": "trusted_server_time_only"
+          "validationRef": "#/$defs/TrustedServerTime"
         },
         {
           "name": "p_limit",
           "sqlType": "integer",
           "nullable": false,
           "default": null,
-          "validationRef": "integer_1_100_or_rpc_specific"
+          "validationRef": "#/$defs/RpcListLimit"
         }
       ],
       "returns": {
@@ -12337,12 +12605,12 @@
       "ackRef": "#/$defs/RetentionRedactionResult",
       "errors": {
         "P0001": {
-          "code": "policy_rejection",
+          "code": "revision_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
         },
         "22023": {
-          "code": "invalid_argument",
+          "code": "invalid_request",
           "httpStatus": 400,
           "schemaRef": "#/$defs/Error"
         },
@@ -12508,7 +12776,15 @@
       "provider",
       "analytics",
       "client"
-    ]
+    ],
+    "terminalAnchors": {
+      "trustedWriter": "aiow_commercial_mutate_v1 transition_status branch only, using transaction server time after expectedRevision CAS; clients, providers, mail and analytics cannot write terminal_at",
+      "firstTerminalTransition": "a nonterminal -> won/lost accepted non-replay transition stamps terminal_at exactly once with transaction server time and increments revision once",
+      "terminalReplayOrNoOp": "idempotent replay returns the persisted outcome and repeated terminal/no-op requests neither restamp terminal_at nor increment revision",
+      "lostReopen": "lost -> qualified clears terminal_at atomically after expectedRevision CAS, increments revision once, and makes the lead retention-ineligible while active",
+      "reterminalization": "a later qualified/nonterminal -> won/lost accepted transition stamps a fresh terminal_at using transaction server time",
+      "eligibility": "terminal_at is eligible only while status is won/lost; legal_hold or active_customer_relation suspends retention without changing anchor age"
+    }
   },
   "x-aiow-operator-auth": {
     "order": [
@@ -13470,6 +13746,10 @@
           "expression": "two pending outbox rows customer_booking/internal_booking"
         },
         {
+          "field": "activeCustomerRelation",
+          "expression": "commercial_leads.active_customer_relation (server-authoritative; never client supplied)"
+        },
+        {
           "field": "legalHold",
           "expression": "false"
         }
@@ -13558,6 +13838,10 @@
         {
           "field": "deliverySummary",
           "expression": "two pending outbox rows customer_quote/internal_lead"
+        },
+        {
+          "field": "activeCustomerRelation",
+          "expression": "commercial_leads.active_customer_relation (server-authoritative; never client supplied)"
         },
         {
           "field": "legalHold",
@@ -13832,10 +14116,20 @@
       "applicationId",
       "mailbox",
       "sender",
+      "controlMailbox",
+      "secretPresent",
+      "oauthClientCredentialsPresent",
+      "exchangeApplicationRole",
+      "exchangeRbacSenderInScope",
+      "exchangeRbacControlMailboxInScope",
+      "entraUnscopedMailSendAssigned",
       "evidenceSha256",
       "revision",
+      "ownerApprovedBy",
       "approvedAt",
-      "expiresAt"
+      "expiresAt",
+      "runtimeCapability",
+      "fallbackProvider"
     ],
     "approvalWriter": "private service-role aiow_provider_gate_write_v1 only after canonical owner Basic authentication; audit mandatory",
     "requiredChecks": [
@@ -13860,7 +14154,8 @@
     "runtimeCapability": "mail_send only while activated and custom current/binding verifier passes for exact target and revision",
     "expiryOrRevocation": "removes capability immediately before any provider call",
     "fallback": "none",
-    "activation": "external separate owner gate; contract approval does not activate"
+    "activation": "external separate owner gate; contract approval does not activate",
+    "runtimeVerifier": "providerGateCurrentV1 recomputes the approval binding over every listed current persisted fact and compares tenantId, applicationId, mailbox/sender and controlMailbox to the exact provider target before each call; any mismatch, unscoped Entra Mail.Send assignment, non-Application Mail.Send Exchange role, sender out of scope, or control mailbox in scope fails closed"
   },
   "x-aiow-analytics": {
     "eventNames": [
@@ -14004,7 +14299,11 @@
     "abandonment": {
       "field": "commercial_leads.abandoned_at",
       "preparedQuote": "set only by aiow_quote_abandon_expired_v1 after quote prepared expires uncommitted; job uses trusted server time, row lock, expected state and audit",
-      "failedBookingOrQuote": "set only by deterministic terminal failure transition; never caller supplied"
+      "failedBookingOrQuote": "only aiow_quote_abandon_expired_v1 deterministic expiry/failure branch after trusted-time and row-lock checks; never caller supplied",
+      "trustedWriter": "aiow_quote_abandon_expired_v1 only, using transaction server time and row-lock state/CAS checks; no other operation may stamp abandoned_at",
+      "firstStamp": "only deterministic prepared-quote expiry or deterministic booking/quote failure accepted by that expiry/failure operation stamps abandoned_at once",
+      "replayOrNoOp": "replay, already-abandoned, nonexpired, committed, active-customer-relation, or legal-hold rows are no-ops and never restamp abandoned_at",
+      "eligibility": "abandoned_at is eligible only while no active lifecycle relation exists; legal_hold or active_customer_relation suspends retention without resetting anchor age"
     },
     "activeCustomerRelation": {
       "fields": [
