@@ -1,4 +1,4 @@
-# AIOW — Warm Precision
+# AIOW — Warm Precision 2.0
 
 ## Scope and authority
 
@@ -32,13 +32,33 @@ Avoid: purple/blue AI glow, robots, generic AI-agency claims, fake social proof,
 - Light theme reverses surface/ink roles while retaining copper and AA contrast.
 - Headlines: Fraunces. UI/body: Inter. No third family.
 
-## Composition
+## Composition and visual grammar
 
-The hero is a split editorial field whose dominant working object is the calculator—not a screenshot or decorative scene. Sections use solid surfaces, fine rules, measured asymmetry and restrained radii. Solutions and Ventures are visibly separate systems.
+The hero is a split editorial field whose dominant working object is the calculator—not a screenshot or decorative scene. Warm Precision 2.0 frames that object with an **Operational Field**: an architectural coordinate grid, engraved arcs, measured signal paths and sparse copper nodes. The field is semantic only as a visual signature, remains `aria-hidden`, never competes with content and compresses to a quiet cropped instrument plate on mobile.
+
+Surfaces follow a paper / steel / instrument hierarchy:
+
+- solid drafting-paper or graphite fields carry all body copy;
+- steel rails, fine engraved rules and offset section indices create structure;
+- the calculator is the one elevated instrument, with layered material shadows and a precise top plate;
+- the desktop header is the only glass layer: a floating instrument rail with a deliberate opaque fallback;
+- statement sections become dark technical scenes with measured grids, rails and asymmetry rather than empty colour bands;
+- solutions use route rails with route-specific line glyphs, not repeated generic icon cards;
+- pricing links remain a complete crawlable set but become a dense reference deck: grouped on desktop and horizontally scrollable with snap, overflow affordance and keyboard access on narrow screens;
+- approach uses one architectural three-stage rail, horizontal on wide screens and vertical on mobile;
+- the final CTA is a contained closing instrument scene, not another blank beige band.
+
+Corners remain restrained and nested rather than pill-heavy. Shadows are broad, warm and material; borders remain hairline and engraved. No body-card glass, blobs, glow, robots, fake evidence, dashboard metrics or repeated glass-card soup.
+
+## Theme grammar
+
+Light, Dark and System are equal design modes. Light uses drafting paper as the dominant field with graphite instruments; Dark uses architectural steel with warm paper text and retains depth through border/value separation rather than glow. Copper remains the sole accent in both. `color-mix()` may refine edges and shadows only behind a safe opaque fallback. Theme changes must not alter hierarchy, target size or content.
 
 ## Signature and motion
 
-**Signature:** deterministic live price instrument. It changes model and output in place, keeps the input/output anchors stable, uses tabular numbers, and explains exclusions beside the result. Price changes may settle with a short directional transition; reduced motion snaps immediately. The complete task works without animation.
+**Signature:** deterministic live price instrument inside the Operational Field. It changes model and output in place, keeps the input/output anchors stable, uses tabular numbers, and explains exclusions beside the result. Price changes may settle with a short directional transition; reduced motion snaps immediately. The complete task works without animation.
+
+The Operational Field has one calm physical character: a slow deterministic drafting/signal sweep and sparse node pulse. Entrance and hover motion only clarify hierarchy and route affordance; nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables ambient, entrance and smooth scrolling and preserves the complete static technical composition.
 
 Navigation may use one translucent layer over content with a solid fallback. The booking dialog is a solid overlay. Body copy never sits on glass. Maximum glass layers: one.
 

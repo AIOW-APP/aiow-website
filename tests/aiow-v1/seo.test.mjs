@@ -26,6 +26,10 @@ test("light-theme pricing accent meets WCAG AA on every light surface", async ()
   assert.match(tariffs, /\.smartDesign\{[^}]*background:#d9a441;color:#14161a/);
   assert.ok(contrast("#14161a", "#D9A441") >= 4.5);
   assert.ok(contrast("#302C26", "#D9A441") >= 4.5);
+  assert.ok(contrast("#FFFAF1", "#795000") >= 4.5);
+  assert.ok(contrast("#FFFAF1", "#684600") >= 4.5);
+  assert.match(shared, /html\[data-theme="light"\][^}]*--on-copper:#fffaf1;--copper-hover:#684600/);
+  assert.match(shared, /\.headerCta,\.primaryButton\{[^}]*color:var\(--on-copper\)/);
 });
 
 test("all tariff row headers have row scope and all six regions have unique names", async () => {

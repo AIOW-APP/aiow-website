@@ -42,6 +42,74 @@ try {
     await page.goto(base, { waitUntil: "networkidle" });
     const geometry = await page.evaluate(() => ({ innerWidth, scrollWidth: document.documentElement.scrollWidth }));
     assert.ok(geometry.scrollWidth <= geometry.innerWidth + 1, `homepage horizontal overflow at ${width}: ${JSON.stringify(geometry)}`);
+    const iconHref = await page.locator('link[rel~="icon"]').first().getAttribute("href");
+    assert.ok(iconHref, `brand icon metadata missing at ${width}`);
+    if (width === 320) {
+      const iconResponse = await page.request.get(new URL(iconHref, base).href);
+      assert.equal(iconResponse.status(), 200, `brand icon failed to load: ${iconHref}`);
+      assert.match(iconResponse.headers()["content-type"] || "", /image\/svg\+xml/, `unexpected brand icon content type: ${iconHref}`);
+    }
+
+    const operationalFields = page.locator('[data-operational-field]');
+    assert.equal(await operationalFields.count(), 3, `operational field count at ${width}`);
+    for (const field of await operationalFields.all()) assert.equal(await field.getAttribute("aria-hidden"), "true", `operational field must be decorative at ${width}`);
+    assert.equal(await page.locator('[data-premium-instrument="calculator"]').count(), 1, `premium calculator instrument missing at ${width}`);
+    assert.equal(await page.locator('[data-approach-rail="true"] li').count(), 3, `approach rail structure at ${width}`);
+    assert.equal(await page.locator('[data-pricing-deck="true"] a').count(), 15, `pricing guide must retain 15 links at ${width}`);
+    const controlTargets = await page.locator('header select, header a[hreflang]').evaluateAll((nodes) => nodes.map((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
+    assert.equal(controlTargets.length, 2, `theme/language controls missing at ${width}`);
+    for (const target of controlTargets) assert.ok(target.width >= 44 && target.height >= 44, `header control below 44px at ${width}: ${JSON.stringify(target)}`);
+    if (width <= 390) {
+      const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
+      await assert.doesNotReject(() => pricingDeck.waitFor({ state: "visible" }));
+      await page.waitForFunction(() => document.querySelector('[data-pricing-deck="true"]')?.getAttribute("data-pricing-overflow") === "true");
+      const deckGeometry = await pricingDeck.evaluate((node) => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, snap: getComputedStyle(node).scrollSnapType, tabIndex: node.tabIndex, role: node.getAttribute("role"), label: node.getAttribute("aria-label") }));
+      assert.ok(deckGeometry.scrollWidth > deckGeometry.clientWidth && (deckGeometry.snap.includes("x") || deckGeometry.snap.includes("inline")), `mobile pricing deck is not an accessible snap overflow at ${width}: ${JSON.stringify(deckGeometry)}`);
+      assert.equal(deckGeometry.tabIndex, 0, `mobile pricing deck is not keyboard focusable at ${width}`);
+      assert.equal(deckGeometry.role, "region", `mobile pricing deck region semantics missing at ${width}`);
+      assert.match(deckGeometry.label || "", /pijltjestoetsen/, `mobile pricing deck instruction missing at ${width}`);
+      await pricingDeck.focus();
+      const before = await pricingDeck.evaluate((node) => node.scrollLeft);
+      await page.keyboard.press("ArrowRight");
+      await page.waitForTimeout(250);
+      const after = await pricingDeck.evaluate((node) => node.scrollLeft);
+      assert.ok(after > before, `mobile pricing deck keyboard scroll failed at ${width}: ${before} -> ${after}`);
+      await pricingDeck.evaluate((node) => node.scrollTo({ left: 0, behavior: "instant" }));
+      await page.evaluate(() => scrollTo(0, 0));
+      await pricingDeck.locator("a").first().evaluate((node) => node.focus({ preventScroll: true }));
+      await page.keyboard.press("End");
+      await page.waitForTimeout(100);
+      assert.ok(await page.evaluate(() => scrollY > 0), `mobile child-link End key was swallowed at ${width}`);
+      assert.equal(await pricingDeck.evaluate((node) => node.scrollLeft), 0, `mobile child-link End key moved pricing deck at ${width}`);
+    } else {
+      const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
+      const deckGeometry = await pricingDeck.evaluate((node) => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, tabIndex: node.tabIndex, role: node.getAttribute("role"), label: node.getAttribute("aria-label"), overflow: node.getAttribute("data-pricing-overflow") }));
+      assert.ok(deckGeometry.scrollWidth <= deckGeometry.clientWidth + 1, `desktop pricing deck unexpectedly overflows at ${width}: ${JSON.stringify(deckGeometry)}`);
+      assert.equal(deckGeometry.overflow, "false", `desktop pricing deck reports overflow at ${width}`);
+      assert.equal(deckGeometry.tabIndex, -1, `desktop pricing deck creates a dead tab stop at ${width}`);
+      assert.equal(deckGeometry.role, null, `desktop pricing deck advertises inactive region semantics at ${width}`);
+      assert.equal(deckGeometry.label, null, `desktop pricing deck advertises inactive keyboard instructions at ${width}`);
+      await page.evaluate(() => scrollTo(0, 0));
+      await pricingDeck.locator("a").first().focus();
+      await page.keyboard.press("End");
+      await page.waitForTimeout(100);
+      assert.ok(await page.evaluate(() => scrollY > 0), `desktop End key was swallowed by pricing deck at ${width}`);
+    }
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const reducedFieldMotion = await page.locator('[data-operational-field="hero"] .operational-field__signal').evaluate((node) => getComputedStyle(node).animationName);
+    assert.equal(reducedFieldMotion, "none", `operational field motion not disabled at ${width}`);
+    if (width <= 390) {
+      const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
+      await pricingDeck.evaluate((node) => node.scrollTo({ left: 0, behavior: "instant" }));
+      await pricingDeck.focus();
+      await page.keyboard.press("End");
+      const immediate = await pricingDeck.evaluate((node) => node.scrollLeft);
+      await page.waitForTimeout(100);
+      const settled = await pricingDeck.evaluate((node) => node.scrollLeft);
+      assert.ok(immediate > 0, `reduced-motion pricing deck did not move immediately at ${width}`);
+      assert.equal(settled, immediate, `reduced-motion pricing deck animated at ${width}: ${immediate} -> ${settled}`);
+    }
+    await page.emulateMedia({ reducedMotion: "no-preference" });
 
     const quoteTrigger = page.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true });
     await quoteTrigger.click();
