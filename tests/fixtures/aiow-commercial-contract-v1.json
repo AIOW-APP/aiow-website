@@ -1,0 +1,2227 @@
+{
+  "fixtureVersion": 1,
+  "requests": {
+    "BookingRequest": {
+      "schemaKind": "booking_request",
+      "subject": "bedrijf",
+      "details": "x",
+      "date": "2026-08-30",
+      "slot": "10:00",
+      "name": "x",
+      "email": "operator@example.com",
+      "company": "x",
+      "locale": "nl",
+      "consentAccepted": true,
+      "consentVersion": "aiow-booking-v1"
+    },
+    "QuoteRequest": {
+      "schemaKind": "quote_request",
+      "configuration": {
+        "segment": "business",
+        "serviceRoute": "standard",
+        "contextSlug": "accountants",
+        "people": 1,
+        "squareMetres": 1,
+        "homeSubtype": "home",
+        "smartDesignModules": []
+      },
+      "contact": {
+        "name": "x",
+        "email": "operator@example.com",
+        "phone": "xxxxxx",
+        "company": "x",
+        "postcode": "1234 AB",
+        "kvk": "12345678",
+        "startDate": "2026-08-30",
+        "note": "x"
+      },
+      "consent": {
+        "accepted": true,
+        "version": "aiow-quote-v1"
+      },
+      "source": {
+        "route": "/",
+        "locale": "nl"
+      },
+      "country": "NL"
+    },
+    "QuotePrepareRequest": {
+      "schemaKind": "quote_prepare_request",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "abcdefghijklmnop",
+      "receivedAt": "2026-08-30T12:00:00.000Z",
+      "quote": {
+        "schemaKind": "quote_request",
+        "configuration": {
+          "segment": "business",
+          "serviceRoute": "standard",
+          "contextSlug": "accountants",
+          "people": 1,
+          "squareMetres": 1,
+          "homeSubtype": "home",
+          "smartDesignModules": []
+        },
+        "contact": {
+          "name": "x",
+          "email": "operator@example.com",
+          "phone": "xxxxxx",
+          "company": "x",
+          "postcode": "1234 AB",
+          "kvk": "12345678",
+          "startDate": "2026-08-30",
+          "note": "x"
+        },
+        "consent": {
+          "accepted": true,
+          "version": "aiow-quote-v1"
+        },
+        "source": {
+          "route": "/",
+          "locale": "nl"
+        },
+        "country": "NL"
+      }
+    },
+    "QuoteCommitRequest": {
+      "schemaKind": "quote_commit_request",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+      "quoteNumber": "AIOW-2026-0001",
+      "pdf": {
+        "filename": "AIOW-2026-0001.pdf",
+        "mimeType": "application/pdf",
+        "base64": "x",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "OpsMarkRead": {
+      "schemaKind": "ops_mark_read",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "expectedRevision": 1,
+      "operation": "mark_read",
+      "unread": false
+    },
+    "OpsSetPriority": {
+      "schemaKind": "ops_set_priority",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "expectedRevision": 1,
+      "operation": "set_priority",
+      "priority": "normal"
+    },
+    "OpsTransitionStatus": {
+      "schemaKind": "ops_transition_status",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "expectedRevision": 1,
+      "operation": "transition_status",
+      "status": "new",
+      "reopenReason": "x"
+    },
+    "OpsSetNextAction": {
+      "schemaKind": "ops_set_next_action",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "expectedRevision": 1,
+      "operation": "set_next_action",
+      "nextActionAt": "2026-08-30T12:00:00.000Z"
+    },
+    "OpsResolveOutbox": {
+      "schemaKind": "ops_resolve_outbox",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "expectedRevision": 1,
+      "operation": "resolve_outbox",
+      "jobId": "123e4567-e89b-42d3-a456-426614174000",
+      "jobExpectedRevision": 1,
+      "resolution": "mark_sent",
+      "reason": "x",
+      "evidence": "x"
+    },
+    "OpsLegalHold": {
+      "schemaKind": "ops_legal_hold",
+      "idempotencyKey": "abcdefghijklmnop",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "expectedRevision": 1,
+      "operation": "set_legal_hold",
+      "enabled": true,
+      "reason": "x"
+    },
+    "MailJob": {
+      "schemaKind": "mail_job",
+      "jobId": "123e4567-e89b-42d3-a456-426614174000",
+      "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+      "kind": "customer_booking",
+      "from": "operator@example.com",
+      "to": [
+        "operator@example.com"
+      ],
+      "subject": "x",
+      "text": "x",
+      "html": "x",
+      "attachments": [],
+      "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "attempt": 1,
+      "leaseOwner": "worker-01",
+      "leaseToken": "123e4567-e89b-42d3-a456-426614174000",
+      "leaseExpiresAt": "2026-08-30T12:00:00.000Z"
+    }
+  },
+  "acks": {
+    "BookingACK": {
+      "schemaKind": "booking_ack",
+      "accepted": true,
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "revision": 1,
+      "preference": {
+        "date": "2026-08-30",
+        "slot": "10:00",
+        "subject": "x"
+      },
+      "durableAt": "2026-08-30T12:00:00.000Z",
+      "replayed": true
+    },
+    "QuotePrepareACK": {
+      "schemaKind": "quote_prepare_ack",
+      "accepted": true,
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+      "quoteNumber": "AIOW-2026-0001",
+      "state": "prepared",
+      "expiresAt": "2026-08-30T12:00:00.000Z",
+      "replayed": true
+    },
+    "QuoteCommitACK": {
+      "schemaKind": "quote_commit_ack",
+      "accepted": true,
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "leadId": "123e4567-e89b-42d3-a456-426614174000",
+      "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+      "quoteNumber": "AIOW-2026-0001",
+      "state": "committed",
+      "pdfSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "committedAt": "2026-08-30T12:00:00.000Z",
+      "replayed": true,
+      "pdfDeliveryPermitted": true
+    },
+    "OpsMutationACK": {
+      "schemaKind": "ops_mutation_ack",
+      "accepted": true,
+      "projection": {
+        "schemaKind": "lead_projection",
+        "id": "123e4567-e89b-42d3-a456-426614174000",
+        "source": "booking",
+        "sourceId": "123e4567-e89b-42d3-a456-426614174000",
+        "createdAt": "2026-08-30T12:00:00.000Z",
+        "updatedAt": "2026-08-30T12:00:00.000Z",
+        "revision": 2,
+        "unread": false,
+        "status": "new",
+        "priority": "normal",
+        "displayName": "x",
+        "email": "operator@example.com",
+        "phone": "x",
+        "organisation": "x",
+        "route": "/",
+        "locale": "nl",
+        "nextActionAt": "2026-08-30T12:00:00.000Z",
+        "slaDueAt": "2026-08-30T12:00:00.000Z",
+        "overdue": true,
+        "exception": "delivery_review",
+        "deliverySummary": {
+          "schemaKind": "delivery_summary",
+          "customer": "pending",
+          "internal": "pending",
+          "hasAmbiguity": true,
+          "lastAttemptAt": "2026-08-30T12:00:00.000Z"
+        },
+        "legalHold": true
+      },
+      "previousRevision": 1,
+      "revision": 2,
+      "actorId": "richard",
+      "serverTime": "2026-08-30T12:00:00.000Z",
+      "auditId": "123e4567-e89b-42d3-a456-426614174000",
+      "replayed": true,
+      "operation": "mark_read",
+      "effect": {
+        "unread": false
+      }
+    },
+    "AnalyticsACK": {
+      "schemaKind": "analytics_ack",
+      "accepted": true,
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "deduplicated": true,
+      "storedAt": "2026-08-30T12:00:00.000Z"
+    }
+  },
+  "errors": {
+    "Error": {
+      "schemaKind": "error",
+      "code": "invalid_request",
+      "message": "x",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000"
+    },
+    "BookingError": {
+      "schemaKind": "booking_error",
+      "code": "invalid_request",
+      "message": "x",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "retriable": true
+    },
+    "QuotePrepareError": {
+      "schemaKind": "quote_prepare_error",
+      "code": "invalid_request",
+      "message": "x",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "retriable": true
+    },
+    "QuoteCommitError": {
+      "schemaKind": "quote_commit_error",
+      "code": "invalid_request",
+      "message": "x",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "retriable": true
+    },
+    "OpsError": {
+      "schemaKind": "ops_error",
+      "code": "invalid_request",
+      "message": "x",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "retriable": true
+    },
+    "AnalyticsError": {
+      "schemaKind": "analytics_error",
+      "code": "invalid_request",
+      "message": "x",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "retriable": true
+    },
+    "RevisionConflict": {
+      "schemaKind": "revision_conflict",
+      "code": "revision_conflict",
+      "expectedRevision": 1,
+      "currentRevision": 1,
+      "current": {
+        "schemaKind": "lead_projection",
+        "id": "123e4567-e89b-42d3-a456-426614174000",
+        "source": "booking",
+        "sourceId": "123e4567-e89b-42d3-a456-426614174000",
+        "createdAt": "2026-08-30T12:00:00.000Z",
+        "updatedAt": "2026-08-30T12:00:00.000Z",
+        "revision": 1,
+        "unread": true,
+        "status": "new",
+        "priority": "normal",
+        "displayName": "x",
+        "email": "operator@example.com",
+        "phone": "x",
+        "organisation": "x",
+        "route": "/",
+        "locale": "nl",
+        "nextActionAt": "2026-08-30T12:00:00.000Z",
+        "slaDueAt": "2026-08-30T12:00:00.000Z",
+        "overdue": true,
+        "exception": "delivery_review",
+        "deliverySummary": {
+          "schemaKind": "delivery_summary",
+          "customer": "pending",
+          "internal": "pending",
+          "hasAmbiguity": true,
+          "lastAttemptAt": "2026-08-30T12:00:00.000Z"
+        },
+        "legalHold": true
+      }
+    }
+  },
+  "projections": {
+    "LeadProjection": {
+      "schemaKind": "lead_projection",
+      "id": "123e4567-e89b-42d3-a456-426614174000",
+      "source": "booking",
+      "sourceId": "123e4567-e89b-42d3-a456-426614174000",
+      "createdAt": "2026-08-30T12:00:00.000Z",
+      "updatedAt": "2026-08-30T12:00:00.000Z",
+      "revision": 2,
+      "unread": false,
+      "status": "new",
+      "priority": "normal",
+      "displayName": "x",
+      "email": "operator@example.com",
+      "phone": "x",
+      "organisation": "x",
+      "route": "/",
+      "locale": "nl",
+      "nextActionAt": "2026-08-30T12:00:00.000Z",
+      "slaDueAt": "2026-08-30T12:00:00.000Z",
+      "overdue": true,
+      "exception": "delivery_review",
+      "deliverySummary": {
+        "schemaKind": "delivery_summary",
+        "customer": "pending",
+        "internal": "pending",
+        "hasAmbiguity": true,
+        "lastAttemptAt": "2026-08-30T12:00:00.000Z"
+      },
+      "legalHold": true
+    },
+    "DeliverySummary": {
+      "schemaKind": "delivery_summary",
+      "customer": "pending",
+      "internal": "pending",
+      "hasAmbiguity": true,
+      "lastAttemptAt": "2026-08-30T12:00:00.000Z"
+    },
+    "QueueCounts": {
+      "schemaKind": "queue_counts",
+      "total": 0,
+      "unread": 0,
+      "actionable": 0,
+      "overdue": 0,
+      "exceptions": 0
+    },
+    "QueueCursor": {
+      "schemaKind": "queue_cursor",
+      "createdAt": "2026-08-30T12:00:00.000Z",
+      "id": "123e4567-e89b-42d3-a456-426614174000"
+    },
+    "QueueProjection": {
+      "schemaKind": "queue_projection",
+      "items": [],
+      "counts": {
+        "schemaKind": "queue_counts",
+        "total": 0,
+        "unread": 0,
+        "actionable": 0,
+        "overdue": 0,
+        "exceptions": 0
+      },
+      "nextCursor": {
+        "schemaKind": "queue_cursor",
+        "createdAt": "2026-08-30T12:00:00.000Z",
+        "id": "123e4567-e89b-42d3-a456-426614174000"
+      }
+    },
+    "AnalyticsAggregateReport": {
+      "schemaKind": "analytics_aggregate_report",
+      "from": "2026-08-30",
+      "through": "2026-08-30",
+      "generatedAt": "2026-08-30T12:00:00.000Z",
+      "buckets": []
+    },
+    "OutboxProjection": {
+      "schemaKind": "outbox_projection",
+      "id": "123e4567-e89b-42d3-a456-426614174000",
+      "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+      "kind": "customer_booking",
+      "revision": 1,
+      "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "attempts": 0,
+      "state": "pending",
+      "leaseOwner": null,
+      "leaseToken": null,
+      "leaseExpiresAt": null,
+      "nextAttemptAt": null,
+      "lastResult": null,
+      "cancellationReason": null
+    },
+    "ProviderGateRecord": {
+      "schemaKind": "provider_gate_record",
+      "gateId": "mail_provider_production_v1",
+      "state": "pending",
+      "environment": "production",
+      "provider": "microsoft_graph",
+      "tenantId": "123e4567-e89b-42d3-a456-426614174000",
+      "applicationId": "123e4567-e89b-42d3-a456-426614174000",
+      "mailbox": "operator@example.com",
+      "sender": "operator@example.com",
+      "controlMailbox": "operator@example.com",
+      "secretPresent": true,
+      "oauthClientCredentialsPresent": true,
+      "exchangeApplicationRole": "Application Mail.Send",
+      "exchangeRbacSenderInScope": true,
+      "exchangeRbacControlMailboxInScope": true,
+      "entraUnscopedMailSendAssigned": true,
+      "evidenceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "ownerApprovedBy": "richard",
+      "approvedAt": "2026-08-30T12:00:00.000Z",
+      "expiresAt": "2026-08-30T12:00:00.000Z",
+      "approvalBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "runtimeCapability": "mail_send",
+      "fallbackProvider": null
+    },
+    "AuditRecord": {
+      "schemaKind": "audit_record",
+      "id": "123e4567-e89b-42d3-a456-426614174000",
+      "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+      "actorId": "x",
+      "actorRole": "ops_admin",
+      "action": "mark_read",
+      "reason": "x",
+      "beforeRevision": 1,
+      "afterRevision": 1,
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "idempotencyKeyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "nonPiiFactsOnly": true
+    },
+    "RetentionRedactionResult": {
+      "schemaKind": "retention_redaction_result",
+      "dryRun": true,
+      "runId": "123e4567-e89b-42d3-a456-426614174000",
+      "generatedAt": "2026-08-30T12:00:00.000Z",
+      "policyVersion": 1,
+      "eligible": {
+        "leadPii": 0,
+        "pdfs": 0,
+        "outboxPayloads": 0,
+        "analyticsEvents": 0,
+        "providerReceipts": 0,
+        "auditFacts": 0
+      },
+      "excludedLegalHold": 0,
+      "excludedActiveCustomerRelation": 0,
+      "wouldRedactIdsSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "actions": []
+    }
+  },
+  "events": {
+    "page_view": {
+      "schemaKind": "analytics_page_view",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "page_view",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "viewport": "mobile"
+    },
+    "calculator_changed": {
+      "schemaKind": "analytics_calculator_changed",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "calculator_changed",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "segment": "business",
+      "serviceRoute": "standard"
+    },
+    "context_opened": {
+      "schemaKind": "analytics_context_opened",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "context_opened",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "contextSlug": "accountants"
+    },
+    "quote_opened": {
+      "schemaKind": "analytics_quote_opened",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "quote_opened",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl"
+    },
+    "quote_succeeded": {
+      "schemaKind": "analytics_quote_succeeded",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "quote_succeeded",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "experiment": {
+        "experimentId": "scan_cta_copy_v1",
+        "variant": "control"
+      }
+    },
+    "quote_failed": {
+      "schemaKind": "analytics_quote_failed",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "quote_failed",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "failureClass": "validation"
+    },
+    "booking_opened": {
+      "schemaKind": "analytics_booking_opened",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "booking_opened",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl"
+    },
+    "booking_succeeded": {
+      "schemaKind": "analytics_booking_succeeded",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "booking_succeeded",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "experiment": {
+        "experimentId": "scan_cta_copy_v1",
+        "variant": "control"
+      }
+    },
+    "booking_failed": {
+      "schemaKind": "analytics_booking_failed",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "booking_failed",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "failureClass": "validation"
+    },
+    "scan_cta_clicked": {
+      "schemaKind": "analytics_scan_cta_clicked",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "scan_cta_clicked",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "experiment": {
+        "experimentId": "scan_cta_copy_v1",
+        "variant": "control"
+      }
+    },
+    "knowledge_cta_clicked": {
+      "schemaKind": "analytics_knowledge_cta_clicked",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "knowledge_cta_clicked",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl"
+    },
+    "experiment_exposed": {
+      "schemaKind": "analytics_experiment_exposed",
+      "eventId": "123e4567-e89b-42d3-a456-426614174000",
+      "event": "experiment_exposed",
+      "occurredAt": "2026-08-30T12:00:00.000Z",
+      "route": "/",
+      "locale": "nl",
+      "experiment": {
+        "experimentId": "scan_cta_copy_v1",
+        "variant": "control"
+      }
+    }
+  },
+  "providerResults": {
+    "accepted": {
+      "schemaKind": "provider_accepted",
+      "category": "accepted",
+      "code": null,
+      "receipt": {
+        "provider": "microsoft_graph",
+        "httpStatus": 202,
+        "graphRequestId": "x",
+        "providerMessageId": "x",
+        "acceptanceKind": "graph_http_202",
+        "attemptReceipt": "x",
+        "observedAt": "2026-08-30T12:00:00.000Z"
+      }
+    },
+    "transient_pre_acceptance": {
+      "schemaKind": "provider_transient_pre_acceptance",
+      "category": "transient_pre_acceptance",
+      "code": "timeout_before_response",
+      "receipt": {
+        "provider": "microsoft_graph",
+        "httpStatus": 429,
+        "graphRequestId": "x",
+        "providerMessageId": "x",
+        "acceptanceKind": null,
+        "attemptReceipt": "x",
+        "observedAt": "2026-08-30T12:00:00.000Z"
+      }
+    },
+    "permanent_pre_acceptance": {
+      "schemaKind": "provider_permanent_pre_acceptance",
+      "category": "permanent_pre_acceptance",
+      "code": "oauth_authentication_failed",
+      "receipt": {
+        "provider": "microsoft_graph",
+        "httpStatus": 403,
+        "graphRequestId": "x",
+        "providerMessageId": "x",
+        "acceptanceKind": null,
+        "attemptReceipt": "x",
+        "observedAt": "2026-08-30T12:00:00.000Z"
+      }
+    },
+    "ambiguous": {
+      "schemaKind": "provider_ambiguous",
+      "category": "ambiguous",
+      "code": "timeout_after_request_body",
+      "receipt": {
+        "provider": "microsoft_graph",
+        "httpStatus": 504,
+        "graphRequestId": "x",
+        "providerMessageId": "x",
+        "acceptanceKind": null,
+        "attemptReceipt": "x",
+        "observedAt": "2026-08-30T12:00:00.000Z"
+      }
+    }
+  },
+  "rpcBoundaries": {
+    "aiow_quote_prepare_v1": {
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_received_at",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/receivedAt",
+          "value": "2026-08-30T12:00:00.000Z"
+        },
+        {
+          "name": "p_country",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest/properties/country",
+          "value": "fixture"
+        },
+        {
+          "name": "p_quote",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest",
+          "value": {
+            "schemaKind": "quote_request",
+            "configuration": {
+              "segment": "business",
+              "serviceRoute": "standard",
+              "contextSlug": "accountants",
+              "people": 1,
+              "squareMetres": 1,
+              "homeSubtype": "home",
+              "smartDesignModules": []
+            },
+            "contact": {
+              "name": "x",
+              "email": "operator@example.com",
+              "phone": "xxxxxx",
+              "company": "x",
+              "postcode": "1234 AB",
+              "kvk": "12345678",
+              "startDate": "2026-08-30",
+              "note": "x"
+            },
+            "consent": {
+              "accepted": true,
+              "version": "aiow-quote-v1"
+            },
+            "source": {
+              "route": "/",
+              "locale": "nl"
+            },
+            "country": "NL"
+          }
+        },
+        {
+          "name": "p_contact",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteContact",
+          "value": {
+            "name": "x",
+            "email": "operator@example.com",
+            "phone": "xxxxxx",
+            "company": "x",
+            "postcode": "1234 AB",
+            "kvk": "12345678",
+            "startDate": "2026-08-30",
+            "note": "x"
+          }
+        },
+        {
+          "name": "p_consent",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest/properties/consent",
+          "value": {
+            "schemaKind": "quote_request",
+            "configuration": {
+              "segment": "business",
+              "serviceRoute": "standard",
+              "contextSlug": "accountants",
+              "people": 1,
+              "squareMetres": 1,
+              "homeSubtype": "home",
+              "smartDesignModules": []
+            },
+            "contact": {
+              "name": "x",
+              "email": "operator@example.com",
+              "phone": "xxxxxx",
+              "company": "x",
+              "postcode": "1234 AB",
+              "kvk": "12345678",
+              "startDate": "2026-08-30",
+              "note": "x"
+            },
+            "consent": {
+              "accepted": true,
+              "version": "aiow-quote-v1"
+            },
+            "source": {
+              "route": "/",
+              "locale": "nl"
+            },
+            "country": "NL"
+          }
+        },
+        {
+          "name": "p_source",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest/properties/source",
+          "value": {
+            "schemaKind": "quote_request",
+            "configuration": {
+              "segment": "business",
+              "serviceRoute": "standard",
+              "contextSlug": "accountants",
+              "people": 1,
+              "squareMetres": 1,
+              "homeSubtype": "home",
+              "smartDesignModules": []
+            },
+            "contact": {
+              "name": "x",
+              "email": "operator@example.com",
+              "phone": "xxxxxx",
+              "company": "x",
+              "postcode": "1234 AB",
+              "kvk": "12345678",
+              "startDate": "2026-08-30",
+              "note": "x"
+            },
+            "consent": {
+              "accepted": true,
+              "version": "aiow-quote-v1"
+            },
+            "source": {
+              "route": "/",
+              "locale": "nl"
+            },
+            "country": "NL"
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/QuotePrepareACK",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_quote_commit_v1": {
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_quote_number",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteCommitRequest/properties/quoteNumber",
+          "value": "fixture"
+        },
+        {
+          "name": "p_lead_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteCommitRequest/properties/leadId",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_pdf_filename",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/PdfArtifact/properties/filename",
+          "value": "fixture"
+        },
+        {
+          "name": "p_pdf_mime_type",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/PdfArtifact/properties/mimeType",
+          "value": "fixture"
+        },
+        {
+          "name": "p_pdf_base64",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/PdfArtifact/properties/base64",
+          "value": "fixture"
+        },
+        {
+          "name": "p_pdf_sha256",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/PdfArtifact/properties/sha256",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_customer_mail",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailJob",
+          "value": {
+            "schemaKind": "mail_job",
+            "jobId": "123e4567-e89b-42d3-a456-426614174000",
+            "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+            "kind": "customer_booking",
+            "from": "operator@example.com",
+            "to": [
+              "operator@example.com"
+            ],
+            "subject": "x",
+            "text": "x",
+            "html": "x",
+            "attachments": [],
+            "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "attempt": 1,
+            "leaseOwner": "x",
+            "leaseToken": "123e4567-e89b-42d3-a456-426614174000",
+            "leaseExpiresAt": "2026-08-30T12:00:00.000Z"
+          }
+        },
+        {
+          "name": "p_internal_mail",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailJob",
+          "value": {
+            "schemaKind": "mail_job",
+            "jobId": "123e4567-e89b-42d3-a456-426614174000",
+            "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+            "kind": "customer_booking",
+            "from": "operator@example.com",
+            "to": [
+              "operator@example.com"
+            ],
+            "subject": "x",
+            "text": "x",
+            "html": "x",
+            "attachments": [],
+            "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "attempt": 1,
+            "leaseOwner": "x",
+            "leaseToken": "123e4567-e89b-42d3-a456-426614174000",
+            "leaseExpiresAt": "2026-08-30T12:00:00.000Z"
+          }
+        },
+        {
+          "name": "p_quote",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest",
+          "value": {
+            "schemaKind": "quote_request",
+            "configuration": {
+              "segment": "business",
+              "serviceRoute": "standard",
+              "contextSlug": "accountants",
+              "people": 1,
+              "squareMetres": 1,
+              "homeSubtype": "home",
+              "smartDesignModules": []
+            },
+            "contact": {
+              "name": "x",
+              "email": "operator@example.com",
+              "phone": "xxxxxx",
+              "company": "x",
+              "postcode": "1234 AB",
+              "kvk": "12345678",
+              "startDate": "2026-08-30",
+              "note": "x"
+            },
+            "consent": {
+              "accepted": true,
+              "version": "aiow-quote-v1"
+            },
+            "source": {
+              "route": "/",
+              "locale": "nl"
+            },
+            "country": "NL"
+          }
+        },
+        {
+          "name": "p_contact",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteContact",
+          "value": {
+            "name": "x",
+            "email": "operator@example.com",
+            "phone": "xxxxxx",
+            "company": "x",
+            "postcode": "1234 AB",
+            "kvk": "12345678",
+            "startDate": "2026-08-30",
+            "note": "x"
+          }
+        },
+        {
+          "name": "p_source",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest/properties/source",
+          "value": {
+            "schemaKind": "quote_request",
+            "configuration": {
+              "segment": "business",
+              "serviceRoute": "standard",
+              "contextSlug": "accountants",
+              "people": 1,
+              "squareMetres": 1,
+              "homeSubtype": "home",
+              "smartDesignModules": []
+            },
+            "contact": {
+              "name": "x",
+              "email": "operator@example.com",
+              "phone": "xxxxxx",
+              "company": "x",
+              "postcode": "1234 AB",
+              "kvk": "12345678",
+              "startDate": "2026-08-30",
+              "note": "x"
+            },
+            "consent": {
+              "accepted": true,
+              "version": "aiow-quote-v1"
+            },
+            "source": {
+              "route": "/",
+              "locale": "nl"
+            },
+            "country": "NL"
+          }
+        },
+        {
+          "name": "p_country",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest/properties/country",
+          "value": "fixture"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/QuoteCommitACK",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_booking_commit_v1": {
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_booking",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/BookingRequest",
+          "value": {
+            "schemaKind": "booking_request",
+            "subject": "bedrijf",
+            "details": "x",
+            "date": "2026-08-30",
+            "slot": "10:00",
+            "name": "x",
+            "email": "operator@example.com",
+            "company": "x",
+            "locale": "nl",
+            "consentAccepted": true,
+            "consentVersion": "aiow-booking-v1"
+          }
+        },
+        {
+          "name": "p_source",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuoteRequest/properties/source",
+          "value": {
+            "schemaKind": "quote_request",
+            "configuration": {
+              "segment": "business",
+              "serviceRoute": "standard",
+              "contextSlug": "accountants",
+              "people": 1,
+              "squareMetres": 1,
+              "homeSubtype": "home",
+              "smartDesignModules": []
+            },
+            "contact": {
+              "name": "x",
+              "email": "operator@example.com",
+              "phone": "xxxxxx",
+              "company": "x",
+              "postcode": "1234 AB",
+              "kvk": "12345678",
+              "startDate": "2026-08-30",
+              "note": "x"
+            },
+            "consent": {
+              "accepted": true,
+              "version": "aiow-quote-v1"
+            },
+            "source": {
+              "route": "/",
+              "locale": "nl"
+            },
+            "country": "NL"
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/BookingACK",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_commercial_queue_v1": {
+      "args": [
+        {
+          "name": "p_cursor_created_at",
+          "sqlType": "timestamptz",
+          "nullable": true,
+          "default": null,
+          "validationRef": "#/$defs/QueueCursor/properties/createdAt",
+          "value": null
+        },
+        {
+          "name": "p_cursor_id",
+          "sqlType": "uuid",
+          "nullable": true,
+          "default": null,
+          "validationRef": "#/$defs/QueueCursor/properties/id",
+          "value": null
+        },
+        {
+          "name": "p_limit",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_1_100_or_rpc_specific",
+          "value": 1
+        }
+      ],
+      "returnSchemaRef": "#/$defs/QueueProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_commercial_mutate_v1": {
+      "args": [
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_mutation",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OpsMutation",
+          "value": {
+            "schemaKind": "ops_mark_read",
+            "idempotencyKey": "abcdefghijklmnop",
+            "leadId": "123e4567-e89b-42d3-a456-426614174000",
+            "expectedRevision": 1,
+            "operation": "mark_read",
+            "unread": false
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OpsMutationACK",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_commercial_report_v1": {
+      "args": [
+        {
+          "name": "p_from",
+          "sqlType": "date",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/AnalyticsAggregateReport/properties/from",
+          "value": "2026-08-30"
+        },
+        {
+          "name": "p_through",
+          "sqlType": "date",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/AnalyticsAggregateReport/properties/through",
+          "value": "2026-08-30"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/AnalyticsAggregateReport",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_commercial_event_v1": {
+      "args": [
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_event",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/AnalyticsEvent",
+          "value": {
+            "schemaKind": "analytics_page_view",
+            "eventId": "123e4567-e89b-42d3-a456-426614174000",
+            "event": "page_view",
+            "occurredAt": "2026-08-30T12:00:00.000Z",
+            "route": "/",
+            "locale": "nl",
+            "viewport": "mobile"
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/AnalyticsACK",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_claim_v2": {
+      "args": [
+        {
+          "name": "p_worker_id",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "worker_id_1_100",
+          "value": "worker-01"
+        },
+        {
+          "name": "p_limit",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_1_100_or_rpc_specific",
+          "value": 1
+        },
+        {
+          "name": "p_now",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "trusted_server_time_only",
+          "value": "2026-08-30T12:00:00.000Z"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_sent_v2": {
+      "args": [
+        {
+          "name": "p_job_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxProjection",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_lease_owner",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "worker_id_1_100",
+          "value": "worker-01"
+        },
+        {
+          "name": "p_lease_token",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailJob/properties/leaseToken",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_result",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/ProviderResult",
+          "value": {
+            "schemaKind": "provider_accepted",
+            "category": "accepted",
+            "code": null,
+            "receipt": {
+              "provider": "microsoft_graph",
+              "httpStatus": 100,
+              "graphRequestId": "x",
+              "providerMessageId": "x",
+              "acceptanceKind": "graph_http_202",
+              "attemptReceipt": "x",
+              "observedAt": "2026-08-30T12:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_retry_v2": {
+      "args": [
+        {
+          "name": "p_job_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxProjection",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_lease_owner",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "worker_id_1_100",
+          "value": "worker-01"
+        },
+        {
+          "name": "p_lease_token",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailJob/properties/leaseToken",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_result",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/ProviderResult",
+          "value": {
+            "schemaKind": "provider_accepted",
+            "category": "accepted",
+            "code": null,
+            "receipt": {
+              "provider": "microsoft_graph",
+              "httpStatus": 100,
+              "graphRequestId": "x",
+              "providerMessageId": "x",
+              "acceptanceKind": "graph_http_202",
+              "attemptReceipt": "x",
+              "observedAt": "2026-08-30T12:00:00.000Z"
+            }
+          }
+        },
+        {
+          "name": "p_next_attempt_at",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "retry_backoff_schedule",
+          "value": "2026-08-30T12:00:00.000Z"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_dead_v2": {
+      "args": [
+        {
+          "name": "p_job_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxProjection",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_lease_owner",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "worker_id_1_100",
+          "value": "worker-01"
+        },
+        {
+          "name": "p_lease_token",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailJob/properties/leaseToken",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_result",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/ProviderResult",
+          "value": {
+            "schemaKind": "provider_accepted",
+            "category": "accepted",
+            "code": null,
+            "receipt": {
+              "provider": "microsoft_graph",
+              "httpStatus": 100,
+              "graphRequestId": "x",
+              "providerMessageId": "x",
+              "acceptanceKind": "graph_http_202",
+              "attemptReceipt": "x",
+              "observedAt": "2026-08-30T12:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_review_v2": {
+      "args": [
+        {
+          "name": "p_job_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxProjection",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_lease_owner",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "worker_id_1_100",
+          "value": "worker-01"
+        },
+        {
+          "name": "p_lease_token",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailJob/properties/leaseToken",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_result",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/ProviderResult",
+          "value": {
+            "schemaKind": "provider_accepted",
+            "category": "accepted",
+            "code": null,
+            "receipt": {
+              "provider": "microsoft_graph",
+              "httpStatus": 100,
+              "graphRequestId": "x",
+              "providerMessageId": "x",
+              "acceptanceKind": "graph_http_202",
+              "attemptReceipt": "x",
+              "observedAt": "2026-08-30T12:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_resolve_v2": {
+      "args": [
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_job_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxProjection",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_resolution",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "enum_sent_retry_dead",
+          "value": "sent"
+        },
+        {
+          "name": "p_reason",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "nonempty_1_500",
+          "value": "fixture"
+        },
+        {
+          "name": "p_evidence",
+          "sqlType": "text",
+          "nullable": true,
+          "default": null,
+          "validationRef": "text_1_1000",
+          "value": null
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_commercial_retention_dry_run_v1": {
+      "args": [
+        {
+          "name": "p_now",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "trusted_server_time_only",
+          "value": "2026-08-30T12:00:00.000Z"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/RetentionRedactionResult",
+      "errorMap": {
+        "P0001": {
+          "code": "conflict_or_policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_recover_stale_v2": {
+      "args": [
+        {
+          "name": "p_worker_id",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "worker_id_1_100",
+          "value": "worker-01"
+        },
+        {
+          "name": "p_now",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "trusted_server_time_only",
+          "value": "2026-08-30T12:00:00.000Z"
+        },
+        {
+          "name": "p_limit",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_1_100_or_rpc_specific",
+          "value": 1
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_mail_outbox_cancel_v2": {
+      "args": [
+        {
+          "name": "p_commercial_lead_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/LeadProjection/properties/id",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_job_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxProjection",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_cancellation_kind",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "enum_retention_legal_admin",
+          "value": "admin"
+        },
+        {
+          "name": "p_reason",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "nonempty_1_500",
+          "value": "fixture"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OutboxProjection",
+      "errorMap": {
+        "P0001": {
+          "code": "policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_provider_gate_write_v1": {
+      "args": [
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_gate",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/ProviderGateRecord",
+          "value": {
+            "schemaKind": "provider_gate_record",
+            "gateId": "mail_provider_production_v1",
+            "state": "pending",
+            "environment": "production",
+            "provider": "microsoft_graph",
+            "tenantId": "123e4567-e89b-42d3-a456-426614174000",
+            "applicationId": "123e4567-e89b-42d3-a456-426614174000",
+            "mailbox": "operator@example.com",
+            "sender": "operator@example.com",
+            "controlMailbox": "operator@example.com",
+            "secretPresent": true,
+            "oauthClientCredentialsPresent": true,
+            "exchangeApplicationRole": "Application Mail.Send",
+            "exchangeRbacSenderInScope": true,
+            "exchangeRbacControlMailboxInScope": true,
+            "entraUnscopedMailSendAssigned": true,
+            "evidenceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "revision": 1,
+            "ownerApprovedBy": "richard",
+            "approvedAt": "2026-08-30T12:00:00.000Z",
+            "expiresAt": "2026-08-30T12:00:00.000Z",
+            "approvalBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "runtimeCapability": "mail_send",
+            "fallbackProvider": null
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/ProviderGateRecord",
+      "errorMap": {
+        "P0001": {
+          "code": "policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_active_customer_relation_set_v1": {
+      "args": [
+        {
+          "name": "p_commercial_lead_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/LeadProjection/properties/id",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_expected_revision",
+          "sqlType": "bigint",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_gte_1",
+          "value": 1
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_payload_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "sha256_lowercase_hex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_enabled",
+          "sqlType": "boolean",
+          "nullable": false,
+          "default": null,
+          "validationRef": "boolean",
+          "value": true
+        },
+        {
+          "name": "p_reason",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "nonempty_1_500",
+          "value": "fixture"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/OpsMutationACK",
+      "errorMap": {
+        "P0001": {
+          "code": "policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    },
+    "aiow_quote_abandon_expired_v1": {
+      "args": [
+        {
+          "name": "p_expired_before",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "trusted_server_time_only",
+          "value": "2026-08-30T12:00:00.000Z"
+        },
+        {
+          "name": "p_limit",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "integer_1_100_or_rpc_specific",
+          "value": 1
+        }
+      ],
+      "returnSchemaRef": "#/$defs/RetentionRedactionResult",
+      "errorMap": {
+        "P0001": {
+          "code": "policy_rejection",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_argument",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      }
+    }
+  },
+  "migrationScenarios": {
+    "zero_to_head": {
+      "name": "zero_to_head",
+      "start": "empty schema at predecessor boundary",
+      "expected": "all tables/checks/FKs created; zero rows; all constraints VALID"
+    },
+    "production_baseline_to_head": {
+      "name": "production_baseline_to_head",
+      "start": "one committed quote, one prepared expired quote, one booking, v1 historical outbox",
+      "expected": "committed quote and booking map one-to-one at revision 1; prepared expired quote becomes abandoned only after expiry job; v1 receives zero new jobs; no orphan documents"
+    }
+  }
+}
