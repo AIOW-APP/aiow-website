@@ -1,12 +1,23 @@
 import type { MetadataRoute } from "next";
-import { generateSitemap } from "@/core/seo/sitemap";
+import { PUBLIC_ROUTE_PAIRS } from "@/lib/aiow-v1/locale";
+import { PRICING_CONTEXT_SLUGS } from "@/lib/aiow-v1/pricing-contexts";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+const SITE_URL = "https://aiow.ai";
+const routePairs: readonly (readonly [string, string])[] = [
+  ...PUBLIC_ROUTE_PAIRS,
+  ...PRICING_CONTEXT_SLUGS.map((slug) => [`/tarieven/${slug}`, `/en/rates/${slug}`] as const),
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return generateSitemap(SITE_URL, [
-    { path: "/",          priority: 1.0, changeFreq: "weekly" },
-    { path: "/privacy",   priority: 0.3, changeFreq: "yearly" },
-    { path: "/terms",     priority: 0.3, changeFreq: "yearly" },
-  ]);
+  const lastModified = new Date("2026-08-28T00:00:00.000Z");
+  return routePairs.flatMap(([nl, en], pairIndex) => {
+    const languages = { nl: `${SITE_URL}${nl}`, en: `${SITE_URL}${en}`, "x-default": `${SITE_URL}${nl}` };
+    return [nl, en].map((path, localeIndex) => ({
+      url: `${SITE_URL}${path}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: pairIndex === 0 && localeIndex === 0 ? 1 : pairIndex === 0 ? 0.8 : 0.9,
+      alternates: { languages },
+    }));
+  });
 }

@@ -1,0 +1,12 @@
+export type MinimumApplied = Readonly<{ setup: boolean; monthly: boolean }>;
+export type PriceResult = Readonly<{ kind: "business" | "building"; tier: string; label: string; input: number; setupCents: number; monthlyCents: number; minimumApplied: MinimumApplied; from: boolean; estimate: boolean }>;
+export type DeterminingAnchor = "minimum" | "technology-budget" | "square-metres";
+export type SmartDesignResult = Readonly<{ kind: "smart-design"; service: "scan" | "blueprint" | "supervision"; label: string; squareMetres: number; technologyBudgetEuros: number; squareMetreCents: number; technologyBudgetCents: number; totalCents: number; minimumApplied: boolean; determiningAnchor: DeterminingAnchor; determiningAnchors: readonly DeterminingAnchor[]; from: true }>;
+export const BUSINESS_TIERS: readonly Readonly<{ key: string; label: string; maxPeople: number; setupCents: number; monthlyPerPersonCents: number; monthlyMinimumCents: number; from: boolean }>[];
+export const BUILDING_MODES: Readonly<Record<"office" | "officeXL" | "home" | "signature", Readonly<{ key: string; label: string; setupPerSquareMetreCents: number; setupMinimumCents: number; monthlyPerSquareMetreCents: number; monthlyMinimumCents: number; from: boolean; estimate: boolean }>>>;
+export const SMART_DESIGN_SERVICES: Readonly<Record<"scan" | "blueprint" | "supervision", Readonly<{ key: "scan" | "blueprint" | "supervision"; label: string; perSquareMetreCents: number; technologyBudgetRate: number; minimumCents: number }>>>;
+export function calculateBusinessPrice(people: number): PriceResult;
+export function calculateBuildingPrice(mode: "office" | "home" | "signature", squareMetres: number): PriceResult;
+export function calculateSmartDesignPrice(service: "scan" | "blueprint" | "supervision", squareMetres: number, technologyBudgetEuros?: number): SmartDesignResult;
+export function formatEuroCents(cents: number, locale?: string): string;
+export const PRICING_EXCLUSIONS: readonly string[];
