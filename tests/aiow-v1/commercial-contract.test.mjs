@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
+import {
+  PROVIDER_GATE_APPROVAL_FIELDS,
+  buildProviderGateApprovalBindingDigestV1,
+  validateOutboxBatchAckV1,
+  validateProviderGateCurrentV1,
+  validateQuoteAbandonBatchAckV1,
+} from "../../lib/aiow-v1/commercial-contract-validator.mjs";
 
 const contractUrl = new URL("../../docs/contracts/aiow-commercial-control-plane-v1.json", import.meta.url);
 const fixtureUrl = new URL("../fixtures/aiow-commercial-contract-v1.json", import.meta.url);
@@ -231,21 +238,6 @@ function validateOpsMutationAck(value, persistedReplay = value) {
   if (field && value.effect[field] !== value.projection[field]) return false;
   return !value.replayed || stableJson(value) === stableJson(persistedReplay);
 }
-function validateOutboxBatchAck(value) {
-  if (!validateRoot(value) || value.itemCount !== value.items.length || value.items.length > value.requestedLimit) return false;
-  return new Set(value.items.map((item) => item.id)).size === value.items.length && new Set(value.items.map((item) => item.leaseToken)).size === value.items.length;
-}
-function providerGateBinding(record) {
-  const fields = contract["x-aiow-provider-gate"].approvalBinding;
-  return sha256(Object.fromEntries(fields.map((field) => [field, record[field]])));
-}
-function validateCurrentProviderGate(record, serverNow, target = record) {
-  if (!validateRoot(record)) return false;
-  if (!["approved", "activated"].includes(record.state)) return false;
-  for (const field of ["tenantId","applicationId","mailbox","sender","controlMailbox"]) if (record[field] !== target[field]) return false;
-  const now = Date.parse(serverNow), approved = Date.parse(record.approvedAt), expires = Date.parse(record.expiresAt);
-  return approved <= now && now < expires && record.approvalBindingSha256 === providerGateBinding(record);
-}
 
 test("canonical fixture registry contains exactly 70 independently frozen records", () => {
   const expectedCounts = { requests:11, acks:5, errors:7, projections:10, events:12, providerResults:4, rpcBoundaries:19, migrationScenarios:2 };
@@ -256,7 +248,7 @@ test("canonical fixture registry contains exactly 70 independently frozen record
     projections:"01a4d4ef2134a4f0a779d2ed946556bda56afb5f2a64f8e684ca8c16e0fdaeeb",
     events:"ea4aced2945e90e903d95f27514e90f4b366df6ea4913e028f9029dd51df5d83",
     providerResults:"ce715ea6a8c88bbe647e2ec182fe3e2b691e01706ffb279d52c10df7b377c12d",
-    rpcBoundaries:"5f5fad8b03d12c99222796dfded005024b90a31e39df4b8faf58a473c86a0868",
+    rpcBoundaries:"5f31c2839f49f3c5f6c910137a98e9ad4e03485f75e1312ead5f31ab1e079f5f",
     migrationScenarios:"4cd373a06b638959ecc151112882dd3ed6513b06f15c87f4cd839292589e69de",
   };
   assert.equal(canonicalFixtures.fixtureVersion, 1);
@@ -267,7 +259,7 @@ test("canonical fixture registry contains exactly 70 independently frozen record
   }
   const records = Object.entries(expectedCounts).flatMap(([group]) => Object.entries(canonicalFixtures[group]).map(([name, value]) => ({group,name,value}))).sort((a,b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
   assert.equal(records.length, 70);
-  assert.equal(sha256(records), "8a3a42dfaa39cb42421e208015d0c5ab8da58ccdf6f34041f9f44492cbdf4d67");
+  assert.equal(sha256(records), "f98dbc9389ef72fd6cc4261118b47bd9d39723b2db165e581450ffe43cef6634");
   for (const group of ["requests","acks","errors","projections","events","providerResults"])
     for (const [name, value] of Object.entries(canonicalFixtures[group])) assert.equal(validateRoot(value), true, `${group}/${name}: ${ajv.errorsText(validateRoot.errors)}`);
   const ops = contract["x-aiow-operations"];
@@ -291,7 +283,7 @@ test("canonical fixture registry contains exactly 70 independently frozen record
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
   assert.equal(Object.keys(ops).length, 28);
-  assert.equal(sha256(ops), "a176ae7fa6da5db307f29c56304b1859ac08721e533929d4acc9d6056d7911ca");
+  assert.equal(sha256(ops), "1d152ddab562336921b44fd978144856f933fe87fe84648d091c2346544bf34a");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
@@ -306,7 +298,7 @@ test("operation and RPC registries freeze typed order, private service-role auth
       if (arg.validationRef.startsWith("#/")) deref({$ref:arg.validationRef});
       assert.doesNotMatch(arg.name, /operator|actor|jwt/i);
     }
-    const expectedCardinality = ["aiow_mail_outbox_claim_v2","aiow_mail_outbox_recover_stale_v2"].includes(name) ? "exactly_one_batch_ack" : "exactly_one";
+    const expectedCardinality = ["aiow_mail_outbox_claim_v2","aiow_mail_outbox_recover_stale_v2","aiow_quote_abandon_expired_v1"].includes(name) ? "exactly_one_batch_ack" : "exactly_one";
     assert.deepEqual(op.returns, {sqlType:"jsonb",schemaRef:op.ackRef,cardinality:expectedCardinality});
     assert.deepEqual(canonicalFixtures.rpcBoundaries[name].args.map(({value,...arg}) => arg), op.args, `${name} canonical boundary`);
   }
@@ -346,16 +338,26 @@ test("active-customer relation ACK is closed, revision-correlated and replay-sta
 
 test("outbox batch ACK is exact for zero, one and multiple ordered leases", () => {
   const cases=canonicalFixtures.rpcBoundaries.aiow_mail_outbox_claim_v2.canonicalResults;
-  for (const [name,value] of Object.entries(cases)) assert.equal(validateOutboxBatchAck(value),true,name);
+  const claimLimit=canonicalFixtures.rpcBoundaries.aiow_mail_outbox_claim_v2.args.find((arg)=>arg.name==="p_limit").value;
+  assert.equal(claimLimit,2);
+  for (const [name,value] of Object.entries(cases)) assert.equal(validateOutboxBatchAckV1(value,{operation:"claim",requestedLimit:claimLimit}),true,name);
   const multi=structuredClone(cases.multi);
-  assert.equal(validateOutboxBatchAck({...multi,itemCount:1}),false);
-  assert.equal(validateOutboxBatchAck({...multi,requestedLimit:1}),false);
+  assert.equal(validateOutboxBatchAckV1({...multi,itemCount:1},{operation:"claim",requestedLimit:2}),false);
+  assert.equal(validateOutboxBatchAckV1({...multi,requestedLimit:1},{operation:"claim",requestedLimit:2}),false);
+  assert.equal(validateOutboxBatchAckV1(multi,{operation:"claim",requestedLimit:1}),false,"two items for request limit one");
+  assert.equal(validateOutboxBatchAckV1(multi,{operation:"mail_run",requestedLimit:2}),false,"operation binding");
   assert.equal(validateRoot({...multi,requestedLimit:0}),false);
   assert.equal(validateRoot({...multi,requestedLimit:51}),false);
-  assert.equal(validateOutboxBatchAck({...multi,items:[multi.items[0],{...multi.items[1],id:multi.items[0].id}]}),false);
-  assert.equal(validateOutboxBatchAck({...multi,items:[multi.items[0],{...multi.items[1],leaseToken:multi.items[0].leaseToken}]}),false);
+  assert.equal(validateOutboxBatchAckV1({...multi,items:[multi.items[0],{...multi.items[1],id:multi.items[0].id}]},{operation:"claim",requestedLimit:2}),false);
+  assert.equal(validateOutboxBatchAckV1({...multi,items:[multi.items[0],{...multi.items[1],leaseToken:multi.items[0].leaseToken}]},{operation:"claim",requestedLimit:2}),false);
+  assert.equal(validateOutboxBatchAckV1({...multi,items:multi.items.toReversed()},{operation:"claim",requestedLimit:2}),false,"deterministic order");
   const {payloadSha256,...incomplete}=multi.items[0];
   assert.equal(validateRoot({...cases.one,items:[incomplete]}),false);
+  assert.equal(validateOutboxBatchAckV1({...cases.one,items:[incomplete]},{operation:"claim",requestedLimit:2}),false);
+  const stale=canonicalFixtures.rpcBoundaries.aiow_mail_outbox_recover_stale_v2;
+  const staleLimit=stale.args.find((arg)=>arg.name==="p_limit").value;
+  assert.equal(staleLimit,2);
+  assert.equal(validateOutboxBatchAckV1(stale.canonicalResults.one,{operation:"stale_recovery",requestedLimit:staleLimit}),true);
   assert.equal(contract["x-aiow-operations"].aiow_mail_outbox_claim_v2.ackRef,"#/$defs/OutboxBatchACK");
   assert.equal(contract["x-aiow-operations"].aiow_mail_outbox_recover_stale_v2.ackRef,"#/$defs/OutboxBatchACK");
   assert.equal(contract["x-aiow-operations"].mail_run.responses["200"],"#/$defs/OutboxBatchACK");
@@ -382,41 +384,67 @@ test("outbox state machine, leases and Graph-only provider outcomes reject hosti
   assert.equal(validateRoot({...accepted,category:"ambiguous"}), false);
   assert.equal(validateRoot({...canonicalFixtures.providerResults.transient_pre_acceptance,code:"invalid_recipient"}), false);
   assert.equal(validateRoot({...canonicalFixtures.providerResults.permanent_pre_acceptance,code:"timeout_before_response"}), false);
-  const operationCategories={aiow_mail_outbox_sent_v2:"accepted",aiow_mail_outbox_retry_v2:"transient_pre_acceptance",aiow_mail_outbox_dead_v2:"permanent_pre_acceptance",aiow_mail_outbox_review_v2:"ambiguous"};
-  for (const [rpc,category] of Object.entries(operationCategories)) {
-    const result=canonicalFixtures.rpcBoundaries[rpc].args.find((arg)=>arg.name==="p_result").value;
+  const operationCategories={aiow_mail_outbox_sent_v2:["accepted","#/$defs/ProviderAccepted"],aiow_mail_outbox_retry_v2:["transient_pre_acceptance","#/$defs/ProviderTransientPreAcceptance"],aiow_mail_outbox_dead_v2:["permanent_pre_acceptance","#/$defs/ProviderPermanentPreAcceptance"],aiow_mail_outbox_review_v2:["ambiguous","#/$defs/ProviderAmbiguous"]};
+  for (const [rpc,[category,validationRef]] of Object.entries(operationCategories)) {
+    const resultArg=canonicalFixtures.rpcBoundaries[rpc].args.find((arg)=>arg.name==="p_result");
+    assert.equal(resultArg.validationRef,validationRef,rpc);
+    const validateBoundary=validatorForRef(validationRef);
+    const result=resultArg.value;
     assert.equal(result.category,category,rpc);
-    for (const other of Object.values(operationCategories).filter((value)=>value!==category)) assert.notEqual(result.category,other,rpc);
+    assert.equal(validateBoundary(result),true,rpc);
+    for (const other of Object.values(canonicalFixtures.providerResults).filter((value)=>value.category!==category))
+      assert.equal(validateBoundary(other),false,`${rpc} rejects ${other.category}`);
   }
+  assert.ok(contract.$defs.ProviderPermanentPreAcceptance.properties.code.enum.includes("retry_exhausted"));
+  assert.match(ops.aiow_mail_outbox_dead_v2.resultBoundary,/server-classified.*retry_exhausted/);
   assert.deepEqual(contract["x-aiow-provider-gate"].v2Providers,["microsoft_graph"]);
   assert.equal(validateRoot({...accepted,receipt:{...accepted.receipt,provider:"gmail_legacy_test_only"}}),false);
 });
 
 test("provider owner gate binds exact Graph target, RBAC evidence, revision and trusted time", () => {
   const gate = {...canonicalFixtures.projections.ProviderGateRecord,state:"activated",secretPresent:true,oauthClientCredentialsPresent:true,controlMailbox:"negative-control@example.com",exchangeRbacSenderInScope:true,exchangeRbacControlMailboxInScope:false,entraUnscopedMailSendAssigned:false,ownerApprovedBy:"richard",approvedAt:"2026-08-30T12:00:00.000Z",expiresAt:"2026-08-31T12:00:00.000Z"};
-  gate.approvalBindingSha256 = providerGateBinding(gate);
+  gate.approvalBindingSha256 = buildProviderGateApprovalBindingDigestV1(gate);
   const now="2026-08-30T13:00:00.000Z";
-  assert.equal(validateCurrentProviderGate(gate,now),true);
+  assert.equal(validateProviderGateCurrentV1(gate,{serverNow:now}),true);
   const mutations={
     gateId:"other_gate",environment:"preview",provider:"gmail_legacy_test_only",tenantId:"123e4567-e89b-42d3-a456-426614174099",applicationId:"123e4567-e89b-42d3-a456-426614174098",
     mailbox:"other@example.com",sender:"attacker@example.com",controlMailbox:"different-control@example.com",secretPresent:false,oauthClientCredentialsPresent:false,
     exchangeApplicationRole:"Mail.Read",exchangeRbacSenderInScope:false,exchangeRbacControlMailboxInScope:true,entraUnscopedMailSendAssigned:true,evidenceSha256:"b".repeat(64),revision:2,
     ownerApprovedBy:"arbitrary",approvedAt:"2026-08-30T12:00:01.000Z",expiresAt:"2026-08-31T12:00:01.000Z",runtimeCapability:"mail_read",fallbackProvider:"gmail_legacy_test_only"
   };
-  assert.deepEqual(Object.keys(mutations),contract["x-aiow-provider-gate"].approvalBinding);
-  for (const [field,value] of Object.entries(mutations)) assert.equal(validateCurrentProviderGate({...gate,[field]:value},now),false,field);
-  assert.equal(validateCurrentProviderGate(gate,now,{...gate,controlMailbox:"provider-control@example.com"}),false,"provider target mismatch");
-  assert.equal(validateCurrentProviderGate(gate,"2026-08-29T13:00:00.000Z"),false);
-  assert.equal(validateCurrentProviderGate(gate,gate.expiresAt),false);
-  assert.equal(validateCurrentProviderGate({...gate,state:"revoked"},now),false);
+  assert.equal(Object.isFrozen(PROVIDER_GATE_APPROVAL_FIELDS),true);
+  assert.deepEqual(PROVIDER_GATE_APPROVAL_FIELDS,contract["x-aiow-provider-gate"].approvalBinding);
+  assert.deepEqual(Object.keys(mutations),PROVIDER_GATE_APPROVAL_FIELDS);
+  for (const [field,value] of Object.entries(mutations)) assert.equal(validateProviderGateCurrentV1({...gate,[field]:value},{serverNow:now}),false,field);
+  assert.equal(validateProviderGateCurrentV1(gate,{serverNow:now,target:{...gate,controlMailbox:"provider-control@example.com"}}),false,"provider target mismatch");
+  assert.equal(validateProviderGateCurrentV1(gate,{serverNow:now,target:{...gate,provider:"gmail_legacy_test_only"}}),false,"provider identity mismatch");
+  assert.equal(validateProviderGateCurrentV1(gate,{serverNow:"2026-08-29T13:00:00.000Z"}),false);
+  assert.equal(validateProviderGateCurrentV1(gate,{serverNow:gate.expiresAt}),false);
+  assert.equal(validateProviderGateCurrentV1({...gate,state:"revoked"},{serverNow:now}),false);
   assert.equal(contract.$defs.ProviderGateRecord["x-aiow-custom-validator"],"providerGateCurrentV1");
   assert.match(contract["x-aiow-provider-gate"].runtimeVerifier,/every listed current persisted fact/);
+  assert.deepEqual(Object.keys(contract["x-aiow-provider-gate"].runtimeBindings),["write","read","providerCall"]);
+  assert.match(contract["x-aiow-operations"].aiow_provider_gate_write_v1.runtimeValidation.currentValidator,/approved\/activated/);
   assert.match(contract["x-aiow-provider-gate"].microsoftAuthority.unionRiskRule,/MUST NOT/);
+});
+
+test("runtime validators fail closed on malformed values without secret or logger inputs", () => {
+  assert.deepEqual(validateProviderGateCurrentV1.length,1);
+  assert.deepEqual(buildProviderGateApprovalBindingDigestV1(null),null);
+  assert.equal(buildProviderGateApprovalBindingDigestV1(Object.fromEntries(PROVIDER_GATE_APPROVAL_FIELDS.map((field)=>[field,undefined]))),null);
+  for (const value of [null,{},[],"secret",{approvalBindingSha256:"a".repeat(64)}])
+    assert.equal(validateProviderGateCurrentV1(value,{serverNow:"2026-08-30T13:00:00.000Z"}),false);
+  for (const value of [null,{},[],"secret",{schemaKind:"outbox_batch_ack"}])
+    assert.equal(validateOutboxBatchAckV1(value,{operation:"claim",requestedLimit:1}),false);
+  assert.equal(validateOutboxBatchAckV1({schemaKind:"outbox_batch_ack",operation:"claim",requestedLimit:1,itemCount:0,items:{length:0}},{operation:"claim",requestedLimit:1}),false);
+  assert.equal(validateOutboxBatchAckV1(canonicalFixtures.rpcBoundaries.aiow_mail_outbox_claim_v2.canonicalResults.zero,{operation:"claim",requestedLimit:1.5}),false);
+  assert.equal(validateQuoteAbandonBatchAckV1(null,{requestedLimit:1}),false);
+  assert.equal(contract["x-aiow-custom-verifiers"].outboxBatchAckV1.module,"lib/aiow-v1/commercial-contract-validator.mjs");
 });
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"4098866b316d609e8ef08db8fffb9dafeb9ef31ca1aa8ae47cbe296be152779f");
+  assert.equal(sha256(db),"5335d10426254a17fcff3eaea68c2c639345ebe229cd551b067619c0478b3366");
   assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {
@@ -437,27 +465,34 @@ test("persistence mappings and retention anchors are exact and exception-complet
 
 test("terminal and abandonment anchors have trusted CAS writers and exact no-op boundaries", () => {
   const life=contract["x-aiow-lifecycle"].terminalAnchors, abandonment=contract["x-aiow-retention"].abandonment;
-  function transition(row,to,serverTime,{replay=false}={}) {
-    if (replay || row.status===to) return row;
+  const boundary=canonicalFixtures.rpcBoundaries.aiow_quote_abandon_expired_v1;
+  const limit=boundary.args.find((arg)=>arg.name==="p_limit").value;
+  assert.equal(validateQuoteAbandonBatchAckV1(boundary.canonicalResults.zero,{requestedLimit:limit}),true);
+  assert.equal(validateQuoteAbandonBatchAckV1(boundary.canonicalResults.one,{requestedLimit:limit}),true);
+  const item=boundary.canonicalResults.one.items[0];
+  assert.equal(item.revision,item.previousRevision+1);
+  assert.equal(item.status,"lost"); assert.equal(item.quoteState,"abandoned"); assert.equal(item.terminalAt,item.abandonedAt);
+  assert.equal(validateQuoteAbandonBatchAckV1({...boundary.canonicalResults.one,itemCount:0},{requestedLimit:limit}),false);
+  assert.equal(validateQuoteAbandonBatchAckV1({...boundary.canonicalResults.one,items:[{...item,revision:item.revision+1}]},{requestedLimit:limit}),false);
+  assert.equal(validateQuoteAbandonBatchAckV1({...boundary.canonicalResults.one,items:[{...item,abandonedAt:"2026-08-30T12:00:01.000Z"}]},{requestedLimit:limit}),false);
+  function transition(row,to,serverTime) {
+    if (row.status===to) return row;
     const next={...row,status:to,revision:row.revision+1};
-    if (row.status==="lost" && to==="qualified") next.terminalAt=null;
+    if (row.status==="lost" && to==="qualified") { next.terminalAt=null; next.abandonedAt=null; }
     else if (!["won","lost"].includes(row.status) && ["won","lost"].includes(to)) next.terminalAt=serverTime;
     return next;
   }
-  const active={status:"proposal",revision:1,terminalAt:null,abandonedAt:null,legalHold:false,activeCustomerRelation:false};
-  const terminal=transition(active,"lost","2026-01-01T00:00:00.000Z");
-  assert.equal(terminal.terminalAt,"2026-01-01T00:00:00.000Z");
-  assert.deepEqual(transition(terminal,"lost","2026-02-01T00:00:00.000Z"),terminal,"terminal no-op does not restamp");
-  assert.deepEqual(transition(terminal,"lost","2026-02-01T00:00:00.000Z",{replay:true}),terminal,"replay does not restamp");
-  const reopened=transition(terminal,"qualified","2026-02-01T00:00:00.000Z"); assert.equal(reopened.terminalAt,null);
-  const reterminal=transition(reopened,"won","2026-03-01T00:00:00.000Z"); assert.equal(reterminal.terminalAt,"2026-03-01T00:00:00.000Z");
-  const abandon=(row,serverTime,eligible)=>eligible && !row.abandonedAt && !row.legalHold && !row.activeCustomerRelation ? {...row,abandonedAt:serverTime} : row;
-  const abandoned=abandon(active,"2026-04-01T00:00:00.000Z",true); assert.equal(abandoned.abandonedAt,"2026-04-01T00:00:00.000Z");
-  assert.deepEqual(abandon(abandoned,"2026-05-01T00:00:00.000Z",true),abandoned);
-  assert.deepEqual(abandon({...active,legalHold:true},"2026-04-01T00:00:00.000Z",true),{...active,legalHold:true});
-  assert.deepEqual(abandon({...active,activeCustomerRelation:true},"2026-04-01T00:00:00.000Z",true),{...active,activeCustomerRelation:true});
-  assert.match(life.trustedWriter,/server time.*expectedRevision CAS/); assert.match(life.lostReopen,/clears terminal_at/); assert.match(life.reterminalization,/fresh terminal_at/);
-  assert.match(abandonment.trustedWriter,/aiow_quote_abandon_expired_v1 only/); assert.match(abandonment.replayOrNoOp,/legal-hold/);
+  const abandoned={status:"lost",revision:2,terminalAt:item.terminalAt,abandonedAt:item.abandonedAt,legalHold:false,activeCustomerRelation:false};
+  const reopened=transition(abandoned,"qualified","2026-09-01T00:00:00.000Z");
+  assert.equal(reopened.terminalAt,null); assert.equal(reopened.abandonedAt,null); assert.equal(reopened.revision,3);
+  const reterminal=transition(reopened,"won","2026-09-02T00:00:00.000Z"); assert.equal(reterminal.terminalAt,"2026-09-02T00:00:00.000Z");
+  const atomic=contract["x-aiow-operations"].aiow_quote_abandon_expired_v1.atomicTransition;
+  assert.match(atomic.selection,/prepared.*nonterminal.*legal_hold=false.*active_customer_relation=false/);
+  assert.match(atomic.transaction,/status=lost.*revision exactly once.*terminal_at and abandoned_at.*quote.state=abandoned.*audit/);
+  assert.match(atomic.noOp,/committed, nonexpired, held, active-relation, terminal/);
+  assert.match(atomic.bookingFailure,/never committed.*no retention row/);
+  assert.match(life.trustedWriter,/aiow_quote_abandon_expired_v1/); assert.match(life.lostReopen,/clears both terminal_at and abandoned_at/); assert.match(life.reterminalization,/fresh terminal_at/);
+  assert.match(abandonment.trustedWriter,/only abandoned_at writer/); assert.match(abandonment.replayOrNoOp,/zero-item/);
 });
 
 test("analytics route/locale, experiment dimensions and NULL identity remain correlated", () => {

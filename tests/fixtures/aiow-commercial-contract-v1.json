@@ -1300,7 +1300,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/OutboxBatchLimit",
-          "value": 1
+          "value": 2
         },
         {
           "name": "p_now",
@@ -1352,7 +1352,9 @@
               "attempts": 1,
               "leaseOwner": "worker-01",
               "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
-              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z",
+              "nextAttemptAt": "2026-08-30T12:00:00.000Z",
+              "createdAt": "2026-08-30T11:00:00.000Z"
             }
           ]
         },
@@ -1371,7 +1373,9 @@
               "attempts": 1,
               "leaseOwner": "worker-01",
               "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
-              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z",
+              "nextAttemptAt": "2026-08-30T12:00:00.000Z",
+              "createdAt": "2026-08-30T11:00:00.000Z"
             },
             {
               "id": "123e4567-e89b-42d3-a456-426614174002",
@@ -1382,7 +1386,9 @@
               "attempts": 1,
               "leaseOwner": "worker-01",
               "leaseToken": "123e4567-e89b-42d3-a456-426614174012",
-              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z",
+              "nextAttemptAt": "2026-08-30T12:00:00.000Z",
+              "createdAt": "2026-08-30T11:00:01.000Z"
             }
           ]
         }
@@ -1435,7 +1441,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult",
+          "validationRef": "#/$defs/ProviderAccepted",
           "value": {
             "schemaKind": "provider_accepted",
             "category": "accepted",
@@ -1518,7 +1524,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult",
+          "validationRef": "#/$defs/ProviderTransientPreAcceptance",
           "value": {
             "schemaKind": "provider_transient_pre_acceptance",
             "category": "transient_pre_acceptance",
@@ -1609,7 +1615,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult",
+          "validationRef": "#/$defs/ProviderPermanentPreAcceptance",
           "value": {
             "schemaKind": "provider_permanent_pre_acceptance",
             "category": "permanent_pre_acceptance",
@@ -1692,7 +1698,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult",
+          "validationRef": "#/$defs/ProviderAmbiguous",
           "value": {
             "schemaKind": "provider_ambiguous",
             "category": "ambiguous",
@@ -1860,7 +1866,7 @@
           "nullable": false,
           "default": null,
           "validationRef": "#/$defs/OutboxBatchLimit",
-          "value": 1
+          "value": 2
         }
       ],
       "returnSchemaRef": "#/$defs/OutboxBatchACK",
@@ -1890,7 +1896,7 @@
         "one": {
           "schemaKind": "outbox_batch_ack",
           "operation": "stale_recovery",
-          "requestedLimit": 1,
+          "requestedLimit": 2,
           "itemCount": 1,
           "items": [
             {
@@ -1902,7 +1908,9 @@
               "attempts": 1,
               "leaseOwner": "worker-01",
               "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
-              "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+              "leaseExpiresAt": "2026-08-30T12:05:00.000Z",
+              "nextAttemptAt": "2026-08-30T12:00:00.000Z",
+              "createdAt": "2026-08-30T11:00:00.000Z"
             }
           ]
         }
@@ -2161,7 +2169,7 @@
           "value": 1
         }
       ],
-      "returnSchemaRef": "#/$defs/RetentionRedactionResult",
+      "returnSchemaRef": "#/$defs/QuoteAbandonBatchACK",
       "errorMap": {
         "P0001": {
           "code": "revision_conflict",
@@ -2182,6 +2190,34 @@
           "code": "idempotency_conflict",
           "httpStatus": 409,
           "schemaRef": "#/$defs/Error"
+        }
+      },
+      "canonicalResults": {
+        "zero": {
+          "schemaKind": "quote_abandon_batch_ack",
+          "operation": "quote_abandon_expired",
+          "requestedLimit": 1,
+          "itemCount": 0,
+          "items": []
+        },
+        "one": {
+          "schemaKind": "quote_abandon_batch_ack",
+          "operation": "quote_abandon_expired",
+          "requestedLimit": 1,
+          "itemCount": 1,
+          "items": [
+            {
+              "quoteId": "123e4567-e89b-42d3-a456-426614174001",
+              "commercialLeadId": "123e4567-e89b-42d3-a456-426614174000",
+              "previousRevision": 1,
+              "revision": 2,
+              "status": "lost",
+              "quoteState": "abandoned",
+              "terminalAt": "2026-08-30T12:00:00.000Z",
+              "abandonedAt": "2026-08-30T12:00:00.000Z",
+              "auditId": "123e4567-e89b-42d3-a456-426614174010"
+            }
+          ]
         }
       }
     }

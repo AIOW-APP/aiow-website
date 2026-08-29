@@ -96,6 +96,9 @@
     },
     {
       "$ref": "#/$defs/RetentionRedactionResult"
+    },
+    {
+      "$ref": "#/$defs/QuoteAbandonBatchACK"
     }
   ],
   "$defs": {
@@ -9606,7 +9609,8 @@
             "oauth_authentication_failed",
             "exchange_rbac_denied",
             "invalid_recipient",
-            "invalid_payload"
+            "invalid_payload",
+            "retry_exhausted"
           ]
         },
         "receipt": {
@@ -10905,6 +10909,21 @@
         "leaseExpiresAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "nextAttemptAt": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "date-time"
+            }
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
         }
       },
       "required": [
@@ -10916,7 +10935,9 @@
         "attempts",
         "leaseOwner",
         "leaseToken",
-        "leaseExpiresAt"
+        "leaseExpiresAt",
+        "nextAttemptAt",
+        "createdAt"
       ]
     },
     "OutboxBatchACK": {
@@ -10958,7 +10979,94 @@
         "itemCount",
         "items"
       ],
-      "x-aiow-custom-validator": "outboxBatchAckV1: itemCount equals items.length; items.length <= requestedLimit; order is database claim order; every id and leaseToken is distinct; response contains every and only transitioned lease"
+      "x-aiow-custom-validator": "outboxBatchAckV1"
+    },
+    "QuoteAbandonBatchItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quoteId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "previousRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "status": {
+          "const": "lost"
+        },
+        "quoteState": {
+          "const": "abandoned"
+        },
+        "terminalAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "abandonedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "auditId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "quoteId",
+        "commercialLeadId",
+        "previousRevision",
+        "revision",
+        "status",
+        "quoteState",
+        "terminalAt",
+        "abandonedAt",
+        "auditId"
+      ]
+    },
+    "QuoteAbandonBatchACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_abandon_batch_ack"
+        },
+        "operation": {
+          "const": "quote_abandon_expired"
+        },
+        "requestedLimit": {
+          "$ref": "#/$defs/RpcListLimit"
+        },
+        "itemCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "items": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/QuoteAbandonBatchItem"
+          }
+        }
+      },
+      "required": [
+        "schemaKind",
+        "operation",
+        "requestedLimit",
+        "itemCount",
+        "items"
+      ],
+      "x-aiow-custom-validator": "quoteAbandonBatchAckV1"
     }
   },
   "x-aiow-operations": {
@@ -11234,7 +11342,15 @@
       },
       "tlsRequired": true,
       "authRef": "#/x-aiow-internal-hmac",
-      "batchSemantics": "operation=mail_run; one HTTP 200 OutboxBatchACK; requestedLimit equals request.limit; ordered items length 0..limit and contains every and only claimed/dispatched lease"
+      "batchSemantics": "operation=mail_run; one HTTP 200 OutboxBatchACK; requestedLimit equals request.limit; ordered items length 0..limit and contains every and only claimed/dispatched lease",
+      "runtimeValidator": {
+        "name": "validateOutboxBatchAckV1",
+        "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+        "context": {
+          "operation": "mail_run",
+          "requestedLimitFrom": "request.body.limit"
+        }
+      }
     },
     "aiow_quote_prepare_v1": {
       "transport": "sql_rpc",
@@ -11818,7 +11934,15 @@
         "authenticated": false,
         "service_role": true
       },
-      "batchSemantics": "claim: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision"
+      "batchSemantics": "claim: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision",
+      "runtimeValidator": {
+        "name": "validateOutboxBatchAckV1",
+        "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+        "context": {
+          "operation": "claim",
+          "requestedLimitFrom": "p_limit"
+        }
+      }
     },
     "aiow_mail_outbox_sent_v2": {
       "transport": "sql_rpc",
@@ -11865,7 +11989,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult"
+          "validationRef": "#/$defs/ProviderAccepted"
         }
       ],
       "ackRef": "#/$defs/OutboxProjection",
@@ -11944,7 +12068,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult"
+          "validationRef": "#/$defs/ProviderTransientPreAcceptance"
         },
         {
           "name": "p_next_attempt_at",
@@ -12030,7 +12154,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult"
+          "validationRef": "#/$defs/ProviderPermanentPreAcceptance"
         }
       ],
       "ackRef": "#/$defs/OutboxProjection",
@@ -12062,7 +12186,8 @@
         "anon": false,
         "authenticated": false,
         "service_role": true
-      }
+      },
+      "resultBoundary": "permanent_pre_acceptance only; an exhausted transient is first server-classified as permanent code retry_exhausted, then finalized dead"
     },
     "aiow_mail_outbox_review_v2": {
       "transport": "sql_rpc",
@@ -12109,7 +12234,7 @@
           "sqlType": "jsonb",
           "nullable": false,
           "default": null,
-          "validationRef": "#/$defs/ProviderResult"
+          "validationRef": "#/$defs/ProviderAmbiguous"
         }
       ],
       "ackRef": "#/$defs/OutboxProjection",
@@ -12335,7 +12460,15 @@
         "authenticated": false,
         "service_role": true
       },
-      "batchSemantics": "stale_recovery: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision"
+      "batchSemantics": "stale_recovery: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision",
+      "runtimeValidator": {
+        "name": "validateOutboxBatchAckV1",
+        "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+        "context": {
+          "operation": "stale_recovery",
+          "requestedLimitFrom": "p_limit"
+        }
+      }
     },
     "aiow_mail_outbox_cancel_v2": {
       "transport": "sql_rpc",
@@ -12489,6 +12622,13 @@
         "anon": false,
         "authenticated": false,
         "service_role": true
+      },
+      "runtimeValidation": {
+        "bindingBuilder": "buildProviderGateApprovalBindingDigestV1",
+        "currentValidator": "validateProviderGateCurrentV1 for approved/activated writes and returned current records",
+        "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+        "serverNowFrom": "trusted database transaction_timestamp",
+        "targetFrom": "exact persisted provider target"
       }
     },
     "aiow_active_customer_relation_set_v1": {
@@ -12599,10 +12739,10 @@
       ],
       "returns": {
         "sqlType": "jsonb",
-        "schemaRef": "#/$defs/RetentionRedactionResult",
-        "cardinality": "exactly_one"
+        "schemaRef": "#/$defs/QuoteAbandonBatchACK",
+        "cardinality": "exactly_one_batch_ack"
       },
-      "ackRef": "#/$defs/RetentionRedactionResult",
+      "ackRef": "#/$defs/QuoteAbandonBatchACK",
       "errors": {
         "P0001": {
           "code": "revision_conflict",
@@ -12630,6 +12770,21 @@
         "anon": false,
         "authenticated": false,
         "service_role": true
+      },
+      "runtimeValidator": {
+        "name": "validateQuoteAbandonBatchAckV1",
+        "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+        "context": {
+          "requestedLimitFrom": "p_limit"
+        }
+      },
+      "atomicTransition": {
+        "selection": "FOR UPDATE SKIP LOCKED, ordered by quote.expires_at then quote.id, at most p_limit; quote.state=prepared; quote.expires_at < trusted transaction_timestamp and <= p_expired_before; common lead status is nonterminal; commercial_leads.legal_hold=false; commercial_leads.active_customer_relation=false; no committed quote and no active relation",
+        "cas": "the locked quote remains prepared and the common lead remains at its selected revision/status through the write",
+        "transaction": "in one transaction set lead.status=lost, increment lead.revision exactly once, set trusted terminal_at and abandoned_at to the same transaction timestamp, set quote.state=abandoned, and insert one immutable audit row",
+        "ack": "return every and only transitioned row as QuoteAbandonBatchACK; revision=previousRevision+1 and terminalAt=abandonedAt",
+        "noOp": "replay or no eligible rows returns the same closed QuoteAbandonBatchACK with itemCount=0 and items=[]; committed, nonexpired, held, active-relation, terminal, or otherwise ineligible rows remain unchanged",
+        "bookingFailure": "failed public bookings are never committed and create no retention row; there is no booking-failure abandonment writer"
       }
     }
   },
@@ -12778,10 +12933,10 @@
       "client"
     ],
     "terminalAnchors": {
-      "trustedWriter": "aiow_commercial_mutate_v1 transition_status branch only, using transaction server time after expectedRevision CAS; clients, providers, mail and analytics cannot write terminal_at",
+      "trustedWriter": "aiow_commercial_mutate_v1 transition_status and aiow_quote_abandon_expired_v1 atomic prepared-expiry transition only; both use transaction server time after row-lock/CAS checks; clients, providers, mail and analytics cannot write terminal_at",
       "firstTerminalTransition": "a nonterminal -> won/lost accepted non-replay transition stamps terminal_at exactly once with transaction server time and increments revision once",
       "terminalReplayOrNoOp": "idempotent replay returns the persisted outcome and repeated terminal/no-op requests neither restamp terminal_at nor increment revision",
-      "lostReopen": "lost -> qualified clears terminal_at atomically after expectedRevision CAS, increments revision once, and makes the lead retention-ineligible while active",
+      "lostReopen": "lost -> qualified clears both terminal_at and abandoned_at atomically after expectedRevision CAS, increments revision once, and makes the lead retention-ineligible while active",
       "reterminalization": "a later qualified/nonterminal -> won/lost accepted transition stamps a fresh terminal_at using transaction server time",
       "eligibility": "terminal_at is eligible only while status is won/lost; legal_hold or active_customer_relation suspends retention without changing anchor age"
     }
@@ -13657,6 +13812,19 @@
           "onDelete": "restrict"
         },
         "activation": "validate FK before retention activation"
+      },
+      {
+        "table": "quote_leads",
+        "stateMachine": {
+          "existingStates": [
+            "prepared",
+            "committed"
+          ],
+          "addState": "abandoned",
+          "writer": "aiow_quote_abandon_expired_v1 only",
+          "transition": "prepared -> abandoned only in the atomic expiry transaction; committed -> abandoned forbidden"
+        },
+        "activation": "install the abandoned state/check before enabling aiow_quote_abandon_expired_v1"
       }
     ],
     "sourceMappings": {
@@ -14155,7 +14323,18 @@
     "expiryOrRevocation": "removes capability immediately before any provider call",
     "fallback": "none",
     "activation": "external separate owner gate; contract approval does not activate",
-    "runtimeVerifier": "providerGateCurrentV1 recomputes the approval binding over every listed current persisted fact and compares tenantId, applicationId, mailbox/sender and controlMailbox to the exact provider target before each call; any mismatch, unscoped Entra Mail.Send assignment, non-Application Mail.Send Exchange role, sender out of scope, or control mailbox in scope fails closed"
+    "runtimeVerifier": "providerGateCurrentV1 recomputes the approval binding over every listed current persisted fact and compares tenantId, applicationId, mailbox/sender and controlMailbox to the exact provider target before each call; any mismatch, unscoped Entra Mail.Send assignment, non-Application Mail.Send Exchange role, sender out of scope, or control mailbox in scope fails closed",
+    "runtimeModule": "lib/aiow-v1/commercial-contract-validator.mjs",
+    "runtimeFunctions": [
+      "PROVIDER_GATE_APPROVAL_FIELDS",
+      "buildProviderGateApprovalBindingDigestV1",
+      "validateProviderGateCurrentV1"
+    ],
+    "runtimeBindings": {
+      "write": "aiow_provider_gate_write_v1 builds the digest from PROVIDER_GATE_APPROVAL_FIELDS and invokes validateProviderGateCurrentV1 before accepting approved or activated state",
+      "read": "every capability-bearing gate read invokes validateProviderGateCurrentV1 with trusted serverNow and the exact persisted provider target",
+      "providerCall": "immediately before every Microsoft Graph call, validateProviderGateCurrentV1 is invoked again; failure removes mail_send capability and no call occurs"
+    }
   },
   "x-aiow-analytics": {
     "eventNames": [
@@ -14298,12 +14477,12 @@
     },
     "abandonment": {
       "field": "commercial_leads.abandoned_at",
-      "preparedQuote": "set only by aiow_quote_abandon_expired_v1 after quote prepared expires uncommitted; job uses trusted server time, row lock, expected state and audit",
-      "failedBookingOrQuote": "only aiow_quote_abandon_expired_v1 deterministic expiry/failure branch after trusted-time and row-lock checks; never caller supplied",
-      "trustedWriter": "aiow_quote_abandon_expired_v1 only, using transaction server time and row-lock state/CAS checks; no other operation may stamp abandoned_at",
-      "firstStamp": "only deterministic prepared-quote expiry or deterministic booking/quote failure accepted by that expiry/failure operation stamps abandoned_at once",
-      "replayOrNoOp": "replay, already-abandoned, nonexpired, committed, active-customer-relation, or legal-hold rows are no-ops and never restamp abandoned_at",
-      "eligibility": "abandoned_at is eligible only while no active lifecycle relation exists; legal_hold or active_customer_relation suspends retention without resetting anchor age"
+      "preparedQuote": "aiow_quote_abandon_expired_v1 row-locks/CAS-selects only prepared expired uncommitted quotes whose common lead is nonterminal, not held, and has no active customer relation; atomically transitions lead to lost, increments revision once, stamps identical trusted terminal_at and abandoned_at, marks quote abandoned, and audits",
+      "failedBookingOrQuote": "failed public bookings are never committed and create no retention row; no booking-failure abandonment branch exists",
+      "trustedWriter": "aiow_quote_abandon_expired_v1 is the only abandoned_at writer and is also an allowed terminal_at writer solely for its atomic prepared-quote expiry transition",
+      "firstStamp": "only the accepted prepared-quote expiry transition stamps terminal_at and abandoned_at to the same trusted transaction timestamp",
+      "replayOrNoOp": "replay/no eligible rows returns a closed zero-item QuoteAbandonBatchACK; already-abandoned, terminal, nonexpired, committed, active-customer-relation, or legal-hold rows remain unchanged and anchors are never restamped",
+      "eligibility": "abandoned_at is eligible only while status is lost and no active customer relation exists; legal_hold or active_customer_relation suspends retention without resetting anchor age; lost -> qualified clears both anchors and later terminalization stamps a fresh terminal_at"
     },
     "activeCustomerRelation": {
       "fields": [
@@ -14357,10 +14536,29 @@
     "providerGateCurrentV1": {
       "rules": [
         "approvedAt <= serverNow < expiresAt",
-        "approvalBindingSha256 equals SHA-256 of RFC8785 canonical JSON over gateId,environment,provider,tenantId,applicationId,mailbox,sender,evidenceSha256,revision,approvedAt,expiresAt",
+        "approvalBindingSha256 equals SHA-256 of canonical JSON over exactly PROVIDER_GATE_APPROVAL_FIELDS; that frozen runtime list must equal x-aiow-provider-gate.approvalBinding byte-for-byte",
         "expired or revoked state removes mail_send capability immediately"
       ],
-      "clock": "trusted database transaction_timestamp; never caller time"
+      "clock": "trusted database transaction_timestamp; never caller time",
+      "module": "lib/aiow-v1/commercial-contract-validator.mjs"
+    },
+    "outboxBatchAckV1": {
+      "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+      "rules": [
+        "operation equals endpoint/RPC operation",
+        "requestedLimit exactly equals request limit and is 1..50",
+        "itemCount equals items.length and length is at most requestedLimit",
+        "every item has the complete lease fields and IDs and lease tokens are unique",
+        "items are strictly ordered by the exact tuple nextAttemptAt null-first, createdAt, id"
+      ]
+    },
+    "quoteAbandonBatchAckV1": {
+      "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+      "rules": [
+        "itemCount equals items.length and length is at most the exact request limit",
+        "every accepted item increments revision exactly once, status=lost, quoteState=abandoned and terminalAt=abandonedAt",
+        "quote IDs and commercial lead IDs are unique"
+      ]
     }
   },
   "x-aiow-internal-hmac": {
