@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contract": "aiow-commercial-control-plane",
+  "version": 1,
+  "status": "implementation-candidate",
+  "publicOrigin": "https://aiow.ai",
+  "canonicalBusiness": {
+    "legalName": "AIOW B.V.",
+    "kvk": "71887466",
+    "contactEmail": "info@aiow.io",
+    "publicationBasis": "Existing repository identity plus public registry corroboration; address and VAT ID remain unpublished until owner-verified."
+  },
+  "principles": [
+    "No success before durable acceptance.",
+    "No PII in analytics events, logs, URLs, experiment cookies or alert payloads.",
+    "Mail delivery state and commercial handling state are separate authorities.",
+    "A read email never marks a lead handled; workflow transitions are explicit server mutations.",
+    "No public custom-domain route may render the operations dashboard or customer PII.",
+    "Provider credentials are server-only and every provider remains disabled when configuration is incomplete.",
+    "Every mutation is idempotent, revision-bound and auditable.",
+    "No client-supplied price, role, owner, delivery state or experiment conversion is authoritative."
+  ],
+  "leadSources": ["booking", "quote"],
+  "leadStatuses": ["new", "triaged", "qualified", "scan_planned", "proposal", "won", "lost", "not_a_fit"],
+  "leadPriorities": ["normal", "high", "urgent"],
+  "leadProjection": {
+    "required": ["id", "source", "createdAt", "updatedAt", "revision", "unread", "status", "priority", "displayName", "email", "route", "locale", "nextActionAt", "deliverySummary"],
+    "additionalProperties": false,
+    "piiBoundary": "Only the SSO-protected operations surface may receive name, email, phone, organisation, notes or stored documents."
+  },
+  "publicBooking": {
+    "semantics": "preferred scan request, pending human confirmation",
+    "success": "Durable booking lead plus exactly two durable transactional outbox jobs accepted atomically.",
+    "failure": "No success UI, calendar-confirmation claim or receipt when durable acceptance fails.",
+    "retentionDays": 90
+  },
+  "publicQuote": {
+    "success": "Server-recomputed quote, durable lead, PDF and exactly two durable transactional outbox jobs accepted atomically.",
+    "failure": "No PDF or receipt when prepare or commit fails.",
+    "pricingAuthority": "server"
+  },
+  "mail": {
+    "canonicalDomain": "aiow.io",
+    "defaultSender": "info@aiow.io",
+    "defaultInternalInbox": "info@aiow.io",
+    "provider": "microsoft_graph",
+    "allowedProviders": ["microsoft_graph", "gmail_legacy_test_only"],
+    "customerKinds": ["customer_booking", "customer_quote"],
+    "internalKinds": ["internal_booking", "internal_lead"],
+    "ambiguousDeliveryState": "review",
+    "automaticResendAfterAmbiguity": false
+  },
+  "analytics": {
+    "allowedEvents": ["page_view", "calculator_changed", "context_opened", "quote_opened", "quote_succeeded", "quote_failed", "booking_opened", "booking_succeeded", "booking_failed", "scan_cta_clicked", "knowledge_cta_clicked"],
+    "allowedDimensions": ["route", "locale", "viewport", "contextSlug", "segment", "serviceRoute", "variant", "failureClass"],
+    "forbidden": ["name", "email", "phone", "company", "postcode", "kvk", "note", "message", "ip", "userAgent", "rawReferrer", "freeText"],
+    "retentionDays": 395,
+    "sessionIdentifier": "none"
+  },
+  "experiments": {
+    "allowed": ["scan_cta_copy_v1"],
+    "assignment": "First-party SameSite=Lax cookie containing only experiment ID, variant and schema version; no user identifier.",
+    "variants": ["control", "outcome_summary"],
+    "pricingChangesAllowed": false,
+    "availabilityClaimsAllowed": false,
+    "serverValidation": true
+  },
+  "operationsSurface": {
+    "path": "/ops/leads",
+    "customDomainBehavior": "404",
+    "allowedHostClass": "vercel_deployment_host_only",
+    "requiredOuterControl": "Vercel Authentication/SSO enabled and provider-read-back before release",
+    "mutations": ["mark_read", "set_priority", "transition_status", "set_next_action"],
+    "optimisticConcurrency": "expected revision required"
+  },
+  "knowledgeEvidenceStates": ["reference_architecture", "internal_demonstration", "pilot", "customer_case"],
+  "customerCaseRule": "customer_case is forbidden without recorded customer approval and claim evidence",
+  "ownerGates": [
+    "Supabase target selection and additive production migration",
+    "Microsoft Graph application permission and mailbox restriction",
+    "Vercel production secret activation",
+    "Recurring outbox/alert scheduler activation",
+    "Search Console and Bing ownership verification",
+    "IndexNow key publication and submission",
+    "Publication of address, VAT ID, customer names, testimonials or measured outcomes"
+  ]
+}
