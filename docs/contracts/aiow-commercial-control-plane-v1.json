@@ -1,87 +1,4699 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "contract": "aiow-commercial-control-plane",
-  "version": 1,
-  "status": "implementation-candidate",
-  "publicOrigin": "https://aiow.ai",
-  "canonicalBusiness": {
-    "legalName": "AIOW B.V.",
-    "kvk": "71887466",
-    "contactEmail": "info@aiow.io",
-    "publicationBasis": "Existing repository identity plus public registry corroboration; address and VAT ID remain unpublished until owner-verified."
-  },
-  "principles": [
-    "No success before durable acceptance.",
-    "No PII in analytics events, logs, URLs, experiment cookies or alert payloads.",
-    "Mail delivery state and commercial handling state are separate authorities.",
-    "A read email never marks a lead handled; workflow transitions are explicit server mutations.",
-    "No public custom-domain route may render the operations dashboard or customer PII.",
-    "Provider credentials are server-only and every provider remains disabled when configuration is incomplete.",
-    "Every mutation is idempotent, revision-bound and auditable.",
-    "No client-supplied price, role, owner, delivery state or experiment conversion is authoritative."
+  "$id": "https://aiow.ai/contracts/aiow-commercial-control-plane-v1.schema.json",
+  "title": "AIOW commercial control plane v1",
+  "description": "Executable closed authority. The instance is exactly one wire or projection variant.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/BookingRequest"
+    },
+    {
+      "$ref": "#/$defs/BookingACK"
+    },
+    {
+      "$ref": "#/$defs/BookingError"
+    },
+    {
+      "$ref": "#/$defs/Error"
+    },
+    {
+      "$ref": "#/$defs/QuoteRequest"
+    },
+    {
+      "$ref": "#/$defs/QuotePrepareRequest"
+    },
+    {
+      "$ref": "#/$defs/QuotePrepareACK"
+    },
+    {
+      "$ref": "#/$defs/QuotePrepareError"
+    },
+    {
+      "$ref": "#/$defs/QuoteCommitRequest"
+    },
+    {
+      "$ref": "#/$defs/QuoteCommitACK"
+    },
+    {
+      "$ref": "#/$defs/QuoteCommitError"
+    },
+    {
+      "$ref": "#/$defs/LeadProjection"
+    },
+    {
+      "$ref": "#/$defs/DeliverySummary"
+    },
+    {
+      "$ref": "#/$defs/QueueCounts"
+    },
+    {
+      "$ref": "#/$defs/QueueCursor"
+    },
+    {
+      "$ref": "#/$defs/QueueProjection"
+    },
+    {
+      "$ref": "#/$defs/OpsMutation"
+    },
+    {
+      "$ref": "#/$defs/OpsMutationACK"
+    },
+    {
+      "$ref": "#/$defs/RevisionConflict"
+    },
+    {
+      "$ref": "#/$defs/OpsError"
+    },
+    {
+      "$ref": "#/$defs/AnalyticsEvent"
+    },
+    {
+      "$ref": "#/$defs/AnalyticsACK"
+    },
+    {
+      "$ref": "#/$defs/AnalyticsError"
+    },
+    {
+      "$ref": "#/$defs/AnalyticsAggregateReport"
+    },
+    {
+      "$ref": "#/$defs/MailJob"
+    },
+    {
+      "$ref": "#/$defs/ProviderResult"
+    },
+    {
+      "$ref": "#/$defs/OutboxProjection"
+    },
+    {
+      "$ref": "#/$defs/ProviderGateRecord"
+    },
+    {
+      "$ref": "#/$defs/AuditRecord"
+    },
+    {
+      "$ref": "#/$defs/RetentionRedactionResult"
+    }
   ],
-  "leadSources": ["booking", "quote"],
-  "leadStatuses": ["new", "triaged", "qualified", "scan_planned", "proposal", "won", "lost", "not_a_fit"],
-  "leadPriorities": ["normal", "high", "urgent"],
-  "leadProjection": {
-    "required": ["id", "source", "createdAt", "updatedAt", "revision", "unread", "status", "priority", "displayName", "email", "route", "locale", "nextActionAt", "deliverySummary"],
-    "additionalProperties": false,
-    "piiBoundary": "Only the SSO-protected operations surface may receive name, email, phone, organisation, notes or stored documents."
+  "$defs": {
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "error"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "idempotency_conflict",
+            "revision_conflict",
+            "unauthenticated",
+            "forbidden",
+            "not_found",
+            "rate_limited",
+            "unavailable",
+            "provider_failure"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fieldErrors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9]{0,39}$": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            }
+          },
+          "maxProperties": 20
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "message",
+        "requestId"
+      ]
+    },
+    "BookingError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "booking_error"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "idempotency_conflict",
+            "rate_limited",
+            "unavailable"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "retriable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "message",
+        "requestId",
+        "retriable"
+      ]
+    },
+    "QuotePrepareError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_prepare_error"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "idempotency_conflict",
+            "rate_limited",
+            "unavailable"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "retriable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "message",
+        "requestId",
+        "retriable"
+      ]
+    },
+    "QuoteCommitError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_commit_error"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "idempotency_conflict",
+            "unavailable"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "retriable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "message",
+        "requestId",
+        "retriable"
+      ]
+    },
+    "OpsError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_error"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "idempotency_conflict",
+            "unauthenticated",
+            "forbidden",
+            "not_found"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "retriable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "message",
+        "requestId",
+        "retriable"
+      ]
+    },
+    "AnalyticsError": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_error"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "idempotency_conflict",
+            "rate_limited"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "retriable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "message",
+        "requestId",
+        "retriable"
+      ]
+    },
+    "BookingRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "booking_request"
+        },
+        "subject": {
+          "type": "string",
+          "enum": [
+            "bedrijf",
+            "woning",
+            "gebouw",
+            "anders"
+          ]
+        },
+        "details": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "slot": {
+          "type": "string",
+          "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "company": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "consentAccepted": {
+          "const": true
+        },
+        "consentVersion": {
+          "const": "aiow-booking-v1"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "subject",
+        "details",
+        "date",
+        "slot",
+        "name",
+        "email",
+        "company",
+        "locale",
+        "consentAccepted",
+        "consentVersion"
+      ]
+    },
+    "BookingACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "booking_ack"
+        },
+        "accepted": {
+          "const": true
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preference": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "slot": {
+              "type": "string",
+              "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "required": [
+            "date",
+            "slot",
+            "subject"
+          ]
+        },
+        "durableAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "accepted",
+        "requestId",
+        "leadId",
+        "revision",
+        "preference",
+        "durableAt",
+        "replayed"
+      ]
+    },
+    "QuoteConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "segment": {
+          "type": "string",
+          "enum": [
+            "business",
+            "building",
+            "home"
+          ]
+        },
+        "serviceRoute": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "comfort"
+          ]
+        },
+        "contextSlug": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "accountants",
+                "business-services",
+                "care",
+                "education",
+                "hospitality",
+                "retail",
+                "logistics",
+                "manufacturing",
+                "real-estate",
+                "government",
+                "woning",
+                "bedrijfshal-industrie"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "people": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "squareMetres": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "homeSubtype": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "home",
+                "signature"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "smartDesignModules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "scan",
+              "blueprint",
+              "supervision"
+            ]
+          },
+          "uniqueItems": true,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "segment",
+        "serviceRoute",
+        "contextSlug",
+        "people",
+        "squareMetres",
+        "homeSubtype",
+        "smartDesignModules"
+      ]
+    },
+    "QuoteContact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 40
+        },
+        "company": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "postcode": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{3} ?[A-Z]{2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kvk": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9]{8}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startDate": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "email",
+        "phone",
+        "company",
+        "postcode",
+        "kvk",
+        "startDate",
+        "note"
+      ]
+    },
+    "QuoteRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_request"
+        },
+        "configuration": {
+          "$ref": "#/$defs/QuoteConfiguration"
+        },
+        "contact": {
+          "$ref": "#/$defs/QuoteContact"
+        },
+        "consent": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "accepted": {
+              "const": true
+            },
+            "version": {
+              "const": "aiow-quote-v1"
+            }
+          },
+          "required": [
+            "accepted",
+            "version"
+          ]
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "route": {
+              "type": "string",
+              "enum": [
+                "home",
+                "en_home",
+                "booking",
+                "en_booking",
+                "quote",
+                "en_quote",
+                "knowledge",
+                "en_knowledge",
+                "context"
+              ]
+            },
+            "locale": {
+              "type": "string",
+              "enum": [
+                "nl",
+                "en"
+              ]
+            }
+          },
+          "required": [
+            "route",
+            "locale"
+          ]
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "configuration",
+        "contact",
+        "consent",
+        "source",
+        "country"
+      ]
+    },
+    "QuotePrepareRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_prepare_request"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "receivedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "quote": {
+          "$ref": "#/$defs/QuoteRequest"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "requestId",
+        "idempotencyKey",
+        "receivedAt",
+        "quote"
+      ]
+    },
+    "QuotePrepareACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_prepare_ack"
+        },
+        "accepted": {
+          "const": true
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "quoteNumber": {
+          "type": "string",
+          "pattern": "^AIOW-[0-9]{4}-[0-9]{4}$"
+        },
+        "state": {
+          "const": "prepared"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "accepted",
+        "requestId",
+        "leadId",
+        "commercialLeadId",
+        "quoteNumber",
+        "state",
+        "expiresAt",
+        "replayed"
+      ]
+    },
+    "PdfArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "type": "string",
+          "pattern": "^AIOW-[0-9]{4}-[0-9]{4}\\.pdf$"
+        },
+        "mimeType": {
+          "const": "application/pdf"
+        },
+        "base64": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "maxLength": 2000000
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "filename",
+        "mimeType",
+        "base64",
+        "sha256"
+      ]
+    },
+    "QuoteCommitRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_commit_request"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "quoteNumber": {
+          "type": "string",
+          "pattern": "^AIOW-[0-9]{4}-[0-9]{4}$"
+        },
+        "pdf": {
+          "$ref": "#/$defs/PdfArtifact"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "requestId",
+        "idempotencyKey",
+        "leadId",
+        "commercialLeadId",
+        "quoteNumber",
+        "pdf"
+      ]
+    },
+    "QuoteCommitACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "quote_commit_ack"
+        },
+        "accepted": {
+          "const": true
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "quoteNumber": {
+          "type": "string",
+          "pattern": "^AIOW-[0-9]{4}-[0-9]{4}$"
+        },
+        "state": {
+          "const": "committed"
+        },
+        "pdfSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "replayed": {
+          "type": "boolean"
+        },
+        "pdfDeliveryPermitted": {
+          "const": true
+        }
+      },
+      "required": [
+        "schemaKind",
+        "accepted",
+        "requestId",
+        "leadId",
+        "commercialLeadId",
+        "quoteNumber",
+        "state",
+        "pdfSha256",
+        "committedAt",
+        "replayed",
+        "pdfDeliveryPermitted"
+      ]
+    },
+    "DeliverySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "delivery_summary"
+        },
+        "customer": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "leased",
+            "retry",
+            "sent",
+            "dead",
+            "review",
+            "cancelled"
+          ]
+        },
+        "internal": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "leased",
+            "retry",
+            "sent",
+            "dead",
+            "review",
+            "cancelled"
+          ]
+        },
+        "hasAmbiguity": {
+          "type": "boolean"
+        },
+        "lastAttemptAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "customer",
+        "internal",
+        "hasAmbiguity",
+        "lastAttemptAt"
+      ]
+    },
+    "LeadProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "lead_projection"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "booking",
+            "quote"
+          ]
+        },
+        "sourceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unread": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "new",
+            "qualified",
+            "awaiting_info",
+            "scan_planned",
+            "proposal",
+            "won",
+            "lost"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "high",
+            "urgent"
+          ]
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "phone": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 40
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "organisation": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "nextActionAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slaDueAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "overdue": {
+          "type": "boolean"
+        },
+        "exception": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "delivery_review",
+                "delivery_dead",
+                "next_action_overdue"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deliverySummary": {
+          "$ref": "#/$defs/DeliverySummary"
+        },
+        "legalHold": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "id",
+        "source",
+        "sourceId",
+        "createdAt",
+        "updatedAt",
+        "revision",
+        "unread",
+        "status",
+        "priority",
+        "displayName",
+        "email",
+        "phone",
+        "organisation",
+        "route",
+        "locale",
+        "nextActionAt",
+        "slaDueAt",
+        "overdue",
+        "exception",
+        "deliverySummary",
+        "legalHold"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "won",
+                  "lost"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "nextActionAt": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "QueueCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "queue_counts"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unread": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actionable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overdue": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exceptions": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "schemaKind",
+        "total",
+        "unread",
+        "actionable",
+        "overdue",
+        "exceptions"
+      ]
+    },
+    "QueueCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "queue_cursor"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "createdAt",
+        "id"
+      ]
+    },
+    "QueueProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "queue_projection"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LeadProjection"
+          },
+          "maxItems": 100
+        },
+        "counts": {
+          "$ref": "#/$defs/QueueCounts"
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QueueCursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "items",
+        "counts",
+        "nextCursor"
+      ]
+    },
+    "OpsMarkRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_mark_read"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "const": "mark_read"
+        },
+        "unread": {
+          "const": false
+        }
+      },
+      "required": [
+        "schemaKind",
+        "idempotencyKey",
+        "leadId",
+        "expectedRevision",
+        "operation",
+        "unread"
+      ]
+    },
+    "OpsSetPriority": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_set_priority"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "const": "set_priority"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "high",
+            "urgent"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "idempotencyKey",
+        "leadId",
+        "expectedRevision",
+        "operation",
+        "priority"
+      ]
+    },
+    "OpsTransitionStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_transition_status"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "const": "transition_status"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "new",
+            "qualified",
+            "awaiting_info",
+            "scan_planned",
+            "proposal",
+            "won",
+            "lost"
+          ]
+        },
+        "reopenReason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "idempotencyKey",
+        "leadId",
+        "expectedRevision",
+        "operation",
+        "status",
+        "reopenReason"
+      ]
+    },
+    "OpsSetNextAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_set_next_action"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "const": "set_next_action"
+        },
+        "nextActionAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "idempotencyKey",
+        "leadId",
+        "expectedRevision",
+        "operation",
+        "nextActionAt"
+      ]
+    },
+    "OpsResolveOutbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_resolve_outbox"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "const": "resolve_outbox"
+        },
+        "jobId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "jobExpectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resolution": {
+          "type": "string",
+          "enum": [
+            "mark_sent",
+            "approve_resend",
+            "dead"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "evidence": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "idempotencyKey",
+        "leadId",
+        "expectedRevision",
+        "operation",
+        "jobId",
+        "jobExpectedRevision",
+        "resolution",
+        "reason",
+        "evidence"
+      ]
+    },
+    "OpsLegalHold": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_legal_hold"
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$"
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "const": "set_legal_hold"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "schemaKind",
+        "idempotencyKey",
+        "leadId",
+        "expectedRevision",
+        "operation",
+        "enabled",
+        "reason"
+      ]
+    },
+    "OpsMutation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/OpsMarkRead"
+        },
+        {
+          "$ref": "#/$defs/OpsSetPriority"
+        },
+        {
+          "$ref": "#/$defs/OpsTransitionStatus"
+        },
+        {
+          "$ref": "#/$defs/OpsSetNextAction"
+        },
+        {
+          "$ref": "#/$defs/OpsResolveOutbox"
+        },
+        {
+          "$ref": "#/$defs/OpsLegalHold"
+        }
+      ]
+    },
+    "OpsMutationACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "ops_mutation_ack"
+        },
+        "accepted": {
+          "const": true
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "mark_read",
+            "set_priority",
+            "transition_status",
+            "set_next_action",
+            "resolve_outbox",
+            "set_legal_hold"
+          ]
+        },
+        "projection": {
+          "$ref": "#/$defs/LeadProjection"
+        },
+        "previousRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "actorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "auditId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "replayed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "accepted",
+        "operation",
+        "projection",
+        "previousRevision",
+        "revision",
+        "actorId",
+        "serverTime",
+        "auditId",
+        "replayed"
+      ]
+    },
+    "RevisionConflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "revision_conflict"
+        },
+        "code": {
+          "const": "revision_conflict"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "currentRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "current": {
+          "$ref": "#/$defs/LeadProjection"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "code",
+        "expectedRevision",
+        "currentRevision",
+        "current"
+      ]
+    },
+    "AnalyticsPageView": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_page_view"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "page_view"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "viewport": {
+          "type": "string",
+          "enum": [
+            "mobile",
+            "tablet",
+            "desktop"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "viewport"
+      ]
+    },
+    "AnalyticsCalculatorChanged": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_calculator_changed"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "calculator_changed"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "segment": {
+          "type": "string",
+          "enum": [
+            "business",
+            "building",
+            "home"
+          ]
+        },
+        "serviceRoute": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "comfort"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "segment",
+        "serviceRoute"
+      ]
+    },
+    "AnalyticsContextOpened": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_context_opened"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "context_opened"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "contextSlug": {
+          "type": "string",
+          "enum": [
+            "accountants",
+            "care",
+            "education",
+            "hospitality",
+            "retail",
+            "logistics",
+            "manufacturing",
+            "woning",
+            "bedrijfshal-industrie"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "contextSlug"
+      ]
+    },
+    "AnalyticsQuoteOpened": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_quote_opened"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "quote_opened"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale"
+      ]
+    },
+    "AnalyticsQuoteSucceeded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_quote_succeeded"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "quote_succeeded"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "experiment": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "experimentId": {
+                  "const": "scan_cta_copy_v1"
+                },
+                "variant": {
+                  "type": "string",
+                  "enum": [
+                    "control",
+                    "outcome_summary"
+                  ]
+                }
+              },
+              "required": [
+                "experimentId",
+                "variant"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "experiment"
+      ]
+    },
+    "AnalyticsQuoteFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_quote_failed"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "quote_failed"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "failureClass": {
+          "type": "string",
+          "enum": [
+            "validation",
+            "rate_limit",
+            "unavailable",
+            "conflict"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "failureClass"
+      ]
+    },
+    "AnalyticsBookingOpened": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_booking_opened"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "booking_opened"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale"
+      ]
+    },
+    "AnalyticsBookingSucceeded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_booking_succeeded"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "booking_succeeded"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "experiment": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "experimentId": {
+                  "const": "scan_cta_copy_v1"
+                },
+                "variant": {
+                  "type": "string",
+                  "enum": [
+                    "control",
+                    "outcome_summary"
+                  ]
+                }
+              },
+              "required": [
+                "experimentId",
+                "variant"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "experiment"
+      ]
+    },
+    "AnalyticsBookingFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_booking_failed"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "booking_failed"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "failureClass": {
+          "type": "string",
+          "enum": [
+            "validation",
+            "rate_limit",
+            "unavailable",
+            "conflict"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "failureClass"
+      ]
+    },
+    "AnalyticsScanCtaClicked": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_scan_cta_clicked"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "scan_cta_clicked"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "experiment": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "experimentId": {
+                  "const": "scan_cta_copy_v1"
+                },
+                "variant": {
+                  "type": "string",
+                  "enum": [
+                    "control",
+                    "outcome_summary"
+                  ]
+                }
+              },
+              "required": [
+                "experimentId",
+                "variant"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "experiment"
+      ]
+    },
+    "AnalyticsKnowledgeCtaClicked": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_knowledge_cta_clicked"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "knowledge_cta_clicked"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale"
+      ]
+    },
+    "AnalyticsExperimentExposed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_experiment_exposed"
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "event": {
+          "const": "experiment_exposed"
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "experiment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "experimentId": {
+              "const": "scan_cta_copy_v1"
+            },
+            "variant": {
+              "type": "string",
+              "enum": [
+                "control",
+                "outcome_summary"
+              ]
+            }
+          },
+          "required": [
+            "experimentId",
+            "variant"
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "eventId",
+        "event",
+        "occurredAt",
+        "route",
+        "locale",
+        "experiment"
+      ]
+    },
+    "AnalyticsEvent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AnalyticsPageView"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsCalculatorChanged"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsContextOpened"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsQuoteOpened"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsQuoteSucceeded"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsQuoteFailed"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsBookingOpened"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsBookingSucceeded"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsBookingFailed"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsScanCtaClicked"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsKnowledgeCtaClicked"
+        },
+        {
+          "$ref": "#/$defs/AnalyticsExperimentExposed"
+        }
+      ]
+    },
+    "AnalyticsACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_ack"
+        },
+        "accepted": {
+          "const": true
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deduplicated": {
+          "type": "boolean"
+        },
+        "storedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "accepted",
+        "eventId",
+        "deduplicated",
+        "storedAt"
+      ]
+    },
+    "AggregateBucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "event": {
+          "type": "string",
+          "enum": [
+            "page_view",
+            "calculator_changed",
+            "context_opened",
+            "quote_opened",
+            "quote_succeeded",
+            "quote_failed",
+            "booking_opened",
+            "booking_succeeded",
+            "booking_failed",
+            "scan_cta_clicked",
+            "knowledge_cta_clicked",
+            "experiment_exposed"
+          ]
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "home",
+            "en_home",
+            "booking",
+            "en_booking",
+            "quote",
+            "en_quote",
+            "knowledge",
+            "en_knowledge",
+            "context"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "nl",
+            "en"
+          ]
+        },
+        "experimentId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "scan_cta_copy_v1"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "variant": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "control",
+                "outcome_summary"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "date",
+        "event",
+        "route",
+        "locale",
+        "experimentId",
+        "variant",
+        "count"
+      ]
+    },
+    "AnalyticsAggregateReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "analytics_aggregate_report"
+        },
+        "from": {
+          "type": "string",
+          "format": "date"
+        },
+        "through": {
+          "type": "string",
+          "format": "date"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "buckets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AggregateBucket"
+          },
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "schemaKind",
+        "from",
+        "through",
+        "generatedAt",
+        "buckets"
+      ]
+    },
+    "MailAttachment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "mimeType": {
+          "type": "string",
+          "enum": [
+            "application/pdf",
+            "text/calendar"
+          ]
+        },
+        "base64": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "maxLength": 2000000
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "filename",
+        "mimeType",
+        "base64",
+        "sha256"
+      ]
+    },
+    "MailJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "mail_job"
+        },
+        "jobId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "customer_booking",
+            "internal_booking",
+            "customer_quote",
+            "internal_lead"
+          ]
+        },
+        "from": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "to": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "html": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50000
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MailAttachment"
+          },
+          "maxItems": 2
+        },
+        "payloadSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "leaseToken": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "leaseExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "jobId",
+        "commercialLeadId",
+        "kind",
+        "from",
+        "to",
+        "subject",
+        "text",
+        "html",
+        "attachments",
+        "payloadSha256",
+        "attempt",
+        "leaseToken",
+        "leaseExpiresAt"
+      ]
+    },
+    "ProviderAccepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "provider_accepted"
+        },
+        "category": {
+          "const": "accepted"
+        },
+        "provider": {
+          "const": "microsoft_graph"
+        },
+        "acceptanceKind": {
+          "type": "string",
+          "enum": [
+            "graph_http_202"
+          ]
+        },
+        "providerMessageId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attemptReceipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "acceptedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "category",
+        "provider",
+        "acceptanceKind",
+        "providerMessageId",
+        "attemptReceipt",
+        "acceptedAt"
+      ]
+    },
+    "ProviderTransientPreAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "provider_transient_pre_acceptance"
+        },
+        "category": {
+          "const": "transient_pre_acceptance"
+        },
+        "provider": {
+          "const": "microsoft_graph"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "timeout",
+            "network",
+            "throttled",
+            "auth",
+            "permission",
+            "invalid_recipient",
+            "invalid_payload",
+            "unknown"
+          ]
+        },
+        "attemptReceipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "category",
+        "provider",
+        "code",
+        "attemptReceipt",
+        "observedAt"
+      ]
+    },
+    "ProviderPermanentPreAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "provider_permanent_pre_acceptance"
+        },
+        "category": {
+          "const": "permanent_pre_acceptance"
+        },
+        "provider": {
+          "const": "microsoft_graph"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "timeout",
+            "network",
+            "throttled",
+            "auth",
+            "permission",
+            "invalid_recipient",
+            "invalid_payload",
+            "unknown"
+          ]
+        },
+        "attemptReceipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "category",
+        "provider",
+        "code",
+        "attemptReceipt",
+        "observedAt"
+      ]
+    },
+    "ProviderAmbiguous": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "provider_ambiguous"
+        },
+        "category": {
+          "const": "ambiguous"
+        },
+        "provider": {
+          "const": "microsoft_graph"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "timeout",
+            "network",
+            "throttled",
+            "auth",
+            "permission",
+            "invalid_recipient",
+            "invalid_payload",
+            "unknown"
+          ]
+        },
+        "attemptReceipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "category",
+        "provider",
+        "code",
+        "attemptReceipt",
+        "observedAt"
+      ]
+    },
+    "ProviderResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ProviderAccepted"
+        },
+        {
+          "$ref": "#/$defs/ProviderTransientPreAcceptance"
+        },
+        {
+          "$ref": "#/$defs/ProviderPermanentPreAcceptance"
+        },
+        {
+          "$ref": "#/$defs/ProviderAmbiguous"
+        }
+      ]
+    },
+    "OutboxProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "outbox_projection"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "customer_booking",
+            "internal_booking",
+            "customer_quote",
+            "internal_lead"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "leased",
+            "retry",
+            "sent",
+            "dead",
+            "review",
+            "cancelled"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "payloadSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "leaseToken": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "leaseExpiresAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "providerMessageId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "acceptanceKind": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "graph_http_202",
+                "manual_evidence"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nextAttemptAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastResultCategory": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "accepted",
+                "transient_pre_acceptance",
+                "permanent_pre_acceptance",
+                "ambiguous"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaKind",
+        "id",
+        "commercialLeadId",
+        "kind",
+        "state",
+        "revision",
+        "payloadSha256",
+        "attempts",
+        "leaseToken",
+        "leaseExpiresAt",
+        "providerMessageId",
+        "acceptanceKind",
+        "nextAttemptAt",
+        "lastResultCategory"
+      ]
+    },
+    "ProviderGateRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "provider_gate_record"
+        },
+        "gateId": {
+          "const": "mail_provider_production_v1"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "activated",
+            "expired",
+            "revoked"
+          ]
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "preview",
+            "production"
+          ]
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "microsoft_graph",
+            "gmail_legacy_test_only"
+          ]
+        },
+        "tenantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "applicationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "mailbox": {
+          "type": "string",
+          "format": "email"
+        },
+        "sender": {
+          "type": "string",
+          "format": "email"
+        },
+        "secretPresent": {
+          "type": "boolean"
+        },
+        "mailSendApplicationRole": {
+          "type": "boolean"
+        },
+        "exchangeMailboxRestrictionReadback": {
+          "type": "boolean"
+        },
+        "evidenceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "ownerApprovedBy": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "approvedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expiresAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtimeCapability": {
+          "const": "mail_send"
+        },
+        "fallbackProvider": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "gateId",
+        "state",
+        "environment",
+        "provider",
+        "tenantId",
+        "applicationId",
+        "mailbox",
+        "sender",
+        "secretPresent",
+        "mailSendApplicationRole",
+        "exchangeMailboxRestrictionReadback",
+        "evidenceSha256",
+        "ownerApprovedBy",
+        "approvedAt",
+        "expiresAt",
+        "runtimeCapability",
+        "fallbackProvider"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "environment": {
+                "const": "production"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "provider": {
+                "const": "microsoft_graph"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "activated"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "provider": {
+                "const": "microsoft_graph"
+              },
+              "secretPresent": {
+                "const": true
+              },
+              "mailSendApplicationRole": {
+                "const": true
+              },
+              "exchangeMailboxRestrictionReadback": {
+                "const": true
+              },
+              "ownerApprovedBy": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "approvedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AuditRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "audit_record"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "commercialLeadId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "actorRole": {
+          "const": "ops_admin"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "mark_read",
+            "set_priority",
+            "transition_status",
+            "set_next_action",
+            "resolve_outbox",
+            "set_legal_hold",
+            "retention_redact"
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "beforeRevision": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "afterRevision": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "idempotencyKeyHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "nonPiiFactsOnly": {
+          "const": true
+        }
+      },
+      "required": [
+        "schemaKind",
+        "id",
+        "commercialLeadId",
+        "actorId",
+        "actorRole",
+        "action",
+        "reason",
+        "beforeRevision",
+        "afterRevision",
+        "occurredAt",
+        "idempotencyKeyHash",
+        "nonPiiFactsOnly"
+      ]
+    },
+    "RetentionRedactionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "retention_redaction_result"
+        },
+        "dryRun": {
+          "const": true
+        },
+        "runId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "policyVersion": {
+          "const": 1
+        },
+        "eligible": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "leadPii": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "pdfs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "outboxPayloads": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "analyticsEvents": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "providerReceipts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "auditFacts": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "leadPii",
+            "pdfs",
+            "outboxPayloads",
+            "analyticsEvents",
+            "providerReceipts",
+            "auditFacts"
+          ]
+        },
+        "excludedLegalHold": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excludedActiveCustomerRelation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wouldRedactIdsSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "dryRun",
+        "runId",
+        "generatedAt",
+        "policyVersion",
+        "eligible",
+        "excludedLegalHold",
+        "excludedActiveCustomerRelation",
+        "wouldRedactIdsSha256"
+      ]
+    }
   },
-  "publicBooking": {
-    "semantics": "preferred scan request, pending human confirmation",
-    "success": "Durable booking lead plus exactly two durable transactional outbox jobs accepted atomically.",
-    "failure": "No success UI, calendar-confirmation claim or receipt when durable acceptance fails.",
-    "retentionDays": 90
+  "x-aiow-operations": {
+    "booking": {
+      "transport": "http",
+      "method": "POST",
+      "path": "/api/booking",
+      "auth": "public_tls",
+      "request": {
+        "bodyRef": "#/$defs/BookingRequest",
+        "headers": [
+          "Content-Type: application/json",
+          "Idempotency-Key"
+        ]
+      },
+      "responses": {
+        "202": "#/$defs/BookingACK",
+        "400": "#/$defs/BookingError",
+        "409": "#/$defs/BookingError",
+        "413": "#/$defs/BookingError",
+        "415": "#/$defs/BookingError",
+        "429": "#/$defs/BookingError",
+        "503": "#/$defs/BookingError"
+      },
+      "idempotencyProfile": "booking"
+    },
+    "quote": {
+      "transport": "http",
+      "method": "POST",
+      "path": "/api/quote",
+      "auth": "public_tls",
+      "request": {
+        "bodyRef": "#/$defs/QuoteRequest",
+        "headers": [
+          "Content-Type: application/json",
+          "Idempotency-Key"
+        ]
+      },
+      "responses": {
+        "200": "#/$defs/QuoteCommitACK",
+        "400": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "409": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "413": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "415": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "429": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "503": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ]
+      },
+      "idempotencyProfile": "quote_prepare+quote_commit"
+    },
+    "events": {
+      "transport": "http",
+      "method": "POST",
+      "path": "/api/events",
+      "auth": "public_tls",
+      "request": {
+        "bodyRef": "#/$defs/AnalyticsEvent",
+        "headers": [
+          "Content-Type: application/json",
+          "Idempotency-Key"
+        ]
+      },
+      "responses": {
+        "202": "#/$defs/AnalyticsACK",
+        "400": "#/$defs/AnalyticsError",
+        "409": "#/$defs/AnalyticsError",
+        "413": "#/$defs/AnalyticsError",
+        "415": "#/$defs/AnalyticsError",
+        "429": "#/$defs/AnalyticsError"
+      },
+      "idempotencyProfile": "event_ingest"
+    },
+    "ops_queue": {
+      "transport": "http",
+      "method": "GET",
+      "path": "/api/ops/leads",
+      "auth": "ops_basic_tls_ops_admin",
+      "request": {
+        "query": {
+          "cursorRef": "#/$defs/QueueCursor",
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "responses": {
+        "200": "#/$defs/QueueProjection",
+        "401": "#/$defs/OpsError",
+        "403": "#/$defs/OpsError",
+        "404": "#/$defs/OpsError"
+      }
+    },
+    "ops_mutate": {
+      "transport": "http",
+      "method": "PATCH",
+      "path": "/api/ops/leads/{leadId}",
+      "auth": "ops_basic_tls_ops_admin",
+      "request": {
+        "bodyRef": "#/$defs/OpsMutation",
+        "headers": [
+          "Content-Type: application/json",
+          "Idempotency-Key"
+        ],
+        "pathParams": {
+          "leadId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "responses": {
+        "200": "#/$defs/OpsMutationACK",
+        "400": "#/$defs/OpsError",
+        "401": "#/$defs/OpsError",
+        "403": "#/$defs/OpsError",
+        "404": "#/$defs/OpsError",
+        "409": "#/$defs/RevisionConflict"
+      },
+      "idempotencyProfile": "ops_mutation"
+    },
+    "ops_report": {
+      "transport": "http",
+      "method": "GET",
+      "path": "/api/ops/report",
+      "auth": "ops_basic_tls_ops_admin",
+      "request": {
+        "query": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "through": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "responses": {
+        "200": "#/$defs/AnalyticsAggregateReport",
+        "400": "#/$defs/OpsError",
+        "401": "#/$defs/OpsError",
+        "403": "#/$defs/OpsError",
+        "404": "#/$defs/OpsError"
+      }
+    },
+    "booking_adapter": {
+      "transport": "http",
+      "method": "POST",
+      "path": "/api/internal/booking-adapter",
+      "auth": "internal_hmac_tls",
+      "request": {
+        "bodyRef": "#/$defs/BookingRequest",
+        "headers": [
+          "Content-Type: application/json",
+          "Idempotency-Key",
+          "X-AIOW-Request-Id",
+          "X-AIOW-Webhook-Timestamp",
+          "X-AIOW-Webhook-Signature"
+        ]
+      },
+      "responses": {
+        "202": "#/$defs/BookingACK",
+        "400": "#/$defs/BookingError",
+        "401": "#/$defs/BookingError",
+        "409": "#/$defs/BookingError",
+        "503": "#/$defs/BookingError"
+      },
+      "idempotencyProfile": "booking"
+    },
+    "quote_adapter": {
+      "transport": "http",
+      "method": "POST",
+      "path": "/api/internal/quote-adapter",
+      "auth": "internal_hmac_tls",
+      "request": {
+        "bodyOneOf": [
+          "#/$defs/QuotePrepareRequest",
+          "#/$defs/QuoteCommitRequest"
+        ],
+        "headers": [
+          "Content-Type: application/json",
+          "Idempotency-Key",
+          "X-AIOW-Request-Id",
+          "X-AIOW-Webhook-Timestamp",
+          "X-AIOW-Webhook-Signature"
+        ]
+      },
+      "responses": {
+        "200": [
+          "#/$defs/QuotePrepareACK",
+          "#/$defs/QuoteCommitACK"
+        ],
+        "400": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "401": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "409": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ],
+        "503": [
+          "#/$defs/QuotePrepareError",
+          "#/$defs/QuoteCommitError"
+        ]
+      },
+      "idempotencyProfile": "quote_prepare+quote_commit"
+    },
+    "mail_run": {
+      "transport": "http",
+      "method": "POST",
+      "path": "/api/internal/mail-outbox/run",
+      "auth": "internal_hmac_tls",
+      "request": {
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "required": [
+            "limit"
+          ]
+        }
+      },
+      "responses": {
+        "200": "#/$defs/OutboxProjection",
+        "401": "#/$defs/Error",
+        "409": "#/$defs/Error",
+        "503": "#/$defs/Error"
+      }
+    },
+    "aiow_quote_prepare_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_quote_prepare_v1",
+      "auth": "service_role",
+      "args": [
+        "p_request_id",
+        "p_idempotency_key",
+        "p_received_at",
+        "p_country",
+        "p_quote",
+        "p_contact",
+        "p_consent",
+        "p_source"
+      ],
+      "ackRef": "#/$defs/QuotePrepareACK",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_quote_commit_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_quote_commit_v1",
+      "auth": "service_role",
+      "args": [
+        "p_request_id",
+        "p_idempotency_key",
+        "p_quote_number",
+        "p_lead_id",
+        "p_pdf_filename",
+        "p_pdf_mime_type",
+        "p_pdf_base64",
+        "p_pdf_sha256",
+        "p_customer_mail",
+        "p_internal_mail",
+        "p_quote",
+        "p_contact",
+        "p_source",
+        "p_country"
+      ],
+      "ackRef": "#/$defs/QuoteCommitACK",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_booking_commit_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_booking_commit_v1",
+      "auth": "service_role",
+      "args": [
+        "p_request_id",
+        "p_idempotency_key",
+        "p_payload_digest",
+        "p_booking",
+        "p_source"
+      ],
+      "ackRef": "#/$defs/BookingACK",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_commercial_queue_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_commercial_queue_v1",
+      "auth": "ops_admin_jwt",
+      "args": [
+        "p_cursor_created_at",
+        "p_cursor_id",
+        "p_limit"
+      ],
+      "ackRef": "#/$defs/QueueProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_commercial_mutate_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_commercial_mutate_v1",
+      "auth": "ops_admin_jwt",
+      "args": [
+        "p_operator_id",
+        "p_idempotency_key",
+        "p_payload_digest",
+        "p_mutation"
+      ],
+      "ackRef": "#/$defs/OpsMutationACK",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_commercial_report_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_commercial_report_v1",
+      "auth": "ops_admin_jwt",
+      "args": [
+        "p_from",
+        "p_through"
+      ],
+      "ackRef": "#/$defs/AnalyticsAggregateReport",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_commercial_event_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_commercial_event_v1",
+      "auth": "service_role",
+      "args": [
+        "p_idempotency_key",
+        "p_payload_digest",
+        "p_event"
+      ],
+      "ackRef": "#/$defs/AnalyticsACK",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_mail_outbox_claim_v2": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_outbox_claim_v2",
+      "auth": "service_role",
+      "args": [
+        "p_worker_id",
+        "p_limit",
+        "p_now"
+      ],
+      "ackRef": "#/$defs/OutboxProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_mail_outbox_sent_v2": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_outbox_sent_v2",
+      "auth": "service_role",
+      "args": [
+        "p_job_id",
+        "p_lease_token",
+        "p_expected_revision",
+        "p_result"
+      ],
+      "ackRef": "#/$defs/OutboxProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_mail_outbox_retry_v2": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_outbox_retry_v2",
+      "auth": "service_role",
+      "args": [
+        "p_job_id",
+        "p_lease_token",
+        "p_expected_revision",
+        "p_result",
+        "p_next_attempt_at"
+      ],
+      "ackRef": "#/$defs/OutboxProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_mail_outbox_dead_v2": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_outbox_dead_v2",
+      "auth": "service_role",
+      "args": [
+        "p_job_id",
+        "p_lease_token",
+        "p_expected_revision",
+        "p_result"
+      ],
+      "ackRef": "#/$defs/OutboxProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_mail_outbox_review_v2": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_outbox_review_v2",
+      "auth": "service_role",
+      "args": [
+        "p_job_id",
+        "p_lease_token",
+        "p_expected_revision",
+        "p_result"
+      ],
+      "ackRef": "#/$defs/OutboxProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_mail_outbox_resolve_v2": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_outbox_resolve_v2",
+      "auth": "service_role",
+      "args": [
+        "p_operator_id",
+        "p_idempotency_key",
+        "p_payload_digest",
+        "p_job_id",
+        "p_expected_revision",
+        "p_resolution",
+        "p_reason",
+        "p_evidence"
+      ],
+      "ackRef": "#/$defs/OutboxProjection",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    },
+    "aiow_commercial_retention_dry_run_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_commercial_retention_dry_run_v1",
+      "auth": "service_role",
+      "args": [
+        "p_now"
+      ],
+      "ackRef": "#/$defs/RetentionRedactionResult",
+      "errors": {
+        "P0001": "conflict_or_policy_rejection",
+        "22023": "invalid_argument",
+        "23505": "idempotency_conflict"
+      }
+    }
   },
-  "publicQuote": {
-    "success": "Server-recomputed quote, durable lead, PDF and exactly two durable transactional outbox jobs accepted atomically.",
-    "failure": "No PDF or receipt when prepare or commit fails.",
-    "pricingAuthority": "server"
+  "x-aiow-idempotency": {
+    "scope": "endpoint_and_idempotency_key",
+    "keyHeader": "Idempotency-Key",
+    "keyPattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$",
+    "digest": "sha256_utf8_rfc8785_canonical_json",
+    "normalization": [
+      "trim_unicode_whitespace",
+      "lowercase_email",
+      "uppercase_country_and_postcode_letters",
+      "canonical_iso_8601_utc",
+      "omit_transport_metadata"
+    ],
+    "atomicOutcome": true,
+    "sameKeySameDigest": "return_original_status_headers_and_body_before_revision_check_with_zero_new_residue",
+    "sameKeyDifferentDigest": {
+      "status": 409,
+      "errorRef": "#/$defs/Error"
+    },
+    "revisionConflict": {
+      "status": 409,
+      "errorRef": "#/$defs/RevisionConflict",
+      "condition": "non_replay_expectedRevision_not_equal_current_revision"
+    },
+    "covered": [
+      "booking",
+      "quote_prepare",
+      "quote_commit",
+      "event_ingest",
+      "mark_read",
+      "set_priority",
+      "transition_status",
+      "set_next_action",
+      "resolve_outbox",
+      "set_legal_hold"
+    ],
+    "canonicalFields": {
+      "booking": [
+        "subject",
+        "details",
+        "date",
+        "slot",
+        "name",
+        "email",
+        "company",
+        "locale",
+        "consentAccepted",
+        "consentVersion"
+      ],
+      "quote_prepare": [
+        "quote.configuration",
+        "quote.contact",
+        "quote.consent",
+        "quote.source",
+        "quote.country"
+      ],
+      "quote_commit": [
+        "leadId",
+        "commercialLeadId",
+        "quoteNumber",
+        "pdf.filename",
+        "pdf.mimeType",
+        "pdf.sha256"
+      ],
+      "event_ingest": [
+        "eventId",
+        "event",
+        "occurredAt",
+        "event-specific-dimensions"
+      ],
+      "ops_mutation": [
+        "operation",
+        "leadId",
+        "expectedRevision",
+        "operation-specific-fields"
+      ]
+    }
   },
-  "mail": {
-    "canonicalDomain": "aiow.io",
-    "defaultSender": "info@aiow.io",
-    "defaultInternalInbox": "info@aiow.io",
-    "provider": "microsoft_graph",
-    "allowedProviders": ["microsoft_graph", "gmail_legacy_test_only"],
-    "customerKinds": ["customer_booking", "customer_quote"],
-    "internalKinds": ["internal_booking", "internal_lead"],
-    "ambiguousDeliveryState": "review",
-    "automaticResendAfterAmbiguity": false
+  "x-aiow-lifecycle": {
+    "statuses": [
+      "new",
+      "qualified",
+      "awaiting_info",
+      "scan_planned",
+      "proposal",
+      "won",
+      "lost"
+    ],
+    "transitions": {
+      "new": [
+        "qualified",
+        "awaiting_info",
+        "scan_planned",
+        "lost"
+      ],
+      "qualified": [
+        "awaiting_info",
+        "scan_planned",
+        "proposal",
+        "lost"
+      ],
+      "awaiting_info": [
+        "qualified",
+        "scan_planned",
+        "lost"
+      ],
+      "scan_planned": [
+        "proposal",
+        "won",
+        "lost"
+      ],
+      "proposal": [
+        "won",
+        "lost"
+      ],
+      "won": [],
+      "lost": [
+        "qualified"
+      ]
+    },
+    "lostReopen": {
+      "to": "qualified",
+      "requires": [
+        "authenticated ops_admin",
+        "nonempty reopenReason",
+        "expectedRevision",
+        "idempotency key",
+        "audit"
+      ]
+    },
+    "terminal": [
+      "won",
+      "lost"
+    ],
+    "acceptedNonReplayMutation": "increments revision exactly once; stamps configured actor ID and server time; writes one immutable audit row atomically",
+    "replay": "returns original outcome with no revision check or residue",
+    "markRead": "unread true to false only; false to false is rejected as no-op",
+    "priority": "may change to any priority enum; same value is rejected as no-op",
+    "nextActionAt": "nullable; non-null must be future server-time ISO timestamp; must be null for won/lost",
+    "forbiddenTransitionActors": [
+      "mail",
+      "provider",
+      "analytics",
+      "client"
+    ]
   },
-  "analytics": {
-    "allowedEvents": ["page_view", "calculator_changed", "context_opened", "quote_opened", "quote_succeeded", "quote_failed", "booking_opened", "booking_succeeded", "booking_failed", "scan_cta_clicked", "knowledge_cta_clicked"],
-    "allowedDimensions": ["route", "locale", "viewport", "contextSlug", "segment", "serviceRoute", "variant", "failureClass"],
-    "forbidden": ["name", "email", "phone", "company", "postcode", "kvk", "note", "message", "ip", "userAgent", "rawReferrer", "freeText"],
-    "retentionDays": 395,
-    "sessionIdentifier": "none"
+  "x-aiow-operator-auth": {
+    "order": [
+      "server_verified_host_allowlist",
+      "application_basic_auth",
+      "capability_authorization"
+    ],
+    "trustedHostSource": "platform-verified deployment hostname compared to exact server allowlist; never trust Host or X-Forwarded-Host alone",
+    "customProductionDomain": "404 before auth or data for UI, API, exports, and PII assets",
+    "allowedHostUnauthenticated": {
+      "status": 401,
+      "header": "WWW-Authenticate: Basic realm=\"AIOW Operations\", charset=\"UTF-8\""
+    },
+    "authenticatedUnauthorized": {
+      "status": 403
+    },
+    "transport": "TLS only",
+    "scheme": "HTTP Basic",
+    "username": "exact configured username",
+    "secret": "configured strong secret; missing/malformed configuration fails closed",
+    "forbidden": [
+      "query token",
+      "URL credentials",
+      "fallback identity"
+    ],
+    "principal": "exact server-configured operator ID",
+    "role": "ops_admin",
+    "capabilities": {
+      "queue_read": [
+        "ops_admin"
+      ],
+      "report_read": [
+        "ops_admin"
+      ],
+      "pii_read": [
+        "ops_admin"
+      ],
+      "lead_mutate": [
+        "ops_admin"
+      ],
+      "outbox_resolve": [
+        "ops_admin"
+      ],
+      "legal_hold": [
+        "ops_admin"
+      ]
+    },
+    "surfaces": [
+      "/ops/leads",
+      "/api/ops/leads",
+      "/api/ops/leads/{leadId}",
+      "/api/ops/report",
+      "all ops exports",
+      "all PII-bearing assets"
+    ],
+    "vercelSso": "outer additional gate; never sole authority"
   },
-  "experiments": {
-    "allowed": ["scan_cta_copy_v1"],
-    "assignment": "First-party SameSite=Lax cookie containing only experiment ID, variant and schema version; no user identifier.",
-    "variants": ["control", "outcome_summary"],
-    "pricingChangesAllowed": false,
-    "availabilityClaimsAllowed": false,
-    "serverValidation": true
+  "x-aiow-persistence": {
+    "predecessorMigration": "supabase/migrations/20260828_aiow_quote_adapter_v1.sql",
+    "successorRule": "append_only_new_migration; never edit predecessor",
+    "tables": {
+      "commercial_leads": {
+        "columns": {
+          "id": "uuid pk",
+          "source": "text check booking|quote",
+          "source_id": "uuid not null",
+          "status": "text lifecycle check",
+          "priority": "text check normal|high|urgent",
+          "unread": "boolean not null default true",
+          "revision": "bigint not null check >0",
+          "route": "text canonical check",
+          "locale": "text check nl|en",
+          "next_action_at": "timestamptz null",
+          "terminal_at": "timestamptz null",
+          "legal_hold": "boolean not null default false",
+          "created_at": "timestamptz not null",
+          "updated_at": "timestamptz not null"
+        },
+        "primaryKey": [
+          "id"
+        ],
+        "checks": [
+          {
+            "name": "commercial_leads_source_ck",
+            "expression": "source in ('booking','quote')"
+          },
+          {
+            "name": "commercial_leads_status_ck",
+            "expression": "status in ('new','qualified','awaiting_info','scan_planned','proposal','won','lost')"
+          },
+          {
+            "name": "commercial_leads_priority_ck",
+            "expression": "priority in ('normal','high','urgent')"
+          },
+          {
+            "name": "commercial_leads_revision_ck",
+            "expression": "revision > 0"
+          },
+          {
+            "name": "commercial_leads_terminal_next_action_ck",
+            "expression": "status not in ('won','lost') or next_action_at is null"
+          }
+        ],
+        "unique": [
+          {
+            "name": "commercial_leads_source_source_id_uq",
+            "columns": [
+              "source",
+              "source_id"
+            ]
+          }
+        ],
+        "foreignKeys": []
+      },
+      "booking_leads": {
+        "columns": {
+          "id": "uuid pk",
+          "commercial_lead_id": "uuid not null unique fk commercial_leads(id) on delete cascade",
+          "request_id": "uuid not null unique",
+          "payload_digest": "text sha256 check",
+          "payload": "jsonb closed booking snapshot",
+          "created_at": "timestamptz not null"
+        },
+        "primaryKey": [
+          "id"
+        ],
+        "checks": [
+          {
+            "name": "booking_leads_payload_digest_ck",
+            "expression": "payload_digest ~ '^[0-9a-f]{64}$'"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": [
+          {
+            "name": "booking_leads_commercial_lead_fk",
+            "columns": [
+              "commercial_lead_id"
+            ],
+            "references": "commercial_leads(id)",
+            "onDelete": "cascade"
+          }
+        ]
+      },
+      "commercial_mail_outbox": {
+        "columns": {
+          "id": "uuid pk",
+          "commercial_lead_id": "uuid not null fk commercial_leads(id) on delete cascade",
+          "kind": "text four-kind check",
+          "state": "text seven-state check",
+          "revision": "bigint check >0",
+          "payload": "jsonb immutable",
+          "payload_sha256": "text sha256 check",
+          "lease_token": "uuid null",
+          "lease_expires_at": "timestamptz null",
+          "attempts": "integer check 0..5",
+          "provider_result": "jsonb null",
+          "created_at": "timestamptz not null",
+          "updated_at": "timestamptz not null"
+        },
+        "primaryKey": [
+          "id"
+        ],
+        "checks": [
+          {
+            "name": "commercial_mail_outbox_kind_ck",
+            "expression": "kind in ('customer_booking','internal_booking','customer_quote','internal_lead')"
+          },
+          {
+            "name": "commercial_mail_outbox_state_ck",
+            "expression": "state in ('pending','leased','retry','sent','dead','review','cancelled')"
+          },
+          {
+            "name": "commercial_mail_outbox_attempts_ck",
+            "expression": "attempts between 0 and 5"
+          },
+          {
+            "name": "commercial_mail_outbox_payload_digest_ck",
+            "expression": "payload_sha256 ~ '^[0-9a-f]{64}$'"
+          }
+        ],
+        "unique": [
+          {
+            "name": "commercial_mail_outbox_lead_kind_uq",
+            "columns": [
+              "commercial_lead_id",
+              "kind"
+            ]
+          }
+        ],
+        "foreignKeys": [
+          {
+            "name": "commercial_mail_outbox_commercial_lead_fk",
+            "columns": [
+              "commercial_lead_id"
+            ],
+            "references": "commercial_leads(id)",
+            "onDelete": "cascade"
+          }
+        ]
+      },
+      "commercial_events": {
+        "columns": {
+          "event_id": "uuid pk",
+          "payload_digest": "text sha256 check",
+          "event": "jsonb closed AnalyticsEvent",
+          "occurred_at": "timestamptz not null",
+          "expires_at": "timestamptz not null"
+        },
+        "primaryKey": [
+          "event_id"
+        ],
+        "checks": [
+          {
+            "name": "commercial_events_payload_digest_ck",
+            "expression": "payload_digest ~ '^[0-9a-f]{64}$'"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": []
+      },
+      "commercial_event_daily": {
+        "columns": {
+          "day": "date not null",
+          "event_name": "text canonical check",
+          "route": "text canonical check",
+          "locale": "text check nl|en",
+          "experiment_id": "text null canonical check",
+          "variant": "text null canonical check",
+          "count": "bigint check >=0"
+        },
+        "primaryKey": [
+          "day",
+          "event_name",
+          "route",
+          "locale",
+          "experiment_id",
+          "variant"
+        ],
+        "checks": [
+          {
+            "name": "commercial_event_daily_count_ck",
+            "expression": "count >= 0"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": []
+      },
+      "commercial_audit": {
+        "columns": {
+          "id": "uuid pk",
+          "commercial_lead_id": "uuid null fk commercial_leads(id) on delete set null",
+          "actor_id": "text not null",
+          "actor_role": "text check ops_admin",
+          "action": "text canonical check",
+          "facts": "jsonb non-pii closed",
+          "occurred_at": "timestamptz not null",
+          "redact_after": "timestamptz not null"
+        },
+        "primaryKey": [
+          "id"
+        ],
+        "checks": [
+          {
+            "name": "commercial_audit_actor_role_ck",
+            "expression": "actor_role = 'ops_admin'"
+          },
+          {
+            "name": "commercial_audit_facts_non_pii_ck",
+            "expression": "facts ? 'nonPiiFactsOnly' and facts->>'nonPiiFactsOnly' = 'true'"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": [
+          {
+            "name": "commercial_audit_commercial_lead_fk",
+            "columns": [
+              "commercial_lead_id"
+            ],
+            "references": "commercial_leads(id)",
+            "onDelete": "set null"
+          }
+        ]
+      },
+      "commercial_provider_gates": {
+        "columns": {
+          "gate_id": "text pk",
+          "state": "text gate-state check",
+          "target": "jsonb closed ProviderGateRecord",
+          "evidence_sha256": "text sha256 check",
+          "expires_at": "timestamptz null",
+          "revision": "bigint check >0"
+        },
+        "primaryKey": [
+          "gate_id"
+        ],
+        "checks": [
+          {
+            "name": "commercial_provider_gates_state_ck",
+            "expression": "state in ('pending','approved','activated','expired','revoked')"
+          },
+          {
+            "name": "commercial_provider_gates_digest_ck",
+            "expression": "evidence_sha256 ~ '^[0-9a-f]{64}$'"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": []
+      },
+      "commercial_idempotency": {
+        "columns": {
+          "endpoint": "text not null",
+          "idempotency_key": "text not null",
+          "payload_digest": "text sha256 check",
+          "http_status": "integer not null",
+          "outcome": "jsonb closed outcome",
+          "created_at": "timestamptz not null"
+        },
+        "primaryKey": [
+          "endpoint",
+          "idempotency_key"
+        ],
+        "checks": [
+          {
+            "name": "commercial_idempotency_digest_ck",
+            "expression": "payload_digest ~ '^[0-9a-f]{64}$'"
+          },
+          {
+            "name": "commercial_idempotency_http_status_ck",
+            "expression": "http_status between 100 and 599"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": []
+      }
+    },
+    "compatibility": {
+      "quoteTablesAndRpcsRemainAuthority": true,
+      "quotePrepareRpc": "aiow_quote_prepare_v1",
+      "quoteCommitRpc": "aiow_quote_commit_v1",
+      "quoteBackfill": "each quote_leads row maps one-to-one to commercial_leads via quote_leads.commercial_lead_id",
+      "preparedVisibility": "excluded_from_queue_unread_sla_and_analytics_until_commit",
+      "v1OutboxCutover": "mail_outbox v1 receives no new jobs after commercial_mail_outbox v2 activation; historical jobs drain under v1 compatibility worker"
+    },
+    "sourceIdentity": {
+      "commercial_leads": "unique(source,source_id)",
+      "booking": "source_id=booking_leads.id",
+      "quote": "source_id=quote_leads.id",
+      "quote_mapping": "quote_leads.commercial_lead_id unique fk commercial_leads(id)"
+    },
+    "activationAcceptance": [
+      "zero_to_head",
+      "production_baseline_to_head",
+      "backfill_count_and_uniqueness",
+      "v1_new_job_cutoff",
+      "all_fk_and_check_validation"
+    ],
+    "quoteAlterations": [
+      {
+        "table": "quote_leads",
+        "addColumn": "commercial_lead_id uuid null",
+        "foreignKey": {
+          "name": "quote_leads_commercial_lead_fk",
+          "references": "commercial_leads(id)",
+          "onDelete": "restrict"
+        },
+        "unique": {
+          "name": "quote_leads_commercial_lead_uq",
+          "columns": [
+            "commercial_lead_id"
+          ]
+        },
+        "activation": "backfill all rows then set not null"
+      }
+    ]
   },
-  "operationsSurface": {
-    "path": "/ops/leads",
-    "customDomainBehavior": "404",
-    "allowedHostClass": "vercel_deployment_host_only",
-    "requiredOuterControl": "Vercel Authentication/SSO enabled and provider-read-back before release",
-    "mutations": ["mark_read", "set_priority", "transition_status", "set_next_action"],
-    "optimisticConcurrency": "expected revision required"
+  "x-aiow-quote-lifecycle": {
+    "states": [
+      "prepared",
+      "committed",
+      "expired_redacted"
+    ],
+    "prepare": "atomically creates quote-specific row and common commercial lead; excludes prepared lead from queue, unread, SLA and analytics",
+    "commit": "atomically stores PDF and exactly customer_quote plus internal_lead v2 jobs and committed transition",
+    "prepareReplay": "same digest returns original prepare ACK; changed digest 409",
+    "commitReplay": "same digest returns original committed ACK before state/revision checks; zero residue",
+    "orphanPolicy": {
+      "expiresAfterHours": 24,
+      "result": "expired_redacted",
+      "redact": [
+        "contact PII",
+        "quote payload"
+      ],
+      "queueVisible": false
+    },
+    "deliveryAuthority": "only QuoteCommitACK with pdfDeliveryPermitted=true permits PDF delivery"
   },
-  "knowledgeEvidenceStates": ["reference_architecture", "internal_demonstration", "pilot", "customer_case"],
-  "customerCaseRule": "customer_case is forbidden without recorded customer approval and claim evidence",
-  "ownerGates": [
-    "Supabase target selection and additive production migration",
-    "Microsoft Graph application permission and mailbox restriction",
-    "Vercel production secret activation",
-    "Recurring outbox/alert scheduler activation",
-    "Search Console and Bing ownership verification",
-    "IndexNow key publication and submission",
-    "Publication of address, VAT ID, customer names, testimonials or measured outcomes"
-  ]
+  "x-aiow-outbox": {
+    "pairs": {
+      "booking": [
+        "customer_booking",
+        "internal_booking"
+      ],
+      "quote": [
+        "customer_quote",
+        "internal_lead"
+      ]
+    },
+    "uniqueIdentity": [
+      "commercialLeadId",
+      "kind"
+    ],
+    "payload": "closed and immutable; SHA-256 digest checked on every transition",
+    "states": [
+      "pending",
+      "leased",
+      "retry",
+      "sent",
+      "dead",
+      "review",
+      "cancelled"
+    ],
+    "lease": {
+      "durationSeconds": 300,
+      "token": "random UUID",
+      "claim": "pending/retry due to leased by CAS",
+      "finalize": "lease token + unexpired lease + expected revision CAS"
+    },
+    "maxAttempts": 5,
+    "providerCategories": [
+      "accepted",
+      "transient_pre_acceptance",
+      "permanent_pre_acceptance",
+      "ambiguous"
+    ],
+    "mapping": {
+      "accepted": "sent",
+      "transient_pre_acceptance": "retry until max then dead",
+      "permanent_pre_acceptance": "dead",
+      "ambiguous": "review"
+    },
+    "acceptedGraph": "HTTP 202 requires acceptanceKind and attemptReceipt; providerMessageId may be null",
+    "ambiguous": "never auto-resend",
+    "manualResolution": {
+      "auth": "ops_admin",
+      "actions": [
+        "mark_sent with evidence",
+        "approve_resend",
+        "dead"
+      ],
+      "requires": [
+        "expected revision",
+        "idempotency key",
+        "nonempty reason",
+        "immutable audit"
+      ]
+    }
+  },
+  "x-aiow-provider-gate": {
+    "defaultState": "disabled",
+    "productionProvider": "microsoft_graph",
+    "previewOnlyProvider": "gmail_legacy_test_only",
+    "gmailProductionForbidden": true,
+    "requiredTarget": [
+      "tenantId",
+      "applicationId",
+      "mailbox",
+      "sender"
+    ],
+    "requiredChecks": [
+      "secretPresent",
+      "Graph Mail.Send application role",
+      "Exchange mailbox restriction readback",
+      "evidence SHA-256",
+      "owner approval",
+      "unexpired current evidence"
+    ],
+    "states": [
+      "pending",
+      "approved",
+      "activated",
+      "expired",
+      "revoked"
+    ],
+    "runtimeCapability": "mail_send only when activated and evidence current for exact target",
+    "fallback": "none",
+    "activation": "external separate owner gate; contract approval does not activate"
+  },
+  "x-aiow-analytics": {
+    "eventNames": [
+      "page_view",
+      "calculator_changed",
+      "context_opened",
+      "quote_opened",
+      "quote_succeeded",
+      "quote_failed",
+      "booking_opened",
+      "booking_succeeded",
+      "booking_failed",
+      "scan_cta_clicked",
+      "knowledge_cta_clicked",
+      "experiment_exposed"
+    ],
+    "metadataNotPersistedOrLogged": [
+      "raw IP",
+      "user-agent",
+      "referrer",
+      "query string",
+      "UTM",
+      "free text"
+    ],
+    "eventId": "UUID dedup identity",
+    "sameEventIdSameDigest": "return original ACK",
+    "sameEventIdDifferentDigest": "409",
+    "timestamp": "server rejects occurredAt outside +/- 10 minutes",
+    "experiment": "experiment_exposed only after rendered; conversion events quote_succeeded, booking_succeeded and scan_cta_clicked count only with same server-validated experimentId and variant",
+    "aggregate": "closed daily buckets; no person-level rows"
+  },
+  "x-aiow-retention": {
+    "activation": "dry-run only; destructive activation is separate owner gate",
+    "classes": {
+      "booking_quote_lead_pii": {
+        "days": 90,
+        "anchor": "terminal_at or abandoned_at",
+        "action": "irreversible redaction",
+        "exceptions": [
+          "active customer relation",
+          "legal hold"
+        ]
+      },
+      "pdfs_and_outbox_payloads": {
+        "days": 90,
+        "anchor": "terminal_at or abandoned_at",
+        "action": "delete bytes and redact payload"
+      },
+      "raw_analytics": {
+        "days": 30,
+        "anchor": "occurred_at",
+        "action": "delete"
+      },
+      "analytics_aggregates": {
+        "months": 13,
+        "anchor": "bucket month end",
+        "action": "delete"
+      },
+      "provider_receipts": {
+        "days": 90,
+        "anchor": "accepted/observed time",
+        "action": "irreversible redaction"
+      },
+      "non_pii_audit_facts": {
+        "days": 365,
+        "anchor": "irreversible PII redaction",
+        "action": "delete"
+      }
+    },
+    "legalHold": "ops_admin only; expected revision, idempotency key, nonempty reason and audit required",
+    "cascades": {
+      "lead_redaction": [
+        "booking_leads PII",
+        "quote contact PII",
+        "quote PDFs",
+        "commercial_mail_outbox payloads"
+      ],
+      "preserve": [
+        "common lead non-PII identity until audit expiry",
+        "non-PII audit facts"
+      ],
+      "delete": [
+        "orphan documents",
+        "expired raw events"
+      ]
+    }
+  }
 }
