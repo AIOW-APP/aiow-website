@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { listVentureAccounts } from "@/lib/aiow-venture-accounts";
 
 export async function GET(req: Request) {
+  if (req.headers.get("x-aiow-operator-id") !== "richard" || req.headers.get("x-aiow-operator-role") !== "ops_admin") {
+    return new NextResponse(null, { status: 404 });
+  }
+
   try {
-    const url = new URL(req.url);
-    const token = req.headers.get("x-aiow-admin-token") || url.searchParams.get("token") || "";
-    const configured = process.env.AIOW_ADMIN_TOKEN || "";
-    if (configured && token !== configured) return NextResponse.json({ error: "Admin token required" }, { status: 401 });
     const accounts = await listVentureAccounts();
     return NextResponse.json({
       ok: true,
