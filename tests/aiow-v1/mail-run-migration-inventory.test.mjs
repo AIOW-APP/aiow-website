@@ -27,6 +27,16 @@ test("mail-run contract inventory is closed by one append-only successor migrati
   }
   assert.match(sql,/alter table public\.commercial_mail_run_receipts force row level security/i);
   assert.match(sql,/alter table public\.commercial_mail_run_receipts owner to aiow_mail_run_receipt_owner/i);
+  assert.match(sql,/create temporary table aiow_temporary_role_memberships/i);
+  assert.match(sql,/if not pg_has_role\(current_user,v_role,'SET'\) then/i);
+  assert.match(sql,/insert into aiow_temporary_role_memberships\(role_name\) values\(v_role\)/i);
+  assert.match(sql,/with admin false, inherit false, set true/i);
+  assert.match(sql,/for v_role in select role_name from aiow_temporary_role_memberships/i);
+  assert.match(sql,/execute format\('revoke %I from %I',v_role,current_user\)/i);
+  assert.match(sql,/create temporary table aiow_temporary_schema_create_privileges/i);
+  assert.match(sql,/if not has_schema_privilege\(v_role,'public','CREATE'\) then/i);
+  assert.match(sql,/grant create on schema public to %I/i);
+  assert.match(sql,/revoke create on schema public from %I/i);
   assert.doesNotMatch(sql,/grant\s+(?:insert|update|delete|all).*commercial_mail_run_receipts.*service_role/is);
 });
 

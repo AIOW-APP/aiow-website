@@ -11,7 +11,8 @@ import { applyOperationsAuthority, isOperationsApiPath, isOperationsPath, OPERAT
 
 const root = new URL("../../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
-const deploymentHost = "aiow-ops-7f3a9c.vercel.app";
+const deploymentHost = "aiow-main-site.vercel.app";
+const immutableDeploymentHost = "aiow-main-site-7f3a9c.vercel.app";
 const configured = {
   AIOW_OPS_DEPLOYMENT_HOST: deploymentHost,
   AIOW_OPS_BASIC_USERNAME: "operator",
@@ -20,7 +21,7 @@ const configured = {
   VERCEL: "1",
   VERCEL_ENV: "production",
   VERCEL_TARGET_ENV: "production",
-  VERCEL_URL: deploymentHost,
+  VERCEL_URL: immutableDeploymentHost,
   VERCEL_DEPLOYMENT_ID: "dpl_7f3a9c",
   VERCEL_PROJECT_ID: "prj_aiow",
 };
@@ -35,7 +36,7 @@ const localConfigured = {
 const basic = (username, password) => `Basic ${Buffer.from(`${username}:${password}`, "utf8").toString("base64")}`;
 const allowed = (overrides = {}) => ({
   hostname: deploymentHost,
-  platformDeploymentHostname: deploymentHost,
+  platformDeploymentHostname: immutableDeploymentHost,
   authorization: basic("operator", "correct horse battery staple"),
   env: configured,
   ...overrides,
@@ -74,7 +75,8 @@ test("malformed or non-production platform configuration is concealed", async ()
     { ...configured, VERCEL: "0" },
     { ...configured, VERCEL_ENV: "preview" },
     { ...configured, VERCEL_TARGET_ENV: "preview" },
-    { ...configured, VERCEL_URL: "different.vercel.app" },
+    { ...configured, VERCEL_URL: `https://${immutableDeploymentHost}` },
+    { ...configured, VERCEL_URL: `${immutableDeploymentHost}:443` },
     { ...configured, VERCEL_DEPLOYMENT_ID: "bad id" },
     { ...configured, VERCEL_PROJECT_ID: "" },
   ]) assert.deepEqual(await authorizeOpsRequest(allowed({ env })), { kind: "not_found" });
@@ -85,6 +87,8 @@ test("client Host cannot substitute for platform deployment provenance", async (
     allowed({ platformDeploymentHostname: null }),
     allowed({ platformDeploymentHostname: "" }),
     allowed({ platformDeploymentHostname: "different.vercel.app" }),
+    allowed({ platformDeploymentHostname: deploymentHost }),
+    allowed({ env: { ...configured, VERCEL_URL: "forged.vercel.app" } }),
     allowed({ env: { ...configured, VERCEL: undefined } }),
     allowed({ env: { ...configured, VERCEL_ENV: undefined } }),
     allowed({ env: { ...configured, VERCEL_URL: undefined } }),
@@ -109,6 +113,15 @@ test("custom domains and every non-exact Host are concealed before credentials",
       { kind: "not_found" },
       hostname,
     );
+  }
+});
+
+test("a custom domain cannot become the configured production ops host", async () => {
+  for (const hostname of ["aiow.ai", "ops.aiow.ai", "admin.example.com", "vercel.app"]) {
+    assert.deepEqual(await authorizeOpsRequest(allowed({
+      hostname,
+      env: { ...configured, AIOW_OPS_DEPLOYMENT_HOST: hostname },
+    })), { kind: "not_found" }, hostname);
   }
 });
 
@@ -157,7 +170,7 @@ test("wrong username and password are rejected", async () => {
   assert.deepEqual(await authorizeOpsRequest(allowed({ authorization: basic("wrong", "wrong") })), { kind: "unauthorized" });
 });
 
-test("valid exact platform identity and credentials return only the trusted principal", async () => {
+test("stable alias with a different exact immutable deployment and valid credentials returns only the trusted principal", async () => {
   assert.deepEqual(await authorizeOpsRequest(allowed({ token: "ignored-query-token" })), {
     kind: "authorized",
     principal: { id: "richard", role: "ops_admin" },
@@ -195,8 +208,8 @@ test("admin source uses shared middleware authority for UI, API, export and PII 
   assert.ok(authority.indexOf("requestHeaders.delete(AIOW_OPERATOR_ID_HEADER)") < authority.indexOf("const access = await authorizeOpsRequest"));
   assert.match(authority, /platformDeploymentHostname/);
   assert.match(access, /VERCEL_ENV === "production"/);
-  assert.match(access, /VERCEL_URL === hostname/);
-  assert.match(access, /platformDeploymentHostname === hostname/);
+  assert.match(access, /validHostname\(env\?\.VERCEL_URL\)/);
+  assert.match(access, /platformDeploymentHostname === env\.VERCEL_URL/);
   assert.match(authority, /Basic realm="AIOW Operations", charset="UTF-8"/);
   assert.match(authority, /"WWW-Authenticate": OPERATIONS_CHALLENGE/);
   assert.ok(authority.indexOf('if (access.kind === "unauthorized")') < authority.indexOf("requestHeaders.set(AIOW_OPERATOR_ID_HEADER"));
@@ -220,7 +233,7 @@ test("host and x-forwarded-host spoofing cannot unlock UI, API, export or PII pa
     for (const headers of [
       { host: deploymentHost, authorization: credentials },
       { host: deploymentHost, "x-forwarded-host": deploymentHost, authorization: credentials },
-      { host: "ops.aiow.ai", "x-forwarded-host": deploymentHost, "x-vercel-deployment-url": deploymentHost, authorization: credentials },
+      { host: "ops.aiow.ai", "x-forwarded-host": deploymentHost, "x-vercel-deployment-url": immutableDeploymentHost, authorization: credentials },
       { host: deploymentHost, "x-forwarded-host": "ops.aiow.ai", "x-vercel-deployment-url": "forged.vercel.app", authorization: credentials },
     ]) {
       const rejected = await applyOperationsAuthority({ pathname, headers, env: configured });
@@ -237,7 +250,7 @@ test("allowed deployment API auth failures are closed no-store OpsError JSON wit
   for (const pathname of ["/api/ops/leads", "/api/ops/report/export", "/api/admin/venture-accounts"]) {
     assert.equal(isOperationsApiPath(pathname), true);
     for (const authorization of [null, basic("operator", "wrong")]) {
-      const headers = new Headers({ host: deploymentHost, "x-vercel-deployment-url": deploymentHost, [AIOW_OPERATOR_ID_HEADER]: "attacker", [AIOW_OPERATOR_ROLE_HEADER]: "owner" });
+      const headers = new Headers({ host: deploymentHost, "x-vercel-deployment-url": immutableDeploymentHost, [AIOW_OPERATOR_ID_HEADER]: "attacker", [AIOW_OPERATOR_ROLE_HEADER]: "owner" });
       if (authorization) headers.set("authorization", authorization);
       const rejected = await applyOperationsAuthority({ pathname, headers, env: configured });
       assert.equal(rejected.kind, "response");
@@ -254,7 +267,7 @@ test("allowed deployment API auth failures are closed no-store OpsError JSON wit
 });
 
 test("allowed deployment UI challenge stays closed and authorized requests replace spoofed authority", async () => {
-  const challenged = await applyOperationsAuthority({ pathname: "/portal/admin", headers: { host: deploymentHost, "x-vercel-deployment-url": deploymentHost }, env: configured });
+  const challenged = await applyOperationsAuthority({ pathname: "/portal/admin", headers: { host: deploymentHost, "x-vercel-deployment-url": immutableDeploymentHost }, env: configured });
   assert.equal(challenged.kind, "response");
   assert.equal(challenged.status, 401);
   assert.equal(challenged.body, null);
@@ -266,7 +279,7 @@ test("allowed deployment UI challenge stays closed and authorized requests repla
       pathname,
       headers: {
         host: deploymentHost,
-        "x-vercel-deployment-url": deploymentHost,
+        "x-vercel-deployment-url": immutableDeploymentHost,
         "x-forwarded-host": "attacker.example",
         authorization: basic("operator", "correct horse battery staple"),
         [AIOW_OPERATOR_ID_HEADER]: "attacker",

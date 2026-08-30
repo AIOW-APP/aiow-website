@@ -31,13 +31,13 @@ def run(command: list[str], env: dict[str, str], check: bool = True) -> subproce
     return result
 
 
-def sql(env: dict[str, str], text: str, check: bool = True, role: str | None = None) -> subprocess.CompletedProcess[str]:
+def sql(env: dict[str, str], text: str, check: bool = True, role: str | None = None, user: str = "postgres", database: str = "postgres") -> subprocess.CompletedProcess[str]:
     prefix = f"set role {role};" if role else ""
-    return run(["psql", "-X", "-v", "ON_ERROR_STOP=1", "-qAt", "-U", "postgres", "-d", "postgres", "-c", prefix + text], env, check)
+    return run(["psql", "-X", "-v", "ON_ERROR_STOP=1", "-qAt", "-U", user, "-d", database, "-c", prefix + text], env, check)
 
 
-def apply(env: dict[str, str], path: pathlib.Path) -> None:
-    run(["psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", "postgres", "-f", str(path)], env)
+def apply(env: dict[str, str], path: pathlib.Path, check: bool = True, user: str = "postgres", database: str = "postgres") -> subprocess.CompletedProcess[str]:
+    return run(["psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", user, "-d", database, "-f", str(path)], env, check)
 
 
 def q(value: object) -> str:
@@ -274,22 +274,144 @@ RUNTIME_READER = {"aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,tex
 RECEIPT_OWNER = {"aiow_mail_run_begin_v1(uuid,text,text,text)", "aiow_mail_run_complete_v1(uuid,text,text,uuid,integer,jsonb,jsonb)", "aiow_mail_run_receipts_delete_expired_v1(integer)", "aiow_iso_v1(timestamp with time zone)", "aiow_jsonb_exact_keys_v1(jsonb,text[])"}
 
 
-def effective_exec(env: dict[str, str], role: str) -> set[str]:
-    return set(sql(env, f"""select p.oid::regprocedure::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%' and has_function_privilege({q(role)},p.oid,'EXECUTE') order by 1;""").stdout.splitlines())
+def effective_exec(env: dict[str, str], role: str, database: str = "postgres") -> set[str]:
+    return set(sql(env, f"""select p.oid::regprocedure::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%' and has_function_privilege({q(role)},p.oid,'EXECUTE') order by 1;""", database=database).stdout.splitlines())
 
 
-def prove_acl_and_obsolete_absent(env: dict[str, str]) -> int:
-    assert sql(env, "select to_regprocedure('public.aiow_mail_outbox_resolve_v2(text,text,uuid,bigint,text,text,text)') is null;").stdout.strip() == "t"
-    all_count = int(sql(env, "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%';").stdout.strip())
-    assert effective_exec(env, "public") == set()
-    assert effective_exec(env, "anon") == set()
-    assert effective_exec(env, "authenticated") == set()
-    service = effective_exec(env, "service_role")
+def prove_acl_and_obsolete_absent(env: dict[str, str], database: str = "postgres") -> int:
+    assert sql(env, "select to_regprocedure('public.aiow_mail_outbox_resolve_v2(text,text,uuid,bigint,text,text,text)') is null;", database=database).stdout.strip() == "t"
+    all_count = int(sql(env, "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%';", database=database).stdout.strip())
+    assert effective_exec(env, "public", database) == set()
+    assert effective_exec(env, "anon", database) == set()
+    assert effective_exec(env, "authenticated", database) == set()
+    service = effective_exec(env, "service_role", database)
     assert service == SERVICE, {"missing": sorted(SERVICE - service), "extra": sorted(service - SERVICE)}
-    assert effective_exec(env, "aiow_mail_runtime_reader") == RUNTIME_READER
-    assert effective_exec(env, "aiow_mail_run_receipt_owner") == RECEIPT_OWNER
-    assert effective_exec(env, "aiow_mail_run_retention_worker") == {"aiow_mail_run_receipts_delete_expired_v1(integer)"}
+    assert effective_exec(env, "aiow_mail_runtime_reader", database) == RUNTIME_READER
+    assert effective_exec(env, "aiow_mail_run_receipt_owner", database) == RECEIPT_OWNER
+    assert effective_exec(env, "aiow_mail_run_retention_worker", database) == {"aiow_mail_run_receipts_delete_expired_v1(integer)"}
     return all_count
+
+
+MANAGED_LOGIN = "aiow_managed_migration_login"
+MANAGED_DATABASE = "aiow_managed_chain"
+MANAGED_FAILURE_DATABASE = "aiow_managed_failure"
+MANAGED_AUTO_MEMBERSHIPS = [
+    "aiow_mail_run_receipt_owner:true:false:false:postgres",
+    "aiow_mail_run_retention_worker:true:false:false:postgres",
+    "aiow_mail_runtime_reader:true:false:false:postgres",
+]
+
+
+def setup_managed_database(env: dict[str, str], database: str) -> None:
+    sql(env, f"create database {database} owner {MANAGED_LOGIN};")
+    sql(env, f"alter schema public owner to {MANAGED_LOGIN};", database=database)
+    sql(env, """create schema auth;
+      create table auth.users(id uuid primary key);
+      create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
+      create schema supabase_migrations;
+      create table supabase_migrations.schema_migrations(version text primary key,name text unique not null);
+      alter default privileges in schema public grant all on tables to anon,authenticated,service_role;
+      alter default privileges in schema public grant all on sequences to anon,authenticated,service_role;
+      alter default privileges in schema public grant execute on functions to anon,authenticated,service_role;""", user=MANAGED_LOGIN, database=database)
+
+
+def bootstrap_managed_owner_roles(env: dict[str, str], database: str, migrations: list[pathlib.Path]) -> None:
+    source = next(path for path in migrations if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql").read_text()
+    start = source.index("do $roles$")
+    end = source.index("end $roles$;", start) + len("end $roles$;")
+    sql(env, source[start:end], user=MANAGED_LOGIN, database=database)
+    assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
+
+
+def apply_managed_migrations(env: dict[str, str], database: str, migrations: list[pathlib.Path]) -> None:
+    for path in migrations:
+        version = VERSION.match(path.name).group(1)  # type: ignore[union-attr]
+        if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql":
+            # PG17 gives a CREATEROLE creator ADMIN=true, INHERIT=false,
+            # SET=false. The already-published 0003 changes owners before its
+            # ACL statements, so supply one scoped INHERIT+SET self-grant
+            # around that exact migration. The harness revokes its grantor row
+            # immediately afterward and proves the automatic rows unchanged.
+            if managed_membership_inventory(env):
+                assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
+                sql(env, f"""grant aiow_mail_run_receipt_owner to {MANAGED_LOGIN} with admin false, inherit true, set true;
+                  grant aiow_mail_runtime_reader to {MANAGED_LOGIN} with admin false, inherit true, set true;""", user=MANAGED_LOGIN, database=database)
+        run([
+            "psql", "-X", "-v", "ON_ERROR_STOP=1", "-qAt",
+            "-U", MANAGED_LOGIN, "-d", database,
+            "-f", str(path),
+            "-c", "select current_user,session_user,has_schema_privilege(current_user,'supabase_migrations','USAGE'),has_table_privilege(current_user,'supabase_migrations.schema_migrations','INSERT');",
+            "-c", f"insert into supabase_migrations.schema_migrations(version,name) values({q(version)},{q(path.name)});",
+        ], env)
+        if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql":
+            sql(env, f"""revoke aiow_mail_run_receipt_owner from {MANAGED_LOGIN};
+              revoke aiow_mail_runtime_reader from {MANAGED_LOGIN};""", user=MANAGED_LOGIN, database=database)
+            assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
+
+
+def managed_catalog_fingerprint(env: dict[str, str], database: str) -> str:
+    catalog = sql(env, """select string_agg(item,E'\\n' order by item) from (
+      select 'p|'||p.oid::regprocedure::text||'|'||pg_get_userbyid(p.proowner)||'|'||coalesce(p.proacl::text,'')||'|'||md5(pg_get_functiondef(p.oid)) item
+      from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%'
+      union all
+      select 'r|'||n.nspname||'.'||c.relname||'|'||c.relkind::text||'|'||pg_get_userbyid(c.relowner)||'|'||coalesce(c.relacl::text,'')
+      from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','extensions','shared','aiow','cargo')
+    ) inventory;""", database=database).stdout
+    return hashlib.sha256(catalog.encode()).hexdigest()
+
+
+def managed_membership_inventory(env: dict[str, str]) -> list[str]:
+    return sql(env, f"""select r.rolname||':'||m.admin_option||':'||m.inherit_option||':'||m.set_option||':'||g.rolname
+      from pg_auth_members m join pg_roles r on r.oid=m.roleid join pg_roles g on g.oid=m.grantor
+      where m.member={q(MANAGED_LOGIN)}::regrole and r.rolname like 'aiow_%' order by r.rolname,g.rolname;""").stdout.splitlines()
+
+
+def prove_managed_full_chain(env: dict[str, str], migrations: list[pathlib.Path], tmp: pathlib.Path) -> int:
+    sql(env, f"create role {MANAGED_LOGIN} login createrole bypassrls;")
+    assert sql(env, f"select rolsuper||':'||rolcanlogin||':'||rolcreaterole from pg_roles where rolname={q(MANAGED_LOGIN)};").stdout.strip() == "false:true:true"
+    setup_managed_database(env, MANAGED_DATABASE)
+    assert sql(env, f"""select pg_get_userbyid(datdba)||':'||(select pg_get_userbyid(nspowner) from pg_namespace where nspname='public')
+      from pg_database where datname={q(MANAGED_DATABASE)};""", database=MANAGED_DATABASE).stdout.strip() == f"{MANAGED_LOGIN}:{MANAGED_LOGIN}"
+    bootstrap_managed_owner_roles(env, MANAGED_DATABASE, migrations)
+    apply_managed_migrations(env, MANAGED_DATABASE, migrations)
+
+    applied = sql(env, "select version||':'||name from supabase_migrations.schema_migrations order by name;", user=MANAGED_LOGIN, database=MANAGED_DATABASE).stdout.splitlines()
+    assert applied == [f"{VERSION.match(path.name).group(1)}:{path.name}" for path in migrations]  # type: ignore[union-attr]
+    assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
+    assert sql(env, "select pg_has_role(current_user,'aiow_mail_run_receipt_owner','SET')||':'||pg_has_role(current_user,'aiow_mail_runtime_reader','SET');", user=MANAGED_LOGIN, database=MANAGED_DATABASE).stdout.strip() == "false:false"
+    assert sql(env, "select has_schema_privilege('aiow_mail_run_receipt_owner','public','CREATE')||':'||has_schema_privilege('aiow_mail_runtime_reader','public','CREATE');", database=MANAGED_DATABASE).stdout.strip() == "false:false"
+    assert sql(env, f"select count(*) from pg_auth_members where member={q(MANAGED_LOGIN)}::regrole and grantor={q(MANAGED_LOGIN)}::regrole;").stdout.strip() == "0"
+    owners = sql(env, """select p.proname||':'||pg_get_userbyid(p.proowner) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname in ('aiow_mail_run_begin_v1','aiow_mail_run_complete_v1','aiow_mail_run_receipts_delete_expired_v1','aiow_mail_outbox_load_leased_job_v1','aiow_mail_provider_gate_load_for_lease_v1') order by p.proname;""", database=MANAGED_DATABASE).stdout.splitlines()
+    assert owners == [
+        "aiow_mail_outbox_load_leased_job_v1:aiow_mail_runtime_reader",
+        "aiow_mail_provider_gate_load_for_lease_v1:aiow_mail_runtime_reader",
+        "aiow_mail_run_begin_v1:aiow_mail_run_receipt_owner",
+        "aiow_mail_run_complete_v1:aiow_mail_run_receipt_owner",
+        "aiow_mail_run_receipts_delete_expired_v1:aiow_mail_run_receipt_owner",
+    ]
+    acl_count = prove_acl_and_obsolete_absent(env, MANAGED_DATABASE)
+
+    setup_managed_database(env, MANAGED_FAILURE_DATABASE)
+    closure = next(path for path in migrations if path.name == "202608300006_aiow_release_chain_closure.sql")
+    closure_index = migrations.index(closure)
+    apply_managed_migrations(env, MANAGED_FAILURE_DATABASE, migrations[:closure_index])
+    before_catalog = managed_catalog_fingerprint(env, MANAGED_FAILURE_DATABASE)
+    before_memberships = managed_membership_inventory(env)
+    source = closure.read_text()
+    injection_point = "end $closure_runtime_reader_capability$;\n\n-- The browser"
+    assert source.count(injection_point) == 1
+    forced = source.replace(injection_point, "end $closure_runtime_reader_capability$;\n\ndo $aiow_managed_forced_failure$ begin raise exception 'AIOW_MANAGED_FORCED_FAILURE'; end $aiow_managed_forced_failure$;\n\n-- The browser")
+    forced_path = tmp / closure.name
+    forced_path.write_text(forced)
+    failed = apply(env, forced_path, False, MANAGED_LOGIN, MANAGED_FAILURE_DATABASE)
+    assert_error(failed, "AIOW_MANAGED_FORCED_FAILURE")
+    assert managed_catalog_fingerprint(env, MANAGED_FAILURE_DATABASE) == before_catalog
+    assert managed_membership_inventory(env) == before_memberships == MANAGED_AUTO_MEMBERSHIPS
+    assert sql(env, "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relname like 'aiow_closure_temporary_%';", database=MANAGED_FAILURE_DATABASE).stdout.strip() == "0"
+    assert sql(env, f"select count(*) from pg_auth_members where member={q(MANAGED_LOGIN)}::regrole and grantor={q(MANAGED_LOGIN)}::regrole;").stdout.strip() == "0"
+    assert sql(env, "select count(*) from supabase_migrations.schema_migrations;", database=MANAGED_FAILURE_DATABASE).stdout.strip() == str(closure_index)
+    return acl_count
 
 
 def main() -> None:
@@ -313,6 +435,8 @@ def main() -> None:
         run(["pg_ctl", "-D", str(data), "-l", str(tmp / "postgres.log"), "-o", f"-k {sock} -p {port} -c listen_addresses=''", "-w", "start"], env)
         started = True
         setup_roles(env)
+        step("managed-login-full-chain-and-forced-rollback")
+        managed_acl_count = prove_managed_full_chain(env, migrations, tmp)
         step("discover-unique-sort-apply-once")
         apply_discovered_once(env, migrations)
         step("provider-gate-concurrent-replay")
@@ -327,7 +451,8 @@ def main() -> None:
         prove_malformed_predispatch(env)
         step("obsolete-overload-and-exhaustive-effective-acl")
         acl_count = prove_acl_and_obsolete_absent(env)
-        print(f"POSTGRES_ORDERED_MIGRATION_CHAIN_PROOF_PASS migrations={len(migrations)} apply=lexical-once duplicate-prefix=reject booking=browser-adapter-js-sql legacy=pending+retry-v2 lifecycle=booking+quote gate=concurrent-replay malformed=predispatch-dead marker=provider-results-bound obsolete-overload=absent aiow-acl-inventory={acl_count}", flush=True)
+        assert acl_count == managed_acl_count
+        print(f"POSTGRES_ORDERED_MIGRATION_CHAIN_PROOF_PASS migrations={len(migrations)} apply=lexical-once duplicate-prefix=reject booking=browser-adapter-js-sql legacy=pending+retry-v2 lifecycle=booking+quote gate=concurrent-replay malformed=predispatch-dead marker=provider-results-bound obsolete-overload=absent managed-login=non-superuser-createrole full-managed-chain=pass owner-auto-memberships=admin-true-inherit-false-set-false temporary-capabilities=clean forced-rollback=no-residue aiow-acl-inventory={acl_count}", flush=True)
     finally:
         if started:
             run(["pg_ctl", "-D", str(data), "-m", "fast", "-w", "stop"], env, False)
