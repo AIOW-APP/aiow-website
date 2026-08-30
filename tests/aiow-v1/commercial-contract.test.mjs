@@ -6,6 +6,10 @@ import Ajv2020 from "ajv/dist/2020.js";
 import {
   PROVIDER_GATE_APPROVAL_FIELDS,
   buildProviderGateApprovalBindingDigestV1,
+  validateMailRunBeginAckV1,
+  validateMailRunCompleteAckV1,
+  validateMailRunStoredResponseV1,
+  serializeMailRunStoredResponseV1,
   validateOutboxBatchAckV1,
   validateProviderGateCurrentV1,
   validateQuoteAbandonBatchAckV1,
@@ -179,7 +183,7 @@ test("operation registry freezes all HTTP and SQL authorities with resolvable sc
   assert.equal(quotePdf.authorityAckRef,"#/$defs/QuoteCommitACK");
   assert.match(quotePdf.replay,/original status, headers and identical PDF bytes/);
   assert.equal(ops.events.responses["503"],"#/$defs/AnalyticsError");
-  const rpcNames = ["aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"];
+  const rpcNames = ["aiow_mail_run_begin_v1","aiow_mail_run_complete_v1","aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"];
   assert.deepEqual(Object.keys(ops).filter((name) => ops[name].transport === "sql_rpc"), rpcNames);
   function assertRefs(value) { if (typeof value === "string" && value.startsWith("#/$defs/")) return void deref({$ref:value}); if (Array.isArray(value)) return value.forEach(assertRefs); if (!value || typeof value !== "object") return; for (const child of Object.values(value)) assertRefs(child); }
   assertRefs(ops);
@@ -196,7 +200,7 @@ test("lifecycle matrix, revision effects and mutation restrictions are exact", (
 test("persistence is successor-only and freezes identities, FKs and v2 cutover", () => {
   const db = contract["x-aiow-persistence"];
   assert.equal(db.predecessorMigration, "supabase/migrations/20260828_aiow_quote_adapter_v1.sql"); assert.match(db.successorRule, /never edit/);
-  assert.deepEqual(Object.keys(db.tables), ["commercial_leads","booking_leads","commercial_mail_outbox","commercial_events","commercial_event_daily","commercial_audit","commercial_provider_gates","commercial_idempotency"]);
+  assert.deepEqual(Object.keys(db.tables), ["commercial_leads","booking_leads","commercial_mail_outbox","commercial_mail_run_receipts","commercial_events","commercial_event_daily","commercial_audit","commercial_provider_gates","commercial_idempotency"]);
   assert.deepEqual(db.tables.commercial_leads.unique, [{name:"commercial_leads_source_source_id_uq",columns:["source","source_id"]}]); assert.deepEqual(db.tables.commercial_mail_outbox.unique, [{name:"commercial_mail_outbox_lead_kind_uq",columns:["commercial_lead_id","kind"]}]);
   assert.ok(db.tables.commercial_leads.checks.every((item)=>item.name && item.expression)); assert.equal(db.quoteAlterations[0].foreignKey.references,"commercial_leads(id)");
   assert.match(db.compatibility.quoteBackfill, /one-to-one/); assert.match(db.compatibility.v1OutboxCutover, /no new jobs/); assert.deepEqual(db.activationAcceptance.slice(0,2), ["zero_to_head","production_baseline_to_head"]);
@@ -220,7 +224,7 @@ test("analytics events are per-event closed, canonical and PII-hostile", () => {
 
 test("idempotency, outbox, auth, gates and retention are fail closed", () => {
   const idem=contract["x-aiow-idempotency"], outbox=contract["x-aiow-outbox"], auth=contract["x-aiow-operator-auth"], gate=contract["x-aiow-provider-gate"], retention=contract["x-aiow-retention"];
-  assert.equal(idem.digest,"sha256_utf8_rfc8785_canonical_json"); assert.equal(idem.atomicOutcome,true); assert.match(idem.sameKeySameDigest,/before_revision_check/); assert.equal(idem.sameKeyDifferentDigest.status,409); assert.equal(idem.covered.length,10);
+  assert.equal(idem.digest,"sha256_utf8_rfc8785_canonical_json"); assert.equal(idem.atomicOutcome,true); assert.match(idem.sameKeySameDigest,/before_revision_check/); assert.equal(idem.sameKeyDifferentDigest.status,409); assert.equal(idem.covered.length,11);
   assert.deepEqual(outbox.pairs,{booking:["customer_booking","internal_booking"],quote:["customer_quote","internal_lead"]}); assert.equal(outbox.lease.durationSeconds,300); assert.equal(outbox.maxAttempts,5); assert.equal(outbox.mapping.ambiguous,"review"); assert.equal(outbox.ambiguous,"never auto-resend");
   assert.equal(auth.customProductionDomain,"404 before auth or data for UI, API, exports, and PII assets"); assert.equal(auth.allowedHostUnauthenticated.status,401); assert.equal(auth.authenticatedUnauthorized.status,403); assert.deepEqual(auth.capabilities.outbox_resolve,["ops_admin"]); assert.match(auth.vercelSso,/never sole/);
   assert.equal(gate.defaultState,"disabled"); assert.equal(gate.productionProvider,"microsoft_graph"); assert.equal(gate.gmailProductionForbidden,true); assert.equal(gate.fallback,"none"); assert.match(gate.activation,/external separate/);
@@ -245,16 +249,16 @@ function validateOpsMutationAck(value, persistedReplay = value) {
   return !value.replayed || stableJson(value) === stableJson(persistedReplay);
 }
 
-test("canonical fixture registry contains exactly 70 independently frozen records", () => {
-  const expectedCounts = { requests:11, acks:5, errors:7, projections:10, events:12, providerResults:4, rpcBoundaries:19, migrationScenarios:2 };
+test("canonical fixture registry contains exactly 77 independently frozen records", () => {
+  const expectedCounts = { requests:11, acks:10, errors:7, projections:10, events:12, providerResults:4, rpcBoundaries:21, migrationScenarios:2 };
   const expectedDigests = {
     requests:"991e4fde39e0144c7a378f7a5ceb194fca400286c9a1ab5abebd83fd62e877d2",
-    acks:"bb222942fb530f65b0abfa31d57eb220001212bafb535a7bbca18113cbfbaacd",
+    acks:"6d2e7c87a1181b73da47697f3e3a7fa0799a3ee86ce734388796d294363d2fc1",
     errors:"431fca98f45b3acb589ebc39402c4c63042c0b67f8062f6c5a0abe6368a59e3d",
     projections:"01a4d4ef2134a4f0a779d2ed946556bda56afb5f2a64f8e684ca8c16e0fdaeeb",
     events:"ea4aced2945e90e903d95f27514e90f4b366df6ea4913e028f9029dd51df5d83",
     providerResults:"ce715ea6a8c88bbe647e2ec182fe3e2b691e01706ffb279d52c10df7b377c12d",
-    rpcBoundaries:"5f31c2839f49f3c5f6c910137a98e9ad4e03485f75e1312ead5f31ab1e079f5f",
+    rpcBoundaries:"70c43f7f09210668e7f9f357935345a8e9b61f22794c105839724940e9e58732",
     migrationScenarios:"4cd373a06b638959ecc151112882dd3ed6513b06f15c87f4cd839292589e69de",
   };
   assert.equal(canonicalFixtures.fixtureVersion, 1);
@@ -264,8 +268,8 @@ test("canonical fixture registry contains exactly 70 independently frozen record
     assert.equal(sha256(canonicalFixtures[group]), expectedDigests[group], `${group} digest`);
   }
   const records = Object.entries(expectedCounts).flatMap(([group]) => Object.entries(canonicalFixtures[group]).map(([name, value]) => ({group,name,value}))).sort((a,b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
-  assert.equal(records.length, 70);
-  assert.equal(sha256(records), "f98dbc9389ef72fd6cc4261118b47bd9d39723b2db165e581450ffe43cef6634");
+  assert.equal(records.length, 77);
+  assert.equal(sha256(records), "bec51489c726322b60672416ed65b432ea7e4c8018adbaa469c470610c973a69");
   for (const group of ["requests","acks","errors","projections","events","providerResults"])
     for (const [name, value] of Object.entries(canonicalFixtures[group])) assert.equal(validateRoot(value), true, `${group}/${name}: ${ajv.errorsText(validateRoot.errors)}`);
   const ops = contract["x-aiow-operations"];
@@ -288,8 +292,8 @@ test("canonical fixture registry contains exactly 70 independently frozen record
 
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
-  assert.equal(Object.keys(ops).length, 28);
-  assert.equal(sha256(contract["x-aiow-operations"]),"eaebcc7debcbaa7b97048ebf827ccc6c5f275603ac1ffe0ff9d0fe9a15da5681");
+  assert.equal(Object.keys(ops).length, 30);
+  assert.equal(sha256(contract["x-aiow-operations"]),"f1c00efdcb86ff8fbce7cbbc3cfdcd3ae2bc68c2b673e91f8dd983ea3df91d42");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
@@ -316,6 +320,86 @@ test("operation and RPC registries freeze typed order, private service-role auth
     const candidate = {...canonicalFixtures.errors[name === "Error" ? "Error" : name], code:"unauthenticated"};
     assert.equal(validateRoot(candidate), true, `${name} must represent HTTP 401`);
   }
+});
+
+test("mail-run receipt table and RPC boundaries freeze private durable authority", () => {
+  const ops=contract["x-aiow-operations"], table=contract["x-aiow-persistence"].tables.commercial_mail_run_receipts;
+  assert.deepEqual(table.primaryKey,["request_id","idempotency_key"]);
+  assert.deepEqual(Object.keys(table.columns),["request_id","idempotency_key","body_digest","state","revision","worker_id","lease_token","lease_expires_at","response_status","response_headers","response_body","created_at","updated_at","completed_at"]);
+  assert.deepEqual(table.rowLevelSecurity,{enabled:true,forced:true,policies:[],authority:"service_role bypass only; no row policy grants application roles access"});
+  assert.deepEqual(table.acl,{PUBLIC:[],anon:[],authenticated:[],service_role:["SELECT","INSERT","UPDATE","DELETE"]});
+  assert.equal(table.retention.days,90); assert.equal(table.bounds.leaseDurationSeconds,300); assert.equal(table.bounds.responseBodyCanonicalBytesMax,262144);
+  assert.deepEqual(ops.aiow_mail_run_begin_v1.args.map((arg)=>[arg.name,arg.sqlType]),[["p_request_id","uuid"],["p_idempotency_key","text"],["p_body_digest","text"],["p_worker_id","text"]]);
+  assert.deepEqual(ops.aiow_mail_run_complete_v1.args.map((arg)=>[arg.name,arg.sqlType]),[["p_request_id","uuid"],["p_idempotency_key","text"],["p_body_digest","text"],["p_lease_token","uuid"],["p_response_status","integer"],["p_response_headers","jsonb"],["p_response_body","jsonb"]]);
+  assert.ok([...ops.aiow_mail_run_begin_v1.args,...ops.aiow_mail_run_complete_v1.args].every((arg)=>!arg.name.includes("time")),"no caller timestamp");
+  assert.match(ops.aiow_mail_run_begin_v1.atomicity,/advisory lock.*SELECT FOR UPDATE.*exactly one execute/);
+  assert.match(ops.aiow_mail_run_begin_v1.stateMachine.pending_unexpired,/in_progress.*without worker execution/);
+  assert.match(ops.aiow_mail_run_begin_v1.stateMachine.pending_expired,/increment revision once.*replace.*token.*trusted server time/);
+  assert.match(ops.aiow_mail_run_complete_v1.cas,/wrong token\/state revision_conflict.*changed digest idempotency_conflict/);
+  assert.match(ops.aiow_mail_run_complete_v1.responseValidation,/200 requires mail_run OutboxBatchACK.*503 requires closed Error.*invalid_request/);
+  assert.equal(contract["x-aiow-retention"].classes.mail_run_receipts.days,90);
+});
+
+test("mail-run ACK validators reject changed digest, malformed completion and non-exact replay", () => {
+  const begin=canonicalFixtures.rpcBoundaries.aiow_mail_run_begin_v1.canonicalResults;
+  const complete=canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1.canonicalResults;
+  const context={requestId:begin.execute.requestId,idempotencyKey:begin.execute.idempotencyKey,bodyDigest:begin.execute.bodyDigest,requestedLimit:2};
+  assert.equal(validateMailRunBeginAckV1(begin.execute,context),true);
+  assert.equal(validateMailRunBeginAckV1(begin.inProgress,context),true);
+  const stored={responseStatus:begin.replay.responseStatus,responseHeaders:begin.replay.responseHeaders,responseBody:begin.replay.responseBody};
+  assert.equal(validateMailRunBeginAckV1(begin.replay,{...context,persistedResponse:stored}),true);
+  assert.equal(validateMailRunBeginAckV1(begin.execute,{...context,bodyDigest:"b".repeat(64)}),false,"changed digest conflict");
+  assert.equal(validateMailRunBeginAckV1({...begin.inProgress,leaseToken:begin.execute.leaseToken},context),false,"in-progress cannot leak an executable token");
+  assert.equal(validateMailRunCompleteAckV1(complete.completed,{...context,persistedResponse:stored}),true);
+  assert.equal(validateMailRunCompleteAckV1({...complete.completed,responseStatus:201},context),false);
+  assert.equal(validateMailRunCompleteAckV1({...complete.completed,responseHeaders:{...complete.completed.responseHeaders,cacheControl:"public"}},context),false);
+  assert.equal(validateMailRunCompleteAckV1({...complete.completed,responseBody:{...complete.completed.responseBody,itemCount:1}},context),false);
+  assert.equal(validateMailRunCompleteAckV1(complete.completed,{...context,persistedResponse:{...stored,responseBody:{...stored.responseBody,items:[] ,itemCount:1}}}),false,"replay body mismatch");
+  const error=complete.errorCompleted;
+  assert.equal(validateMailRunCompleteAckV1(error,context),true);
+  assert.equal(validateMailRunCompleteAckV1({...error,responseBody:{...error.responseBody,code:"idempotency_in_progress"}},context),false,"in-progress is not a storable completion");
+  assert.equal(validateMailRunStoredResponseV1({...stored,responseHeaders:{...stored.responseHeaders,injected:"x"}},context),false);
+  const reordered={responseBody:structuredClone(stored.responseBody),responseHeaders:{xAiowRequestId:stored.responseHeaders.xAiowRequestId,cacheControl:"no-store",contentType:"application/json; charset=utf-8"},responseStatus:200};
+  assert.equal(serializeMailRunStoredResponseV1(stored,context),serializeMailRunStoredResponseV1(reordered,context),"canonical JSON and headers replay byte-equivalently");
+  assert.equal(serializeMailRunStoredResponseV1({...stored,responseBody:{...stored.responseBody,items:[{}]}},context),null);
+});
+
+test("mail-run authority model admits one execute, expiry takeover and exact sequential replay", async () => {
+  const canonical=canonicalFixtures.rpcBoundaries.aiow_mail_run_begin_v1.canonicalResults.execute;
+  const completed=canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1.canonicalResults.completed;
+  class Authority {
+    constructor() { this.row=null; this.tokenSequence=50; }
+    token() { return `123e4567-e89b-42d3-a456-4266141740${String(this.tokenSequence++).padStart(2,"0")}`; }
+    begin({requestId,idempotencyKey,bodyDigest},now) {
+      if (this.row && (this.row.requestId!==requestId || this.row.idempotencyKey!==idempotencyKey)) throw new Error("identity");
+      if (this.row && this.row.bodyDigest!==bodyDigest) return {disposition:"conflict",code:"idempotency_conflict"};
+      if (this.row?.state==="completed") return {disposition:"replay",response:structuredClone(this.row.response)};
+      if (this.row && now<this.row.leaseExpiresAt) return {disposition:"in_progress",revision:this.row.revision};
+      const revision=(this.row?.revision??0)+1, leaseToken=this.token();
+      this.row={requestId,idempotencyKey,bodyDigest,state:"pending",revision,leaseToken,leaseExpiresAt:now+300000};
+      return {disposition:"execute",revision,leaseToken};
+    }
+    complete({bodyDigest,leaseToken,response}) {
+      if (!this.row || this.row.bodyDigest!==bodyDigest) return {disposition:"conflict",code:"idempotency_conflict"};
+      if (this.row.state!=="pending" || this.row.leaseToken!==leaseToken) return {disposition:"conflict",code:"revision_conflict"};
+      if (!validateMailRunStoredResponseV1(response,{requestId:this.row.requestId})) return {disposition:"invalid_request"};
+      this.row={...this.row,state:"completed",response:structuredClone(response)};
+      return {disposition:"completed",response:structuredClone(response)};
+    }
+  }
+  const request={requestId:canonical.requestId,idempotencyKey:canonical.idempotencyKey,bodyDigest:canonical.bodyDigest};
+  const concurrent=new Authority();
+  const pair=await Promise.all([Promise.resolve().then(()=>concurrent.begin(request,0)),Promise.resolve().then(()=>concurrent.begin(request,0))]);
+  assert.deepEqual(pair.map((item)=>item.disposition).sort(),["execute","in_progress"]);
+  assert.deepEqual(concurrent.begin({...request,bodyDigest:"b".repeat(64)},1),{disposition:"conflict",code:"idempotency_conflict"});
+  const takeover=new Authority(), first=takeover.begin(request,0);
+  assert.equal(takeover.begin(request,299999).disposition,"in_progress");
+  const second=takeover.begin(request,300000); assert.equal(second.disposition,"execute"); assert.equal(second.revision,2); assert.notEqual(second.leaseToken,first.leaseToken);
+  const response={responseStatus:completed.responseStatus,responseHeaders:completed.responseHeaders,responseBody:completed.responseBody};
+  assert.deepEqual(takeover.complete({bodyDigest:request.bodyDigest,leaseToken:first.leaseToken,response}),{disposition:"conflict",code:"revision_conflict"},"old token cannot complete after takeover");
+  assert.equal(takeover.complete({bodyDigest:request.bodyDigest,leaseToken:second.leaseToken,response}).disposition,"completed");
+  const replay=takeover.begin(request,300001); assert.equal(replay.disposition,"replay"); assert.equal(stableJson(replay.response),stableJson(response));
+  assert.equal(takeover.begin(request,999999).disposition,"replay","completed never executes after lease age");
 });
 
 test("mutation ACK custom verifier rejects crossed arithmetic, projection and replay state", () => {
@@ -464,7 +548,7 @@ test("runtime validators fail closed on malformed values without secret or logge
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"5335d10426254a17fcff3eaea68c2c639345ebe229cd551b067619c0478b3366");
+  assert.equal(sha256(db),"2eaf2aa54294e0406e08273ad97b4b1c4cc1d0e7fd1eb82a4f4e8ab2f2668a18");
   assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {

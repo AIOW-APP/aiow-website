@@ -98,6 +98,12 @@
       "$ref": "#/$defs/RetentionRedactionResult"
     },
     {
+      "$ref": "#/$defs/MailRunBeginACK"
+    },
+    {
+      "$ref": "#/$defs/MailRunCompleteACK"
+    },
+    {
       "$ref": "#/$defs/QuoteAbandonBatchACK"
     }
   ],
@@ -114,6 +120,7 @@
           "enum": [
             "invalid_request",
             "idempotency_conflict",
+            "idempotency_in_progress",
             "revision_conflict",
             "unauthenticated",
             "forbidden",
@@ -145,6 +152,9 @@
             }
           },
           "maxProperties": 20
+        },
+        "retriable": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -152,6 +162,30 @@
         "code",
         "message",
         "requestId"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "idempotency_in_progress"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "retriable": {
+                "const": true
+              }
+            },
+            "required": [
+              "retriable"
+            ]
+          }
+        }
       ]
     },
     "BookingError": {
@@ -10981,6 +11015,496 @@
       ],
       "x-aiow-custom-validator": "outboxBatchAckV1"
     },
+    "MailRunResponseHeaders": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contentType": {
+          "const": "application/json; charset=utf-8"
+        },
+        "cacheControl": {
+          "const": "no-store"
+        },
+        "xAiowRequestId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "contentType",
+        "cacheControl",
+        "xAiowRequestId"
+      ]
+    },
+    "MailRunResponseStatus": {
+      "type": "integer",
+      "enum": [
+        200,
+        503
+      ]
+    },
+    "MailRunResponseBody": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/OutboxBatchACK"
+        },
+        {
+          "$ref": "#/$defs/Error"
+        }
+      ]
+    },
+    "MailRunStoredSuccessResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "responseStatus": {
+          "const": 200
+        },
+        "responseHeaders": {
+          "$ref": "#/$defs/MailRunResponseHeaders"
+        },
+        "responseBody": {
+          "$ref": "#/$defs/OutboxBatchACK"
+        }
+      },
+      "required": [
+        "responseStatus",
+        "responseHeaders",
+        "responseBody"
+      ]
+    },
+    "MailRunStoredErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "responseStatus": {
+          "const": 503
+        },
+        "responseHeaders": {
+          "$ref": "#/$defs/MailRunResponseHeaders"
+        },
+        "responseBody": {
+          "$ref": "#/$defs/Error"
+        }
+      },
+      "required": [
+        "responseStatus",
+        "responseHeaders",
+        "responseBody"
+      ]
+    },
+    "MailRunStoredResponse": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/MailRunStoredSuccessResponse"
+        },
+        {
+          "$ref": "#/$defs/MailRunStoredErrorResponse"
+        }
+      ],
+      "x-aiow-custom-validator": "mailRunStoredResponseV1"
+    },
+    "MailRunBeginACK": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_begin_ack"
+            },
+            "disposition": {
+              "const": "execute"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "leaseToken": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "leaseExpiresAt": {
+              "type": "string",
+              "format": "date-time",
+              "x-aiow-trusted-writer": "database transaction time plus fixed lease duration; never caller time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "leaseToken",
+            "leaseExpiresAt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_begin_ack"
+            },
+            "disposition": {
+              "const": "in_progress"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "leaseExpiresAt": {
+              "type": "string",
+              "format": "date-time",
+              "x-aiow-trusted-writer": "persisted database lease expiry; never caller time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "leaseExpiresAt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_begin_ack"
+            },
+            "disposition": {
+              "const": "replay"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "responseStatus": {
+              "const": 200
+            },
+            "responseHeaders": {
+              "$ref": "#/$defs/MailRunResponseHeaders"
+            },
+            "responseBody": {
+              "$ref": "#/$defs/OutboxBatchACK"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "responseStatus",
+            "responseHeaders",
+            "responseBody",
+            "completedAt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_begin_ack"
+            },
+            "disposition": {
+              "const": "replay"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "responseStatus": {
+              "const": 503
+            },
+            "responseHeaders": {
+              "$ref": "#/$defs/MailRunResponseHeaders"
+            },
+            "responseBody": {
+              "$ref": "#/$defs/Error"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "responseStatus",
+            "responseHeaders",
+            "responseBody",
+            "completedAt"
+          ]
+        }
+      ],
+      "x-aiow-custom-validator": "mailRunBeginAckV1"
+    },
+    "MailRunCompleteACK": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_complete_ack"
+            },
+            "disposition": {
+              "const": "completed"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "responseStatus": {
+              "const": 200
+            },
+            "responseHeaders": {
+              "$ref": "#/$defs/MailRunResponseHeaders"
+            },
+            "responseBody": {
+              "$ref": "#/$defs/OutboxBatchACK"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "responseStatus",
+            "responseHeaders",
+            "responseBody",
+            "completedAt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_complete_ack"
+            },
+            "disposition": {
+              "const": "completed"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "responseStatus": {
+              "const": 503
+            },
+            "responseHeaders": {
+              "$ref": "#/$defs/MailRunResponseHeaders"
+            },
+            "responseBody": {
+              "$ref": "#/$defs/Error"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "responseStatus",
+            "responseHeaders",
+            "responseBody",
+            "completedAt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_complete_ack"
+            },
+            "disposition": {
+              "const": "replay"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "responseStatus": {
+              "const": 200
+            },
+            "responseHeaders": {
+              "$ref": "#/$defs/MailRunResponseHeaders"
+            },
+            "responseBody": {
+              "$ref": "#/$defs/OutboxBatchACK"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "responseStatus",
+            "responseHeaders",
+            "responseBody",
+            "completedAt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaKind": {
+              "const": "mail_run_complete_ack"
+            },
+            "disposition": {
+              "const": "replay"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "idempotencyKey": {
+              "$ref": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+            },
+            "bodyDigest": {
+              "$ref": "#/$defs/Sha256LowercaseHex"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "responseStatus": {
+              "const": 503
+            },
+            "responseHeaders": {
+              "$ref": "#/$defs/MailRunResponseHeaders"
+            },
+            "responseBody": {
+              "$ref": "#/$defs/Error"
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "schemaKind",
+            "disposition",
+            "requestId",
+            "idempotencyKey",
+            "bodyDigest",
+            "revision",
+            "responseStatus",
+            "responseHeaders",
+            "responseBody",
+            "completedAt"
+          ]
+        }
+      ],
+      "x-aiow-custom-validator": "mailRunCompleteAckV1"
+    },
     "QuoteAbandonBatchItem": {
       "type": "object",
       "additionalProperties": false,
@@ -11349,7 +11873,14 @@
           "required": [
             "limit"
           ]
-        }
+        },
+        "headers": [
+          "Content-Type: application/json",
+          "X-AIOW-Webhook-Timestamp",
+          "X-AIOW-Request-Id",
+          "X-AIOW-Webhook-Signature",
+          "Idempotency-Key"
+        ]
       },
       "responses": {
         "200": "#/$defs/OutboxBatchACK",
@@ -11359,7 +11890,7 @@
       },
       "tlsRequired": true,
       "authRef": "#/x-aiow-internal-hmac",
-      "batchSemantics": "operation=mail_run; one HTTP 200 OutboxBatchACK; requestedLimit equals request.limit; ordered items length 0..limit and contains every and only claimed/dispatched lease",
+      "batchSemantics": "operation=mail_run; execute only: one HTTP 200 OutboxBatchACK; requestedLimit equals request.limit; ordered items length 0..limit contains every and only claimed/dispatched lease; in_progress and replay never call worker",
       "runtimeValidator": {
         "name": "validateOutboxBatchAckV1",
         "module": "lib/aiow-v1/commercial-contract-validator.mjs",
@@ -11367,7 +11898,195 @@
           "operation": "mail_run",
           "requestedLimitFrom": "request.body.limit"
         }
+      },
+      "responseHeadersRef": "#/$defs/MailRunResponseHeaders",
+      "idempotency": {
+        "identity": [
+          "X-AIOW-Request-Id",
+          "Idempotency-Key"
+        ],
+        "bodyDigest": "lowercaseHexSha256(rawRequestBodyBytes) from exact bytes authenticated by x-aiow-internal-hmac",
+        "begin": "after HMAC validation call aiow_mail_run_begin_v1 with exact authenticated requestId, idempotencyKey and bodyDigest; only execute may invoke worker",
+        "execute": "invoke worker exactly once for current lease, call aiow_mail_run_complete_v1, and durably commit declared response before customer response",
+        "inProgress": {
+          "status": 409,
+          "schemaRef": "#/$defs/Error",
+          "code": "idempotency_in_progress",
+          "retriable": true,
+          "workerInvoked": false
+        },
+        "replay": "return exact stored responseStatus, closed responseHeaders and RFC 8785 canonical responseBody bytes; do not invoke worker",
+        "completeFailure": "return 503 unavailable, quarantine for lease-aware retry, and never rerun provider-accepted jobs; commercial_mail_outbox job idempotency remains provider-execution authority"
       }
+    },
+    "aiow_mail_run_begin_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_run_begin_v1",
+      "auth": "service_role_private_server_or_worker",
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+        },
+        {
+          "name": "p_body_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/Sha256LowercaseHex"
+        },
+        {
+          "name": "p_worker_id",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/WorkerId"
+        }
+      ],
+      "ackRef": "#/$defs/MailRunBeginACK",
+      "errors": {
+        "P0001": {
+          "code": "revision_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_request",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      },
+      "visibility": "private_server_only",
+      "returns": {
+        "sqlType": "jsonb",
+        "schemaRef": "#/$defs/MailRunBeginACK",
+        "cardinality": "exactly_one"
+      },
+      "grants": {
+        "PUBLIC": false,
+        "anon": false,
+        "authenticated": false,
+        "service_role": true
+      },
+      "identity": "composite request_id + idempotency_key; same tuple requires same body_digest; changed digest always stable idempotency_conflict",
+      "clock": "transaction_timestamp() only; no timestamp argument",
+      "atomicity": "one transaction takes transaction-scoped advisory lock on collision-resistant hash of complete tuple then SELECT FOR UPDATE on existing receipt; concurrent begins yield exactly one execute",
+      "stateMachine": {
+        "missing": "insert pending revision=1 with fresh token and lease_expires_at=transaction_timestamp()+300 seconds; execute",
+        "pending_unexpired": "in_progress without changing revision/token/expiry and without worker execution",
+        "pending_expired": "increment revision once, replace worker_id, token and expiry from trusted server time; execute",
+        "completed": "replay original exact status, headers, body and completed_at; never execute"
+      },
+      "digestConflict": "checked under same lock before every branch; 409 without mutation",
+      "lease": {
+        "durationSeconds": 300,
+        "takeover": "only when transaction_timestamp() >= persisted lease_expires_at; changes token and increments revision once"
+      }
+    },
+    "aiow_mail_run_complete_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_run_complete_v1",
+      "auth": "service_role_private_server_or_worker",
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey"
+        },
+        {
+          "name": "p_body_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/Sha256LowercaseHex"
+        },
+        {
+          "name": "p_lease_token",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunBeginACK/oneOf/0/properties/leaseToken"
+        },
+        {
+          "name": "p_response_status",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunResponseStatus"
+        },
+        {
+          "name": "p_response_headers",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunResponseHeaders"
+        },
+        {
+          "name": "p_response_body",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunResponseBody"
+        }
+      ],
+      "ackRef": "#/$defs/MailRunCompleteACK",
+      "errors": {
+        "P0001": {
+          "code": "revision_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_request",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      },
+      "visibility": "private_server_only",
+      "returns": {
+        "sqlType": "jsonb",
+        "schemaRef": "#/$defs/MailRunCompleteACK",
+        "cardinality": "exactly_one"
+      },
+      "grants": {
+        "PUBLIC": false,
+        "anon": false,
+        "authenticated": false,
+        "service_role": true
+      },
+      "cas": "same advisory/row lock; pending + exact tuple/digest/current token only; wrong token/state revision_conflict, changed digest idempotency_conflict",
+      "responseValidation": "status, headers and body validated as one correlated MailRunStoredResponse: 200 requires mail_run OutboxBatchACK; 503 requires closed Error; headers closed no-store; malformed/undeclared invalid_request",
+      "completion": "atomic update stores only validated response fields, state completed, completed_at=updated_at=transaction_timestamp(); returns completed; no caller timestamp",
+      "replay": "repeated exact completion returns replay only when token, digest, status, headers and RFC 8785 canonical body bytes equal stored completion; otherwise conflict; original never changes"
     },
     "aiow_quote_prepare_v1": {
       "transport": "sql_rpc",
@@ -12838,7 +13557,8 @@
       "transition_status",
       "set_next_action",
       "resolve_outbox",
-      "set_legal_hold"
+      "set_legal_hold",
+      "mail_run"
     ],
     "canonicalFields": {
       "booking": [
@@ -12879,7 +13599,15 @@
         "leadId",
         "expectedRevision",
         "operation-specific-fields"
+      ],
+      "mail_run": [
+        "X-AIOW-Request-Id",
+        "Idempotency-Key",
+        "lowercaseHexSha256(rawRequestBodyBytes)"
       ]
+    },
+    "transportDigestOverrides": {
+      "mail_run": "lowercase SHA-256 of exact raw request body bytes from x-aiow-internal-hmac; no Unicode, JSON, or transport normalization"
     }
   },
   "x-aiow-lifecycle": {
@@ -13435,6 +14163,182 @@
           }
         ]
       },
+      "commercial_mail_run_receipts": {
+        "columns": {
+          "request_id": {
+            "sqlType": "uuid",
+            "nullable": false,
+            "default": null,
+            "checkName": null
+          },
+          "idempotency_key": {
+            "sqlType": "text",
+            "nullable": false,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_idempotency_key_ck"
+          },
+          "body_digest": {
+            "sqlType": "text",
+            "nullable": false,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_body_digest_ck"
+          },
+          "state": {
+            "sqlType": "text",
+            "nullable": false,
+            "default": "'pending'",
+            "checkName": "commercial_mail_run_receipts_state_ck"
+          },
+          "revision": {
+            "sqlType": "bigint",
+            "nullable": false,
+            "default": "1",
+            "checkName": "commercial_mail_run_receipts_revision_ck"
+          },
+          "worker_id": {
+            "sqlType": "text",
+            "nullable": false,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_worker_id_ck"
+          },
+          "lease_token": {
+            "sqlType": "uuid",
+            "nullable": false,
+            "default": "gen_random_uuid()",
+            "checkName": null
+          },
+          "lease_expires_at": {
+            "sqlType": "timestamptz",
+            "nullable": false,
+            "default": null,
+            "checkName": null
+          },
+          "response_status": {
+            "sqlType": "integer",
+            "nullable": true,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_response_status_ck"
+          },
+          "response_headers": {
+            "sqlType": "jsonb",
+            "nullable": true,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_response_shape_ck"
+          },
+          "response_body": {
+            "sqlType": "jsonb",
+            "nullable": true,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_response_shape_ck"
+          },
+          "created_at": {
+            "sqlType": "timestamptz",
+            "nullable": false,
+            "default": "transaction_timestamp()",
+            "checkName": null
+          },
+          "updated_at": {
+            "sqlType": "timestamptz",
+            "nullable": false,
+            "default": "transaction_timestamp()",
+            "checkName": null
+          },
+          "completed_at": {
+            "sqlType": "timestamptz",
+            "nullable": true,
+            "default": null,
+            "checkName": "commercial_mail_run_receipts_completed_shape_ck"
+          }
+        },
+        "primaryKey": [
+          "request_id",
+          "idempotency_key"
+        ],
+        "checks": [
+          {
+            "name": "commercial_mail_run_receipts_idempotency_key_ck",
+            "expression": "char_length(idempotency_key) between 16 and 128 and idempotency_key ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$'"
+          },
+          {
+            "name": "commercial_mail_run_receipts_body_digest_ck",
+            "expression": "body_digest ~ '^[0-9a-f]{64}$'"
+          },
+          {
+            "name": "commercial_mail_run_receipts_state_ck",
+            "expression": "state in ('pending','completed')"
+          },
+          {
+            "name": "commercial_mail_run_receipts_revision_ck",
+            "expression": "revision > 0"
+          },
+          {
+            "name": "commercial_mail_run_receipts_worker_id_ck",
+            "expression": "char_length(worker_id) between 1 and 100"
+          },
+          {
+            "name": "commercial_mail_run_receipts_response_status_ck",
+            "expression": "response_status is null or response_status in (200,503)"
+          },
+          {
+            "name": "commercial_mail_run_receipts_response_shape_ck",
+            "expression": "(state='pending' and response_status is null and response_headers is null and response_body is null) or (state='completed' and response_status is not null and response_headers is not null and response_body is not null)"
+          },
+          {
+            "name": "commercial_mail_run_receipts_completed_shape_ck",
+            "expression": "(state='completed') = (completed_at is not null) and created_at <= updated_at and (completed_at is null or updated_at=completed_at)"
+          }
+        ],
+        "unique": [],
+        "foreignKeys": [],
+        "visibility": "private_server_only",
+        "rowLevelSecurity": {
+          "enabled": true,
+          "forced": true,
+          "policies": [],
+          "authority": "service_role bypass only; no row policy grants application roles access"
+        },
+        "acl": {
+          "PUBLIC": [],
+          "anon": [],
+          "authenticated": [],
+          "service_role": [
+            "SELECT",
+            "INSERT",
+            "UPDATE",
+            "DELETE"
+          ]
+        },
+        "writeAuthority": [
+          "aiow_mail_run_begin_v1",
+          "aiow_mail_run_complete_v1"
+        ],
+        "bounds": {
+          "idempotencyKeyUtf8Characters": [
+            16,
+            128
+          ],
+          "workerIdUtf8Characters": [
+            1,
+            100
+          ],
+          "bodyDigestLowercaseHexCharacters": 64,
+          "responseHeadersCanonicalBytesMax": 2048,
+          "responseBodyCanonicalBytesMax": 262144,
+          "leaseDurationSeconds": 300
+        },
+        "retention": {
+          "days": 90,
+          "anchor": "completed_at for completed rows; updated_at for abandoned pending rows",
+          "action": "delete entire receipt after expiry; no exception"
+        },
+        "trustedTimestamps": {
+          "lease_expires_at": "transaction_timestamp() plus exactly 300 seconds at insert/takeover",
+          "created_at": "transaction_timestamp() at insert",
+          "updated_at": "transaction_timestamp() at every accepted transition",
+          "completed_at": "transaction_timestamp() only on pending-to-completed CAS; equals updated_at",
+          "callerTimestampAccepted": false
+        }
+      },
       "commercial_events": {
         "columns": {
           "event_id": {
@@ -13786,7 +14690,8 @@
       "commercial_leads": "unique(source,source_id)",
       "booking": "source_id=booking_leads.id",
       "quote": "source_id=quote_leads.id",
-      "quote_mapping": "quote_leads.commercial_lead_id unique fk commercial_leads(id)"
+      "quote_mapping": "quote_leads.commercial_lead_id unique fk commercial_leads(id)",
+      "mail_run_receipt": "request_id + exact Idempotency-Key; body_digest is lowercase SHA-256 of the exact raw HTTP request body bytes authenticated by x-aiow-internal-hmac"
     },
     "activationAcceptance": [
       "zero_to_head",
@@ -14469,6 +15374,12 @@
           "legal hold"
         ]
       },
+      "mail_run_receipts": {
+        "days": 90,
+        "anchor": "completed_at, or updated_at for abandoned pending leases",
+        "action": "delete exact HTTP replay receipt",
+        "exceptions": []
+      },
       "non_pii_audit_facts": {
         "days": 365,
         "anchor": "irreversible PII redaction",
@@ -14489,7 +15400,8 @@
       ],
       "delete": [
         "orphan documents",
-        "expired raw events"
+        "expired raw events",
+        "expired commercial_mail_run_receipts"
       ]
     },
     "abandonment": {
@@ -14576,6 +15488,29 @@
         "every accepted item increments revision exactly once, status=lost, quoteState=abandoned and terminalAt=abandonedAt",
         "quote IDs and commercial lead IDs are unique"
       ]
+    },
+    "mailRunStoredResponseV1": {
+      "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+      "rules": [
+        "headers exact JSON content type, no-store and matching request ID",
+        "200 only valid mail_run OutboxBatchACK; 503 only closed Error",
+        "headers/body RFC 8785 canonicalized before storage/replay for byte-identical output"
+      ]
+    },
+    "mailRunBeginAckV1": {
+      "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+      "rules": [
+        "identity/digest match authenticated request",
+        "execute token/expiry; in_progress expiry without token; replay exact stored response",
+        "persisted response comparison exact"
+      ]
+    },
+    "mailRunCompleteAckV1": {
+      "module": "lib/aiow-v1/commercial-contract-validator.mjs",
+      "rules": [
+        "completed/replay carry valid exact stored response",
+        "persisted response comparison exact"
+      ]
     }
   },
   "x-aiow-internal-hmac": {
@@ -14600,7 +15535,7 @@
       "constant-time signature comparison",
       "atomic replay/idempotency check"
     ],
-    "replay": "requestId plus Idempotency-Key plus canonical body digest atomically persisted; same tuple/digest returns original response, any changed digest is 409; timestamp validation occurs before replay",
+    "replay": "mail_run authenticated requestId + idempotencyKey + exact raw-body SHA-256 are durably mediated by begin/complete RPCs; same tuple/digest returns original status, closed no-store headers and canonical JSON bytes, changed digest stable 409; timestamp validation before begin",
     "unauthenticated": {
       "status": 401,
       "code": "unauthenticated",
@@ -14610,6 +15545,14 @@
         "#/$defs/QuoteCommitError",
         "#/$defs/Error"
       ]
+    },
+    "mailRunAuthority": {
+      "receiptTable": "commercial_mail_run_receipts",
+      "beginRpc": "aiow_mail_run_begin_v1",
+      "completeRpc": "aiow_mail_run_complete_v1",
+      "requestBinding": "exact HMAC requestId, key and raw-body digest passed unchanged; no caller time",
+      "workerFence": "only execute invokes worker; unexpired pending and completed cannot execute",
+      "durabilityFence": "completion commits exact response before HTTP write; post-worker completion failure returns unavailable and quarantines without bypassing outbox job idempotency"
     }
   },
   "x-aiow-public-tls": {

@@ -260,6 +260,91 @@
       "eventId": "123e4567-e89b-42d3-a456-426614174000",
       "deduplicated": true,
       "storedAt": "2026-08-30T12:00:00.000Z"
+    },
+    "MailRunBeginACKExecute": {
+      "schemaKind": "mail_run_begin_ack",
+      "disposition": "execute",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "fixture-key-0001",
+      "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "leaseToken": "123e4567-e89b-42d3-a456-426614174050",
+      "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+    },
+    "MailRunBeginACKInProgress": {
+      "schemaKind": "mail_run_begin_ack",
+      "disposition": "in_progress",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "fixture-key-0001",
+      "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+    },
+    "MailRunBeginACKReplay": {
+      "schemaKind": "mail_run_begin_ack",
+      "disposition": "replay",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "fixture-key-0001",
+      "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "responseStatus": 200,
+      "responseHeaders": {
+        "contentType": "application/json; charset=utf-8",
+        "cacheControl": "no-store",
+        "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+      },
+      "responseBody": {
+        "schemaKind": "outbox_batch_ack",
+        "operation": "mail_run",
+        "requestedLimit": 2,
+        "itemCount": 0,
+        "items": []
+      },
+      "completedAt": "2026-08-30T12:01:00.000Z"
+    },
+    "MailRunCompleteACKCompleted": {
+      "schemaKind": "mail_run_complete_ack",
+      "disposition": "completed",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "fixture-key-0001",
+      "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "responseStatus": 200,
+      "responseHeaders": {
+        "contentType": "application/json; charset=utf-8",
+        "cacheControl": "no-store",
+        "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+      },
+      "responseBody": {
+        "schemaKind": "outbox_batch_ack",
+        "operation": "mail_run",
+        "requestedLimit": 2,
+        "itemCount": 0,
+        "items": []
+      },
+      "completedAt": "2026-08-30T12:01:00.000Z"
+    },
+    "MailRunCompleteACKReplay": {
+      "schemaKind": "mail_run_complete_ack",
+      "disposition": "replay",
+      "requestId": "123e4567-e89b-42d3-a456-426614174000",
+      "idempotencyKey": "fixture-key-0001",
+      "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "responseStatus": 200,
+      "responseHeaders": {
+        "contentType": "application/json; charset=utf-8",
+        "cacheControl": "no-store",
+        "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+      },
+      "responseBody": {
+        "schemaKind": "outbox_batch_ack",
+        "operation": "mail_run",
+        "requestedLimit": 2,
+        "itemCount": 0,
+        "items": []
+      },
+      "completedAt": "2026-08-30T12:01:00.000Z"
     }
   },
   "errors": {
@@ -673,6 +758,259 @@
     }
   },
   "rpcBoundaries": {
+    "aiow_mail_run_begin_v1": {
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_body_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/Sha256LowercaseHex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_worker_id",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/WorkerId",
+          "value": "worker-01"
+        }
+      ],
+      "returnSchemaRef": "#/$defs/MailRunBeginACK",
+      "errorMap": {
+        "P0001": {
+          "code": "revision_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_request",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      },
+      "canonicalResults": {
+        "execute": {
+          "schemaKind": "mail_run_begin_ack",
+          "disposition": "execute",
+          "requestId": "123e4567-e89b-42d3-a456-426614174000",
+          "idempotencyKey": "fixture-key-0001",
+          "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1,
+          "leaseToken": "123e4567-e89b-42d3-a456-426614174050",
+          "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+        },
+        "inProgress": {
+          "schemaKind": "mail_run_begin_ack",
+          "disposition": "in_progress",
+          "requestId": "123e4567-e89b-42d3-a456-426614174000",
+          "idempotencyKey": "fixture-key-0001",
+          "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1,
+          "leaseExpiresAt": "2026-08-30T12:05:00.000Z"
+        },
+        "replay": {
+          "schemaKind": "mail_run_begin_ack",
+          "disposition": "replay",
+          "requestId": "123e4567-e89b-42d3-a456-426614174000",
+          "idempotencyKey": "fixture-key-0001",
+          "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1,
+          "responseStatus": 200,
+          "responseHeaders": {
+            "contentType": "application/json; charset=utf-8",
+            "cacheControl": "no-store",
+            "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+          },
+          "responseBody": {
+            "schemaKind": "outbox_batch_ack",
+            "operation": "mail_run",
+            "requestedLimit": 2,
+            "itemCount": 0,
+            "items": []
+          },
+          "completedAt": "2026-08-30T12:01:00.000Z"
+        }
+      }
+    },
+    "aiow_mail_run_complete_v1": {
+      "args": [
+        {
+          "name": "p_request_id",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/requestId",
+          "value": "123e4567-e89b-42d3-a456-426614174000"
+        },
+        {
+          "name": "p_idempotency_key",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/QuotePrepareRequest/properties/idempotencyKey",
+          "value": "fixture-key-0001"
+        },
+        {
+          "name": "p_body_digest",
+          "sqlType": "text",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/Sha256LowercaseHex",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "name": "p_lease_token",
+          "sqlType": "uuid",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunBeginACK/oneOf/0/properties/leaseToken",
+          "value": "123e4567-e89b-42d3-a456-426614174050"
+        },
+        {
+          "name": "p_response_status",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunResponseStatus",
+          "value": 200
+        },
+        {
+          "name": "p_response_headers",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunResponseHeaders",
+          "value": {
+            "contentType": "application/json; charset=utf-8",
+            "cacheControl": "no-store",
+            "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+          }
+        },
+        {
+          "name": "p_response_body",
+          "sqlType": "jsonb",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/MailRunResponseBody",
+          "value": {
+            "schemaKind": "outbox_batch_ack",
+            "operation": "mail_run",
+            "requestedLimit": 2,
+            "itemCount": 0,
+            "items": []
+          }
+        }
+      ],
+      "returnSchemaRef": "#/$defs/MailRunCompleteACK",
+      "errorMap": {
+        "P0001": {
+          "code": "revision_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        },
+        "22023": {
+          "code": "invalid_request",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "23505": {
+          "code": "idempotency_conflict",
+          "httpStatus": 409,
+          "schemaRef": "#/$defs/Error"
+        }
+      },
+      "canonicalResults": {
+        "completed": {
+          "schemaKind": "mail_run_complete_ack",
+          "disposition": "completed",
+          "requestId": "123e4567-e89b-42d3-a456-426614174000",
+          "idempotencyKey": "fixture-key-0001",
+          "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1,
+          "responseStatus": 200,
+          "responseHeaders": {
+            "contentType": "application/json; charset=utf-8",
+            "cacheControl": "no-store",
+            "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+          },
+          "responseBody": {
+            "schemaKind": "outbox_batch_ack",
+            "operation": "mail_run",
+            "requestedLimit": 2,
+            "itemCount": 0,
+            "items": []
+          },
+          "completedAt": "2026-08-30T12:01:00.000Z"
+        },
+        "replay": {
+          "schemaKind": "mail_run_complete_ack",
+          "disposition": "replay",
+          "requestId": "123e4567-e89b-42d3-a456-426614174000",
+          "idempotencyKey": "fixture-key-0001",
+          "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1,
+          "responseStatus": 200,
+          "responseHeaders": {
+            "contentType": "application/json; charset=utf-8",
+            "cacheControl": "no-store",
+            "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+          },
+          "responseBody": {
+            "schemaKind": "outbox_batch_ack",
+            "operation": "mail_run",
+            "requestedLimit": 2,
+            "itemCount": 0,
+            "items": []
+          },
+          "completedAt": "2026-08-30T12:01:00.000Z"
+        },
+        "errorCompleted": {
+          "schemaKind": "mail_run_complete_ack",
+          "disposition": "completed",
+          "requestId": "123e4567-e89b-42d3-a456-426614174000",
+          "idempotencyKey": "fixture-key-0001",
+          "bodyDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision": 1,
+          "responseStatus": 503,
+          "responseHeaders": {
+            "contentType": "application/json; charset=utf-8",
+            "cacheControl": "no-store",
+            "xAiowRequestId": "123e4567-e89b-42d3-a456-426614174000"
+          },
+          "responseBody": {
+            "schemaKind": "error",
+            "code": "unavailable",
+            "message": "mail run unavailable",
+            "requestId": "123e4567-e89b-42d3-a456-426614174000",
+            "retriable": true
+          },
+          "completedAt": "2026-08-30T12:01:00.000Z"
+        }
+      }
+    },
     "aiow_quote_prepare_v1": {
       "args": [
         {

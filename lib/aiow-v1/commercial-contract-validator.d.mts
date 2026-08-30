@@ -14,6 +14,23 @@ export function validateOutboxBatchAckV1(
   ack: unknown,
   context?: { operation?: "claim" | "stale_recovery" | "mail_run"; requestedLimit?: number },
 ): boolean;
+export interface MailRunValidationContext {
+  requestId?: string;
+  idempotencyKey?: string;
+  bodyDigest?: string;
+  requestedLimit?: number;
+  persistedResponse?: Readonly<Record<string, unknown>>;
+}
+export function validateMailRunStoredResponseV1(
+  response: unknown,
+  context?: Pick<MailRunValidationContext, "requestId" | "requestedLimit" | "persistedResponse">,
+): boolean;
+export function serializeMailRunStoredResponseV1(
+  response: unknown,
+  context?: Pick<MailRunValidationContext, "requestId" | "requestedLimit" | "persistedResponse">,
+): string | null;
+export function validateMailRunBeginAckV1(ack: unknown, context?: MailRunValidationContext): boolean;
+export function validateMailRunCompleteAckV1(ack: unknown, context?: MailRunValidationContext): boolean;
 export function validateQuoteAbandonBatchAckV1(
   ack: unknown,
   context?: { requestedLimit?: number },
