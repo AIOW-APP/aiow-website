@@ -113,6 +113,23 @@ begin
  then raise exception using errcode='42501',message='AIOW_GATE_UNAVAILABLE'; end if;
  return v_target;
 end $$;
+
+-- CREATE OR REPLACE retains the runtime-reader owner, so only that owner can
+-- close and re-open these entrypoints on managed Supabase.
+revoke all on function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) from public;
+do $runtime_reader_loader_acl$
+begin
+ if exists(select 1 from pg_roles where rolname='anon') then
+  revoke all on function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) from anon;
+ end if;
+ if exists(select 1 from pg_roles where rolname='authenticated') then
+  revoke all on function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) from authenticated;
+ end if;
+ if exists(select 1 from pg_roles where rolname='service_role') then
+  revoke all on function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) from service_role;
+  grant execute on function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) to service_role;
+ end if;
+end $runtime_reader_loader_acl$;
 reset role;
 
 -- invalid_payload is produced by the local closed validator before Graph can be
@@ -180,7 +197,7 @@ drop function public.aiow_mail_outbox_resolve_v2(text,text,uuid,bigint,text,text
 -- after the original bulk ACL closure, then grant only documented entrypoints.
 do $acl$
 declare r record; begin
- for r in select p.oid,p.proname,pg_get_function_identity_arguments(p.oid) args from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%' loop
+ for r in select p.oid,p.proname,pg_get_function_identity_arguments(p.oid) args from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'aiow_%' and p.proowner=(select oid from pg_roles where rolname=current_user) loop
   execute format('revoke all on function public.%I(%s) from public',r.proname,r.args);
   if exists(select 1 from pg_roles where rolname='anon') then execute format('revoke all on function public.%I(%s) from anon',r.proname,r.args); end if;
   if exists(select 1 from pg_roles where rolname='authenticated') then execute format('revoke all on function public.%I(%s) from authenticated',r.proname,r.args); end if;
@@ -209,10 +226,6 @@ declare r record; begin
    public.aiow_quote_abandon_expired_v1(timestamptz,integer),
    public.aiow_quote_prepared_load_v1(uuid,text,uuid,uuid,text),
    public.aiow_quote_committed_pdf_load_v1(uuid,text,uuid,uuid,text,text),
-   public.aiow_mail_run_begin_v1(uuid,text,text,text),
-   public.aiow_mail_run_complete_v1(uuid,text,text,uuid,integer,jsonb,jsonb),
-   public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),
-   public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text),
    public.aiow_mail_outbox_dispatch_v2(uuid,text,uuid,text,bigint),
    public.aiow_analytics_retention_purge_v1(boolean,timestamptz)
   to service_role;
