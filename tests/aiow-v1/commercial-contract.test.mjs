@@ -361,6 +361,10 @@ test("outbox batch ACK is exact for zero, one and multiple ordered leases", () =
   equalInstantWrongTieBreak.items[0].createdAt="2026-08-30T11:00:01.000Z";
   equalInstantWrongTieBreak.items[1].createdAt="2026-08-30T11:00:00.000Z";
   assert.equal(validateOutboxBatchAckV1(equalInstantWrongTieBreak,{operation:"claim",requestedLimit:2}),false,"equal instants still apply createdAt tie-break order");
+  const microsecondReversed=structuredClone(multi);
+  microsecondReversed.items[0].nextAttemptAt="2026-08-30T12:00:00.000002Z";
+  microsecondReversed.items[1].nextAttemptAt="2026-08-30T12:00:00.000001Z";
+  assert.equal(validateOutboxBatchAckV1(microsecondReversed,{operation:"claim",requestedLimit:2}),false,"fractional precision beyond milliseconds remains ordered");
   const {payloadSha256,...incomplete}=multi.items[0];
   assert.equal(validateRoot({...cases.one,items:[incomplete]}),false);
   assert.equal(validateOutboxBatchAckV1({...cases.one,items:[incomplete]},{operation:"claim",requestedLimit:2}),false);
