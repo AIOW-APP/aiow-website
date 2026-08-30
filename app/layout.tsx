@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { headers } from "next/headers";
+import { Analytics } from "@/core/analytics/Analytics";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -19,5 +20,5 @@ const themeScript = `(function(){try{var t=localStorage.getItem('aiow-theme');do
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = (await headers()).get("x-aiow-locale") === "en" ? "en" : "nl";
-  return <html lang={locale} className={`${inter.variable} ${fraunces.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body>{children}</body></html>;
+  return <html lang={locale} className={`${inter.variable} ${fraunces.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body>{children}<Analytics /></body></html>;
 }

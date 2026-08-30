@@ -7,6 +7,6 @@ export function PublicFooter({ locale = "nl", showYear = false }: { locale?: Aio
   return <footer className={styles.footer}>
     <Link href={en ? "/en" : "/"} className={styles.logo}><span>AIOW</span><i /></Link>
     <p>AI Operating Workflows{showYear ? ` · ${new Date().getFullYear()}` : ""}</p>
-    <div><Link href={en ? "/en/rates" : "/tarieven"}>{en ? "Rates" : "Tarieven"}</Link><Link href={en ? "/en/privacy" : "/privacy"}>Privacy</Link><a href="/llms.txt">llms.txt</a></div>
+    <div><Link href={en ? "/en/rates" : "/tarieven"}>{en ? "Rates" : "Tarieven"}</Link><Link href={en ? "/en/company" : "/bedrijfsgegevens"}>{en ? "Company & contact" : "Bedrijf & contact"}</Link><Link href={en ? "/en/privacy" : "/privacy"}>Privacy</Link><a href="/llms.txt">llms.txt</a></div>
   </footer>;
 }

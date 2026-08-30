@@ -16,10 +16,11 @@ export function PublicHeader({ locale = "nl", onBook }: { locale?: AiowLocale; o
       <Link href={en ? "/en/rates" : "/tarieven"}>{en ? "Rates" : "Tarieven"}</Link>
       <Link href={en ? "/en/ventures" : "/ventures"}>Ventures</Link>
       <Link href={en ? "/en#approach" : "/#aanpak"}>{en ? "Approach" : "Aanpak"}</Link>
+      <Link href={en ? "/en/company" : "/bedrijfsgegevens"}>{en ? "Company" : "Bedrijf"}</Link>
     </nav>
     <div className={styles.headerActions}>
       <ThemeLanguageControls locale={locale} />
-      {onBook ? <button type="button" className={styles.headerCta} onClick={onBook}>{en ? "Book scan" : "Plan scan"}</button> : <Link className={styles.headerCta} href={scanHref}>{en ? "Book scan" : "Plan scan"}</Link>}
+      {onBook ? <button type="button" className={styles.headerCta} onClick={onBook}>{en ? "Request scan" : "Vraag scan aan"}</button> : <Link className={styles.headerCta} href={scanHref}>{en ? "Request scan" : "Vraag scan aan"}</Link>}
     </div>
   </header>;
 }

@@ -112,7 +112,9 @@ test("admin source accepts only middleware-injected authority and covers UI plus
 
   assert.match(page, /headers\(\)/);
   assert.match(page, /notFound\(\)/);
-  assert.ok(page.indexOf("headers()") < page.indexOf("listVentureAccounts()"));
+  assert.match(page, /<OpsDashboard \/>/);
+  assert.ok(page.indexOf("headers()") < page.indexOf("<OpsDashboard />"));
+  assert.doesNotMatch(page, /listVentureAccounts|fetch\(/);
 
   assert.match(middleware, /\/portal\/admin/);
   assert.match(middleware, /\/api\/admin/);
