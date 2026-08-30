@@ -10,6 +10,7 @@ const OPERATIONS_CHALLENGE = 'Basic realm="AIOW Operations", charset="UTF-8"';
 function isOperationsPath(pathname: string) {
   return pathname === "/portal/admin" || pathname.startsWith("/portal/admin/")
     || pathname === "/api/admin" || pathname.startsWith("/api/admin/")
+    || pathname === "/api/ops" || pathname.startsWith("/api/ops/")
     || pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
