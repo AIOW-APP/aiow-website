@@ -20,6 +20,26 @@ begin
   end if;
 end $roles$;
 
+-- Managed Supabase migration sessions may create NOLOGIN roles without being
+-- able to SET ROLE to them. PostgreSQL requires temporary membership before
+-- transferring object ownership. Record only memberships added by this
+-- migration and revoke them again before commit.
+create temporary table aiow_temporary_role_memberships(
+  role_name name primary key
+) on commit drop;
+do $temporary_owner_membership$
+declare
+  v_role name;
+begin
+  foreach v_role in array array['aiow_mail_run_receipt_owner'::name,'aiow_mail_runtime_reader'::name]
+  loop
+    if not pg_has_role(current_user,v_role,'MEMBER') then
+      insert into aiow_temporary_role_memberships(role_name) values(v_role);
+      execute format('grant %I to %I',v_role,current_user);
+    end if;
+  end loop;
+end $temporary_owner_membership$;
+
 grant usage on schema public, extensions to aiow_mail_run_receipt_owner, aiow_mail_runtime_reader;
 grant execute on function public.aiow_iso_v1(timestamptz), public.aiow_jsonb_exact_keys_v1(jsonb,text[]) to aiow_mail_run_receipt_owner;
 grant select on table public.commercial_mail_outbox, public.commercial_provider_gates to aiow_mail_runtime_reader;
@@ -224,5 +244,15 @@ begin
   end if;
 end $function_acl$;
 grant execute on function public.aiow_mail_run_receipts_delete_expired_v1(integer) to aiow_mail_run_retention_worker;
+
+do $restore_owner_membership$
+declare
+  v_role name;
+begin
+  for v_role in select role_name from aiow_temporary_role_memberships
+  loop
+    execute format('revoke %I from %I',v_role,current_user);
+  end loop;
+end $restore_owner_membership$;
 
 commit;
