@@ -1,5 +1,7 @@
 begin;
 
+select set_config('aiow.closure_original_role',current_user,true);
+
 create temporary table aiow_closure_temporary_role_memberships(
  role_name name primary key
 ) on commit drop;
@@ -130,7 +132,7 @@ begin
   grant execute on function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text),public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) to service_role;
  end if;
 end $runtime_reader_loader_acl$;
-reset role;
+select set_config('role',current_setting('aiow.closure_original_role'),true);
 
 -- invalid_payload is produced by the local closed validator before Graph can be
 -- called. It may therefore dead-letter without a dispatch marker. Every result
