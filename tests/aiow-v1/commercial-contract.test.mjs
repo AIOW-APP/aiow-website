@@ -331,7 +331,7 @@ test("mail-run receipt table and RPC boundaries freeze private durable authority
   assert.deepEqual(Object.keys(table.columns),["request_id","idempotency_key","body_digest","state","revision","worker_id","lease_token","lease_expires_at","response_status","response_headers","response_body","created_at","updated_at","completed_at"]);
   assert.deepEqual(table.acl,{PUBLIC:[],anon:[],authenticated:[],service_role:["SELECT"]});
   assert.deepEqual(table.functionOwner.serviceRoleDirectDml,[]);
-  assert.equal(table.functionOwner.role,"aiow_mail_run_receipt_owner"); assert.equal(table.functionOwner.login,false); assert.equal(table.functionOwner.serviceRoleExecuteOnly,true);
+  assert.equal(table.functionOwner.role,"aiow_mail_run_receipt_owner"); assert.equal(table.functionOwner.login,false); assert.deepEqual(table.functionOwner.serviceRoleExecuteFunctions,["aiow_mail_run_begin_v1","aiow_mail_run_complete_v1"]); assert.deepEqual(table.functionOwner.retentionWorkerExecuteFunctions,["aiow_mail_run_receipts_delete_expired_v1"]);
   for (const rpc of ["aiow_mail_run_begin_v1","aiow_mail_run_complete_v1"]) {
     assert.equal(ops[rpc].functionAuthority.security,"SECURITY DEFINER",rpc);
     assert.equal(ops[rpc].functionAuthority.owner,"aiow_mail_run_receipt_owner",rpc);
@@ -596,7 +596,7 @@ test("runtime validators fail closed on malformed values without secret or logge
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"0d5414ccc117ab6ffb97f8a7caac0ff45c95270351ad5fa4d4edd767c2017f7d");
+  assert.equal(sha256(db),"ea6bc83d85be9f8e2b4be9ca79e0e83e649d0c7f3238aa4373961ea5f9cf051f");
   assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {

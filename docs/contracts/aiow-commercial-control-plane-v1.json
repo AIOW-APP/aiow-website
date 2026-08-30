@@ -14499,7 +14499,7 @@
           "days": 90,
           "anchor": "completed_at for completed rows; updated_at for abandoned pending rows",
           "action": "delete entire receipt after expiry; no exception",
-          "authority": "aiow_mail_run_receipts_delete_expired_v1 SECURITY DEFINER only; service_role has EXECUTE but no table DELETE"
+          "authority": "aiow_mail_run_receipts_delete_expired_v1 SECURITY DEFINER; EXECUTE only for NOLOGIN aiow_mail_run_retention_worker; application service_role has no retention EXECUTE and no table DELETE"
         },
         "trustedTimestamps": {
           "lease_expires_at": "transaction_timestamp() plus exactly 300 seconds at insert/takeover",
@@ -14523,7 +14523,8 @@
             "aiow_mail_run_receipts_delete_expired_v1"
           ],
           "serviceRoleDirectDml": [],
-          "serviceRoleExecuteOnly": true
+          "serviceRoleExecuteFunctions": ["aiow_mail_run_begin_v1", "aiow_mail_run_complete_v1"],
+          "retentionWorkerExecuteFunctions": ["aiow_mail_run_receipts_delete_expired_v1"]
         }
       },
       "commercial_events": {
@@ -15597,7 +15598,7 @@
         "anchor": "completed_at, or updated_at for abandoned pending leases",
         "action": "delete exact HTTP replay receipt",
         "exceptions": [],
-        "authority": "aiow_mail_run_receipts_delete_expired_v1 owned by NOLOGIN aiow_mail_run_receipt_owner; SECURITY DEFINER; service_role EXECUTE only, no direct table DML"
+        "authority": "aiow_mail_run_receipts_delete_expired_v1 owned by NOLOGIN aiow_mail_run_receipt_owner; SECURITY DEFINER; EXECUTE only for NOLOGIN aiow_mail_run_retention_worker; application service_role denied"
       },
       "non_pii_audit_facts": {
         "days": 365,
