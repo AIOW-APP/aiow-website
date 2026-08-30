@@ -1,0 +1,3 @@
+import type { MailJobV2, ProviderResultV2 } from "./microsoft-graph-provider.mjs";
+export class MailOutboxWorkerError extends Error { code:string; status:number; constructor(code:string,status?:number); }
+export function executeMailOutboxRun(options:{limit:number;workerId:string;now?:()=>number;claim:(args:Record<string,unknown>)=>Promise<unknown>;loadJobs:(items:Array<Record<string,unknown>>)=>Promise<MailJobV2[]>;loadProviderGate:()=>Promise<unknown>;finalize:(name:string,args:Record<string,unknown>)=>Promise<unknown>;send?:(job:unknown,gate:unknown,options?:Record<string,unknown>)=>Promise<ProviderResultV2>;providerOptions?:Record<string,unknown>}):Promise<Record<string,unknown>>;
