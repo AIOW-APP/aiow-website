@@ -11069,6 +11069,22 @@
       "x-aiow-custom-validator": "quoteAbandonBatchAckV1"
     }
   },
+  "x-aiow-binary-responses": {
+    "quotePdfV1": {
+      "mediaType": "application/pdf",
+      "authorityAckRef": "#/$defs/QuoteCommitACK",
+      "bodyAuthority": "exact PDF bytes and SHA-256 durably accepted by the committed QuoteCommitACK",
+      "requiredHeaders": [
+        "Content-Type: application/pdf",
+        "Content-Disposition: attachment; filename=<server quote number>.pdf",
+        "X-AIOW-Quote-Number",
+        "X-AIOW-Request-Id",
+        "X-AIOW-PDF-SHA256",
+        "Cache-Control: no-store"
+      ],
+      "replay": "same endpoint-scoped idempotency key and canonical digest returns the original status, headers and identical PDF bytes"
+    }
+  },
   "x-aiow-operations": {
     "booking": {
       "transport": "http",
@@ -11108,7 +11124,7 @@
         ]
       },
       "responses": {
-        "200": "#/$defs/QuoteCommitACK",
+        "200": "#/x-aiow-binary-responses/quotePdfV1",
         "400": [
           "#/$defs/QuotePrepareError",
           "#/$defs/QuoteCommitError"
@@ -11156,7 +11172,8 @@
         "409": "#/$defs/AnalyticsError",
         "413": "#/$defs/AnalyticsError",
         "415": "#/$defs/AnalyticsError",
-        "429": "#/$defs/AnalyticsError"
+        "429": "#/$defs/AnalyticsError",
+        "503": "#/$defs/AnalyticsError"
       },
       "idempotencyProfile": "event_ingest",
       "tlsRequired": true,

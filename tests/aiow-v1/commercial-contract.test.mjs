@@ -173,6 +173,12 @@ test("operation registry freezes all HTTP and SQL authorities with resolvable sc
   for (const [name, [method, path]] of Object.entries(http)) {
     assert.equal(ops[name].method, method); assert.equal(ops[name].path, path); assert.ok(ops[name].auth); assert.ok(ops[name].request); assert.ok(ops[name].responses);
   }
+  const quotePdf=contract["x-aiow-binary-responses"].quotePdfV1;
+  assert.equal(ops.quote.responses["200"],"#/x-aiow-binary-responses/quotePdfV1");
+  assert.equal(quotePdf.mediaType,"application/pdf");
+  assert.equal(quotePdf.authorityAckRef,"#/$defs/QuoteCommitACK");
+  assert.match(quotePdf.replay,/original status, headers and identical PDF bytes/);
+  assert.equal(ops.events.responses["503"],"#/$defs/AnalyticsError");
   const rpcNames = ["aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"];
   assert.deepEqual(Object.keys(ops).filter((name) => ops[name].transport === "sql_rpc"), rpcNames);
   function assertRefs(value) { if (typeof value === "string" && value.startsWith("#/$defs/")) return void deref({$ref:value}); if (Array.isArray(value)) return value.forEach(assertRefs); if (!value || typeof value !== "object") return; for (const child of Object.values(value)) assertRefs(child); }
@@ -283,7 +289,7 @@ test("canonical fixture registry contains exactly 70 independently frozen record
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
   assert.equal(Object.keys(ops).length, 28);
-  assert.equal(sha256(ops), "1d152ddab562336921b44fd978144856f933fe87fe84648d091c2346544bf34a");
+  assert.equal(sha256(contract["x-aiow-operations"]),"eaebcc7debcbaa7b97048ebf827ccc6c5f275603ac1ffe0ff9d0fe9a15da5681");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
