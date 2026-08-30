@@ -137,10 +137,11 @@ try {
     const quoteGeometry = await quoteDialog.evaluate((node) => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, right: node.getBoundingClientRect().right, viewport: innerWidth }));
     assert.ok(quoteGeometry.scrollWidth <= quoteGeometry.clientWidth + 1 && quoteGeometry.right <= quoteGeometry.viewport + 1, `quote form overflow at ${width}: ${JSON.stringify(quoteGeometry)}`);
     await quoteDialog.getByLabel("Scan", { exact: true }).check();
-    assert.equal(await quoteDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).count(), 1);
+    assert.equal(await quoteDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).count(), 0);
     assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
     await quoteDialog.getByLabel("Blauwdruk", { exact: true }).check();
-    assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 1);
+    assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
+    assert.equal(await quoteDialog.getByText(/Smart Design gebruikt de oppervlakte uit de calculator/).count(), 1);
     const quoteClose = quoteDialog.getByRole("button", { name: "Offerteformulier sluiten" });
     const quoteSubmit = quoteDialog.getByRole("button", { name: "Genereer en download PDF" });
     await quoteSubmit.focus(); await page.keyboard.press("Tab"); assert.equal(await quoteClose.evaluate((node) => node === document.activeElement), true, `quote forward focus trap ${width}`);
@@ -149,12 +150,12 @@ try {
     await page.waitForTimeout(50);
     assert.equal(await quoteTrigger.evaluate((node) => node === document.activeElement), true, `quote focus restore ${width}`);
 
-    await page.getByRole("tab", { name: "Pand" }).click();
+    await page.getByRole("button", { name: "Pand", exact: true }).click();
     assert.equal(await page.getByRole("button", { name: "Signature", exact: true }).count(), 0, `Pand exposes Signature at ${width}`);
     await page.getByRole("slider").fill("2001");
     await page.getByText("Smart Office XL · indicatie/offerte", { exact: true }).waitFor();
 
-    await page.getByRole("tab", { name: "Woning" }).click();
+    await page.getByRole("button", { name: "Woning", exact: true }).click();
     assert.equal(await page.getByRole("button", { name: "Home", exact: true }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "Signature", exact: true }).count(), 1);
     await page.getByRole("button", { name: "Signature", exact: true }).click();
@@ -197,10 +198,10 @@ try {
   const successDialog = await fillBusinessQuote(successPage);
   await successDialog.getByLabel("Scan", { exact: true }).check();
   await successDialog.getByLabel("Blauwdruk", { exact: true }).check();
-  await successDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).fill("300");
-  await successDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).fill("80000");
-  await successDialog.getByLabel("Blauwdruk", { exact: true }).uncheck();
+  assert.equal(await successDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).count(), 0);
   assert.equal(await successDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
+  await successDialog.getByLabel("Blauwdruk", { exact: true }).uncheck();
+  assert.equal(await successDialog.getByText(/Smart Design gebruikt de oppervlakte uit de calculator/).count(), 1);
   const [download] = await Promise.all([
     successPage.waitForEvent("download"),
     successDialog.getByRole("button", { name: "Genereer en download PDF" }).click(),
@@ -210,8 +211,8 @@ try {
   assert.equal(submittedQuote.configuration.people, 10);
   assert.equal(submittedQuote.configuration.serviceRoute, "standard");
   assert.equal(submittedQuote.configuration.contextSlug, "accountants");
-  assert.deepEqual(submittedQuote.configuration.smartDesign.modules, ["scan"]);
-  assert.equal("technologyBudgetEuros" in submittedQuote.configuration.smartDesign, false);
+  assert.deepEqual(submittedQuote.configuration.smartDesignModules, ["scan"]);
+  assert.equal("technologyBudgetEuros" in submittedQuote.configuration, false);
   await successPage.getByText("Duurzaam geaccepteerd", { exact: true }).waitFor();
   assert.equal(await successPage.getByText("AIOW-2026-0042", { exact: true }).count(), 1);
   await successPage.getByRole("button", { name: "Sluiten", exact: true }).click();
@@ -252,17 +253,19 @@ try {
 
   const englishBookingPage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
   let englishBookingPayload;
-  await englishBookingPage.route("**/api/booking", async (route) => { englishBookingPayload = JSON.parse(route.request().postData()); await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok:true,requestId:"english-booking-proof",booking:{ date:"2026-08-30",slot:"09:00",subject:"bedrijf" } }) }); });
+  await englishBookingPage.route("**/api/booking", async (route) => { englishBookingPayload = JSON.parse(route.request().postData()); await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaKind:"booking_ack",accepted:true,requestId:"english-booking-proof",preference:{ date:"2026-09-30",slot:"09:00",subject:"bedrijf" } }) }); });
   await englishBookingPage.goto(`${base}/en`, { waitUntil: "networkidle" });
   await englishBookingPage.getByRole("button", { name: "Request a scan", exact: true }).first().click();
-  await englishBookingPage.getByRole("button", { name: "Continue" }).click();
-  await englishBookingPage.getByLabel("Date").fill("2026-08-30");
-  await englishBookingPage.getByRole("button", { name: "09:00" }).click();
-  await englishBookingPage.getByRole("button", { name: "Continue" }).click();
-  await englishBookingPage.getByLabel("Name").fill("English Booking Proof");
-  await englishBookingPage.getByLabel("E-mail").fill("english@example.com");
-  await englishBookingPage.getByRole("checkbox").check();
-  await englishBookingPage.getByRole("button", { name: "Send preferred request" }).click();
+  const englishBookingDialog = englishBookingPage.getByRole("dialog", { name: "Request a practical scan" });
+  await englishBookingDialog.getByRole("textbox", { name: "Context" }).fill("English booking browser proof");
+  await englishBookingDialog.getByRole("button", { name: "Continue" }).click();
+  await englishBookingDialog.getByLabel("Date").fill("2026-09-30");
+  await englishBookingDialog.getByRole("button", { name: "09:00" }).click();
+  await englishBookingDialog.getByRole("button", { name: "Continue" }).click();
+  await englishBookingDialog.getByLabel("Name").fill("English Booking Proof");
+  await englishBookingDialog.getByLabel("E-mail").fill("english@example.com");
+  await englishBookingDialog.getByRole("checkbox").check();
+  await englishBookingDialog.getByRole("button", { name: "Send preferred request" }).click();
   await englishBookingPage.getByText("Your preferred scan request was received.").waitFor();
   assert.equal(englishBookingPayload.locale, "en");
   const [calendarDownload] = await Promise.all([englishBookingPage.waitForEvent("download"), englishBookingPage.getByRole("button", { name: "Download local reminder (.ics)" }).click()]);
