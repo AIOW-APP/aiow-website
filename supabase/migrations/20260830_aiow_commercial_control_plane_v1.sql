@@ -607,7 +607,7 @@ declare v_replay jsonb; v_id uuid; v_now timestamptz:=transaction_timestamp(); v
  v_digest:=public.aiow_sha256_json_v1(p_event-'schemaKind');
  if p_payload_digest<>v_digest then raise exception using errcode='22023',message='AIOW_PAYLOAD_DIGEST_INVALID'; end if;
  perform public.aiow_idempotency_lock_v1('event_ingest',p_idempotency_key);
- v_replay:=public.aiow_idempotency_replay_v1('event_ingest',p_idempotency_key,v_digest); if v_replay is not null then return jsonb_set(v_replay,'{deduplicated}','true'::jsonb); end if;
+ v_replay:=public.aiow_idempotency_replay_v1('event_ingest',p_idempotency_key,v_digest); if v_replay is not null then return v_replay; end if;
  v_id:=(p_event->>'eventId')::uuid;
  select * into v_existing from public.commercial_events where event_id=v_id for update;
  if found then
@@ -615,7 +615,7 @@ declare v_replay jsonb; v_id uuid; v_now timestamptz:=transaction_timestamp(); v
   select outcome into v_ack from public.commercial_idempotency where endpoint='event_ingest' and outcome->>'eventId'=lower(v_id::text) order by created_at limit 1;
   if v_ack is null then v_ack:=jsonb_build_object('schemaKind','analytics_ack','accepted',true,'eventId',lower(v_id::text),'deduplicated',false,'storedAt',public.aiow_iso_v1(v_existing.occurred_at)); end if;
   perform public.aiow_idempotency_store_v1('event_ingest',p_idempotency_key,v_digest,v_ack);
-  return jsonb_set(v_ack,'{deduplicated}','true'::jsonb);
+  return v_ack;
  end if;
  v_name:=p_event->>'event'; v_route:=p_event->>'route'; v_locale:=p_event->>'locale';
  v_eid:=coalesce(p_event#>>'{experiment,experimentId}','__none__'); v_variant:=coalesce(p_event#>>'{experiment,variant}','__none__');

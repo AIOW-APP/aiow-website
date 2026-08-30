@@ -132,7 +132,7 @@ def prove_queue_mutate_events(env, lead):
     now = dt.datetime.now(dt.timezone.utc)
     event = {"schemaKind":"analytics_page_view","eventId":str(uuid.uuid4()),"event":"page_view","occurredAt":now.isoformat(),"route":"/","locale":"nl","viewport":"desktop"}
     first = call(env,event_expr("event-proof-00001",event)); replay = call(env,event_expr("event-proof-00001",event))
-    assert first["deduplicated"] is False and replay["deduplicated"] is True
+    assert replay == first and first["deduplicated"] is False
     pii = {**event,"eventId":str(uuid.uuid4()),"email":"person@example.com"}
     rejected = sql(env,f"select {event_expr('event-proof-pii01',pii)};",check=False,role="service_role"); assert_error(rejected,"AIOW_EVENT_INVALID")
     report = call(env,f"public.aiow_commercial_report_v1({q(now.date())}::date,{q(now.date())}::date)")
