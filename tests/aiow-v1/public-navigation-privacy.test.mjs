@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const root = new URL("../../", import.meta.url);
-const [header, css, home, calculator, context, pillar, tariffs, booking, privacy] = await Promise.all([
+const [header, css, home, calculator, context, pillar, tariffs, booking, privacy, quote, quotePdf] = await Promise.all([
   readFile(new URL("components/aiow-v1/PublicHeader.tsx", root), "utf8"), readFile(new URL("components/aiow-v1/AiowV1Homepage.module.css", root), "utf8"),
   readFile(new URL("components/aiow-v1/AiowV1Homepage.tsx", root), "utf8"), readFile(new URL("components/aiow-v1/PriceCalculator.tsx", root), "utf8"),
   readFile(new URL("components/aiow-v1/PricingContextPage.tsx", root), "utf8"), readFile(new URL("components/aiow-v1/PillarPage.tsx", root), "utf8"),
   readFile(new URL("components/aiow-v1/TariffsPage.tsx", root), "utf8"), readFile(new URL("components/aiow-v1/BookingModal.tsx", root), "utf8"),
   readFile(new URL("components/aiow-v1/InfoPage.tsx", root), "utf8"),
+  readFile(new URL("lib/aiow-v1/quote.mjs", root), "utf8"), readFile(new URL("lib/aiow-v1/quote-pdf.mjs", root), "utf8"),
 ]);
 
 test("responsive primary navigation remains keyboard operable and identifies the current page", () => {
@@ -19,9 +20,9 @@ test("responsive primary navigation remains keyboard operable and identifies the
 });
 
 test("every V1 scan CTA uses the same exact localized request label", () => {
-  const surfaces = `${header}\n${home}\n${calculator}\n${context}\n${pillar}\n${tariffs}`;
+  const surfaces = `${header}\n${home}\n${calculator}\n${context}\n${pillar}\n${tariffs}\n${quote}\n${quotePdf}`;
   assert.match(surfaces, /Request a scan/); assert.match(surfaces, /Vraag een scan aan/);
-  for (const stale of ["Book a scan", "Book the scan", "Book the opportunity scan", "Plan een scan", "Plan de scan", "Plan de kansenscan", "Request scan", "Vraag scan aan", "Discuss the scope", "Bespreek de scope"]) assert.doesNotMatch(surfaces, new RegExp(stale));
+  for (const stale of ["Book a scan", "Book the scan", "Book the opportunity scan", "Book your scan", "Plan een scan", "Plan de scan", "Plan de kansenscan", "Plan uw kansenscan", "Request scan", "Vraag scan aan", "Discuss the scope", "Bespreek de scope"]) assert.doesNotMatch(surfaces, new RegExp(stale));
 });
 
 test("human confirmation qualification is adjacent to the initial date and time choice", () => {
