@@ -78,6 +78,9 @@ def setup_roles(env: dict[str, str]) -> None:
       alter default privileges in schema public grant all on tables to anon,authenticated,service_role;
       alter default privileges in schema public grant all on sequences to anon,authenticated,service_role;
       alter default privileges in schema public grant execute on functions to anon,authenticated,service_role;
+      create schema auth;
+      create table auth.users(id uuid primary key);
+      create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
       create schema supabase_migrations;
       create table supabase_migrations.schema_migrations(version text primary key,name text unique not null);""")
 
