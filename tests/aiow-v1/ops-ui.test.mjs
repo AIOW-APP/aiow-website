@@ -47,6 +47,8 @@ test("ops queue exposes only legal lifecycle edges and closes terminal next acti
   assert.match(ui, /Heropeningsreden/);
   assert.match(ui, /maxLength=\{MAX_REOPEN_REASON_LENGTH\}/);
   assert.match(ui, /reopenReason: requestedTransition!\.reopenReason/);
+  assert.match(ui, /const terminalSelection = isTerminalStatus\(lead\.status\)/);
+  assert.doesNotMatch(ui, /const terminalSelection = isTerminalStatus\(status\)/);
   assert.match(ui, /disabled=\{terminalSelection\}/);
   assert.match(ui, /value=\{terminalSelection \? "" : nextActionAt\}/);
 });

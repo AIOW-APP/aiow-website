@@ -91,7 +91,7 @@ function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (lead: Lead) => vo
   const [nextActionAt, setNextActionAt] = useState(localInput(lead.nextActionAt)); const [reopenReason, setReopenReason] = useState(""); const [mutation, setMutation] = useState<MutationState>({ kind: "idle" });
   useEffect(() => { setStatus(lead.status); setPriority(lead.priority); setNextActionAt(isTerminalStatus(lead.status) ? "" : localInput(lead.nextActionAt)); setReopenReason(""); }, [lead]);
   const statusChoices = availableLeadStatuses(lead.status);
-  const terminalSelection = isTerminalStatus(status);
+  const terminalSelection = isTerminalStatus(lead.status);
   const transition = buildStatusTransition(lead.status, status, reopenReason);
   async function mutate(operation: "mark_read" | "set_priority" | "transition_status" | "set_next_action") {
     const requestedTransition = operation === "transition_status" ? buildStatusTransition(lead.status, status, reopenReason) : null;
