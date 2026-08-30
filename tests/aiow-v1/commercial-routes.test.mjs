@@ -41,7 +41,7 @@ function mockServer() {
       if (key === "booking-non2xx-1") return json(res, 500, { error: "provider failure" });
       const value = await body(req); const digest = JSON.stringify(value); const saved = durable.booking.get(key);
       if (saved && saved.digest !== digest) return json(res, 409, error("booking", "idempotency_conflict", rid, 409));
-      if (saved) return json(res, 202, { ...saved.ack, replayed: true });
+      if (saved) return json(res, 202, saved.ack);
       const ack = { schemaKind: "booking_ack", accepted: true, requestId: rid, leadId: "123e4567-e89b-42d3-a456-426614174000", revision: 1, preference: { date: value.date, slot: value.slot, subject: value.subject }, durableAt: "2026-08-30T12:00:00.000Z", replayed: false };
       durable.booking.set(key, { digest, ack }); return json(res, 202, ack);
     }
@@ -50,13 +50,14 @@ function mockServer() {
       if (value.schemaKind === "quote_prepare_request") {
         const digest = JSON.stringify(value.quote);
         if (saved && saved.digest !== digest) return json(res, 409, error("quote_prepare", "idempotency_conflict", rid, 409));
-        if (saved) return json(res, 200, { ...saved.prepare, replayed: true });
+        if (saved) return json(res, 200, saved.prepare);
         const prepare = { schemaKind: "quote_prepare_ack", accepted: true, requestId: rid, leadId: "223e4567-e89b-42d3-a456-426614174000", commercialLeadId: "323e4567-e89b-42d3-a456-426614174000", quoteNumber: "AIOW-2026-0001", state: "prepared", expiresAt: "2026-09-30T12:00:00.000Z", replayed: false };
         durable.quote.set(key, { digest, prepare }); return json(res, 200, prepare);
       }
       if (!saved || value.requestId !== saved.prepare.requestId) return json(res, 409, error("quote_commit", "idempotency_conflict", rid, 409));
-      const ack = { schemaKind: "quote_commit_ack", accepted: true, requestId: value.requestId, leadId: value.leadId, commercialLeadId: value.commercialLeadId, quoteNumber: value.quoteNumber, state: "committed", pdfSha256: value.pdf.sha256, committedAt: "2026-08-30T12:00:00.000Z", replayed: Boolean(saved.committed), pdfDeliveryPermitted: true };
-      saved.committed = true; return json(res, 200, ack);
+      if (saved.committed) return json(res, 200, saved.commit);
+      const ack = { schemaKind: "quote_commit_ack", accepted: true, requestId: value.requestId, leadId: value.leadId, commercialLeadId: value.commercialLeadId, quoteNumber: value.quoteNumber, state: "committed", pdfSha256: value.pdf.sha256, committedAt: "2026-08-30T12:00:00.000Z", replayed: false, pdfDeliveryPermitted: true };
+      saved.committed = true; saved.commit = ack; return json(res, 200, ack);
     }
     if (url.pathname.startsWith("/rest/v1/rpc/")) {
       if (rpcMode === "invalid") return json(res, 400, { code: "22023", message: "invalid" });
@@ -123,7 +124,7 @@ test("commercial HTTP routes enforce ops authority, durable replay and exact fai
 
     const booking = { ...fixtures.requests.BookingRequest, date: "2026-09-30", subject: "bedrijf" }; const bookingHeaders = { "content-type": "application/json", "idempotency-key": "booking-replay-1" };
     const firstBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(firstBooking.status, 202); const firstBookingBody = await firstBooking.json();
-    const replayBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(replayBooking.status, 202); const replayBookingBody = await replayBooking.json(); assert.equal(replayBookingBody.requestId, firstBookingBody.requestId); assert.equal(replayBookingBody.replayed, true);
+    const replayBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(replayBooking.status, 202); const replayBookingBody = await replayBooking.json(); assert.deepEqual(replayBookingBody,firstBookingBody); assert.equal(replayBookingBody.replayed,false);
     const bookingConflict = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify({ ...booking, details: "changed" }) }); assert.equal(bookingConflict.status, 409); assert.equal((await bookingConflict.json()).code, "idempotency_conflict");
     for (const key of ["booking-timeout-1", "booking-non2xx-1"]) { const failed = await fetch(`${base}/api/booking`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify(booking) }); assert.equal(failed.status, 502, key); const value = await failed.json(); assert.equal(value.code, "unavailable"); assert.equal(value.retriable, true); }
 
