@@ -427,14 +427,14 @@ begin
  v_hash:=public.aiow_sha256_json_v1(p_quote-'schemaKind');
  perform public.aiow_idempotency_lock_v1('quote_prepare',p_idempotency_key);
  v_replay:=public.aiow_idempotency_replay_v1('quote_prepare',p_idempotency_key,v_hash);
- if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ if v_replay is not null then return v_replay; end if;
  select * into v_q from public.quote_leads where idempotency_key=p_idempotency_key for update;
  if found then
   if v_q.request_payload_hash<>v_hash then raise exception using errcode='23505',message='AIOW_QUOTE_IDEMPOTENCY_CONFLICT'; end if;
   v_ack:=jsonb_build_object('schemaKind','quote_prepare_ack','accepted',true,'requestId',lower(v_q.request_id),'leadId',lower(v_q.id::text),
    'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','prepared','expiresAt',public.aiow_iso_v1(v_q.expires_at),'replayed',false);
   perform public.aiow_idempotency_store_v1('quote_prepare',p_idempotency_key,v_hash,v_ack);
-  return jsonb_set(v_ack,'{replayed}','true'::jsonb);
+  return v_ack;
  end if;
  v_year:=extract(year from v_now at time zone 'Europe/Amsterdam');
  insert into public.quote_sequences(year,next_value,updated_at) values(v_year,1,v_now)
@@ -469,11 +469,11 @@ begin
   'pdf',jsonb_build_object('filename',p_pdf_filename,'mimeType',p_pdf_mime_type,'sha256',p_pdf_sha256)));
  perform public.aiow_idempotency_lock_v1('quote_commit',p_idempotency_key);
  v_replay:=public.aiow_idempotency_replay_v1('quote_commit',p_idempotency_key,v_hash);
- if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ if v_replay is not null then return v_replay; end if;
  select * into v_q from public.quote_leads where id=p_lead_id for update;
  if not found then raise exception using errcode='P0001',message='AIOW_QUOTE_PREPARE_NOT_FOUND'; end if;
  v_replay:=public.aiow_idempotency_replay_v1('quote_commit',p_idempotency_key,v_hash);
- if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ if v_replay is not null then return v_replay; end if;
  if v_q.idempotency_key<>p_idempotency_key or v_q.quote_number<>p_quote_number or v_q.normalized_quote<>p_quote or v_q.contact<>p_contact
   or v_q.source<>p_source or v_q.country<>p_country
   or not public.aiow_mail_job_valid_v1(p_customer_mail,'customer_quote',v_q.commercial_lead_id)
@@ -488,7 +488,7 @@ begin
   then raise exception using errcode='23505',message='AIOW_QUOTE_COMMIT_CONFLICT'; end if;
   v_ack:=jsonb_build_object('schemaKind','quote_commit_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','committed','pdfSha256',p_pdf_sha256,'committedAt',public.aiow_iso_v1(v_q.committed_at),'replayed',false,'pdfDeliveryPermitted',true);
   perform public.aiow_idempotency_store_v1('quote_commit',p_idempotency_key,v_hash,v_ack);
-  return jsonb_set(v_ack,'{replayed}','true'::jsonb);
+  return v_ack;
  end if;
  insert into public.quote_documents(lead_id,quote_lead_id,filename,mime_type,document_bytes,sha256) values(v_q.id,v_q.id,p_pdf_filename,p_pdf_mime_type,v_bytes,p_pdf_sha256);
  insert into public.commercial_mail_outbox(commercial_lead_id,kind,payload,payload_sha256,next_attempt_at)
@@ -516,7 +516,7 @@ begin
  if p_payload_digest<>v_digest then raise exception using errcode='22023',message='AIOW_PAYLOAD_DIGEST_INVALID'; end if;
  perform public.aiow_idempotency_lock_v1('booking',p_idempotency_key);
  v_replay:=public.aiow_idempotency_replay_v1('booking',p_idempotency_key,v_digest);
- if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ if v_replay is not null then return v_replay; end if;
  insert into public.commercial_leads(id,source,source_id,route,locale,display_name,email,organisation,sla_due_at,created_at,updated_at)
  values(v_cid,'booking',v_bid,p_source->>'route',p_source->>'locale',left(btrim(p_booking->>'name'),100),lower(p_booking->>'email'),nullif(left(btrim(p_booking->>'company'),120),''),public.aiow_next_business_day_v1(v_now),v_now,v_now);
  insert into public.booking_leads(id,commercial_lead_id,request_id,payload_digest,payload,created_at) values(v_bid,v_cid,p_request_id,v_digest,p_booking,v_now);
@@ -558,10 +558,10 @@ begin
  v_digest:=public.aiow_sha256_json_v1(p_mutation-'schemaKind'-'idempotencyKey');
  if p_payload_digest<>v_digest then raise exception using errcode='22023',message='AIOW_PAYLOAD_DIGEST_INVALID'; end if;
  perform public.aiow_idempotency_lock_v1('ops_mutation',p_idempotency_key);
- v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,v_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,v_digest); if v_replay is not null then return v_replay; end if;
  select * into v_lead from public.commercial_leads where id=(p_mutation->>'leadId')::uuid for update;
  if not found then raise exception using errcode='P0001',message='AIOW_LEAD_NOT_FOUND'; end if;
- v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,v_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,v_digest); if v_replay is not null then return v_replay; end if;
  if v_lead.revision<>(p_mutation->>'expectedRevision')::bigint then raise exception using errcode='40001',message='AIOW_REVISION_CONFLICT'; end if;
  v_before:=v_lead.revision; v_op:=p_mutation->>'operation';
  if v_op='mark_read' then
@@ -739,7 +739,7 @@ end $$;
 create function public.aiow_active_customer_relation_set_v1(p_commercial_lead_id uuid,p_expected_revision bigint,p_idempotency_key text,p_payload_digest text,p_enabled boolean,p_reason text) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,extensions as $$
 declare v_replay jsonb; v public.commercial_leads%rowtype; v_before bigint; v_audit uuid; v_ack jsonb; v_now timestamptz:=transaction_timestamp(); begin
- v_replay:=public.aiow_idempotency_replay_v1('active_relation',p_idempotency_key,p_payload_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ v_replay:=public.aiow_idempotency_replay_v1('active_relation',p_idempotency_key,p_payload_digest); if v_replay is not null then return v_replay; end if;
  if nullif(btrim(p_reason),'') is null then raise exception using errcode='22023',message='AIOW_RELATION_INVALID'; end if;
  select * into v from public.commercial_leads where id=p_commercial_lead_id for update; if not found then raise exception using errcode='P0001',message='AIOW_LEAD_NOT_FOUND'; end if;
  if v.revision<>p_expected_revision then raise exception using errcode='40001',message='AIOW_REVISION_CONFLICT'; end if; if v.active_customer_relation=p_enabled then raise exception using errcode='22023',message='AIOW_RELATION_NOOP'; end if;

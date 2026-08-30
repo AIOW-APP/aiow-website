@@ -104,7 +104,7 @@ def prove_booking_and_idempotency(env):
     assert sql(env, "select (select count(*) from commercial_leads)||','||(select count(*) from booking_leads)||','||(select count(*) from commercial_mail_outbox);").stdout.strip() == before
     first = call(env, booking_expr("booking-proof-0001", booking))
     replay = call(env, booking_expr("booking-proof-0001", booking, request_id=str(uuid.uuid4())))
-    assert first["leadId"] == replay["leadId"] and replay["replayed"] is True
+    assert replay == first and replay["replayed"] is False
     counts = sql(env, f"select (select count(*) from booking_leads b where b.commercial_lead_id={q(first['leadId'])}::uuid)||','||(select count(*) from commercial_mail_outbox o where o.commercial_lead_id={q(first['leadId'])}::uuid);").stdout.strip()
     assert counts == "1,2", counts
     conflict = sql(env, f"select {booking_expr('booking-proof-0001',{**booking,'details':'changed'},digest(normalized_booking(booking)))};", check=False, role="service_role")
@@ -112,7 +112,7 @@ def prove_booking_and_idempotency(env):
     key = "booking-race-0001"
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: call(env, booking_expr(key, booking, request_id=str(uuid.uuid4()))), range(2)))
-    assert results[0]["leadId"] == results[1]["leadId"] and {x["replayed"] for x in results} == {False, True}
+    assert results[0] == results[1] and results[0]["replayed"] is False
     race_counts = sql(env, f"select count(*)||','||(select count(*) from commercial_mail_outbox where commercial_lead_id=c.id) from commercial_leads c where c.id={q(results[0]['leadId'])}::uuid group by c.id;").stdout.strip()
     assert race_counts == "1,2", race_counts
     return booking, first
@@ -122,7 +122,7 @@ def prove_queue_mutate_events(env, lead):
     assert any(x["id"] == lead["leadId"] for x in queue["items"])
     mutation = {"schemaKind":"ops_mark_read","idempotencyKey":"mutate-read-0001","leadId":lead["leadId"],"expectedRevision":1,"operation":"mark_read","unread":False}
     ack = call(env, mutation_expr("mutate-read-0001", mutation)); assert ack["revision"] == 2 and ack["projection"]["unread"] is False
-    replay = call(env, mutation_expr("mutate-read-0001", mutation)); assert replay["replayed"] is True and replay["revision"] == 2
+    replay = call(env, mutation_expr("mutate-read-0001", mutation)); assert replay == ack and replay["replayed"] is False
     changed_mutation={**mutation,"expectedRevision":999}
     changed_replay = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest({k:v for k,v in mutation.items() if k not in ('schemaKind','idempotencyKey')}))};", check=False, role="service_role")
     assert_error(changed_replay,"AIOW_PAYLOAD_DIGEST_INVALID")
@@ -178,11 +178,11 @@ def prove_quote_v2(env):
     now = dt.datetime.now(dt.timezone.utc); request = str(uuid.uuid4()); key="quote-v2-proof-01"
     quote=quote_request_fixture("Quote Proof","quote@example.com"); contact=quote["contact"]; consent=quote["consent"]; source=quote["source"]
     prepare=f"public.aiow_quote_prepare_v1({q(request)}::uuid,{q(key)},{q(now.isoformat())}::timestamptz,{q(quote['country'])},{j(quote)},{j(contact)},{j(consent)},{j(source)})"
-    first=call(env,prepare); replay=call(env,prepare); assert first["leadId"]==replay["leadId"] and replay["replayed"] is True
+    first=call(env,prepare); replay=call(env,prepare); assert replay==first and replay["replayed"] is False
     pdf=b"%PDF-commercial-proof"; digest=hashlib.sha256(pdf).hexdigest(); encoded=base64.b64encode(pdf).decode()
     customer=quote_mail_fixture("p_customer_mail",first["commercialLeadId"]); internal=quote_mail_fixture("p_internal_mail",first["commercialLeadId"])
     commit=f"public.aiow_quote_commit_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(first['quoteNumber'])},{q(first['leadId'])}::uuid,{q(first['quoteNumber']+'.pdf')},'application/pdf',{q(encoded)},{q(digest)},{j(customer)},{j(internal)},{j(quote)},{j(contact)},{j(source)},{q(quote['country'])})"
-    ack=call(env,commit); replay_commit=call(env,commit); assert ack["state"]=="committed" and replay_commit["replayed"] is True
+    ack=call(env,commit); replay_commit=call(env,commit); assert ack["state"]=="committed" and replay_commit==ack and replay_commit["replayed"] is False
     assert sql(env,f"select (select count(*) from quote_documents where lead_id={q(first['leadId'])}::uuid)||','||(select count(*) from commercial_mail_outbox where commercial_lead_id={q(first['commercialLeadId'])}::uuid);").stdout.strip()=="1,2"
     return first
 
