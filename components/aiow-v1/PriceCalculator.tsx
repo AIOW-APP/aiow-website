@@ -36,8 +36,8 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
     <section id="booking" className={styles.calculator} aria-labelledby="calculator-title">
       <div className={styles.instrumentTop}><span>{en ? "Live indication" : "Live indicatie"}</span><span className={styles.liveDot} aria-hidden="true" /></div>
       <h2 id="calculator-title" className={styles.srOnly}>{en ? "Price calculator" : "Prijsberekening"}</h2>
-      <div role="tablist" aria-label={en ? "Select calculation" : "Kies berekening"} className={styles.tabs}>
-        {tabs.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={mode === tab.id} className={mode === tab.id ? styles.activeTab : styles.tab} onClick={() => changeMode(tab.id)}>{tab.label}</button>)}
+      <div aria-label={en ? "Select calculation" : "Kies berekening"} className={styles.tabs}>
+        {tabs.map((tab) => <button key={tab.id} type="button" aria-pressed={mode === tab.id} className={mode === tab.id ? styles.activeTab : styles.tab} onClick={() => changeMode(tab.id)}>{tab.label}</button>)}
       </div>
       {mode === "home" && <div className={styles.segment} aria-label={en ? "Choose home package" : "Kies woningpakket"}><button type="button" aria-pressed={homeType === "home"} onClick={() => changeHomeType("home")}>Home</button><button type="button" aria-pressed={homeType === "signature"} onClick={() => changeHomeType("signature")}>Signature</button></div>}
       <div className={styles.rangeHeader}><label htmlFor="price-range">{mode === "business" ? (en ? "Team size" : "Teamgrootte") : (en ? "Surface" : "Oppervlakte")}</label><output htmlFor="price-range">{input} {unit}</output></div>

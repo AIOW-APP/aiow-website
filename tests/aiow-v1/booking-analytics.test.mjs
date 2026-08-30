@@ -6,7 +6,7 @@ const jsonResponse = (status, body) => new Response(JSON.stringify(body), { stat
 
 async function exercise(fetcher) {
   const events = [];
-  const result = await requestBooking(fetcher, { method: "POST" }, (event, fields) => { events.push({ event, fields }); });
+  const result = await requestBooking(fetcher, { method: "POST", body: JSON.stringify({ date: "2026-09-30", slot: "09:00", subject: "bedrijf" }) }, (event, fields) => { events.push({ event, fields }); });
   return { result, events };
 }
 
@@ -14,9 +14,10 @@ test("booking transport and malformed-success failures emit unavailable exactly 
   for (const fetcher of [
     async () => { throw new TypeError("network unavailable"); },
     async () => new Response("not-json", { status: 200 }),
-    async () => jsonResponse(200, { ok: true }),
-    async () => jsonResponse(200, { ok: false, requestId: "id" }),
-    async () => jsonResponse(200, { ok: true, requestId: "" }),
+    async () => jsonResponse(200, { schemaKind: "booking_ack", accepted: true }),
+    async () => jsonResponse(200, { schemaKind: "booking_ack", accepted: false, requestId: "id" }),
+    async () => jsonResponse(200, { schemaKind: "booking_ack", accepted: true, requestId: "", preference: { date: "2026-09-30", slot: "09:00", subject: "bedrijf" } }),
+    async () => jsonResponse(200, { schemaKind: "booking_ack", accepted: true, requestId: "id", preference: { date: "2026-09-30", slot: "10:30", subject: "bedrijf" } }),
   ]) {
     const { result, events } = await exercise(fetcher);
     assert.deepEqual(events, [{ event: "booking_failed", fields: { failureClass: "unavailable" } }]);
@@ -36,8 +37,8 @@ test("booking HTTP failures retain their closed class and emit once even with ma
   }
 });
 
-test("booking valid durable success emits only the aggregate success event", async () => {
-  const { result, events } = await exercise(async () => jsonResponse(201, { ok: true, requestId: "123e4567-e89b-42d3-a456-426614174000" }));
+test("booking valid durable pending-confirmation ACK emits only the aggregate success event", async () => {
+  const { result, events } = await exercise(async () => jsonResponse(202, { schemaKind: "booking_ack", accepted: true, requestId: "123e4567-e89b-42d3-a456-426614174000", preference: { date: "2026-09-30", slot: "09:00", subject: "bedrijf" } }));
   assert.deepEqual(result, { ok: true, requestId: "123e4567-e89b-42d3-a456-426614174000" });
   assert.deepEqual(events, [{ event: "booking_succeeded", fields: { experiment: null } }]);
 });

@@ -26,6 +26,8 @@ export async function requestBooking(
   init: RequestInit,
   emit: AnalyticsEmitter,
 ): Promise<BookingRequestResult> {
+  let expected: Record<string, unknown> | null = null;
+  if (typeof init.body === "string") { try { const parsed = JSON.parse(init.body); if (isRecord(parsed)) expected = parsed; } catch { /* malformed request cannot produce a trusted ACK */ } }
   let response: Response;
   try {
     response = await fetcher("/api/booking", init);
@@ -48,7 +50,8 @@ export async function requestBooking(
     void emit("booking_failed", { failureClass: "unavailable" });
     return { ok: false, fields: {}, failureClass: "unavailable" };
   }
-  if (!isRecord(body) || body.ok !== true || typeof body.requestId !== "string" || body.requestId.length < 1 || body.requestId.length > 128) {
+  const preference = isRecord(body) && isRecord(body.preference) ? body.preference : null;
+  if (!isRecord(body) || body.schemaKind !== "booking_ack" || body.accepted !== true || typeof body.requestId !== "string" || body.requestId.length < 1 || body.requestId.length > 128 || !preference || !expected || preference.date !== expected.date || preference.slot !== expected.slot || preference.subject !== expected.subject) {
     void emit("booking_failed", { failureClass: "unavailable" });
     return { ok: false, fields: responseFields(body), failureClass: "unavailable" };
   }

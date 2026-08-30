@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { readFile } from "node:fs/promises";
 import { endpointPayloadDigest } from "../../lib/aiow-v1/commercial-api-runtime.mjs";
+import { buildBookingRequest, buildQuoteRequest } from "../../components/aiow-v1/commercial-form-payloads.mjs";
 
 const root = new URL("../../", import.meta.url);
 const fixtures = JSON.parse(await readFile(new URL("../fixtures/aiow-commercial-contract-v1.json", import.meta.url), "utf8"));
@@ -141,11 +142,26 @@ test("commercial HTTP routes enforce ops authority, durable replay and exact fai
     const replayBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(replayBooking.status, 202); const replayBookingBody = await replayBooking.json(); assert.deepEqual({ ...replayBookingBody, replayed: false },firstBookingBody); assert.equal(firstBookingBody.replayed,false); assert.equal(replayBookingBody.replayed,true);
     const bookingConflict = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify({ ...booking, details: "changed" }) }); assert.equal(bookingConflict.status, 409); assert.equal((await bookingConflict.json()).code, "idempotency_conflict");
     for (const key of ["booking-timeout-1", "booking-non2xx-1"]) { const failed = await fetch(`${base}/api/booking`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify(booking) }); assert.equal(failed.status, 502, key); const value = await failed.json(); assert.equal(value.code, "unavailable"); assert.equal(value.retriable, true); }
+    for (const [index, choice] of ["bedrijf", "pand", "woning", "anders"].entries()) {
+      const browserBooking = buildBookingRequest({ subject:choice,details:"Browser route proof",date:"2026-09-30",slot:"09:00",name:"Browser Proof",email:"browser@example.com",company:"Proof BV",website:"",consentAccepted:true,consentVersion:"aiow-booking-v1" }, index % 2 ? "en" : "nl");
+      const response = await fetch(`${base}/api/booking`, { method:"POST", headers:{ "content-type":"application/json", "idempotency-key":`booking-browser-${index}` }, body:JSON.stringify(browserBooking) });
+      assert.equal(response.status, 202, `${choice}: ${await response.text()}`);
+      assert.equal(durable.booking.get(`booking-browser-${index}`).ack.preference.subject, choice === "pand" ? "gebouw" : choice);
+    }
 
-    const quote = structuredClone(fixtures.requests.QuoteRequest); quote.contact.startDate = "2026-09-30"; const quoteHeaders = { "content-type": "application/json", "idempotency-key": "quote-replay-0001" };
+    const quoteForm = { contextSlug:"accountants",modules:["scan","blueprint","supervision"],name:"Route Proof",email:"route@example.com",phone:"+31 20 123 4567",company:"Route Proof BV",postcode:"",kvk:"",startDate:"2026-09-30",note:"All modules",website:"",consentAccepted:true };
+    const quote = buildQuoteRequest({ segment:"business",serviceRoute:"standard",people:10 }, quoteForm, "nl", "/?utm_source=must-not-leak"); const quoteHeaders = { "content-type": "application/json", "idempotency-key": "quote-replay-0001" };
     const firstQuote = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(quote) }); assert.equal(firstQuote.status, 200); const firstBytes = Buffer.from(await firstQuote.arrayBuffer()); assert.equal(firstQuote.headers.get("content-type"), "application/pdf"); assert.equal(firstQuote.headers.get("content-disposition"), 'attachment; filename="AIOW-2026-0001.pdf"'); assert.equal(firstQuote.headers.get("cache-control"), "no-store"); assert.equal(firstQuote.headers.get("x-aiow-pdf-sha256"), createHash("sha256").update(firstBytes).digest("hex"));
     const replayQuote = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(quote) }); assert.equal(replayQuote.status, 200); const replayBytes = Buffer.from(await replayQuote.arrayBuffer()); assert.deepEqual(replayBytes, firstBytes); for (const header of ["content-type", "content-disposition", "cache-control", "x-aiow-quote-number", "x-aiow-request-id", "x-aiow-pdf-sha256"]) assert.equal(replayQuote.headers.get(header), firstQuote.headers.get(header), header);
-    assert.equal(quoteCommitCalls,1,"committed replay must not regenerate or recommit"); const changed = structuredClone(quote); changed.contact.note = "changed"; const quoteConflict = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(changed) }); assert.equal(quoteConflict.status, 409); assert.equal((await quoteConflict.json()).code, "idempotency_conflict");
+    assert.equal(quoteCommitCalls,1,"committed replay must not regenerate or recommit");
+    assert.deepEqual(durable.quote.get("quote-replay-0001").quote.configuration.smartDesignModules, ["scan","blueprint","supervision"]);
+    for (const [locale, route] of [["nl","/"],["en","/en"]]) {
+      const key=`quote-browser-${locale}`; const browserQuote=buildQuoteRequest({ segment:"business",serviceRoute:"comfort",people:12 }, quoteForm, locale, `${route}?utm_campaign=must-not-leak`);
+      const response=await fetch(`${base}/api/quote`,{method:"POST",headers:{"content-type":"application/json","idempotency-key":key},body:JSON.stringify(browserQuote)}); const responseBytes=Buffer.from(await response.arrayBuffer());
+      assert.equal(response.status,200,`${locale}: ${responseBytes.toString()}`); assert.equal(response.headers.get("content-type"),"application/pdf"); assert.equal(responseBytes.subarray(0,5).toString(),"%PDF-");
+      assert.deepEqual(durable.quote.get(key).quote,browserQuote); assert.deepEqual(durable.quote.get(key).quote.configuration.smartDesignModules,["scan","blueprint","supervision"]);
+    }
+    const changed = structuredClone(quote); changed.contact.note = "changed"; const quoteConflict = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(changed) }); assert.equal(quoteConflict.status, 409); assert.equal((await quoteConflict.json()).code, "idempotency_conflict");
 
     const event = fixtures.events.page_view; const eventResponse = await fetch(`${base}/api/events`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": "events-unavailable-1" }, body: JSON.stringify(event) }); assert.equal(eventResponse.status, 503); const eventBody = await eventResponse.json(); assert.deepEqual({ ...eventBody, requestId: "<uuid>" }, { schemaKind: "analytics_error", code: "rate_limited", message: "Request rejected", requestId: "<uuid>", retriable: true });
     await stopNext(app.child); app = null;
