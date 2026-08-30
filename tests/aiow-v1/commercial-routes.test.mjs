@@ -81,8 +81,8 @@ function mockServer() {
 }
 async function startNext(port, mockPort, configured = true) {
   const env = { ...process.env, NEXT_TELEMETRY_DISABLED: "1", AIOW_COMMERCIAL_TEST_MODE: "1", AIOW_BOOKING_WEBHOOK_URL: `http://127.0.0.1:${mockPort}/booking`, AIOW_BOOKING_WEBHOOK_SECRET: secret, AIOW_QUOTE_WEBHOOK_URL: `http://127.0.0.1:${mockPort}/quote`, AIOW_QUOTE_WEBHOOK_SECRET: secret };
-  if (configured) Object.assign(env, { AIOW_SUPABASE_URL: `http://127.0.0.1:${mockPort}`, AIOW_SUPABASE_SERVICE_ROLE_KEY: "service-role", AIOW_OPS_DEPLOYMENT_HOST: "ops.aiow.ai", AIOW_OPS_BASIC_USERNAME: "operator", AIOW_OPS_BASIC_PASSWORD: "correct horse battery staple", AIOW_OPS_OPERATOR_ID: "richard" });
-  else for (const key of ["AIOW_SUPABASE_URL", "AIOW_SUPABASE_SERVICE_ROLE_KEY", "AIOW_OPS_DEPLOYMENT_HOST", "AIOW_OPS_BASIC_USERNAME", "AIOW_OPS_BASIC_PASSWORD", "AIOW_OPS_OPERATOR_ID"]) delete env[key];
+  if (configured) Object.assign(env, { AIOW_SUPABASE_URL: `http://127.0.0.1:${mockPort}`, AIOW_SUPABASE_SERVICE_ROLE_KEY: "service-role", AIOW_OPS_DEPLOYMENT_HOST: "127.0.0.1", AIOW_OPS_BASIC_USERNAME: "operator", AIOW_OPS_BASIC_PASSWORD: "correct horse battery staple", AIOW_OPS_OPERATOR_ID: "richard", AIOW_OPS_LOCAL_PROOF_MODE: "loopback-test" });
+  else for (const key of ["AIOW_SUPABASE_URL", "AIOW_SUPABASE_SERVICE_ROLE_KEY", "AIOW_OPS_DEPLOYMENT_HOST", "AIOW_OPS_BASIC_USERNAME", "AIOW_OPS_BASIC_PASSWORD", "AIOW_OPS_OPERATOR_ID", "AIOW_OPS_LOCAL_PROOF_MODE"]) delete env[key];
   const child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], { cwd: new URL(root), env, stdio: ["ignore", "pipe", "pipe"] });
   let output = ""; child.stdout.on("data", (chunk) => { output += chunk; }); child.stderr.on("data", (chunk) => { output += chunk; });
   const deadline = Date.now() + 60_000;
@@ -99,7 +99,7 @@ async function stopNext(child) {
   await Promise.race([once(child, "exit"), new Promise((resolve) => setTimeout(resolve, 10_000))]);
   if (child.exitCode === null) child.kill("SIGKILL");
 }
-function opsHeaders(extra = {}) { return { host: "ops.aiow.ai", authorization: basic, ...extra }; }
+function opsHeaders(extra = {}) { return { host: "127.0.0.1", "x-vercel-deployment-url": "127.0.0.1", authorization: basic, ...extra }; }
 async function freePort() { const server = createServer(); const port = await listen(server); await new Promise((resolve) => server.close(resolve)); return port; }
 async function opsRequest(url, { method="GET", headers={}, body=null } = {}) {
   const target=new URL(url);
@@ -129,8 +129,26 @@ test("commercial HTTP routes enforce ops authority, durable replay and exact fai
     const stale = await opsRequest(`${base}/api/ops/leads/${mutation.leadId}`, { method: "PATCH", headers: opsHeaders({ "content-type": "application/json", "idempotency-key": mutation.idempotencyKey }), body: JSON.stringify(mutation) }); assert.equal(stale.status, 409); assert.deepEqual(await stale.json(), fixtures.errors.RevisionConflict);
     rpcMode = "ok";
     const report = await opsRequest(`${base}/api/ops/report?from=2026-08-30&through=2026-08-30`, { headers: opsHeaders() }); assert.equal(report.status, 200); assert.deepEqual(await report.json(), fixtures.projections.AnalyticsAggregateReport);
-    const forged = await opsRequest(`${base}/api/ops/leads`, { headers: { host: "ops.aiow.ai", "x-aiow-operator-id": "richard", "x-aiow-operator-role": "ops_admin" } }); assert.equal(forged.status, 401); assert.equal(forged.headers.get("www-authenticate"), 'Basic realm="AIOW Operations", charset="UTF-8"');
-    assert.equal((await opsRequest(`${base}/api/ops/leads`, { headers: { host: "www.aiow.ai", authorization: basic } })).status, 404);
+    const forged = await opsRequest(`${base}/api/ops/leads`, { headers: { host: "127.0.0.1", "x-vercel-deployment-url": "127.0.0.1", "x-aiow-operator-id": "richard", "x-aiow-operator-role": "ops_admin" } });
+    assert.equal(forged.status, 401);
+    assert.equal(forged.headers.get("www-authenticate"), 'Basic realm="AIOW Operations", charset="UTF-8"');
+    assert.equal(forged.headers.get("cache-control"), "no-store");
+    assert.match(forged.headers.get("content-type") ?? "", /^application\/json/);
+    const forgedBody = await forged.json();
+    assert.deepEqual({ ...forgedBody, requestId: "<uuid>" }, { schemaKind: "ops_error", code: "unauthenticated", message: "Request rejected", requestId: "<uuid>", retriable: false });
+    assert.match(forgedBody.requestId, /^[0-9a-f-]{36}$/);
+    assert.equal(forged.headers.get("x-aiow-request-id"), forgedBody.requestId);
+    for (const headers of [
+      { host: "www.aiow.ai", authorization: basic },
+      { host: "127.0.0.1", "x-forwarded-host": "127.0.0.1", "x-vercel-deployment-url": "localhost", authorization: basic },
+      { host: "www.aiow.ai", "x-forwarded-host": "127.0.0.1", authorization: basic },
+    ]) {
+      const concealed = await opsRequest(`${base}/api/ops/leads`, { headers });
+      assert.equal(concealed.status, 404);
+      assert.equal(concealed.headers.get("www-authenticate"), null);
+      assert.equal(concealed.headers.get("cache-control"), "no-store");
+      assert.equal(await concealed.text(), "");
+    }
 
     rpcMode = "invalid";
     const invalid = await opsRequest(`${base}/api/ops/leads/${mutation.leadId}`, { method: "PATCH", headers: opsHeaders({ "content-type": "application/json", "idempotency-key": mutation.idempotencyKey }), body: JSON.stringify(mutation) });
