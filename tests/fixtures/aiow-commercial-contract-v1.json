@@ -2569,14 +2569,6 @@
     "aiow_mail_run_receipts_delete_expired_v1": {
       "args": [
         {
-          "name": "p_cutoff",
-          "sqlType": "timestamptz",
-          "nullable": false,
-          "default": null,
-          "validationRef": "#/$defs/TrustedServerTime",
-          "value": "2026-05-31T12:00:00.000Z"
-        },
-        {
           "name": "p_limit",
           "sqlType": "integer",
           "nullable": false,

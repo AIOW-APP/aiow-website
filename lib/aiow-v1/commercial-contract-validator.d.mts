@@ -22,6 +22,7 @@ export interface MailRunValidationContext {
   idempotencyKey?: string;
   bodyDigest?: string;
   requestedLimit?: number;
+  expectedRevision?: number;
   persistedResponse?: Readonly<Record<string, unknown>>;
 }
 export function validateMailRunStoredResponseV1(

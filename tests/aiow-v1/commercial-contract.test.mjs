@@ -258,7 +258,7 @@ test("canonical fixture registry contains exactly 79 independently frozen record
     projections:"01a4d4ef2134a4f0a779d2ed946556bda56afb5f2a64f8e684ca8c16e0fdaeeb",
     events:"ea4aced2945e90e903d95f27514e90f4b366df6ea4913e028f9029dd51df5d83",
     providerResults:"ce715ea6a8c88bbe647e2ec182fe3e2b691e01706ffb279d52c10df7b377c12d",
-    rpcBoundaries:"9e2c18277381fde966cea4554c06661700249a22ddd2783c870e751962dd76aa",
+    rpcBoundaries:"cc0113c06927ccf5c37fcffd3d75e4a651c9867f34ecdfe46fc6d20b94e07a19",
     migrationScenarios:"4cd373a06b638959ecc151112882dd3ed6513b06f15c87f4cd839292589e69de",
   };
   assert.equal(canonicalFixtures.fixtureVersion, 1);
@@ -269,7 +269,7 @@ test("canonical fixture registry contains exactly 79 independently frozen record
   }
   const records = Object.entries(expectedCounts).flatMap(([group]) => Object.entries(canonicalFixtures[group]).map(([name, value]) => ({group,name,value}))).sort((a,b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
   assert.equal(records.length, 79);
-  assert.equal(sha256(records), "520dca582a6b6d949151b7aefb6ddf3dcecb47509b22865f23c866e2c78a0259");
+  assert.equal(sha256(records), "bbbf1221e3c5e26f8eeb874ecc421ddd79f74a7a477d01c999b409969aa98342");
   for (const group of ["requests","acks","errors","projections","events","providerResults"])
     for (const [name, value] of Object.entries(canonicalFixtures[group])) assert.equal(validateRoot(value), true, `${group}/${name}: ${ajv.errorsText(validateRoot.errors)}`);
   const ops = contract["x-aiow-operations"];
@@ -293,14 +293,17 @@ test("canonical fixture registry contains exactly 79 independently frozen record
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
   assert.equal(Object.keys(ops).length, 31);
-  assert.equal(sha256(contract["x-aiow-operations"]),"ae4a8c740af2b22cefde493a578601fca06d578c1c0dc8dced46c763b472211b");
+  assert.equal(sha256(ops), "2ce8e2ec662444e642f284d0a95e984ee5bcc6f45cfb05c1fb8ed5e6a8ee2a68");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
   assert.equal(stableJson(contract).includes("ops_admin_jwt"), false);
   for (const [name, op] of Object.entries(ops).filter(([,value]) => value.transport === "sql_rpc")) {
     assert.equal(op.visibility, "private_server_only", name);
-    assert.deepEqual(op.grants, {PUBLIC:false,anon:false,authenticated:false,service_role:true}, name);
+    const expectedGrants = name === "aiow_mail_run_receipts_delete_expired_v1"
+      ? {PUBLIC:false,anon:false,authenticated:false,service_role:false,aiow_mail_run_retention_worker:true}
+      : {PUBLIC:false,anon:false,authenticated:false,service_role:true};
+    assert.deepEqual(op.grants, expectedGrants, name);
     assert.equal(new Set(op.args.map((arg) => arg.name)).size, op.args.length, `${name} duplicate args`);
     for (const arg of op.args) {
       assert.deepEqual(Object.keys(arg), ["name","sqlType","nullable","default","validationRef"], `${name}/${arg.name}`);
@@ -329,12 +332,18 @@ test("mail-run receipt table and RPC boundaries freeze private durable authority
   assert.deepEqual(table.acl,{PUBLIC:[],anon:[],authenticated:[],service_role:["SELECT"]});
   assert.deepEqual(table.functionOwner.serviceRoleDirectDml,[]);
   assert.equal(table.functionOwner.role,"aiow_mail_run_receipt_owner"); assert.equal(table.functionOwner.login,false); assert.equal(table.functionOwner.serviceRoleExecuteOnly,true);
-  for (const rpc of table.writeAuthority) {
+  for (const rpc of ["aiow_mail_run_begin_v1","aiow_mail_run_complete_v1"]) {
     assert.equal(ops[rpc].functionAuthority.security,"SECURITY DEFINER",rpc);
     assert.equal(ops[rpc].functionAuthority.owner,"aiow_mail_run_receipt_owner",rpc);
     assert.equal(ops[rpc].functionAuthority.ownerRole,"NOLOGIN",rpc);
     assert.deepEqual(ops[rpc].functionAuthority.executeAcl,{PUBLIC:false,anon:false,authenticated:false,service_role:true},rpc);
   }
+  const retentionRpc=ops.aiow_mail_run_receipts_delete_expired_v1;
+  assert.deepEqual(retentionRpc.args.map((arg)=>arg.name),["p_limit"]);
+  assert.equal(retentionRpc.grants.service_role,false); assert.equal(retentionRpc.grants.aiow_mail_run_retention_worker,true);
+  assert.equal(retentionRpc.functionAuthority.executeAcl.service_role,false); assert.equal(retentionRpc.functionAuthority.executeAcl.aiow_mail_run_retention_worker,true);
+  assert.deepEqual(retentionRpc.retentionWorker,{role:"aiow_mail_run_retention_worker",login:false,applicationServiceRoleMembership:false});
+  assert.match(retentionRpc.deletion,/transaction_timestamp\(\) - interval '90 days'.*no caller cutoff/);
   assert.equal(table.retention.days,90); assert.equal(table.bounds.leaseDurationSeconds,300); assert.equal(table.bounds.responseBodyCanonicalBytesMax,262144);
   assert.deepEqual(ops.aiow_mail_run_begin_v1.args.map((arg)=>[arg.name,arg.sqlType]),[["p_request_id","uuid"],["p_idempotency_key","text"],["p_body_digest","text"],["p_worker_id","text"]]);
   assert.deepEqual(ops.aiow_mail_run_complete_v1.args.map((arg)=>[arg.name,arg.sqlType]),[["p_request_id","uuid"],["p_idempotency_key","text"],["p_body_digest","text"],["p_lease_token","uuid"],["p_response_status","integer"],["p_response_headers","jsonb"],["p_response_body","jsonb"]]);
@@ -347,16 +356,19 @@ test("mail-run receipt table and RPC boundaries freeze private durable authority
   assert.equal(ops.mail_run.responses["400"],"#/$defs/Error");
   assert.deepEqual(ops.mail_run.workerIdentity,{source:"private server configuration AIOW_MAIL_WORKER_ID",pattern:"^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$",utf8Characters:[1,100],default:"mail-run-worker",failure:ops.mail_run.workerIdentity.failure});
   assert.match(ops.mail_run.routeAlgorithm.orderedSteps.join("\n"),/constant-time compare HMAC-SHA256 before JSON parsing/);
+  assert.match(ops.mail_run.preAuthCorrelation.source,/server-generated.*lowercase UUID/); assert.match(ops.mail_run.preAuthCorrelation.incomingRequestId,/never trusted or echoed/);
   assert.match(ops.mail_run.routeAlgorithm.orderedSteps.join("\n"),/executeMailOutboxRun\(\{limit: parsedBody.limit, workerId, store: commercialMailOutboxStoreV2, provider: microsoftGraphMailProvider\}\)/);
   assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1,{"22023":"400 invalid_request","23505":"409 idempotency_conflict",P0001:"409 revision_conflict"});
-  assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1);
+  assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,{all_sqlstate_conflict_connectivity_unexpected:"503 unavailable unstored response; never call provider again in this request"});
+  assert.notDeepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1);
+  assert.equal(contract["x-aiow-persistence"].sourceIdentity.mail_run_receipt,"registered endpoint + exact Idempotency-Key is identity; request_id is immutable first-request correlation only; body_digest is the lowercase SHA-256 conflict digest");
   assert.equal(contract["x-aiow-retention"].classes.mail_run_receipts.days,90);
 });
 
 test("mail-run ACK validators reject changed digest, malformed completion and non-exact replay", () => {
   const begin=canonicalFixtures.rpcBoundaries.aiow_mail_run_begin_v1.canonicalResults;
   const complete=canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1.canonicalResults;
-  const context={requestId:begin.execute.requestId,idempotencyKey:begin.execute.idempotencyKey,bodyDigest:begin.execute.bodyDigest,requestedLimit:2};
+  const context={requestId:begin.execute.requestId,idempotencyKey:begin.execute.idempotencyKey,bodyDigest:begin.execute.bodyDigest,requestedLimit:2,expectedRevision:complete.completed.revision};
   assert.equal(validateMailRunBeginAckV1(begin.execute,context),true);
   assert.equal(validateMailRunBeginAckV1(begin.inProgress,context),true);
   const stored={responseStatus:begin.replay.responseStatus,responseHeaders:begin.replay.responseHeaders,responseBody:begin.replay.responseBody};
@@ -364,6 +376,7 @@ test("mail-run ACK validators reject changed digest, malformed completion and no
   assert.equal(validateMailRunBeginAckV1(begin.execute,{...context,bodyDigest:"b".repeat(64)}),false,"changed digest conflict");
   assert.equal(validateMailRunBeginAckV1({...begin.inProgress,leaseToken:begin.execute.leaseToken},context),false,"in-progress cannot leak an executable token");
   assert.equal(validateMailRunCompleteAckV1(complete.completed,{...context,persistedResponse:stored}),true);
+  assert.equal(validateMailRunCompleteAckV1({...complete.completed,revision:999},context),false,"completion revision is bound to begin lease generation");
   assert.equal(validateMailRunCompleteAckV1({...complete.completed,responseStatus:201},context),false);
   assert.equal(validateMailRunCompleteAckV1({...complete.completed,responseHeaders:{...complete.completed.responseHeaders,cacheControl:"public"}},context),false);
   assert.equal(validateMailRunCompleteAckV1({...complete.completed,responseBody:{...complete.completed.responseBody,itemCount:1}},context),false);
@@ -583,7 +596,7 @@ test("runtime validators fail closed on malformed values without secret or logge
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"5564cff9b9bbf329eb09690277fa5e9384219cc404a6dc93e3fb8d40bafe8513");
+  assert.equal(sha256(db),"0d5414ccc117ab6ffb97f8a7caac0ff45c95270351ad5fa4d4edd767c2017f7d");
   assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {

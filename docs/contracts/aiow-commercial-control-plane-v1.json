@@ -11990,13 +11990,16 @@
             "P0001": "409 revision_conflict"
           },
           "aiow_mail_run_complete_v1": {
-            "22023": "400 invalid_request",
-            "23505": "409 idempotency_conflict",
-            "P0001": "409 revision_conflict"
+            "all_sqlstate_conflict_connectivity_unexpected": "503 unavailable unstored response; never call provider again in this request"
           },
           "unexpected_or_connectivity_failure": "503 unavailable"
         },
         "responseSerialization": "all initial completed and replay responses parse directly as exactly their advertised OutboxBatchACK or Error body; no stored-response envelope is written to HTTP"
+      },
+      "preAuthCorrelation": {
+        "source": "server-generated cryptographically random lowercase UUID for every non-HTTPS, missing/malformed header, stale timestamp, or bad-signature response",
+        "binding": "the same generated UUID appears in Error.requestId and MailRunResponseHeaders.xAiowRequestId",
+        "incomingRequestId": "never trusted or echoed before successful HMAC authentication"
       }
     },
     "aiow_mail_run_begin_v1": {
@@ -12199,16 +12202,9 @@
     "aiow_mail_run_receipts_delete_expired_v1": {
       "transport": "sql_rpc",
       "name": "aiow_mail_run_receipts_delete_expired_v1",
-      "auth": "service_role_private_retention_worker",
+      "auth": "aiow_mail_run_retention_worker_nologin",
       "visibility": "private_server_only",
       "args": [
-        {
-          "name": "p_cutoff",
-          "sqlType": "timestamptz",
-          "nullable": false,
-          "default": null,
-          "validationRef": "#/$defs/TrustedServerTime"
-        },
         {
           "name": "p_limit",
           "sqlType": "integer",
@@ -12239,7 +12235,8 @@
         "PUBLIC": false,
         "anon": false,
         "authenticated": false,
-        "service_role": true
+        "service_role": false,
+        "aiow_mail_run_retention_worker": true
       },
       "functionAuthority": {
         "security": "SECURITY DEFINER",
@@ -12250,11 +12247,17 @@
           "PUBLIC": false,
           "anon": false,
           "authenticated": false,
-          "service_role": true
+          "service_role": false,
+          "aiow_mail_run_retention_worker": true
         },
         "tableDml": "function owner only"
       },
-      "deletion": "SECURITY DEFINER owner deletes at most p_limit receipts whose 90-day trusted retention anchor is strictly before p_cutoff; stable idempotency_key ordering; no caller can delete by key/request ID; service_role has EXECUTE only and no direct DELETE"
+      "deletion": "SECURITY DEFINER derives cutoff internally as transaction_timestamp() - interval '90 days' and deletes at most p_limit completed receipts older than that trusted cutoff in stable idempotency_key order; no caller cutoff/key/request ID; application service_role has neither EXECUTE nor direct DELETE",
+      "retentionWorker": {
+        "role": "aiow_mail_run_retention_worker",
+        "login": false,
+        "applicationServiceRoleMembership": false
+      }
     },
     "aiow_quote_prepare_v1": {
       "transport": "sql_rpc",
@@ -14875,7 +14878,7 @@
       "booking": "source_id=booking_leads.id",
       "quote": "source_id=quote_leads.id",
       "quote_mapping": "quote_leads.commercial_lead_id unique fk commercial_leads(id)",
-      "mail_run_receipt": "request_id + exact Idempotency-Key; body_digest is lowercase SHA-256 of the exact raw HTTP request body bytes authenticated by x-aiow-internal-hmac"
+      "mail_run_receipt": "registered endpoint + exact Idempotency-Key is identity; request_id is immutable first-request correlation only; body_digest is the lowercase SHA-256 conflict digest"
     },
     "activationAcceptance": [
       "zero_to_head",
