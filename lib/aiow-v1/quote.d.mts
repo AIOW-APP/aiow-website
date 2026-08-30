@@ -17,7 +17,7 @@ export const QUOTE_QUALIFICATION_NL: string;
 export const QUOTE_QUALIFICATION_EN: string;
 export function validateQuoteRequest(input: unknown): QuoteValidationResult;
 export function buildQuoteSnapshot(normalized: NormalizedQuoteRequest, options?: { now?: Date; issueDate?: string; bookingUrl?: string }): QuoteSnapshot;
-export function buildQuoteMailContent(input: { quoteNumber: string; snapshot: QuoteSnapshot; contact: QuoteContact; source: QuoteSource; country?: string; receivedAt: string }): Readonly<{ customerMail: Readonly<{ from: "offerte@aiow.ai"; to: string; subject: string; text: string; html: string }>; internalMail: Readonly<{ from: "offerte@aiow.ai"; to: "offerte@aiow.ai"; subject: string; text: string; html: string }> }>;
+export function buildQuoteMailContent(input: { quoteNumber: string; snapshot: QuoteSnapshot; contact: QuoteContact; source: QuoteSource; country?: string; receivedAt: string }): Readonly<{ customerMail: Readonly<{ from: "info@aiow.io"; to: string[]; subject: string; text: string; html: string }>; internalMail: Readonly<{ from: "info@aiow.io"; to: string[]; subject: string; text: string; html: string }> }>;
 export function escapeHtml(value: unknown): string;
 export function validateQuoteNumber(value: unknown, expectedYear: number): boolean;
 export function amsterdamDateISO(now?: Date): string;

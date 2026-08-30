@@ -5,7 +5,8 @@ export type ProviderGateApprovalField =
   | "ownerApprovedBy" | "approvedAt" | "expiresAt" | "runtimeCapability" | "fallbackProvider";
 
 export const PROVIDER_GATE_APPROVAL_FIELDS: readonly ProviderGateApprovalField[];
-export function buildProviderGateApprovalBindingDigestV1(record: Readonly<Record<string, unknown>>): string | null;
+export function buildProviderGateApprovalBindingBytesV2(record: unknown): string | null;
+export function buildProviderGateApprovalBindingDigestV1(record: unknown): string | null;
 export function validateProviderGateCurrentV1(
   record: unknown,
   context?: { serverNow?: string; target?: Readonly<Record<string, unknown>> },

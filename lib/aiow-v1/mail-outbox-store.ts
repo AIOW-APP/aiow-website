@@ -12,6 +12,7 @@ function leaseArgs(item: LeaseItem) {
     p_payload_digest:item.payloadSha256,
   };
 }
+function plain(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === "object" && !Array.isArray(value); }
 function stable(value: unknown) { return JSON.stringify(value); }
 export function mailOutboxConfigured(env: Env = process.env) {
   return supabaseConfigured(env) && Boolean(env.AIOW_MAIL_WORKER_SECRET && env.AIOW_MICROSOFT_CLIENT_SECRET && env.AIOW_MICROSOFT_TENANT_ID && env.AIOW_MICROSOFT_APPLICATION_ID && env.AIOW_MICROSOFT_MAILBOX === "info@aiow.io" && env.AIOW_MICROSOFT_SENDER === "info@aiow.io" && env.AIOW_MICROSOFT_CONTROL_MAILBOX && env.AIOW_MICROSOFT_CONTROL_MAILBOX !== "info@aiow.io");
@@ -22,6 +23,10 @@ export function createMailOutboxStore(options: { env?: Env; fetchImpl?: Fetch } 
   return {
     claim: (args: Record<string, unknown>) => rpc("aiow_mail_outbox_claim_v2", args),
     finalize: (name: string, args: Record<string, unknown>) => rpc(name, args),
+    async markDispatch(item: LeaseItem) {
+      const ack = await rpc("aiow_mail_outbox_dispatch_v2", leaseArgs(item));
+      if (!plain(ack) || Object.keys(ack).length !== 4 || ack.schemaKind !== "outbox_dispatch_ack" || ack.jobId !== item.id || ack.leaseToken !== item.leaseToken || typeof ack.dispatchStartedAt !== "string" || !Number.isFinite(Date.parse(ack.dispatchStartedAt))) throw new Error("mail dispatch marker invalid");
+    },
     loadJobs: (items: LeaseItem[]) => Promise.all(items.map((item)=>rpc("aiow_mail_outbox_load_leased_job_v1",leaseArgs(item)))),
     async loadProviderGate(items: LeaseItem[]) {
       if (!items.length) throw new Error("provider gate lease unavailable");

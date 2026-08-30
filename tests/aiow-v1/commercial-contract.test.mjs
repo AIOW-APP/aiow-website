@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
 import {
   PROVIDER_GATE_APPROVAL_FIELDS,
+  buildProviderGateApprovalBindingBytesV2,
   buildProviderGateApprovalBindingDigestV1,
   validateMailRunBeginAckV1,
   validateMailRunCompleteAckV1,
@@ -679,6 +680,22 @@ test("runtime validators fail closed on malformed values without secret or logge
   assert.equal(validateOutboxBatchAckV1(canonicalFixtures.rpcBoundaries.aiow_mail_outbox_claim_v2.canonicalResults.zero,{operation:"claim",requestedLimit:1.5}),false);
   assert.equal(validateQuoteAbandonBatchAckV1(null,{requestedLimit:1}),false);
   assert.equal(contract["x-aiow-custom-verifiers"].outboxBatchAckV1.module,"lib/aiow-v1/commercial-contract-validator.mjs");
+});
+
+test("provider gate binding has one frozen cross-runtime UTF-8 golden vector", () => {
+  const gate = {
+    gateId:"mail_provider_production_v1", environment:"production", provider:"microsoft_graph",
+    tenantId:"123e4567-e89b-42d3-a456-426614174010", applicationId:"123e4567-e89b-42d3-a456-426614174011",
+    mailbox:"info@aiow.io", sender:"info@aiow.io", controlMailbox:"rbac-control@aiow.io",
+    secretPresent:true, oauthClientCredentialsPresent:true, exchangeApplicationRole:"Application Mail.Send",
+    exchangeRbacSenderInScope:true, exchangeRbacControlMailboxInScope:false, entraUnscopedMailSendAssigned:false,
+    evidenceSha256:"b".repeat(64), revision:1, ownerApprovedBy:"richard",
+    approvedAt:"2026-08-30T11:00:00.000Z", expiresAt:"2026-08-30T13:00:00.000Z",
+    runtimeCapability:"mail_send", fallbackProvider:null,
+  };
+  const expected = "gateId:27:mail_provider_production_v1\nenvironment:10:production\nprovider:15:microsoft_graph\ntenantId:36:123e4567-e89b-42d3-a456-426614174010\napplicationId:36:123e4567-e89b-42d3-a456-426614174011\nmailbox:12:info@aiow.io\nsender:12:info@aiow.io\ncontrolMailbox:20:rbac-control@aiow.io\nsecretPresent:4:true\noauthClientCredentialsPresent:4:true\nexchangeApplicationRole:21:Application Mail.Send\nexchangeRbacSenderInScope:4:true\nexchangeRbacControlMailboxInScope:5:false\nentraUnscopedMailSendAssigned:5:false\nevidenceSha256:64:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nrevision:1:1\nownerApprovedBy:7:richard\napprovedAt:24:2026-08-30T11:00:00.000Z\nexpiresAt:24:2026-08-30T13:00:00.000Z\nruntimeCapability:9:mail_send\nfallbackProvider:4:null\n";
+  assert.equal(buildProviderGateApprovalBindingBytesV2(gate), expected);
+  assert.equal(buildProviderGateApprovalBindingDigestV1(gate), "5e485190eeab178c230198af385cf87103b65313d20fe8968083915e936f1d63");
 });
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {

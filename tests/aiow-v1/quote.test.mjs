@@ -83,7 +83,7 @@ test("quote number is year-bound and HTML content escapes lead data", () => {
   assert.equal(escapeHtml(`<script>"x" & 'y'</script>`), "&lt;script&gt;&quot;x&quot; &amp; &#39;y&#39;&lt;/script&gt;");
   const data = valid({ ...base, contact: { ...base.contact, name: "<Ada>", company: "A&B" } }); const snapshot = buildQuoteSnapshot(data, { issueDate: "2026-08-28" });
   const mails = buildQuoteMailContent({ quoteNumber: "AIOW-2026-0001", snapshot, contact: data.contact, source: data.source, country: "NL", receivedAt: "2026-08-28T14:15:16.123Z" });
-  assert.doesNotMatch(mails.internalMail.html, /<Ada>|A&B/); assert.match(mails.internalMail.html, /&lt;Ada&gt;|A&amp;B/); assert.equal(mails.customerMail.from, "offerte@aiow.ai"); assert.equal(mails.internalMail.to, "offerte@aiow.ai");
+  assert.doesNotMatch(mails.internalMail.html, /<Ada>|A&B/); assert.match(mails.internalMail.html, /&lt;Ada&gt;|A&amp;B/); assert.equal(mails.customerMail.from, "info@aiow.io"); assert.deepEqual(mails.customerMail.to,[data.contact.email]); assert.deepEqual(mails.internalMail.to, ["info@aiow.io"]);
 });
 
 test("internal transactional mail carries context and authoritative receipt timestamp", () => {
