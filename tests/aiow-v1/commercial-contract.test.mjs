@@ -351,6 +351,16 @@ test("outbox batch ACK is exact for zero, one and multiple ordered leases", () =
   assert.equal(validateOutboxBatchAckV1({...multi,items:[multi.items[0],{...multi.items[1],id:multi.items[0].id}]},{operation:"claim",requestedLimit:2}),false);
   assert.equal(validateOutboxBatchAckV1({...multi,items:[multi.items[0],{...multi.items[1],leaseToken:multi.items[0].leaseToken}]},{operation:"claim",requestedLimit:2}),false);
   assert.equal(validateOutboxBatchAckV1({...multi,items:multi.items.toReversed()},{operation:"claim",requestedLimit:2}),false,"deterministic order");
+  const caseAliased=structuredClone(multi);
+  caseAliased.items[1].id=caseAliased.items[0].id.toUpperCase();
+  caseAliased.items[1].leaseToken=caseAliased.items[0].leaseToken.toUpperCase();
+  assert.equal(validateOutboxBatchAckV1(caseAliased,{operation:"claim",requestedLimit:2}),false,"database-equivalent UUID case aliases are rejected");
+  const equalInstantWrongTieBreak=structuredClone(multi);
+  equalInstantWrongTieBreak.items[0].nextAttemptAt="2026-08-30T12:00:00.000Z";
+  equalInstantWrongTieBreak.items[1].nextAttemptAt="2026-08-30T12:00:00Z";
+  equalInstantWrongTieBreak.items[0].createdAt="2026-08-30T11:00:01.000Z";
+  equalInstantWrongTieBreak.items[1].createdAt="2026-08-30T11:00:00.000Z";
+  assert.equal(validateOutboxBatchAckV1(equalInstantWrongTieBreak,{operation:"claim",requestedLimit:2}),false,"equal instants still apply createdAt tie-break order");
   const {payloadSha256,...incomplete}=multi.items[0];
   assert.equal(validateRoot({...cases.one,items:[incomplete]}),false);
   assert.equal(validateOutboxBatchAckV1({...cases.one,items:[incomplete]},{operation:"claim",requestedLimit:2}),false);
