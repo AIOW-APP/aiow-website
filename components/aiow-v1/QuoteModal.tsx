@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@/core/analytics/client";
 import { PRICING_CONTEXT_SLUGS, pricingContexts } from "@/lib/aiow-v1/pricing-contexts";
+import { httpFailureClass, type FailureClass } from "./booking-request";
 import styles from "./AiowV1Homepage.module.css";
 
 export type CalculatorQuoteConfig = { segment: "business" | "building" | "home"; serviceRoute: "standard" | "comfort"; people?: number; squareMetres?: number; homeSubtype?: "home" | "signature" };
@@ -51,20 +53,22 @@ export function QuoteModal({ open, onClose, locale = "nl", returnFocus, calculat
     const payload = { configuration, contact: { name: form.name, email: form.email, phone: form.phone, company: form.company, postcode: form.postcode, kvk: form.kvk, startDate: form.startDate, note: form.note }, consent: { accepted: form.consentAccepted, version: "aiow-quote-v1" }, source: { route: location.pathname.slice(0, 240), ...(utm ? { utm } : {}), locale }, website: form.website };
     const fingerprint = JSON.stringify(payload); if (operation.current.fingerprint !== fingerprint) operation.current = { fingerprint, key: crypto.randomUUID() };
     sending.current = true; setStatus("sending"); setErrors({}); setErrorKind(0);
+    let failureTracked = false;
+    const trackFailure = (failureClass: FailureClass) => { if (failureTracked) return; failureTracked = true; void track("quote_failed", { failureClass }); };
     try {
       const response = await fetch("/api/quote", { method: "POST", headers: { "content-type": "application/json", "idempotency-key": operation.current.key }, body: fingerprint });
       const contentType = response.headers.get("content-type") || "";
       if (!response.ok || !contentType.toLowerCase().startsWith("application/pdf")) {
         let body: { fields?: Record<string, string> } = {}; if (contentType.includes("application/json")) { try { body = await response.json(); } catch { /* generic failure below */ } }
-        setErrors(localizedFieldErrors(body.fields || {}, en)); setErrorKind(response.status); throw new Error("not durably accepted");
+        setErrors(localizedFieldErrors(body.fields || {}, en)); setErrorKind(response.status); trackFailure(response.ok ? "unavailable" : httpFailureClass(response.status)); throw new Error("not durably accepted");
       }
       const number = response.headers.get("x-aiow-quote-number") || ""; const bytes = await response.arrayBuffer();
       const expectedYear = new Date().toLocaleDateString("en", { timeZone: "Europe/Amsterdam", year: "numeric" });
       const magic = new TextDecoder().decode(bytes.slice(0, 5));
       if (!new RegExp(`^AIOW-${expectedYear}-[0-9]{4}$`).test(number) || magic !== "%PDF-") throw new Error("invalid pdf response");
       const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })); const link = document.createElement("a"); link.href = url; link.download = `${number}.pdf`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setQuoteNumber(number); setStatus("success");
-    } catch { setStatus((current) => current === "success" ? current : "error"); }
+      setQuoteNumber(number); setStatus("success"); void track("quote_succeeded", { experiment: null });
+    } catch { trackFailure("unavailable"); setStatus((current) => current === "success" ? current : "error"); }
     finally { sending.current = false; }
   }
   const explicitError = errorKind === 429 ? (en ? "Too many attempts. Your input is preserved; wait and retry." : "Te veel pogingen. Je invoer blijft staan; wacht en probeer opnieuw.") : errorKind === 503 ? (en ? "The durable quote service is unavailable. No PDF or receipt was created; your input is preserved." : "De duurzame offertevoorziening is niet beschikbaar. Er is geen PDF of ontvangstbewijs aangemaakt; je invoer blijft staan.") : errorKind === 502 ? (en ? "Durable acceptance of the lead, PDF and both mail jobs failed. No PDF was released; your input is preserved." : "Duurzame acceptatie van lead, PDF en beide mailtaken mislukte. Er is geen PDF vrijgegeven; je invoer blijft staan.") : (en ? "The request was not accepted. Check the fields or retry later; no PDF was released." : "De aanvraag is niet geaccepteerd. Controleer de velden of probeer later; er is geen PDF vrijgegeven.");

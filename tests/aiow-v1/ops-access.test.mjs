@@ -6,6 +6,7 @@ import {
   AIOW_OPERATOR_ROLE_HEADER,
   authorizeOpsRequest,
 } from "../../lib/aiow-v1/ops-access.mjs";
+import { applyOperationsAuthority, isOperationsPath, OPERATIONS_CHALLENGE } from "../../middleware-ops-authority.ts";
 
 const root = new URL("../../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
@@ -99,8 +100,9 @@ test("valid exact host and credentials return only the trusted principal", async
 });
 
 test("admin source accepts only middleware-injected authority and covers UI plus API", async () => {
-  const [middleware, api, page] = await Promise.all([
+  const [middleware, authority, api, page] = await Promise.all([
     read("middleware.ts"),
+    read("middleware-ops-authority.ts"),
     read("app/api/admin/venture-accounts/route.ts"),
     read("app/portal/admin/page.tsx"),
   ]);
@@ -116,15 +118,32 @@ test("admin source accepts only middleware-injected authority and covers UI plus
   assert.ok(page.indexOf("headers()") < page.indexOf("<OpsDashboard />"));
   assert.doesNotMatch(page, /listVentureAccounts|fetch\(/);
 
-  assert.match(middleware, /\/portal\/admin/);
-  assert.match(middleware, /\/api\/admin/);
-  assert.match(middleware, /\/admin/);
-  assert.match(middleware, /headers\.delete\(AIOW_OPERATOR_ID_HEADER\)/);
-  assert.match(middleware, /headers\.delete\(AIOW_OPERATOR_ROLE_HEADER\)/);
-  assert.ok(middleware.indexOf("headers.delete(AIOW_OPERATOR_ID_HEADER)") < middleware.indexOf("const access = await authorizeOpsRequest"));
-  assert.match(middleware, /hostname: request\.headers\.get\("host"\) \?\? ""/);
-  assert.doesNotMatch(middleware, /x-forwarded-host/);
-  assert.match(middleware, /Basic realm="AIOW Operations", charset="UTF-8"/);
-  assert.match(middleware, /"WWW-Authenticate": OPERATIONS_CHALLENGE/);
-  assert.ok(middleware.indexOf('if (access.kind === "unauthorized")') < middleware.indexOf("headers.set(AIOW_OPERATOR_ID_HEADER"));
+  for (const route of ["/portal/admin", "/api/admin", "/api/ops", "/admin"]) assert.match(authority, new RegExp(route.replaceAll("/", "\\/")));
+  assert.match(middleware, /applyOperationsAuthority/);
+  assert.match(authority, /requestHeaders\.delete\(AIOW_OPERATOR_ID_HEADER\)/);
+  assert.match(authority, /requestHeaders\.delete\(AIOW_OPERATOR_ROLE_HEADER\)/);
+  assert.ok(authority.indexOf("requestHeaders.delete(AIOW_OPERATOR_ID_HEADER)") < authority.indexOf("const access = await authorizeOpsRequest"));
+  assert.match(authority, /hostname: requestHeaders\.get\("host"\) \?\? ""/);
+  assert.doesNotMatch(`${middleware}\n${authority}`, /x-forwarded-host/);
+  assert.match(authority, /Basic realm="AIOW Operations", charset="UTF-8"/);
+  assert.match(authority, /"WWW-Authenticate": OPERATIONS_CHALLENGE/);
+  assert.ok(authority.indexOf('if (access.kind === "unauthorized")') < authority.indexOf("requestHeaders.set(AIOW_OPERATOR_ID_HEADER"));
+});
+
+test("every direct ops API route is host-first protected and replaces spoofed authority", async () => {
+  const routes = ["/api/ops", "/api/ops/leads", "/api/ops/report", "/api/ops/leads/123e4567-e89b-42d3-a456-426614174000"];
+  for (const pathname of routes) {
+    assert.equal(isOperationsPath(pathname), true);
+    const concealed = await applyOperationsAuthority({ pathname, headers: { host: "www.aiow.ai", authorization: basic("operator", "wrong"), [AIOW_OPERATOR_ID_HEADER]: "attacker", [AIOW_OPERATOR_ROLE_HEADER]: "ops_admin" }, env: configured });
+    assert.equal(concealed.kind, "response"); assert.equal(concealed.status, 404);
+    for (const authorization of [null, basic("operator", "wrong")]) {
+      const headers = new Headers({ host: "ops.aiow.ai", [AIOW_OPERATOR_ID_HEADER]: "attacker", [AIOW_OPERATOR_ROLE_HEADER]: "owner" });
+      if (authorization) headers.set("authorization", authorization);
+      const rejected = await applyOperationsAuthority({ pathname, headers, env: configured });
+      assert.equal(rejected.kind, "response"); assert.equal(rejected.status, 401); assert.equal(rejected.headers.get("www-authenticate"), OPERATIONS_CHALLENGE);
+    }
+    const accepted = await applyOperationsAuthority({ pathname, headers: { host: "ops.aiow.ai", authorization: basic("operator", "correct horse battery staple"), [AIOW_OPERATOR_ID_HEADER]: "attacker", [AIOW_OPERATOR_ROLE_HEADER]: "owner" }, env: configured });
+    assert.equal(accepted.kind, "next"); assert.equal(accepted.headers.get(AIOW_OPERATOR_ID_HEADER), "richard"); assert.equal(accepted.headers.get(AIOW_OPERATOR_ROLE_HEADER), "ops_admin");
+  }
+  assert.equal(isOperationsPath("/api/opsx"), false);
 });

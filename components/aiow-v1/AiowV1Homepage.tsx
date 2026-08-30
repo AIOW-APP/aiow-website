@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, type MouseEvent } from "react";
+import { track } from "@/core/analytics/client";
 import { BookingModal } from "./BookingModal";
 import { OperationalField } from "./OperationalField";
 import { PriceCalculator } from "./PriceCalculator";
@@ -27,8 +28,8 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
   const [quote, setQuote] = useState<CalculatorQuoteConfig | null>(null);
   const bookingTrigger = useRef<HTMLElement | null>(null);
   const quoteTrigger = useRef<HTMLElement | null>(null);
-  function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; setBooking(true); }
-  function openQuote(event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) { quoteTrigger.current = event.currentTarget; setQuote(configuration); }
+  function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; void track("scan_cta_clicked", { experiment: null }); setBooking(true); }
+  function openQuote(event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) { quoteTrigger.current = event.currentTarget; void track("quote_opened", {}); setQuote(configuration); }
   const solutions = en ? [
     ["AI automation", "Turn repeated knowledge work into controlled workflows with human checkpoints.", "/en/ai-automation"],
     ["Local AI", "Run sensitive AI workloads closer to your own data and infrastructure.", "/en/local-ai"],

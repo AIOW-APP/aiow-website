@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { availableLeadStatuses, buildStatusTransition, isTerminalStatus, MAX_REOPEN_REASON_LENGTH, type LeadStatus } from "./ops-lifecycle";
 import styles from "./OpsDashboard.module.css";
 
 type DeliveryState = "pending" | "leased" | "retry" | "sent" | "dead" | "review" | "cancelled";
-type LeadStatus = "new" | "qualified" | "awaiting_info" | "scan_planned" | "proposal" | "won" | "lost";
 type Priority = "normal" | "high" | "urgent";
 type Lead = {
   schemaKind: "lead_projection"; id: string; source: "booking" | "quote"; sourceId: string; createdAt: string; updatedAt: string;
@@ -19,7 +19,6 @@ type Report = { schemaKind: "analytics_aggregate_report"; from: string; through:
 type LoadState<T> = { kind: "loading" } | { kind: "ready"; data: T } | { kind: "empty"; data: T } | { kind: "error"; message: string };
 type MutationState = { kind: "idle" } | { kind: "saving" } | { kind: "saved"; message: string } | { kind: "conflict"; message: string } | { kind: "error"; message: string };
 
-const STATUS: LeadStatus[] = ["new", "qualified", "awaiting_info", "scan_planned", "proposal", "won", "lost"];
 const PRIORITY: Priority[] = ["normal", "high", "urgent"];
 
 export function replaceLead(queue: Queue, lead: Lead): Queue { return { ...queue, items: queue.items.map((item) => item.id === lead.id ? lead : item) }; }
@@ -89,14 +88,20 @@ function ReportView({ report }: { report: Report }) {
 
 function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (lead: Lead) => void }) {
   const [status, setStatus] = useState<LeadStatus>(lead.status); const [priority, setPriority] = useState<Priority>(lead.priority);
-  const [nextActionAt, setNextActionAt] = useState(localInput(lead.nextActionAt)); const [mutation, setMutation] = useState<MutationState>({ kind: "idle" });
-  useEffect(() => { setStatus(lead.status); setPriority(lead.priority); setNextActionAt(localInput(lead.nextActionAt)); }, [lead]);
+  const [nextActionAt, setNextActionAt] = useState(localInput(lead.nextActionAt)); const [reopenReason, setReopenReason] = useState(""); const [mutation, setMutation] = useState<MutationState>({ kind: "idle" });
+  useEffect(() => { setStatus(lead.status); setPriority(lead.priority); setNextActionAt(isTerminalStatus(lead.status) ? "" : localInput(lead.nextActionAt)); setReopenReason(""); }, [lead]);
+  const statusChoices = availableLeadStatuses(lead.status);
+  const terminalSelection = isTerminalStatus(status);
+  const transition = buildStatusTransition(lead.status, status, reopenReason);
   async function mutate(operation: "mark_read" | "set_priority" | "transition_status" | "set_next_action") {
+    const requestedTransition = operation === "transition_status" ? buildStatusTransition(lead.status, status, reopenReason) : null;
+    if (requestedTransition && !requestedTransition.ok) { setMutation({ kind: "error", message: requestedTransition.reason === "reopen_reason_required" ? "Een heropeningsreden is verplicht." : requestedTransition.reason === "reopen_reason_too_long" ? `De heropeningsreden mag maximaal ${MAX_REOPEN_REASON_LENGTH} tekens bevatten.` : "Deze statusovergang is niet toegestaan." }); return; }
+    if (operation === "set_next_action" && terminalSelection) { setNextActionAt(""); setMutation({ kind: "error", message: "Een afgesloten lead kan geen volgende actie hebben." }); return; }
     const idempotencyKey = crypto.randomUUID();
     const common = { idempotencyKey, leadId: lead.id, expectedRevision: lead.revision, operation };
     const body = operation === "mark_read" ? { schemaKind: "ops_mark_read", ...common, unread: false }
       : operation === "set_priority" ? { schemaKind: "ops_set_priority", ...common, priority }
-      : operation === "transition_status" ? { schemaKind: "ops_transition_status", ...common, status, reopenReason: null }
+      : operation === "transition_status" ? { schemaKind: "ops_transition_status", ...common, status: requestedTransition!.status, reopenReason: requestedTransition!.reopenReason }
       : { schemaKind: "ops_set_next_action", ...common, nextActionAt: nextActionAt ? new Date(nextActionAt).toISOString() : null };
     setMutation({ kind: "saving" });
     try {
@@ -113,8 +118,9 @@ function LeadCard({ lead, onUpdate }: { lead: Lead; onUpdate: (lead: Lead) => vo
     <div className={styles.controls} aria-label={`Acties voor ${lead.displayName}`}>
       {lead.unread && <button type="button" onClick={() => void mutate("mark_read")} disabled={mutation.kind === "saving"}>Markeer gelezen</button>}
       <label>Prioriteit<select value={priority} onChange={(event) => setPriority(event.target.value as Priority)}>{PRIORITY.map((value) => <option key={value}>{value}</option>)}</select></label><button type="button" onClick={() => void mutate("set_priority")} disabled={mutation.kind === "saving" || priority === lead.priority}>Bewaar prioriteit</button>
-      <label>Status<select value={status} onChange={(event) => setStatus(event.target.value as LeadStatus)}>{STATUS.map((value) => <option key={value}>{value}</option>)}</select></label><button type="button" onClick={() => void mutate("transition_status")} disabled={mutation.kind === "saving" || status === lead.status}>Bewaar status</button>
-      <label>Volgende actie<input type="datetime-local" value={nextActionAt} onChange={(event) => setNextActionAt(event.target.value)} /></label><button type="button" onClick={() => void mutate("set_next_action")} disabled={mutation.kind === "saving"}>Bewaar actie</button>
+      <label>Status<select value={status} onChange={(event) => { const next = event.target.value as LeadStatus; setStatus(next); if (isTerminalStatus(next)) setNextActionAt(""); }}>{statusChoices.map((value) => <option key={value}>{value}</option>)}</select></label><button type="button" onClick={() => void mutate("transition_status")} disabled={mutation.kind === "saving" || status === lead.status || !transition.ok}>Bewaar status</button>
+      {lead.status === "lost" && status === "qualified" && <label>Heropeningsreden<textarea required maxLength={MAX_REOPEN_REASON_LENGTH} value={reopenReason} onChange={(event) => setReopenReason(event.target.value)} /></label>}
+      <label>Volgende actie<input type="datetime-local" value={terminalSelection ? "" : nextActionAt} onChange={(event) => setNextActionAt(event.target.value)} disabled={terminalSelection} /></label><button type="button" onClick={() => void mutate("set_next_action")} disabled={mutation.kind === "saving" || terminalSelection}>Bewaar actie</button>
     </div>
     {mutation.kind !== "idle" && <p className={styles.mutation} role={mutation.kind === "error" || mutation.kind === "conflict" ? "alert" : "status"}>{mutation.kind === "saving" ? "Wijziging veilig opslaan…" : mutation.message}</p>}
   </article>;

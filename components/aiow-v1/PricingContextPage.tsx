@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { track } from "@/core/analytics/client";
 import type { AiowLocale } from "@/lib/aiow-v1/locale";
 import type { LocalizedPricingContext } from "@/lib/aiow-v1/pricing-contexts-localized";
 import { BookingModal } from "./BookingModal";
@@ -10,10 +11,16 @@ import { PublicHeader } from "./PublicHeader";
 import shared from "./AiowV1Homepage.module.css";
 import styles from "./PricingContextPage.module.css";
 
+const ANALYTICS_CONTEXTS = {
+  accountants: "accountants", zorg: "care", logistiek: "logistics", industrie: "manufacturing",
+  woning: "woning", "bedrijfshal-industrie": "bedrijfshal-industrie",
+} as const;
+
 export function PricingContextPage({ context, locale = "nl" }: { context: LocalizedPricingContext; locale?: AiowLocale }) {
   const [booking, setBooking] = useState(false); const en = locale === "en";
   const bookingTrigger = useRef<HTMLElement | null>(null);
-  function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; setBooking(true); }
+  useEffect(() => { const contextSlug = ANALYTICS_CONTEXTS[context.slug as keyof typeof ANALYTICS_CONTEXTS]; if (!en && contextSlug) void track("context_opened", { contextSlug }); }, [context.slug, en]);
+  function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; void track("scan_cta_clicked", { experiment: null }); setBooking(true); }
   return <div className={`${shared.site} ${styles.site}`}>
     <PublicHeader locale={locale} onBook={openBooking} />
     <main>

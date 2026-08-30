@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { BOOKING_SLOTS } from "@/lib/aiow-v1/booking.mjs";
 import { amsterdamDateISO } from "@/lib/aiow-v1/booking-runtime.mjs";
 import { track } from "@/core/analytics/client";
+import { requestBooking } from "./booking-request";
 import styles from "./AiowV1Homepage.module.css";
 
 type Form = {
@@ -54,12 +55,10 @@ export function BookingModal({ open, onClose, locale = "nl", returnFocus }: { op
     event.preventDefault(); if (sending.current) return; sending.current = true; setStatus("sending"); setErrors({});
     const fingerprint = JSON.stringify({ ...form, locale });
     if (operation.current.fingerprint !== fingerprint) operation.current = { fingerprint, key: crypto.randomUUID() };
-    try {
-      const response = await fetch("/api/booking", { method: "POST", headers: { "content-type": "application/json", "idempotency-key": operation.current.key }, body: fingerprint });
-      const body = await response.json(); if (!response.ok || !body.ok) { setErrors(body.fields || {}); void track("booking_failed", { failureClass: response.status === 429 ? "rate_limit" : response.status === 409 ? "conflict" : response.status >= 500 ? "unavailable" : "validation" }); throw new Error(body.error || "failed"); }
-      setRequestId(body.requestId); setStatus("success"); void track("booking_succeeded", { experiment: null });
-    } catch { setStatus("error"); }
-    finally { sending.current = false; }
+    const result = await requestBooking(fetch, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": operation.current.key }, body: fingerprint }, track);
+    if (result.ok) { setRequestId(result.requestId); setStatus("success"); }
+    else { setErrors(result.fields); setStatus("error"); }
+    sending.current = false;
   }
   return <div className={styles.modalBackdrop} onMouseDown={(event) => { if (event.target === event.currentTarget && !sending.current) onClose(); }}>
     <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1} ref={dialog}>

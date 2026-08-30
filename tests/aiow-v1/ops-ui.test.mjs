@@ -2,11 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const [page, ui, css, middleware] = await Promise.all([
+const [page, ui, css, middleware, authority] = await Promise.all([
   readFile(new URL("../../app/portal/admin/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../../components/aiow-v1/OpsDashboard.tsx", import.meta.url), "utf8"),
   readFile(new URL("../../components/aiow-v1/OpsDashboard.module.css", import.meta.url), "utf8"),
   readFile(new URL("../../middleware.ts", import.meta.url), "utf8"),
+  readFile(new URL("../../middleware-ops-authority.ts", import.meta.url), "utf8"),
 ]);
 
 test("ops consumer mounts only after the existing middleware authority marker", () => {
@@ -15,8 +16,9 @@ test("ops consumer mounts only after the existing middleware authority marker", 
   assert.match(page, /x-aiow-operator-role/);
   assert.match(page, /notFound\(\)/);
   assert.doesNotMatch(page, /fetch\(|listVentureAccounts/);
-  assert.match(middleware, /access\.kind === "not_found"[^]*status: 404/);
-  assert.match(middleware, /hostname: request\.headers\.get\("host"\)/);
+  assert.match(authority, /access\.kind === "not_found"[^]*status: 404/);
+  assert.match(authority, /hostname: requestHeaders\.get\("host"\)/);
+  assert.match(middleware, /applyOperationsAuthority/);
 });
 
 test("ops UI closes loading, empty, error, report and retry states", () => {
@@ -37,6 +39,16 @@ test("ops queue exposes contract fields and revision-bound controls", () => {
   assert.match(ui, /Bewaar prioriteit/);
   assert.match(ui, /Bewaar status/);
   assert.match(ui, /Bewaar actie/);
+});
+
+test("ops queue exposes only legal lifecycle edges and closes terminal next actions", () => {
+  assert.match(ui, /availableLeadStatuses\(lead\.status\)/);
+  assert.match(ui, /buildStatusTransition\(lead\.status, status, reopenReason\)/);
+  assert.match(ui, /Heropeningsreden/);
+  assert.match(ui, /maxLength=\{MAX_REOPEN_REASON_LENGTH\}/);
+  assert.match(ui, /reopenReason: requestedTransition!\.reopenReason/);
+  assert.match(ui, /disabled=\{terminalSelection\}/);
+  assert.match(ui, /value=\{terminalSelection \? "" : nextActionAt\}/);
 });
 
 test("ops surface is responsive, theme-aware, keyboard-visible and reduced-motion safe", () => {
