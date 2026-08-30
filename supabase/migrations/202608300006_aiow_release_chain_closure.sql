@@ -1,6 +1,6 @@
 begin;
 
-select set_config('aiow.closure_original_role',current_user,true);
+select set_config('aiow.closure_original_role',current_user,false);
 
 create temporary table aiow_closure_temporary_role_memberships(
  role_name name primary key
@@ -252,3 +252,9 @@ begin
 end $closure_restore_runtime_reader_capability$;
 
 commit;
+
+-- Supabase records migration history in the same session after this file.
+-- SET ROLE is transactional, so reassert the original active role after COMMIT
+-- before the CLI writes supabase_migrations.schema_migrations.
+select set_config('role',current_setting('aiow.closure_original_role'),false);
+select set_config('aiow.closure_original_role','',false);

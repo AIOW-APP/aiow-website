@@ -336,8 +336,13 @@ def apply_managed_migrations(env: dict[str, str], database: str, migrations: lis
                 assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
                 sql(env, f"""grant aiow_mail_run_receipt_owner to {MANAGED_LOGIN} with admin false, inherit true, set true;
                   grant aiow_mail_runtime_reader to {MANAGED_LOGIN} with admin false, inherit true, set true;""", user=MANAGED_LOGIN, database=database)
-        apply(env, path, user=MANAGED_LOGIN, database=database)
-        sql(env, f"insert into supabase_migrations.schema_migrations(version,name) values({q(version)},{q(path.name)});", user=MANAGED_LOGIN, database=database)
+        run([
+            "psql", "-X", "-v", "ON_ERROR_STOP=1", "-qAt",
+            "-U", MANAGED_LOGIN, "-d", database,
+            "-f", str(path),
+            "-c", "select current_user,session_user,has_schema_privilege(current_user,'supabase_migrations','USAGE'),has_table_privilege(current_user,'supabase_migrations.schema_migrations','INSERT');",
+            "-c", f"insert into supabase_migrations.schema_migrations(version,name) values({q(version)},{q(path.name)});",
+        ], env)
         if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql":
             sql(env, f"""revoke aiow_mail_run_receipt_owner from {MANAGED_LOGIN};
               revoke aiow_mail_runtime_reader from {MANAGED_LOGIN};""", user=MANAGED_LOGIN, database=database)
@@ -388,14 +393,16 @@ def prove_managed_full_chain(env: dict[str, str], migrations: list[pathlib.Path]
     acl_count = prove_acl_and_obsolete_absent(env, MANAGED_DATABASE)
 
     setup_managed_database(env, MANAGED_FAILURE_DATABASE)
-    apply_managed_migrations(env, MANAGED_FAILURE_DATABASE, migrations[:-1])
+    closure = next(path for path in migrations if path.name == "202608300006_aiow_release_chain_closure.sql")
+    closure_index = migrations.index(closure)
+    apply_managed_migrations(env, MANAGED_FAILURE_DATABASE, migrations[:closure_index])
     before_catalog = managed_catalog_fingerprint(env, MANAGED_FAILURE_DATABASE)
     before_memberships = managed_membership_inventory(env)
-    source = migrations[-1].read_text()
+    source = closure.read_text()
     injection_point = "end $closure_runtime_reader_capability$;\n\n-- The browser"
     assert source.count(injection_point) == 1
     forced = source.replace(injection_point, "end $closure_runtime_reader_capability$;\n\ndo $aiow_managed_forced_failure$ begin raise exception 'AIOW_MANAGED_FORCED_FAILURE'; end $aiow_managed_forced_failure$;\n\n-- The browser")
-    forced_path = tmp / migrations[-1].name
+    forced_path = tmp / closure.name
     forced_path.write_text(forced)
     failed = apply(env, forced_path, False, MANAGED_LOGIN, MANAGED_FAILURE_DATABASE)
     assert_error(failed, "AIOW_MANAGED_FORCED_FAILURE")
@@ -403,7 +410,7 @@ def prove_managed_full_chain(env: dict[str, str], migrations: list[pathlib.Path]
     assert managed_membership_inventory(env) == before_memberships == MANAGED_AUTO_MEMBERSHIPS
     assert sql(env, "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relname like 'aiow_closure_temporary_%';", database=MANAGED_FAILURE_DATABASE).stdout.strip() == "0"
     assert sql(env, f"select count(*) from pg_auth_members where member={q(MANAGED_LOGIN)}::regrole and grantor={q(MANAGED_LOGIN)}::regrole;").stdout.strip() == "0"
-    assert sql(env, "select count(*) from supabase_migrations.schema_migrations;", database=MANAGED_FAILURE_DATABASE).stdout.strip() == str(len(migrations) - 1)
+    assert sql(env, "select count(*) from supabase_migrations.schema_migrations;", database=MANAGED_FAILURE_DATABASE).stdout.strip() == str(closure_index)
     return acl_count
 
 
