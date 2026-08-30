@@ -6,9 +6,10 @@ import base64, concurrent.futures, copy, datetime as dt, hashlib, json, os, path
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PREDECESSOR = ROOT / "supabase/migrations/20260828_aiow_quote_adapter_v1.sql"
 MIGRATION = ROOT / "supabase/migrations/20260830_aiow_commercial_control_plane_v1.sql"
+REMEDIATION = ROOT / "supabase/migrations/20260830_1301_aiow_cross_lane_digest_quote_ops_remediation.sql"
 FIXTURES = json.loads((ROOT / "tests/fixtures/aiow-commercial-contract-v1.json").read_text())
 EXPECTED_TABLES = {"commercial_leads","booking_leads","commercial_mail_outbox","commercial_events","commercial_event_daily","commercial_audit","commercial_provider_gates","commercial_idempotency"}
-EXPECTED_RPCS = {"aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"}
+EXPECTED_RPCS = {"aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_quote_prepared_load_v1","aiow_quote_committed_pdf_load_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"}
 DIGEST_A = "a" * 64
 DIGEST_B = "b" * 64
 
@@ -34,6 +35,13 @@ def j(value):
 def digest(value):
     return hashlib.sha256(json.dumps(value,separators=(",",":"),sort_keys=True,ensure_ascii=False).encode()).hexdigest()
 
+def without_replayed(value):
+    return {k:v for k,v in value.items() if k != "replayed"}
+
+def node_digest(value, endpoint):
+    script = "import {endpointPayloadDigest} from './lib/aiow-v1/commercial-api-runtime.mjs';const v=JSON.parse(process.argv[1]);process.stdout.write(endpointPayloadDigest(process.argv[2],v));"
+    return run(["node","--input-type=module","-e",script,json.dumps(value,separators=(",",":"),ensure_ascii=False),endpoint],os.environ.copy()).stdout
+
 def call(env, expression, db="postgres"):
     result = sql(env, f"select ({expression})::text;", db, True, "service_role")
     return json.loads(result.stdout.strip())
@@ -46,15 +54,13 @@ def normalized_booking(booking):
 def booking_expr(key, booking, payload_digest=None, request_id=None, source_override=None):
     request_id = request_id or str(uuid.uuid4())
     source = source_override or {"route":"/" if booking["locale"] == "nl" else "/en", "locale":booking["locale"]}
-    canonical=normalized_booking(booking)
-    return f"public.aiow_booking_commit_v1({q(request_id)}::uuid,{q(key)},{q(payload_digest or digest(canonical))},{j(booking)},{j(source)})"
+    return f"public.aiow_booking_commit_v1({q(request_id)}::uuid,{q(key)},{q(payload_digest or digest(booking))},{j(booking)},{j(source)})"
 
 def mutation_expr(key, mutation, payload_digest=None):
-    canonical={k:v for k,v in mutation.items() if k not in ("schemaKind","idempotencyKey")}
-    return f"public.aiow_commercial_mutate_v1({q(key)},{q(payload_digest or digest(canonical))},{j(mutation)})"
+    return f"public.aiow_commercial_mutate_v1({q(key)},{q(payload_digest or digest(mutation))},{j(mutation)})"
 
 def event_expr(key, event, payload_digest=None):
-    return f"public.aiow_commercial_event_v1({q(key)},{q(payload_digest or digest({k:v for k,v in event.items() if k!='schemaKind'}))},{j(event)})"
+    return f"public.aiow_commercial_event_v1({q(key)},{q(payload_digest or digest(event))},{j(event)})"
 
 def quote_request_fixture(name, email):
     value=copy.deepcopy(FIXTURES["requests"]["QuoteRequest"])
@@ -90,7 +96,7 @@ def prove_catalog_and_acl(env):
       where n.nspname='public' and p.proname=any(array[%s]))
       select count(*)||','||count(*) filter(where has_function_privilege('service_role',oid,'EXECUTE'))||','||
        count(*) filter(where has_function_privilege('anon',oid,'EXECUTE'))||','||count(*) filter(where has_function_privilege('authenticated',oid,'EXECUTE'))||','||count(*) filter(where has_function_privilege('public',oid,'EXECUTE')) from r;""" % ",".join(q(x) for x in sorted(EXPECTED_RPCS))).stdout.strip()
-    assert acl == "19,19,0,0,0", acl
+    assert acl == "22,22,0,0,0", acl
     table_acl = sql(env, "select count(*) filter(where has_table_privilege('service_role','public.'||x,'SELECT,INSERT,UPDATE,DELETE'))||','||count(*) filter(where has_table_privilege('anon','public.'||x,'SELECT,INSERT,UPDATE,DELETE'))||','||count(*) filter(where has_table_privilege('authenticated','public.'||x,'SELECT,INSERT,UPDATE,DELETE')) from unnest(array[" + ",".join(q(x) for x in sorted(EXPECTED_TABLES)) + "]) x;").stdout.strip()
     assert table_acl == "0,0,0", table_acl
     denied = sql(env, "select count(*) from public.commercial_leads;", check=False, role="service_role")
@@ -104,31 +110,41 @@ def prove_booking_and_idempotency(env):
     assert sql(env, "select (select count(*) from commercial_leads)||','||(select count(*) from booking_leads)||','||(select count(*) from commercial_mail_outbox);").stdout.strip() == before
     first = call(env, booking_expr("booking-proof-0001", booking))
     replay = call(env, booking_expr("booking-proof-0001", booking, request_id=str(uuid.uuid4())))
-    assert replay == first and replay["replayed"] is False
+    assert without_replayed(replay) == without_replayed(first) and first["replayed"] is False and replay["replayed"] is True
     counts = sql(env, f"select (select count(*) from booking_leads b where b.commercial_lead_id={q(first['leadId'])}::uuid)||','||(select count(*) from commercial_mail_outbox o where o.commercial_lead_id={q(first['leadId'])}::uuid);").stdout.strip()
     assert counts == "1,2", counts
-    conflict = sql(env, f"select {booking_expr('booking-proof-0001',{**booking,'details':'changed'},digest(normalized_booking(booking)))};", check=False, role="service_role")
+    conflict = sql(env, f"select {booking_expr('booking-proof-0001',{**booking,'details':'changed'},digest(booking))};", check=False, role="service_role")
     assert_error(conflict, "AIOW_PAYLOAD_DIGEST_INVALID")
     key = "booking-race-0001"
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: call(env, booking_expr(key, booking, request_id=str(uuid.uuid4()))), range(2)))
-    assert results[0] == results[1] and results[0]["replayed"] is False
+    assert without_replayed(results[0]) == without_replayed(results[1]) and sorted(x["replayed"] for x in results) == [False,True]
     race_counts = sql(env, f"select count(*)||','||(select count(*) from commercial_mail_outbox where commercial_lead_id=c.id) from commercial_leads c where c.id={q(results[0]['leadId'])}::uuid group by c.id;").stdout.strip()
     assert race_counts == "1,2", race_counts
     return booking, first
+
+def prove_cross_runtime_digest_goldens(env, booking):
+    samples=[("booking",booking),("quote_prepare",FIXTURES["requests"]["QuoteRequest"])]
+    for event in FIXTURES["events"].values(): samples.append(("analytics",event))
+    for name in ("OpsMarkRead","OpsSetPriority","OpsTransitionStatus","OpsSetNextAction","OpsResolveOutbox","OpsLegalHold"):
+        samples.append(("ops_mutation",FIXTURES["requests"][name]))
+    for endpoint,value in samples:
+        js_digest=node_digest(value,endpoint); pg=sql(env,f"select public.aiow_sha256_json_v1({j(value)});").stdout.strip()
+        assert js_digest==pg==digest(value),(endpoint,js_digest,pg,digest(value))
 
 def prove_queue_mutate_events(env, lead):
     queue = call(env, "public.aiow_commercial_queue_v1(null,null,100)")
     assert any(x["id"] == lead["leadId"] for x in queue["items"])
     mutation = {"schemaKind":"ops_mark_read","idempotencyKey":"mutate-read-0001","leadId":lead["leadId"],"expectedRevision":1,"operation":"mark_read","unread":False}
     ack = call(env, mutation_expr("mutate-read-0001", mutation)); assert ack["revision"] == 2 and ack["projection"]["unread"] is False
-    replay = call(env, mutation_expr("mutate-read-0001", mutation)); assert replay == ack and replay["replayed"] is False
+    replay = call(env, mutation_expr("mutate-read-0001", mutation)); assert without_replayed(replay) == without_replayed(ack) and ack["replayed"] is False and replay["replayed"] is True
     changed_mutation={**mutation,"expectedRevision":999}
-    changed_replay = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest({k:v for k,v in mutation.items() if k not in ('schemaKind','idempotencyKey')}))};", check=False, role="service_role")
+    changed_replay = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest(mutation))};", check=False, role="service_role")
     assert_error(changed_replay,"AIOW_PAYLOAD_DIGEST_INVALID")
-    conflict = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest({k:v for k,v in changed_mutation.items() if k not in ('schemaKind','idempotencyKey')}))};", check=False, role="service_role"); assert_error(conflict,"AIOW_IDEMPOTENCY_CONFLICT")
+    conflict = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest(changed_mutation))};", check=False, role="service_role"); assert_error(conflict,"AIOW_IDEMPOTENCY_CONFLICT")
     wrong = {**mutation,"idempotencyKey":"mutate-wrong-cas-1","expectedRevision":1,"operation":"set_priority","priority":"urgent"}
     denied = sql(env, f"select {mutation_expr('mutate-wrong-cas-1',wrong)};", check=False, role="service_role"); assert_error(denied,"AIOW_REVISION_CONFLICT")
+    assert '"schemaKind": "revision_conflict"' in denied.stderr and '"currentRevision": 2' in denied.stderr, denied.stderr
     now = dt.datetime.now(dt.timezone.utc)
     event = {"schemaKind":"analytics_page_view","eventId":str(uuid.uuid4()),"event":"page_view","occurredAt":now.isoformat(),"route":"/","locale":"nl","viewport":"desktop"}
     first = call(env,event_expr("event-proof-00001",event)); replay = call(env,event_expr("event-proof-00001",event))
@@ -171,18 +187,30 @@ def prove_claims_and_results(env, booking):
     retry = call(env,f"public.aiow_mail_outbox_retry_v2({q(b['id'])}::uuid,{q(b['leaseOwner'])},{q(b['leaseToken'])}::uuid,{q(b['payloadSha256'])},{b['revision']},{j(transient)},{q(updated)}::timestamptz)"); assert retry["state"] == "retry"
     dead = call(env,f"public.aiow_mail_outbox_dead_v2({q(c['id'])}::uuid,{q(c['leaseOwner'])},{q(c['leaseToken'])}::uuid,{q(c['payloadSha256'])},{c['revision']},{j(permanent)})"); assert dead["state"] == "dead"
     review = call(env,f"public.aiow_mail_outbox_review_v2({q(d['id'])}::uuid,{q(d['leaseOwner'])},{q(d['leaseToken'])}::uuid,{q(d['payloadSha256'])},{d['revision']},{j(ambiguous)})"); assert review["state"] == "review"
-    resolved = call(env,f"public.aiow_mail_outbox_resolve_v2('resolve-review-001',{q(DIGEST_A)},{q(d['id'])}::uuid,{review['revision']},'sent','verified','ticket-1')"); assert resolved["state"] == "sent"
+    lead_revision=int(sql(env,f"select revision from commercial_leads where id={q(d['commercialLeadId'])}::uuid;").stdout.strip())
+    mutation={"schemaKind":"ops_resolve_outbox","idempotencyKey":"resolve-review-001","leadId":d["commercialLeadId"],"expectedRevision":lead_revision,"operation":"resolve_outbox","jobId":d["id"],"jobExpectedRevision":review["revision"],"resolution":"mark_sent","reason":"verified","evidence":"ticket-1"}
+    expression=f"public.aiow_mail_outbox_resolve_v2('resolve-review-001',{q(digest(mutation))},{j(mutation)})"
+    audit_before=int(sql(env,f"select count(*) from commercial_audit where commercial_lead_id={q(d['commercialLeadId'])}::uuid and action='resolve_outbox';").stdout.strip())
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: resolved=list(pool.map(lambda _:call(env,expression),range(2)))
+    assert without_replayed(resolved[0])==without_replayed(resolved[1]) and sorted(x["replayed"] for x in resolved)==[False,True] and resolved[0]["operation"]=="resolve_outbox" and resolved[0]["effect"]["outboxResolution"]=="sent"
+    state=sql(env,f"select revision||','||state from commercial_mail_outbox where id={q(d['id'])}::uuid;").stdout.strip(); assert state==f"{review['revision']+1},sent",state
+    assert int(sql(env,f"select count(*) from commercial_audit where commercial_lead_id={q(d['commercialLeadId'])}::uuid and action='resolve_outbox';").stdout.strip())==audit_before+1
+    changed={**mutation,"reason":"changed"}; conflict=sql(env,f"select public.aiow_mail_outbox_resolve_v2('resolve-review-001',{q(digest(changed))},{j(changed)});",check=False,role="service_role"); assert_error(conflict,"AIOW_IDEMPOTENCY_CONFLICT")
     return leads
 
 def prove_quote_v2(env):
     now = dt.datetime.now(dt.timezone.utc); request = str(uuid.uuid4()); key="quote-v2-proof-01"
     quote=quote_request_fixture("Quote Proof","quote@example.com"); contact=quote["contact"]; consent=quote["consent"]; source=quote["source"]
     prepare=f"public.aiow_quote_prepare_v1({q(request)}::uuid,{q(key)},{q(now.isoformat())}::timestamptz,{q(quote['country'])},{j(quote)},{j(contact)},{j(consent)},{j(source)})"
-    first=call(env,prepare); replay=call(env,prepare); assert replay==first and replay["replayed"] is False
-    pdf=b"%PDF-commercial-proof"; digest=hashlib.sha256(pdf).hexdigest(); encoded=base64.b64encode(pdf).decode()
+    first=call(env,prepare); replay=call(env,prepare); assert without_replayed(replay)==without_replayed(first) and first["replayed"] is False and replay["replayed"] is True
+    prepared=call(env,f"public.aiow_quote_prepared_load_v1({q(request)}::uuid,{q(key)},{q(first['leadId'])}::uuid,{q(first['commercialLeadId'])}::uuid,{q(first['quoteNumber'])})")
+    assert prepared["state"]=="prepared" and prepared["requestPayloadDigest"]==digest(quote) and prepared["quote"]==quote
+    pdf=b"%PDF-commercial-proof"; pdf_digest=hashlib.sha256(pdf).hexdigest(); encoded=base64.b64encode(pdf).decode()
     customer=quote_mail_fixture("p_customer_mail",first["commercialLeadId"]); internal=quote_mail_fixture("p_internal_mail",first["commercialLeadId"])
-    commit=f"public.aiow_quote_commit_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(first['quoteNumber'])},{q(first['leadId'])}::uuid,{q(first['quoteNumber']+'.pdf')},'application/pdf',{q(encoded)},{q(digest)},{j(customer)},{j(internal)},{j(quote)},{j(contact)},{j(source)},{q(quote['country'])})"
-    ack=call(env,commit); replay_commit=call(env,commit); assert ack["state"]=="committed" and replay_commit==ack and replay_commit["replayed"] is False
+    commit=f"public.aiow_quote_commit_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(first['quoteNumber'])},{q(first['leadId'])}::uuid,{q(first['quoteNumber']+'.pdf')},'application/pdf',{q(encoded)},{q(pdf_digest)},{j(customer)},{j(internal)},{j(quote)},{j(contact)},{j(source)},{q(quote['country'])})"
+    ack=call(env,commit); replay_commit=call(env,commit); assert ack["state"]=="committed" and without_replayed(replay_commit)==without_replayed(ack) and ack["replayed"] is False and replay_commit["replayed"] is True
+    committed=call(env,f"public.aiow_quote_committed_pdf_load_v1({q(request)}::uuid,{q(key)},{q(first['leadId'])}::uuid,{q(first['commercialLeadId'])}::uuid,{q(first['quoteNumber'])},{q(digest(quote))})")
+    assert base64.b64decode(committed["base64"])==pdf and committed["sha256"]==pdf_digest
     assert sql(env,f"select (select count(*) from quote_documents where lead_id={q(first['leadId'])}::uuid)||','||(select count(*) from commercial_mail_outbox where commercial_lead_id={q(first['commercialLeadId'])}::uuid);").stdout.strip()=="1,2"
     return first
 
@@ -190,16 +218,20 @@ def prove_gate_retention_abandon(env, booking):
     now=dt.datetime.now(dt.timezone.utc); approved=now-dt.timedelta(minutes=1); expires=now+dt.timedelta(days=1)
     gate={"schemaKind":"provider_gate_record","gateId":"mail_provider_production_v1","state":"approved","environment":"production","provider":"microsoft_graph","tenantId":str(uuid.uuid4()),"applicationId":str(uuid.uuid4()),"mailbox":"mail@aiow.ai","sender":"mail@aiow.ai","controlMailbox":"control@aiow.ai","secretPresent":True,"oauthClientCredentialsPresent":True,"exchangeApplicationRole":"Application Mail.Send","exchangeRbacSenderInScope":True,"exchangeRbacControlMailboxInScope":False,"entraUnscopedMailSendAssigned":False,"evidenceSha256":DIGEST_A,"revision":1,"ownerApprovedBy":"richard","approvedAt":approved.isoformat(),"expiresAt":expires.isoformat(),"runtimeCapability":"mail_send","fallbackProvider":None,"approvalBindingSha256":None}
     binding=sql(env,f"select public.aiow_provider_gate_binding_v1({j(gate)});").stdout.strip(); gate["approvalBindingSha256"]=binding
-    stored=call(env,f"public.aiow_provider_gate_write_v1('provider-gate-0001',{q(DIGEST_A)},{j(gate)})"); assert stored["approvalBindingSha256"]==binding
+    gate_expr=f"public.aiow_provider_gate_write_v1('provider-gate-0001',{q(digest(gate))},{j(gate)})"
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: gate_results=list(pool.map(lambda _:call(env,gate_expr),range(2)))
+    assert gate_results[0]==gate_results[1] and gate_results[0]["approvalBindingSha256"]==binding
     invalid={**gate,"sender":"evil@example.com","revision":2}
-    denied=sql(env,f"select public.aiow_provider_gate_write_v1('provider-gate-0002',{q(DIGEST_B)},{j(invalid)});",check=False,role="service_role"); assert_error(denied,"AIOW_GATE_BINDING_INVALID")
+    denied=sql(env,f"select public.aiow_provider_gate_write_v1('provider-gate-0002',{q(digest(invalid))},{j(invalid)});",check=False,role="service_role"); assert_error(denied,"AIOW_GATE_BINDING_INVALID")
     leads=make_more_bookings(env,booking,3)
     for i,lead in enumerate(leads):
         m={"schemaKind":"ops_transition_status","idempotencyKey":f"lost-retain-{i:04d}","leadId":lead["leadId"],"expectedRevision":1,"operation":"transition_status","status":"lost","reopenReason":None}
         call(env,mutation_expr(m["idempotencyKey"],m))
     hold={"schemaKind":"ops_legal_hold","idempotencyKey":"hold-retain-0001","leadId":leads[1]["leadId"],"expectedRevision":2,"operation":"set_legal_hold","enabled":True,"reason":"litigation"}
     call(env,mutation_expr(hold["idempotencyKey"],hold))
-    relation=call(env,f"public.aiow_active_customer_relation_set_v1({q(leads[2]['leadId'])}::uuid,2,'relation-retain01',{q(DIGEST_A)},true,'active contract')"); assert relation["projection"]["activeCustomerRelation"] is True
+    relation_expr=f"public.aiow_active_customer_relation_set_v1({q(leads[2]['leadId'])}::uuid,2,'relation-retain01',{q(DIGEST_A)},true,'active contract')"
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: relations=list(pool.map(lambda _:call(env,relation_expr),range(2)))
+    assert without_replayed(relations[0])==without_replayed(relations[1]) and sorted(x["replayed"] for x in relations)==[False,True] and relations[0]["projection"]["activeCustomerRelation"] is True
     sql(env,"update commercial_leads set terminal_at=transaction_timestamp()-interval '100 days',abandoned_at=transaction_timestamp()-interval '100 days' where id=any(array["+",".join(q(x["leadId"])+"::uuid" for x in leads)+"]);")
     retention=call(env,"public.aiow_commercial_retention_dry_run_v1(transaction_timestamp())")
     assert retention["eligible"]["leadPii"]==1 and retention["excludedLegalHold"]==1 and retention["excludedActiveCustomerRelation"]==1
@@ -221,23 +253,24 @@ def prove_upgrade_route(env):
     sql(env,f"""insert into quote_leads(id,idempotency_key,request_id,quote_number,quote_year,quote_sequence,state,request_payload_hash,normalized_quote,contact,consent,source,country,received_at,prepared_at,committed_at)
       values('10000000-0000-4000-8000-000000000001','upgrade-prepared1','upgrade-prepared','AIOW-2026-9001',2026,9001,'prepared',{q(DIGEST_A)},'{{}}','{{"name":"Prepared","email":"prepared@example.com"}}','{{}}','{{"route":"/quote","locale":"nl"}}','NL',{q(now)},{q(now)},null),
       ('10000000-0000-4000-8000-000000000002','upgrade-committed','upgrade-committed','AIOW-2026-9002',2026,9002,'committed',{q(DIGEST_B)},'{{}}','{{"name":"Committed","email":"committed@example.com"}}','{{}}','{{"route":"/quote","locale":"nl"}}','NL',{q(now)},{q(now)},{q(now)});""",db)
-    apply(env,MIGRATION,db)
+    apply(env,MIGRATION,db); apply(env,REMEDIATION,db)
     mapped=sql(env,"select count(*)||','||count(distinct commercial_lead_id)||','||(select count(*) from commercial_leads where source='quote') from quote_leads;",db).stdout.strip(); assert mapped=="2,2,2",mapped
     visible=call(env,"public.aiow_commercial_queue_v1(null,null,100)",db); assert len(visible["items"])==1 and visible["items"][0]["sourceId"]=="10000000-0000-4000-8000-000000000002"
 
 def main():
     def step(message): print(f"PG_COMMERCIAL_PROOF_STEP {message}",flush=True)
-    tmp=pathlib.Path(tempfile.mkdtemp(prefix="aiow-commercial-pg-proof-", dir="/tmp")); data=tmp/"data"; sock=tmp/"socket"; sock.mkdir()
+    tmp=pathlib.Path(tempfile.mkdtemp(prefix="acp-", dir="/tmp")); data=tmp/"data"; sock=tmp/"socket"; sock.mkdir()
     with socket.socket() as s: s.bind(("127.0.0.1",0)); port=s.getsockname()[1]
-    env=os.environ.copy(); env.update(PGHOST=str(sock),PGPORT=str(port),PGUSER="postgres",PGDATABASE="postgres")
+    env=os.environ.copy(); env.update(PGHOST=str(sock),PGPORT=str(port),PGUSER="postgres",PGDATABASE="postgres",LC_ALL="C",LANG="C")
     started=False
     try:
         step("initdb"); run(["initdb","-D",str(data),"-A","trust","-U","postgres","--no-locale","--encoding=UTF8"],env)
         step("start-owned-cluster"); run(["pg_ctl","-D",str(data),"-l",str(tmp/"postgres.log"),"-o",f"-k {sock} -p {port} -c listen_addresses=''","-w","start"],env); started=True
         setup_roles(env,"postgres"); sql(env,"create database upgrade_proof;")
-        step("fresh-predecessor-successor-chain"); apply(env,PREDECESSOR); apply(env,MIGRATION)
+        step("fresh-predecessor-successor-chain"); apply(env,PREDECESSOR); apply(env,MIGRATION); apply(env,REMEDIATION)
         step("catalog-acl"); prove_catalog_and_acl(env)
         step("booking-atomic-idempotency-concurrency"); booking,lead=prove_booking_and_idempotency(env)
+        step("cross-runtime-digest-goldens"); prove_cross_runtime_digest_goldens(env,booking)
         step("queue-mutate-event"); prove_queue_mutate_events(env,lead)
         step("claim-order-concurrency-results"); prove_claims_and_results(env,booking)
         step("quote-v2"); prove_quote_v2(env)

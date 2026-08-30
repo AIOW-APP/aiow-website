@@ -5,6 +5,7 @@ import { createServer, request as nodeRequest } from "node:http";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { readFile } from "node:fs/promises";
+import { endpointPayloadDigest } from "../../lib/aiow-v1/commercial-api-runtime.mjs";
 
 const root = new URL("../../", import.meta.url);
 const fixtures = JSON.parse(await readFile(new URL("../fixtures/aiow-commercial-contract-v1.json", import.meta.url), "utf8"));
@@ -12,6 +13,8 @@ const secret = "commercial-route-proof-secret-000000000000000";
 const basic = `Basic ${Buffer.from("operator:correct horse battery staple").toString("base64")}`;
 const durable = { booking: new Map(), quote: new Map() };
 let rpcMode = "ok";
+let quoteCommitCalls = 0;
+let lastRpc = null;
 
 function json(res, status, value) {
   const bytes = Buffer.from(JSON.stringify(value));
@@ -41,7 +44,7 @@ function mockServer() {
       if (key === "booking-non2xx-1") return json(res, 500, { error: "provider failure" });
       const value = await body(req); const digest = JSON.stringify(value); const saved = durable.booking.get(key);
       if (saved && saved.digest !== digest) return json(res, 409, error("booking", "idempotency_conflict", rid, 409));
-      if (saved) return json(res, 202, saved.ack);
+      if (saved) return json(res, 202, { ...saved.ack, replayed: true });
       const ack = { schemaKind: "booking_ack", accepted: true, requestId: rid, leadId: "123e4567-e89b-42d3-a456-426614174000", revision: 1, preference: { date: value.date, slot: value.slot, subject: value.subject }, durableAt: "2026-08-30T12:00:00.000Z", replayed: false };
       durable.booking.set(key, { digest, ack }); return json(res, 202, ack);
     }
@@ -50,20 +53,25 @@ function mockServer() {
       if (value.schemaKind === "quote_prepare_request") {
         const digest = JSON.stringify(value.quote);
         if (saved && saved.digest !== digest) return json(res, 409, error("quote_prepare", "idempotency_conflict", rid, 409));
-        if (saved) return json(res, 200, saved.prepare);
+        if (saved) return json(res, 200, { ...saved.prepare, replayed: true });
         const prepare = { schemaKind: "quote_prepare_ack", accepted: true, requestId: rid, leadId: "223e4567-e89b-42d3-a456-426614174000", commercialLeadId: "323e4567-e89b-42d3-a456-426614174000", quoteNumber: "AIOW-2026-0001", state: "prepared", expiresAt: "2026-09-30T12:00:00.000Z", replayed: false };
-        durable.quote.set(key, { digest, prepare }); return json(res, 200, prepare);
+        durable.quote.set(key, { digest, quote:value.quote, receivedAt:value.receivedAt, prepare }); return json(res, 200, prepare);
       }
       if (!saved || value.requestId !== saved.prepare.requestId) return json(res, 409, error("quote_commit", "idempotency_conflict", rid, 409));
       if (saved.committed) return json(res, 200, saved.commit);
-      const ack = { schemaKind: "quote_commit_ack", accepted: true, requestId: value.requestId, leadId: value.leadId, commercialLeadId: value.commercialLeadId, quoteNumber: value.quoteNumber, state: "committed", pdfSha256: value.pdf.sha256, committedAt: "2026-08-30T12:00:00.000Z", replayed: false, pdfDeliveryPermitted: true };
-      saved.committed = true; saved.commit = ack; return json(res, 200, ack);
+      quoteCommitCalls += 1; const ack = { schemaKind: "quote_commit_ack", accepted: true, requestId: value.requestId, leadId: value.leadId, commercialLeadId: value.commercialLeadId, quoteNumber: value.quoteNumber, state: "committed", pdfSha256: value.pdf.sha256, committedAt: "2026-08-30T12:00:00.000Z", replayed: false, pdfDeliveryPermitted: true };
+      saved.committed = true; saved.commit = ack; saved.pdf=value.pdf; return json(res, 200, ack);
     }
     if (url.pathname.startsWith("/rest/v1/rpc/")) {
       if (rpcMode === "invalid") return json(res, 400, { code: "22023", message: "invalid" });
+      if (rpcMode === "revision") return json(res, 400, { code: "40001", details: JSON.stringify(fixtures.errors.RevisionConflict) });
       const name = url.pathname.split("/").at(-1); const args = await body(req);
+      lastRpc = { name, args };
+      if (name === "aiow_quote_prepared_load_v1") { const saved=durable.quote.get(args.p_idempotency_key); if(!saved)return json(res,404,{code:"P0001"}); return json(res,200,{schemaKind:"prepared_quote_authority",requestId:saved.prepare.requestId,idempotencyKey:args.p_idempotency_key,leadId:saved.prepare.leadId,commercialLeadId:saved.prepare.commercialLeadId,quoteNumber:saved.prepare.quoteNumber,state:saved.committed?"committed":"prepared",requestPayloadDigest:endpointPayloadDigest("quote_prepare",saved.quote),quote:saved.quote,receivedAt:saved.receivedAt,expiresAt:saved.prepare.expiresAt}); }
+      if (name === "aiow_quote_committed_pdf_load_v1") { const saved=durable.quote.get(args.p_idempotency_key); if(!saved?.committed)return json(res,404,{code:"P0001"}); return json(res,200,{schemaKind:"committed_quote_pdf",requestId:saved.prepare.requestId,leadId:saved.prepare.leadId,commercialLeadId:saved.prepare.commercialLeadId,quoteNumber:saved.prepare.quoteNumber,filename:saved.pdf.filename,mimeType:saved.pdf.mimeType,base64:saved.pdf.base64,sha256:saved.pdf.sha256}); }
       if (name === "aiow_commercial_queue_v1") return json(res, 200, fixtures.projections.QueueProjection);
       if (name === "aiow_commercial_mutate_v1") return json(res, 200, fixtures.acks.OpsMutationACK);
+      if (name === "aiow_mail_outbox_resolve_v2") return json(res, 200, { ...fixtures.acks.OpsMutationACK, operation: "resolve_outbox", effect: { outboxResolution: "sent" } });
       if (name === "aiow_commercial_report_v1") return json(res, 200, { ...fixtures.projections.AnalyticsAggregateReport, from: args.p_from, through: args.p_through });
       if (name === "aiow_commercial_event_v1") return json(res, 500, { code: "XX000", message: "offline" });
     }
@@ -113,6 +121,12 @@ test("commercial HTTP routes enforce ops authority, durable replay and exact fai
     const queue = await opsRequest(`${base}/api/ops/leads`, { headers: opsHeaders() }); assert.equal(queue.status, 200, `${await queue.text()}\n${app.output()}`); assert.deepEqual(await queue.json(), fixtures.projections.QueueProjection);
     const mutation = fixtures.requests.OpsMarkRead;
     const mutate = await opsRequest(`${base}/api/ops/leads/${mutation.leadId}`, { method: "PATCH", headers: opsHeaders({ "content-type": "application/json", "idempotency-key": mutation.idempotencyKey }), body: JSON.stringify(mutation) }); assert.equal(mutate.status, 200); assert.deepEqual(await mutate.json(), fixtures.acks.OpsMutationACK);
+    const resolve = fixtures.requests.OpsResolveOutbox;
+    const resolved = await opsRequest(`${base}/api/ops/leads/${resolve.leadId}`, { method: "PATCH", headers: opsHeaders({ "content-type": "application/json", "idempotency-key": resolve.idempotencyKey }), body: JSON.stringify(resolve) }); assert.equal(resolved.status, 200); assert.deepEqual(await resolved.json(), { ...fixtures.acks.OpsMutationACK, operation: "resolve_outbox", effect: { outboxResolution: "sent" } });
+    assert.deepEqual(lastRpc, { name: "aiow_mail_outbox_resolve_v2", args: { p_idempotency_key: resolve.idempotencyKey, p_payload_digest: endpointPayloadDigest("ops_mutation", resolve), p_mutation: resolve } });
+    rpcMode = "revision";
+    const stale = await opsRequest(`${base}/api/ops/leads/${mutation.leadId}`, { method: "PATCH", headers: opsHeaders({ "content-type": "application/json", "idempotency-key": mutation.idempotencyKey }), body: JSON.stringify(mutation) }); assert.equal(stale.status, 409); assert.deepEqual(await stale.json(), fixtures.errors.RevisionConflict);
+    rpcMode = "ok";
     const report = await opsRequest(`${base}/api/ops/report?from=2026-08-30&through=2026-08-30`, { headers: opsHeaders() }); assert.equal(report.status, 200); assert.deepEqual(await report.json(), fixtures.projections.AnalyticsAggregateReport);
     const forged = await opsRequest(`${base}/api/ops/leads`, { headers: { host: "ops.aiow.ai", "x-aiow-operator-id": "richard", "x-aiow-operator-role": "ops_admin" } }); assert.equal(forged.status, 401); assert.equal(forged.headers.get("www-authenticate"), 'Basic realm="AIOW Operations", charset="UTF-8"');
     assert.equal((await opsRequest(`${base}/api/ops/leads`, { headers: { host: "www.aiow.ai", authorization: basic } })).status, 404);
@@ -124,14 +138,14 @@ test("commercial HTTP routes enforce ops authority, durable replay and exact fai
 
     const booking = { ...fixtures.requests.BookingRequest, date: "2026-09-30", subject: "bedrijf" }; const bookingHeaders = { "content-type": "application/json", "idempotency-key": "booking-replay-1" };
     const firstBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(firstBooking.status, 202); const firstBookingBody = await firstBooking.json();
-    const replayBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(replayBooking.status, 202); const replayBookingBody = await replayBooking.json(); assert.deepEqual(replayBookingBody,firstBookingBody); assert.equal(replayBookingBody.replayed,false);
+    const replayBooking = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify(booking) }); assert.equal(replayBooking.status, 202); const replayBookingBody = await replayBooking.json(); assert.deepEqual({ ...replayBookingBody, replayed: false },firstBookingBody); assert.equal(firstBookingBody.replayed,false); assert.equal(replayBookingBody.replayed,true);
     const bookingConflict = await fetch(`${base}/api/booking`, { method: "POST", headers: bookingHeaders, body: JSON.stringify({ ...booking, details: "changed" }) }); assert.equal(bookingConflict.status, 409); assert.equal((await bookingConflict.json()).code, "idempotency_conflict");
     for (const key of ["booking-timeout-1", "booking-non2xx-1"]) { const failed = await fetch(`${base}/api/booking`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify(booking) }); assert.equal(failed.status, 502, key); const value = await failed.json(); assert.equal(value.code, "unavailable"); assert.equal(value.retriable, true); }
 
     const quote = structuredClone(fixtures.requests.QuoteRequest); quote.contact.startDate = "2026-09-30"; const quoteHeaders = { "content-type": "application/json", "idempotency-key": "quote-replay-0001" };
     const firstQuote = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(quote) }); assert.equal(firstQuote.status, 200); const firstBytes = Buffer.from(await firstQuote.arrayBuffer()); assert.equal(firstQuote.headers.get("content-type"), "application/pdf"); assert.equal(firstQuote.headers.get("content-disposition"), 'attachment; filename="AIOW-2026-0001.pdf"'); assert.equal(firstQuote.headers.get("cache-control"), "no-store"); assert.equal(firstQuote.headers.get("x-aiow-pdf-sha256"), createHash("sha256").update(firstBytes).digest("hex"));
     const replayQuote = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(quote) }); assert.equal(replayQuote.status, 200); const replayBytes = Buffer.from(await replayQuote.arrayBuffer()); assert.deepEqual(replayBytes, firstBytes); for (const header of ["content-type", "content-disposition", "cache-control", "x-aiow-quote-number", "x-aiow-request-id", "x-aiow-pdf-sha256"]) assert.equal(replayQuote.headers.get(header), firstQuote.headers.get(header), header);
-    const changed = structuredClone(quote); changed.contact.note = "changed"; const quoteConflict = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(changed) }); assert.equal(quoteConflict.status, 409); assert.equal((await quoteConflict.json()).code, "idempotency_conflict");
+    assert.equal(quoteCommitCalls,1,"committed replay must not regenerate or recommit"); const changed = structuredClone(quote); changed.contact.note = "changed"; const quoteConflict = await fetch(`${base}/api/quote`, { method: "POST", headers: quoteHeaders, body: JSON.stringify(changed) }); assert.equal(quoteConflict.status, 409); assert.equal((await quoteConflict.json()).code, "idempotency_conflict");
 
     const event = fixtures.events.page_view; const eventResponse = await fetch(`${base}/api/events`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": "events-unavailable-1" }, body: JSON.stringify(event) }); assert.equal(eventResponse.status, 503); const eventBody = await eventResponse.json(); assert.deepEqual({ ...eventBody, requestId: "<uuid>" }, { schemaKind: "analytics_error", code: "rate_limited", message: "Request rejected", requestId: "<uuid>", retriable: true });
     await stopNext(app.child); app = null;
