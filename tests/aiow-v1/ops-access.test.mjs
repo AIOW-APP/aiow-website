@@ -116,6 +116,15 @@ test("custom domains and every non-exact Host are concealed before credentials",
   }
 });
 
+test("a custom domain cannot become the configured production ops host", async () => {
+  for (const hostname of ["aiow.ai", "ops.aiow.ai", "admin.example.com", "vercel.app"]) {
+    assert.deepEqual(await authorizeOpsRequest(allowed({
+      hostname,
+      env: { ...configured, AIOW_OPS_DEPLOYMENT_HOST: hostname },
+    })), { kind: "not_found" }, hostname);
+  }
+});
+
 test("local proof is explicit, non-production, loopback-only, and requires a matching deployment host", async () => {
   const local = {
     hostname: "127.0.0.1",
