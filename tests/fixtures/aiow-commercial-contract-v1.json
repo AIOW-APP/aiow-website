@@ -933,20 +933,13 @@
       ],
       "returnSchemaRef": "#/$defs/MailRunCompleteACK",
       "errorMap": {
-        "P0001": {
-          "code": "revision_conflict",
-          "httpStatus": 409,
-          "schemaRef": "#/$defs/Error"
-        },
-        "22023": {
-          "code": "invalid_request",
-          "httpStatus": 400,
-          "schemaRef": "#/$defs/Error"
-        },
-        "23505": {
-          "code": "idempotency_conflict",
-          "httpStatus": 409,
-          "schemaRef": "#/$defs/Error"
+        "all_sqlstate_conflict_connectivity_unexpected": {
+          "code": "unavailable",
+          "httpStatus": 503,
+          "schemaRef": "#/$defs/Error",
+          "retriable": true,
+          "persistence": "unstored",
+          "providerAction": "never_call_again_in_this_request"
         }
       },
       "canonicalResults": {

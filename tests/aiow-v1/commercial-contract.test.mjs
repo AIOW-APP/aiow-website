@@ -258,7 +258,7 @@ test("canonical fixture registry contains exactly 79 independently frozen record
     projections:"01a4d4ef2134a4f0a779d2ed946556bda56afb5f2a64f8e684ca8c16e0fdaeeb",
     events:"ea4aced2945e90e903d95f27514e90f4b366df6ea4913e028f9029dd51df5d83",
     providerResults:"ce715ea6a8c88bbe647e2ec182fe3e2b691e01706ffb279d52c10df7b377c12d",
-    rpcBoundaries:"cc0113c06927ccf5c37fcffd3d75e4a651c9867f34ecdfe46fc6d20b94e07a19",
+    rpcBoundaries:"a9cfb4c93e288985a69d37e2af90a39c965c2c127f814e93366fce20fb50f8fb",
     migrationScenarios:"4cd373a06b638959ecc151112882dd3ed6513b06f15c87f4cd839292589e69de",
   };
   assert.equal(canonicalFixtures.fixtureVersion, 1);
@@ -269,7 +269,7 @@ test("canonical fixture registry contains exactly 79 independently frozen record
   }
   const records = Object.entries(expectedCounts).flatMap(([group]) => Object.entries(canonicalFixtures[group]).map(([name, value]) => ({group,name,value}))).sort((a,b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
   assert.equal(records.length, 79);
-  assert.equal(sha256(records), "bbbf1221e3c5e26f8eeb874ecc421ddd79f74a7a477d01c999b409969aa98342");
+  assert.equal(sha256(records), "5aa3caa1fbedda9f55c66c4017b87826fe66752c9db3b21e28e723f9a4489014");
   for (const group of ["requests","acks","errors","projections","events","providerResults"])
     for (const [name, value] of Object.entries(canonicalFixtures[group])) assert.equal(validateRoot(value), true, `${group}/${name}: ${ajv.errorsText(validateRoot.errors)}`);
   const ops = contract["x-aiow-operations"];
@@ -293,7 +293,7 @@ test("canonical fixture registry contains exactly 79 independently frozen record
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
   assert.equal(Object.keys(ops).length, 31);
-  assert.equal(sha256(ops), "2ce8e2ec662444e642f284d0a95e984ee5bcc6f45cfb05c1fb8ed5e6a8ee2a68");
+  assert.equal(sha256(ops), "b999b82ba76f3c3e14dfaef6c4472e7e873ea2dbd1f991948da5e8c2d8b3aaa6");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
@@ -359,10 +359,76 @@ test("mail-run receipt table and RPC boundaries freeze private durable authority
   assert.match(ops.mail_run.preAuthCorrelation.source,/server-generated.*lowercase UUID/); assert.match(ops.mail_run.preAuthCorrelation.incomingRequestId,/never trusted or echoed/);
   assert.match(ops.mail_run.routeAlgorithm.orderedSteps.join("\n"),/executeMailOutboxRun\(\{limit: parsedBody.limit, workerId, store: commercialMailOutboxStoreV2, provider: microsoftGraphMailProvider\}\)/);
   assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1,{"22023":"400 invalid_request","23505":"409 idempotency_conflict",P0001:"409 revision_conflict"});
-  assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,{all_sqlstate_conflict_connectivity_unexpected:"503 unavailable unstored response; never call provider again in this request"});
+  assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,ops.aiow_mail_run_complete_v1.errors);
   assert.notDeepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1);
   assert.equal(contract["x-aiow-persistence"].sourceIdentity.mail_run_receipt,"registered endpoint + exact Idempotency-Key is identity; request_id is immutable first-request correlation only; body_digest is the lowercase SHA-256 conflict digest");
   assert.equal(contract["x-aiow-retention"].classes.mail_run_receipts.days,90);
+});
+
+test("every mail-run completion failure is one unstored HTTP 503 policy", () => {
+  const ops=contract["x-aiow-operations"];
+  const expected={
+    all_sqlstate_conflict_connectivity_unexpected:{
+      code:"unavailable",
+      httpStatus:503,
+      schemaRef:"#/$defs/Error",
+      retriable:true,
+      persistence:"unstored",
+      providerAction:"never_call_again_in_this_request",
+    },
+  };
+  const assertClosed=(candidate)=>{
+    assert.deepEqual(candidate.aiow_mail_run_complete_v1.errors,expected);
+    assert.deepEqual(candidate.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,expected);
+    assert.deepEqual(candidate.fixture.errorMap,expected);
+  };
+  assertClosed({...ops,fixture:canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1});
+  const routeMap=ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1;
+  for (const failure of ["22023","23505","P0001","08006","XX000","conflict","connectivity_failure","unexpected_failure"])
+    assert.deepEqual(routeMap.all_sqlstate_conflict_connectivity_unexpected,expected.all_sqlstate_conflict_connectivity_unexpected,failure);
+  for (const mutate of [
+    (value)=>{ value.aiow_mail_run_complete_v1.errors["22023"]={code:"invalid_request",httpStatus:400,schemaRef:"#/$defs/Error"}; },
+    (value)=>{ value.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1.all_sqlstate_conflict_connectivity_unexpected.httpStatus=409; },
+    (value)=>{ value.fixture.errorMap.all_sqlstate_conflict_connectivity_unexpected.persistence="stored"; },
+  ]) {
+    const hostile={...structuredClone(ops),fixture:structuredClone(canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1)};
+    mutate(hostile);
+    assert.throws(()=>assertClosed(hostile),assert.AssertionError);
+  }
+  assert.deepEqual(ops.aiow_mail_run_begin_v1.errors,canonicalFixtures.rpcBoundaries.aiow_mail_run_begin_v1.errorMap,"400/409 mappings remain begin-only");
+});
+
+test("mail-run retention deletes only completed-old or expired-lease abandoned-old rows", () => {
+  const routine=contract["x-aiow-operations"].aiow_mail_run_receipts_delete_expired_v1.routine;
+  assert.deepEqual(routine,{
+    databaseClock:"transaction_timestamp()",
+    callerCutoffAccepted:false,
+    cutoffDays:90,
+    maxDeleteRows:50,
+    eligibility:{
+      completed:{state:"completed",anchor:"completed_at",olderThanDays:90},
+      abandonedPending:{state:"pending",anchor:"updated_at",olderThanDays:90,requireExpiredLease:true,leaseField:"lease_expires_at",leaseComparison:"<="},
+    },
+    stableOrder:["idempotency_key ASC"],
+    locking:"FOR UPDATE SKIP LOCKED",
+    selectionSql:"WITH eligible AS (SELECT idempotency_key FROM public.commercial_mail_run_receipts WHERE (state = 'completed' AND completed_at < transaction_timestamp() - interval '90 days') OR (state = 'pending' AND lease_expires_at <= transaction_timestamp() AND updated_at < transaction_timestamp() - interval '90 days') ORDER BY idempotency_key ASC LIMIT p_limit FOR UPDATE SKIP LOCKED) DELETE FROM public.commercial_mail_run_receipts AS receipt USING eligible WHERE receipt.idempotency_key = eligible.idempotency_key RETURNING receipt.idempotency_key",
+  });
+  const eligible=(policy,row,now)=>{
+    const branch=row.state==="completed" ? policy.eligibility.completed : row.state==="pending" ? policy.eligibility.abandonedPending : null;
+    if (!branch) return false;
+    if (branch.requireExpiredLease && Date.parse(row[branch.leaseField])>now) return false;
+    return Date.parse(row[branch.anchor]) < now-branch.olderThanDays*86400000;
+  };
+  const now=Date.parse("2026-08-30T12:00:00.000Z");
+  const activeOld={state:"pending",updated_at:"2026-05-01T00:00:00.000Z",lease_expires_at:"2026-08-30T12:00:01.000Z"};
+  const expiredRecent={state:"pending",updated_at:"2026-08-29T00:00:00.000Z",lease_expires_at:"2026-08-30T11:59:59.000Z"};
+  const abandonedOld={state:"pending",updated_at:"2026-05-01T00:00:00.000Z",lease_expires_at:"2026-05-01T00:05:00.000Z"};
+  assert.equal(eligible(routine,activeOld,now),false,"active pending lease is protected regardless of age");
+  assert.equal(eligible(routine,expiredRecent,now),false,"recent pending receipt is protected after lease expiry");
+  assert.equal(eligible(routine,abandonedOld,now),true,"expired-lease old pending receipt is deletable");
+  const hostile=structuredClone(routine); hostile.eligibility.abandonedPending.requireExpiredLease=false;
+  assert.equal(eligible(hostile,activeOld,now),true,"hostile missing lease fence would delete active work");
+  assert.notDeepEqual(hostile,routine,"lease-fence drift is digest-visible");
 });
 
 test("mail-run ACK validators reject changed digest, malformed completion and non-exact replay", () => {
@@ -596,7 +662,7 @@ test("runtime validators fail closed on malformed values without secret or logge
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"ea6bc83d85be9f8e2b4be9ca79e0e83e649d0c7f3238aa4373961ea5f9cf051f");
+  assert.equal(sha256(db),"633910435ea55c6b990e55ef1d032abb1aea7889bd24ceb857621b87123420d4");
   assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {

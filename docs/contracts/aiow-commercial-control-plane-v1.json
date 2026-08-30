@@ -11990,7 +11990,14 @@
             "P0001": "409 revision_conflict"
           },
           "aiow_mail_run_complete_v1": {
-            "all_sqlstate_conflict_connectivity_unexpected": "503 unavailable unstored response; never call provider again in this request"
+            "all_sqlstate_conflict_connectivity_unexpected": {
+              "code": "unavailable",
+              "httpStatus": 503,
+              "schemaRef": "#/$defs/Error",
+              "retriable": true,
+              "persistence": "unstored",
+              "providerAction": "never_call_again_in_this_request"
+            }
           },
           "unexpected_or_connectivity_failure": "503 unavailable"
         },
@@ -12153,20 +12160,13 @@
       ],
       "ackRef": "#/$defs/MailRunCompleteACK",
       "errors": {
-        "P0001": {
-          "code": "revision_conflict",
-          "httpStatus": 409,
-          "schemaRef": "#/$defs/Error"
-        },
-        "22023": {
-          "code": "invalid_request",
-          "httpStatus": 400,
-          "schemaRef": "#/$defs/Error"
-        },
-        "23505": {
-          "code": "idempotency_conflict",
-          "httpStatus": 409,
-          "schemaRef": "#/$defs/Error"
+        "all_sqlstate_conflict_connectivity_unexpected": {
+          "code": "unavailable",
+          "httpStatus": 503,
+          "schemaRef": "#/$defs/Error",
+          "retriable": true,
+          "persistence": "unstored",
+          "providerAction": "never_call_again_in_this_request"
         }
       },
       "visibility": "private_server_only",
@@ -12252,7 +12252,33 @@
         },
         "tableDml": "function owner only"
       },
-      "deletion": "SECURITY DEFINER derives cutoff internally as transaction_timestamp() - interval '90 days' and deletes at most p_limit completed receipts older than that trusted cutoff in stable idempotency_key order; no caller cutoff/key/request ID; application service_role has neither EXECUTE nor direct DELETE",
+      "deletion": "one SECURITY DEFINER routine derives its cutoff internally as transaction_timestamp() - interval '90 days' with no caller cutoff, then deletes at most p_limit (maximum 50) rows: completed receipts with completed_at older than 90 days, or pending receipts only when lease_expires_at is already expired and updated_at is older than 90 days; stable idempotency_key order; application service_role has neither EXECUTE nor direct DELETE",
+      "routine": {
+        "databaseClock": "transaction_timestamp()",
+        "callerCutoffAccepted": false,
+        "cutoffDays": 90,
+        "maxDeleteRows": 50,
+        "eligibility": {
+          "completed": {
+            "state": "completed",
+            "anchor": "completed_at",
+            "olderThanDays": 90
+          },
+          "abandonedPending": {
+            "state": "pending",
+            "anchor": "updated_at",
+            "olderThanDays": 90,
+            "requireExpiredLease": true,
+            "leaseField": "lease_expires_at",
+            "leaseComparison": "<="
+          }
+        },
+        "stableOrder": [
+          "idempotency_key ASC"
+        ],
+        "locking": "FOR UPDATE SKIP LOCKED",
+        "selectionSql": "WITH eligible AS (SELECT idempotency_key FROM public.commercial_mail_run_receipts WHERE (state = 'completed' AND completed_at < transaction_timestamp() - interval '90 days') OR (state = 'pending' AND lease_expires_at <= transaction_timestamp() AND updated_at < transaction_timestamp() - interval '90 days') ORDER BY idempotency_key ASC LIMIT p_limit FOR UPDATE SKIP LOCKED) DELETE FROM public.commercial_mail_run_receipts AS receipt USING eligible WHERE receipt.idempotency_key = eligible.idempotency_key RETURNING receipt.idempotency_key"
+      },
       "retentionWorker": {
         "role": "aiow_mail_run_retention_worker",
         "login": false,
@@ -14498,7 +14524,7 @@
         "retention": {
           "days": 90,
           "anchor": "completed_at for completed rows; updated_at for abandoned pending rows",
-          "action": "delete entire receipt after expiry; no exception",
+          "action": "delete entire completed receipt after completed_at expiry, or pending receipt after updated_at expiry only when lease_expires_at is already expired; no exception",
           "authority": "aiow_mail_run_receipts_delete_expired_v1 SECURITY DEFINER; EXECUTE only for NOLOGIN aiow_mail_run_retention_worker; application service_role has no retention EXECUTE and no table DELETE"
         },
         "trustedTimestamps": {
@@ -15596,7 +15622,7 @@
       "mail_run_receipts": {
         "days": 90,
         "anchor": "completed_at, or updated_at for abandoned pending leases",
-        "action": "delete exact HTTP replay receipt",
+        "action": "delete exact HTTP replay receipt when completed_at is older than 90 days; delete pending receipt only when lease_expires_at is already expired and updated_at is older than 90 days",
         "exceptions": [],
         "authority": "aiow_mail_run_receipts_delete_expired_v1 owned by NOLOGIN aiow_mail_run_receipt_owner; SECURITY DEFINER; EXECUTE only for NOLOGIN aiow_mail_run_retention_worker; application service_role denied"
       },
