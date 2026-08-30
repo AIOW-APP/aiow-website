@@ -383,11 +383,20 @@ test("every mail-run completion failure is one unstored HTTP 503 policy", () => 
     assert.deepEqual(candidate.fixture.errorMap,expected);
   };
   assertClosed({...ops,fixture:canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1});
+  const completionFailures=["22023","23505","P0001","08006","XX000","conflict","connectivity_failure","unexpected_failure"];
+  const resolveCompletionFailure=(errorMap,failure)=>errorMap[failure] ?? errorMap.all_sqlstate_conflict_connectivity_unexpected;
+  const assertEveryCompletionFailureClosed=(errorMap)=>{
+    for (const failure of completionFailures)
+      assert.deepEqual(resolveCompletionFailure(errorMap,failure),expected.all_sqlstate_conflict_connectivity_unexpected,`${failure} must resolve to the closed completion policy`);
+  };
   const routeMap=ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1;
-  for (const failure of ["22023","23505","P0001","08006","XX000","conflict","connectivity_failure","unexpected_failure"])
-    assert.deepEqual(routeMap.all_sqlstate_conflict_connectivity_unexpected,expected.all_sqlstate_conflict_connectivity_unexpected,failure);
+  assertEveryCompletionFailureClosed(routeMap);
+  for (const [failure,httpStatus,code] of [["22023",400,"invalid_request"],["23505",409,"idempotency_conflict"]]) {
+    const hostile=structuredClone(routeMap);
+    hostile[failure]={code,httpStatus,schemaRef:"#/$defs/Error",retriable:false,persistence:"unstored",providerAction:"never_call_again_in_this_request"};
+    assert.throws(()=>assertEveryCompletionFailureClosed(hostile),assert.AssertionError,`completion-specific HTTP ${httpStatus} branch must be rejected`);
+  }
   for (const mutate of [
-    (value)=>{ value.aiow_mail_run_complete_v1.errors["22023"]={code:"invalid_request",httpStatus:400,schemaRef:"#/$defs/Error"}; },
     (value)=>{ value.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1.all_sqlstate_conflict_connectivity_unexpected.httpStatus=409; },
     (value)=>{ value.fixture.errorMap.all_sqlstate_conflict_connectivity_unexpected.persistence="stored"; },
   ]) {
@@ -420,12 +429,24 @@ test("mail-run retention deletes only completed-old or expired-lease abandoned-o
     return Date.parse(row[branch.anchor]) < now-branch.olderThanDays*86400000;
   };
   const now=Date.parse("2026-08-30T12:00:00.000Z");
+  const cutoff=now-90*86400000;
+  const completedOld={state:"completed",completed_at:"2026-06-01T11:59:59.999Z"};
+  const completedRecent={state:"completed",completed_at:"2026-06-01T12:00:00.001Z"};
+  const completedAtCutoff={state:"completed",completed_at:"2026-06-01T12:00:00.000Z"};
   const activeOld={state:"pending",updated_at:"2026-05-01T00:00:00.000Z",lease_expires_at:"2026-08-30T12:00:01.000Z"};
   const expiredRecent={state:"pending",updated_at:"2026-08-29T00:00:00.000Z",lease_expires_at:"2026-08-30T11:59:59.000Z"};
   const abandonedOld={state:"pending",updated_at:"2026-05-01T00:00:00.000Z",lease_expires_at:"2026-05-01T00:05:00.000Z"};
+  const leaseAtTransactionTime={state:"pending",updated_at:"2026-05-01T00:00:00.000Z",lease_expires_at:"2026-08-30T12:00:00.000Z"};
+  const updatedAtCutoff={state:"pending",updated_at:"2026-06-01T12:00:00.000Z",lease_expires_at:"2026-08-30T11:59:59.000Z"};
+  assert.equal(cutoff,Date.parse(completedAtCutoff.completed_at),"fixture freezes the exact 90-day transaction-time cutoff");
+  assert.equal(eligible(routine,completedOld,now),true,"completed receipt strictly older than cutoff is deletable");
+  assert.equal(eligible(routine,completedRecent,now),false,"recent completed receipt is protected");
+  assert.equal(eligible(routine,completedAtCutoff,now),false,"completed_at equal to cutoff is protected by strict <");
   assert.equal(eligible(routine,activeOld,now),false,"active pending lease is protected regardless of age");
   assert.equal(eligible(routine,expiredRecent,now),false,"recent pending receipt is protected after lease expiry");
   assert.equal(eligible(routine,abandonedOld,now),true,"expired-lease old pending receipt is deletable");
+  assert.equal(eligible(routine,leaseAtTransactionTime,now),true,"lease_expires_at equal to transaction time is expired by <=");
+  assert.equal(eligible(routine,updatedAtCutoff,now),false,"updated_at equal to cutoff is protected by strict <");
   const hostile=structuredClone(routine); hostile.eligibility.abandonedPending.requireExpiredLease=false;
   assert.equal(eligible(hostile,activeOld,now),true,"hostile missing lease fence would delete active work");
   assert.notDeepEqual(hostile,routine,"lease-fence drift is digest-visible");
