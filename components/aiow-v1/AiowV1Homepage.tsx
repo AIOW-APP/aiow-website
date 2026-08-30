@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, type MouseEvent } from "react";
+import { track } from "@/core/analytics/client";
 import { BookingModal } from "./BookingModal";
 import { OperationalField } from "./OperationalField";
 import { PriceCalculator } from "./PriceCalculator";
@@ -27,8 +28,8 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
   const [quote, setQuote] = useState<CalculatorQuoteConfig | null>(null);
   const bookingTrigger = useRef<HTMLElement | null>(null);
   const quoteTrigger = useRef<HTMLElement | null>(null);
-  function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; setBooking(true); }
-  function openQuote(event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) { quoteTrigger.current = event.currentTarget; setQuote(configuration); }
+  function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; void track("scan_cta_clicked", { experiment: null }); setBooking(true); }
+  function openQuote(event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) { quoteTrigger.current = event.currentTarget; void track("quote_opened", {}); setQuote(configuration); }
   const solutions = en ? [
     ["AI automation", "Turn repeated knowledge work into controlled workflows with human checkpoints.", "/en/ai-automation"],
     ["Local AI", "Run sensitive AI workloads closer to your own data and infrastructure.", "/en/local-ai"],
@@ -49,7 +50,7 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
           <p className={styles.eyebrow}>{en ? "AI, installed with precision" : "AI, precies geïnstalleerd"}</p>
           <h1>{en ? <>AI for processes, <em>buildings and homes.</em></> : <>AI voor processen, <em>gebouwen en woningen.</em></>}</h1>
           <p className={styles.lead}>{en ? "AI for business processes, buildings and homes — designed and managed by one party. Start with a transparent indication; set the final scope after a scan." : "AI voor bedrijfsprocessen, gebouwen en woningen — ontworpen en beheerd door één partij. Begin met een transparante indicatie; bepaal de definitieve scope na een scan."}</p>
-          <div className={styles.heroLinks}><button className={styles.primaryButton} onClick={openBooking}>{en ? "Book a scan" : "Plan een scan"}</button><Link href={en ? "/en/rates" : "/tarieven"}>{en ? "View all rates" : "Bekijk alle tarieven"} ↓</Link></div>
+          <div className={styles.heroLinks}><button className={styles.primaryButton} onClick={openBooking}>{en ? "Request a scan" : "Vraag een scan aan"}</button><Link href={en ? "/en/rates" : "/tarieven"}>{en ? "View all rates" : "Bekijk alle tarieven"} ↓</Link></div>
           <dl className={styles.heroFacts}>
             <div><dt>{en ? "Start" : "Vanaf"}</dt><dd>€ 2.950</dd></div>
             <div><dt>{en ? "First step" : "Eerste stap"}</dt><dd>{en ? "Practical scan" : "Praktische scan"}</dd></div>
@@ -94,7 +95,7 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
 
       <section className={styles.finalCta}>
         <OperationalField variant="closing" />
-        <div className={styles.finalCtaInner}><p className={styles.eyebrow}>{en ? "A useful first conversation" : "Een nuttig eerste gesprek"}</p><h2>{en ? "Bring one process or one space." : "Neem één proces of één ruimte mee."}</h2><p>{en ? "We will determine what can be built now, what depends on partners or hardware, and what should not be automated." : "We bepalen wat nu gebouwd kan worden, wat van partners of hardware afhangt en wat je beter niet automatiseert."}</p><button className={styles.primaryButton} onClick={openBooking}>{en ? "Book the scan" : "Plan de scan"}</button></div>
+        <div className={styles.finalCtaInner}><p className={styles.eyebrow}>{en ? "A useful first conversation" : "Een nuttig eerste gesprek"}</p><h2>{en ? "Bring one process or one space." : "Neem één proces of één ruimte mee."}</h2><p>{en ? "We will determine what can be built now, what depends on partners or hardware, and what should not be automated." : "We bepalen wat nu gebouwd kan worden, wat van partners of hardware afhangt en wat je beter niet automatiseert."}</p><button className={styles.primaryButton} onClick={openBooking}>{en ? "Request a scan" : "Vraag een scan aan"}</button></div>
       </section>
     </main>
     <PublicFooter locale={locale} showYear />

@@ -9,6 +9,7 @@ export const PUBLIC_ROUTE_PAIRS = [
   ["/home", "/en/home"],
   ["/ventures", "/en/ventures"],
   ["/privacy", "/en/privacy"],
+  ["/bedrijfsgegevens", "/en/company"],
 ] as const;
 
 export function localizedPath(pathname: string, locale: AiowLocale): string {

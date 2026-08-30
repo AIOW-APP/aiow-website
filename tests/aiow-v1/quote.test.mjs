@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { inflateSync } from "node:zlib";
 import { PDFDocument } from "pdf-lib";
 import { amsterdamDateISO, buildQuoteMailContent, buildQuoteSnapshot, escapeHtml, validateQuoteNumber, validateQuoteRequest } from "../../lib/aiow-v1/quote.mjs";
 import { generateQuotePdf } from "../../lib/aiow-v1/quote-pdf.mjs";
@@ -11,6 +12,19 @@ const base = {
   consent: { accepted: true, version: "aiow-quote-v1" }, source: { route: "/?utm_source=test", utm: "utm_source=test", locale: "nl" }, website: "",
 };
 function valid(input = base) { const result = validateQuoteRequest(input); assert.equal(result.ok, true, JSON.stringify(result)); return result.data; }
+
+async function generatedPdfText(bytes) {
+  const document = await PDFDocument.load(bytes);
+  const fragments = [];
+  for (const page of document.getPages()) {
+    for (const reference of page.node.Contents().asArray()) {
+      const stream = document.context.lookup(reference);
+      const operators = inflateSync(stream.getContents()).toString("latin1");
+      for (const match of operators.matchAll(/<([0-9A-F]+)> Tj/g)) fragments.push(Buffer.from(match[1], "hex").toString("latin1"));
+    }
+  }
+  return fragments.join(" ");
+}
 
 test("business request is strict, trimmed and server priced", () => {
   const data = valid(); assert.equal(data.contact.email, "ada@example.com"); assert.equal(data.contact.company, "Analytical Engines");
@@ -61,6 +75,25 @@ test("English quote artifacts use English Smart Design labels and booking route"
   assert.doesNotMatch(mails.customerMail.text, /Blauwdruk|Regie/);
 });
 
+test("generated NL and EN customer mail and PDF use non-reserving scan request wording", async () => {
+  for (const [locale, route, requestLabel, confirmation] of [
+    ["nl", "/", "Vraag een scan aan", "Dit is een voorkeursaanvraag, geen reservering. Een mens bevestigt datum en tijd apart."],
+    ["en", "/en", "Request a scan", "This is a preferred request, not a reservation. A person confirms the date and time separately."],
+  ]) {
+    const data = valid({ ...base, source: { ...base.source, route, locale } });
+    const snapshot = buildQuoteSnapshot(data, { issueDate: "2026-08-28" });
+    const mails = buildQuoteMailContent({ quoteNumber: "AIOW-2026-0042", snapshot, contact: data.contact, source: data.source, receivedAt: "2026-08-28T12:00:00.000Z" });
+    const expectedRequest = `${requestLabel}: ${snapshot.bookingUrl}`;
+    assert.ok(mails.customerMail.text.includes(`${expectedRequest}\n${confirmation}`));
+    assert.ok(mails.customerMail.html.includes(requestLabel));
+    const pdf = await generateQuotePdf({ quoteNumber: "AIOW-2026-0042", snapshot, contact: data.contact });
+    const pdfText = await generatedPdfText(pdf);
+    assert.ok(pdfText.includes(expectedRequest));
+    assert.ok(pdfText.includes(confirmation));
+    assert.doesNotMatch(`${mails.customerMail.text}\n${pdfText}`, /Book (?:a|the|your)|Plan (?:een|de|uw).*scan/);
+  }
+});
+
 test("types, enums, bounds, dates, context, consent and honeypot are strict", () => {
   const mutations = [
     { configuration: { ...base.configuration, people: "8" } }, { configuration: { ...base.configuration, people: 10001 } }, { configuration: { ...base.configuration, serviceRoute: "easy" } },
@@ -83,7 +116,7 @@ test("quote number is year-bound and HTML content escapes lead data", () => {
   assert.equal(escapeHtml(`<script>"x" & 'y'</script>`), "&lt;script&gt;&quot;x&quot; &amp; &#39;y&#39;&lt;/script&gt;");
   const data = valid({ ...base, contact: { ...base.contact, name: "<Ada>", company: "A&B" } }); const snapshot = buildQuoteSnapshot(data, { issueDate: "2026-08-28" });
   const mails = buildQuoteMailContent({ quoteNumber: "AIOW-2026-0001", snapshot, contact: data.contact, source: data.source, country: "NL", receivedAt: "2026-08-28T14:15:16.123Z" });
-  assert.doesNotMatch(mails.internalMail.html, /<Ada>|A&B/); assert.match(mails.internalMail.html, /&lt;Ada&gt;|A&amp;B/); assert.equal(mails.customerMail.from, "offerte@aiow.ai"); assert.equal(mails.internalMail.to, "offerte@aiow.ai");
+  assert.doesNotMatch(mails.internalMail.html, /<Ada>|A&B/); assert.match(mails.internalMail.html, /&lt;Ada&gt;|A&amp;B/); assert.equal(mails.customerMail.from, "info@aiow.io"); assert.deepEqual(mails.customerMail.to,[data.contact.email]); assert.deepEqual(mails.internalMail.to, ["info@aiow.io"]);
 });
 
 test("internal transactional mail carries context and authoritative receipt timestamp", () => {

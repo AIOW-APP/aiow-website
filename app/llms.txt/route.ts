@@ -15,6 +15,8 @@ const body = `# AIOW
 - [Smart Office](${SITE_URL}/smart-office): software and AI around building signals
 - [AIOW Home](${SITE_URL}/home): partner-dependent residential intelligence
 - [English](${SITE_URL}/en): English overview
+- [Bedrijfsgegevens en contact](${SITE_URL}/bedrijfsgegevens): AIOW B.V., KvK 71887466, info@aiow.io and Netherlands service area
+- [Company and contact](${SITE_URL}/en/company): verified English company details and contact route
 
 ## Pricing contexts
 ${contextLinks}
@@ -26,7 +28,7 @@ Published amounts are non-binding indications/from-prices excluding VAT, hardwar
 The calculator configuration is validated and all quote amounts are recomputed on the server; browser-supplied totals are not trusted. The PDF is released only after the configured durable adapter has accepted the lead and then durably accepted the lead, PDF and exactly two transactional mail outbox jobs (customer and internal). Without the adapter, or if either phase fails, no PDF or receipt is returned. Durable outbox acceptance does not claim the messages have already been sent; delivery happens only when the outbox is processed.
 
 ## Contact
-Use the booking intake on ${SITE_URL}/. A booking succeeds only after durable upstream acceptance.
+AIOW B.V. · KvK 71887466 · info@aiow.io · service area: Netherlands. Final scope, exclusions and conditions are supplied with the written proposal. Use the preferred booking intake on ${SITE_URL}/; a durable receipt is not provider calendar confirmation and human confirmation follows separately. Public intake data is retained for no more than 90 days unless an active customer relationship or legal obligation requires longer retention.
 
 Last updated: 2026-08-28
 `;

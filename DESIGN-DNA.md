@@ -65,8 +65,20 @@ Navigation may use one translucent layer over content with a solid fallback. The
 ## State design
 
 - Calculator output is always explicit and labelled as an indication.
-- Booking errors explain correction; pending state says the request is being checked; success appears only after upstream 2xx and offers a locally generated calendar file.
-- Missing booking configuration fails closed and never simulates confirmation.
+- Booking is a preferred scan request pending human confirmation, not a claim that calendar capacity has already been reserved.
+- Booking errors explain correction; pending state says the request is being checked; success appears only after durable lead and transactional-outbox acceptance.
+- Missing booking, quote, mail or storage configuration fails closed and never simulates confirmation.
+- Commercial follow-up state is server-authoritative. Read mail, browser state and analytics events never mark a lead handled.
+
+## Conversion and evidence law
+
+- The calculator remains the single signature object. Conversion improvements extend its decision clarity; they do not add a second hero, floating sales widget or repeated card system.
+- The scan CTA promises a bounded decision artifact: workflow or space, dependencies, human checkpoints, route recommendation and explicit build / prepare / do-not-automate advice.
+- Context pages use one context-specific intake prompt while preserving the same booking flow and pricing authority.
+- Evidence is labelled as `reference architecture`, `internal demonstration`, `pilot` or `customer case`. A customer case, testimonial, saving or outcome is forbidden without recorded evidence and publication approval.
+- Knowledge pages live outside the homepage and use dated sources, visible boundaries and a restrained route back to the scan.
+- Experiments may test copy or ordering only. They never alter price, exclusions, availability, privacy, security or provider truth.
+- The private operations queue is not part of the public information architecture and must never render customer PII on `aiow.ai`.
 
 ## Copy law
 

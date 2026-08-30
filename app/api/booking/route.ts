@@ -1,62 +1,10 @@
-import { NextResponse } from "next/server";
-import { createHash, randomUUID } from "node:crypto";
-import { validateBooking } from "@/lib/aiow-v1/booking.mjs";
-import { BookingRequestError, createRateLimiter, readBoundedJson } from "@/lib/aiow-v1/booking-runtime.mjs";
+import { apiError, idempotency, internalPost, json, requestId, requireJson } from "@/lib/aiow-v1/commercial-route";
+import { readBoundedJson, validateContractDefinition } from "@/lib/aiow-v1/commercial-api-runtime.mjs";
 
 export const runtime = "nodejs";
-const MAX_BODY_BYTES = 8_000;
-const IDEMPOTENCY_KEY = /^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/;
-const limiterGlobal = globalThis as typeof globalThis & { __aiowBookingLimiter?: ReturnType<typeof createRateLimiter> };
-const limiter = limiterGlobal.__aiowBookingLimiter ??= createRateLimiter();
-
-export async function POST(request: Request) {
-  const requestId = randomUUID();
-  const forwarded = request.headers.get("x-vercel-forwarded-for") || request.headers.get("x-forwarded-for") || "unknown";
-  const rateIdentity = createHash("sha256").update(forwarded.split(",")[0].trim()).digest("hex");
-  const rate = limiter.consume(rateIdentity);
-  if (!rate.ok) return NextResponse.json({ ok: false, error: "Te veel aanvragen. Probeer het later opnieuw.", requestId }, { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } });
-  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
-    return NextResponse.json({ ok: false, error: "Content-Type moet application/json zijn.", requestId }, { status: 415 });
-  }
-  const idempotencyKey = request.headers.get("idempotency-key") || "";
-  if (!IDEMPOTENCY_KEY.test(idempotencyKey)) {
-    return NextResponse.json({ ok: false, error: "Ongeldige idempotency key.", requestId }, { status: 400 });
-  }
-  const webhookUrl = process.env.AIOW_BOOKING_WEBHOOK_URL;
-  if (!webhookUrl) {
-    console.warn("AIOW booking unavailable", { requestId, status: 503 });
-    return NextResponse.json({ ok: false, error: "Boeken is tijdelijk niet beschikbaar.", requestId }, { status: 503 });
-  }
-
-  const contentLength = Number(request.headers.get("content-length") || "0");
-  if (contentLength > MAX_BODY_BYTES) return NextResponse.json({ ok: false, error: "Aanvraag is te groot.", requestId }, { status: 413 });
-
-  let input: unknown;
-  try {
-    input = await readBoundedJson(request, MAX_BODY_BYTES);
-  } catch (error) {
-    const status = error instanceof BookingRequestError ? error.status : 400;
-    return NextResponse.json({ ok: false, error: status === 413 ? "Aanvraag is te groot." : "Ongeldige aanvraag.", requestId }, { status });
-  }
-
-  const result = validateBooking(input);
-  if (!result.ok) return NextResponse.json({ ok: false, error: "Controleer de ingevulde gegevens.", fields: result.errors, requestId }, { status: 400 });
-
-  try {
-    const upstream = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-aiow-request-id": requestId, "idempotency-key": idempotencyKey },
-      body: JSON.stringify({ ...result.data, requestId, receivedAt: new Date().toISOString(), source: "aiow.ai" }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!upstream.ok) {
-      console.warn("AIOW booking upstream rejected", { requestId, status: upstream.status });
-      return NextResponse.json({ ok: false, error: "De boeking kon niet worden bevestigd. Probeer het later opnieuw.", requestId }, { status: 502 });
-    }
-    console.info("AIOW booking accepted", { requestId, status: upstream.status });
-    return NextResponse.json({ ok: true, requestId, booking: { date: result.data.date, slot: result.data.slot, subject: result.data.subject } });
-  } catch (error) {
-    console.warn("AIOW booking upstream failed", { requestId, status: 502, reason: error instanceof Error ? error.name : "unknown" });
-    return NextResponse.json({ ok: false, error: "De boeking kon niet worden bevestigd. Probeer het later opnieuw.", requestId }, { status: 502 });
-  }
-}
+const LIMIT=8_000;
+function canonical(value: any){if(!value||typeof value!=="object"||Array.isArray(value))return value; return {...value,details:typeof value.details==="string"?value.details.trim():value.details,name:typeof value.name==="string"?value.name.trim():value.name,email:typeof value.email==="string"?value.email.trim().toLowerCase():value.email,company:typeof value.company==="string"?value.company.trim():value.company};}
+export async function POST(request:Request){const rid=requestId(); if(!requireJson(request))return apiError("booking","invalid_request",rid,415,"Content-Type must be application/json"); const key=idempotency(request); if(!key)return apiError("booking","invalid_request",rid,400); const url=process.env.AIOW_BOOKING_WEBHOOK_URL,secret=process.env.AIOW_BOOKING_WEBHOOK_SECRET; if(!url||!secret)return apiError("booking","unavailable",rid,503,"Booking is unavailable");
+ let body; try{body=canonical((await readBoundedJson(request,LIMIT)).value);}catch(error:any){return apiError("booking","invalid_request",rid,error?.status===413?413:400);}
+ if(!validateContractDefinition("BookingRequest",body)||body.date<=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Amsterdam",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()))return apiError("booking","invalid_request",rid,400);
+ try{const response=await internalPost(url,secret,body,rid,key,process.env.AIOW_COMMERCIAL_TEST_MODE==="1"); let ack=null; try{ack=await response.json();}catch{} if(response.status===409&&validateContractDefinition("BookingError",ack))return json(ack,409);if(!response.ok||!validateContractDefinition("BookingACK",ack)||ack.preference.date!==body.date||ack.preference.slot!==body.slot||ack.preference.subject!==body.subject)return apiError("booking","unavailable",rid,502,"Booking was not durably accepted"); return json(ack,202);}catch{return apiError("booking","unavailable",rid,502,"Booking was not durably accepted");}}
