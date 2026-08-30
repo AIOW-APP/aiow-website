@@ -15,7 +15,10 @@ export function validateOutboxBatchAckV1(
   context?: { operation?: "claim" | "stale_recovery" | "mail_run"; requestedLimit?: number },
 ): boolean;
 export interface MailRunValidationContext {
+  /** Incoming correlation. Begin ACK validation does not use this as identity. */
   requestId?: string;
+  /** Immutable request ID persisted by the first begin, when known. */
+  originalRequestId?: string;
   idempotencyKey?: string;
   bodyDigest?: string;
   requestedLimit?: number;
@@ -25,7 +28,8 @@ export function validateMailRunStoredResponseV1(
   response: unknown,
   context?: Pick<MailRunValidationContext, "requestId" | "requestedLimit" | "persistedResponse">,
 ): boolean;
-export function serializeMailRunStoredResponseV1(
+/** Validates the full stored response and returns RFC 8785 responseBody JSON only. */
+export function serializeMailRunResponseBodyV1(
   response: unknown,
   context?: Pick<MailRunValidationContext, "requestId" | "requestedLimit" | "persistedResponse">,
 ): string | null;

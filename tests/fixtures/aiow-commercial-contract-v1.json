@@ -345,6 +345,13 @@
         "items": []
       },
       "completedAt": "2026-08-30T12:01:00.000Z"
+    },
+    "MailRunRetentionACK": {
+      "schemaKind": "mail_run_retention_ack",
+      "operation": "delete_expired_mail_run_receipts",
+      "cutoff": "2026-05-31T12:00:00.000Z",
+      "deletedCount": 0,
+      "completedAt": "2026-08-30T12:00:00.000Z"
     }
   },
   "errors": {
@@ -2243,7 +2250,7 @@
               "kind": "customer_booking",
               "revision": 2,
               "payloadSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-              "attempts": 1,
+              "attempts": 5,
               "leaseOwner": "worker-01",
               "leaseToken": "123e4567-e89b-42d3-a456-426614174011",
               "leaseExpiresAt": "2026-08-30T12:05:00.000Z",
@@ -2556,6 +2563,48 @@
               "auditId": "123e4567-e89b-42d3-a456-426614174010"
             }
           ]
+        }
+      }
+    },
+    "aiow_mail_run_receipts_delete_expired_v1": {
+      "args": [
+        {
+          "name": "p_cutoff",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/TrustedServerTime",
+          "value": "2026-05-31T12:00:00.000Z"
+        },
+        {
+          "name": "p_limit",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxBatchLimit",
+          "value": 2
+        }
+      ],
+      "returnSchemaRef": "#/$defs/MailRunRetentionACK",
+      "errorMap": {
+        "22023": {
+          "code": "invalid_request",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        }
+      },
+      "canonicalResults": {
+        "zero": {
+          "schemaKind": "mail_run_retention_ack",
+          "operation": "delete_expired_mail_run_receipts",
+          "cutoff": "2026-05-31T12:00:00.000Z",
+          "deletedCount": 0,
+          "completedAt": "2026-08-30T12:00:00.000Z"
         }
       }
     }

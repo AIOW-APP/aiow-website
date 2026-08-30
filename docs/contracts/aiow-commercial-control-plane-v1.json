@@ -105,6 +105,9 @@
     },
     {
       "$ref": "#/$defs/QuoteAbandonBatchACK"
+    },
+    {
+      "$ref": "#/$defs/MailRunRetentionACK"
     }
   ],
   "$defs": {
@@ -11591,6 +11594,39 @@
         "items"
       ],
       "x-aiow-custom-validator": "quoteAbandonBatchAckV1"
+    },
+    "MailRunRetentionACK": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaKind": {
+          "const": "mail_run_retention_ack"
+        },
+        "operation": {
+          "const": "delete_expired_mail_run_receipts"
+        },
+        "cutoff": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "x-aiow-trusted-writer": "database transaction time only"
+        }
+      },
+      "required": [
+        "schemaKind",
+        "operation",
+        "cutoff",
+        "deletedCount",
+        "completedAt"
+      ]
     }
   },
   "x-aiow-binary-responses": {
@@ -11884,13 +11920,14 @@
       },
       "responses": {
         "200": "#/$defs/OutboxBatchACK",
+        "400": "#/$defs/Error",
         "401": "#/$defs/Error",
         "409": "#/$defs/Error",
         "503": "#/$defs/Error"
       },
       "tlsRequired": true,
       "authRef": "#/x-aiow-internal-hmac",
-      "batchSemantics": "operation=mail_run; execute only: one HTTP 200 OutboxBatchACK; requestedLimit equals request.limit; ordered items length 0..limit contains every and only claimed/dispatched lease; in_progress and replay never call worker",
+      "batchSemantics": "operation=mail_run; execute only: one HTTP 200 OutboxBatchACK; requestedLimit equals authenticated parsed request.limit; ordered items length 0..limit contains every and only jobs claimed by this run; in_progress and replay never invoke executeMailOutboxRun",
       "runtimeValidator": {
         "name": "validateOutboxBatchAckV1",
         "module": "lib/aiow-v1/commercial-contract-validator.mjs",
@@ -11902,21 +11939,64 @@
       "responseHeadersRef": "#/$defs/MailRunResponseHeaders",
       "idempotency": {
         "identity": [
-          "X-AIOW-Request-Id",
+          "registered endpoint",
           "Idempotency-Key"
         ],
         "bodyDigest": "lowercaseHexSha256(rawRequestBodyBytes) from exact bytes authenticated by x-aiow-internal-hmac",
-        "begin": "after HMAC validation call aiow_mail_run_begin_v1 with exact authenticated requestId, idempotencyKey and bodyDigest; only execute may invoke worker",
-        "execute": "invoke worker exactly once for current lease, call aiow_mail_run_complete_v1, and durably commit declared response before customer response",
+        "requestId": "immutable correlation stored only on first insert; not part of uniqueness; every later ACK/header/body uses that original request ID",
+        "begin": "after HMAC and body validation call aiow_mail_run_begin_v1 with exact authenticated incoming requestId, key, digest and derived workerId; only execute may invoke worker",
+        "execute": "invoke executeMailOutboxRun exactly once for current mail-run lease, then call aiow_mail_run_complete_v1 and durably commit the declared response before HTTP response bytes",
         "inProgress": {
           "status": 409,
           "schemaRef": "#/$defs/Error",
           "code": "idempotency_in_progress",
           "retriable": true,
-          "workerInvoked": false
+          "workerInvoked": false,
+          "requestId": "original persisted request_id even when the incoming authenticated request ID differs"
         },
-        "replay": "return exact stored responseStatus, closed responseHeaders and RFC 8785 canonical responseBody bytes; do not invoke worker",
-        "completeFailure": "return 503 unavailable, quarantine for lease-aware retry, and never rerun provider-accepted jobs; commercial_mail_outbox job idempotency remains provider-execution authority"
+        "replay": "return exact stored responseStatus, closed responseHeaders and RFC 8785 canonical responseBody bytes with original persisted request_id; do not invoke worker",
+        "completeFailure": "return unstored 503 unavailable; never issue a second provider call in the request; expired mail-run execution may run again, while the durable outbox leased/sent fence prevents every accepted or possibly accepted job from a second provider call"
+      },
+      "workerIdentity": {
+        "source": "private server configuration AIOW_MAIL_WORKER_ID",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$",
+        "utf8Characters": [
+          1,
+          100
+        ],
+        "default": "mail-run-worker",
+        "failure": "configured values outside the pattern/length fail closed with HTTP 503 unavailable before begin or worker execution"
+      },
+      "routeAlgorithm": {
+        "implementation": "POST /api/internal/mail-outbox/run",
+        "orderedSteps": [
+          "require HTTPS before reading application data; otherwise return 401 Error unauthenticated",
+          "read the exact raw request-body bytes once and require the five declared headers with exact syntax",
+          "compute lowercaseHexSha256(rawRequestBodyBytes), construct x-aiow-internal-hmac canonical bytes, enforce inclusive +/-300 second server-clock tolerance, and constant-time compare HMAC-SHA256 before JSON parsing",
+          "parse the authenticated raw bytes exactly once as UTF-8 JSON and require the closed body {limit: integer 1..50}; malformed encoding, JSON, content type, shape or limit returns HTTP 400 Error invalid_request without begin or worker execution",
+          "derive workerId only from private server configuration AIOW_MAIL_WORKER_ID using the declared pattern/length/default; never accept it from request data",
+          "call aiow_mail_run_begin_v1(p_request_id=authenticated X-AIOW-Request-Id, p_idempotency_key=exact Idempotency-Key, p_body_digest=raw-body SHA-256, p_worker_id=derived workerId)",
+          "on execute invoke executeMailOutboxRun({limit: parsedBody.limit, workerId, store: commercialMailOutboxStoreV2, provider: microsoftGraphMailProvider}) exactly once for that mail-run lease",
+          "validate the execute result as operation=mail_run OutboxBatchACK, build status 200 with closed no-store headers carrying the original receipt requestId, and call aiow_mail_run_complete_v1 with exact begin identity/token and response fields before writing HTTP bytes",
+          "if executeMailOutboxRun throws or its result is invalid, build closed HTTP 503 Error unavailable with the original receipt requestId and retriable=true, then attempt aiow_mail_run_complete_v1 before writing HTTP bytes",
+          "on in_progress return HTTP 409 Error idempotency_in_progress with retriable=true and the original persisted requestId; do not invoke worker or complete",
+          "on replay return exact stored responseStatus, responseHeaders, and serializeMailRunResponseBodyV1 canonical responseBody bytes with the original persisted requestId; do not invoke worker or complete",
+          "if complete fails or conflicts, return an unstored HTTP 503 Error unavailable and do not call the provider again in this request; expired mail-run execution may later run, but stale leased outbox jobs are fenced to review and sent jobs are unclaimable"
+        ],
+        "sqlstateMap": {
+          "aiow_mail_run_begin_v1": {
+            "22023": "400 invalid_request",
+            "23505": "409 idempotency_conflict",
+            "P0001": "409 revision_conflict"
+          },
+          "aiow_mail_run_complete_v1": {
+            "22023": "400 invalid_request",
+            "23505": "409 idempotency_conflict",
+            "P0001": "409 revision_conflict"
+          },
+          "unexpected_or_connectivity_failure": "503 unavailable"
+        },
+        "responseSerialization": "all initial completed and replay responses parse directly as exactly their advertised OutboxBatchACK or Error body; no stored-response envelope is written to HTTP"
       }
     },
     "aiow_mail_run_begin_v1": {
@@ -11983,19 +12063,34 @@
         "authenticated": false,
         "service_role": true
       },
-      "identity": "composite request_id + idempotency_key; same tuple requires same body_digest; changed digest always stable idempotency_conflict",
+      "identity": "registered endpoint + idempotency_key only; table primary key is idempotency_key; request_id is immutable first-request correlation and is returned on every execute/in_progress/replay ACK even when a later authenticated request ID differs",
       "clock": "transaction_timestamp() only; no timestamp argument",
-      "atomicity": "one transaction takes transaction-scoped advisory lock on collision-resistant hash of complete tuple then SELECT FOR UPDATE on existing receipt; concurrent begins yield exactly one execute",
+      "atomicity": "one transaction takes a transaction-scoped advisory lock on collision-resistant hash of the complete idempotency_key then SELECT FOR UPDATE on the existing receipt; INSERT races resolve by reselecting the key, yielding exactly one first insert/execute",
       "stateMachine": {
-        "missing": "insert pending revision=1 with fresh token and lease_expires_at=transaction_timestamp()+300 seconds; execute",
-        "pending_unexpired": "in_progress without changing revision/token/expiry and without worker execution",
-        "pending_expired": "increment revision once, replace worker_id, token and expiry from trusted server time; execute",
-        "completed": "replay original exact status, headers, body and completed_at; never execute"
+        "missing": "insert original request_id, pending revision=1 with fresh token and lease_expires_at=transaction_timestamp()+300 seconds; execute using original request_id",
+        "pending_unexpired": "same key+digest returns in_progress with immutable original request_id without changing revision/token/expiry and without worker execution, regardless of incoming request ID",
+        "pending_expired": "same key+digest increments revision once, replaces worker_id, token and expiry from trusted server time, and executes using immutable original request_id; incoming request ID never replaces it",
+        "completed": "same key+digest replays original exact status, headers, body, completed_at and request_id; never execute",
+        "digest_conflict": "same key with any changed digest returns stable idempotency_conflict without mutation for every request ID"
       },
-      "digestConflict": "checked under same lock before every branch; 409 without mutation",
+      "digestConflict": "checked under the key lock before every state branch; changed digest is 409 without mutation; same digest ignores incoming request ID for identity and preserves original request_id",
       "lease": {
         "durationSeconds": 300,
         "takeover": "only when transaction_timestamp() >= persisted lease_expires_at; changes token and increments revision once"
+      },
+      "raceSemantics": "concurrent missing-row begins for one key serialize through advisory lock/unique primary key; winner inserts original request_id and execute; loser reselects and returns in_progress (or replay if completion wins), always with winner request_id; no unique violation escapes",
+      "functionAuthority": {
+        "security": "SECURITY DEFINER",
+        "owner": "aiow_mail_run_receipt_owner",
+        "ownerRole": "NOLOGIN",
+        "searchPath": "pg_catalog, public",
+        "executeAcl": {
+          "PUBLIC": false,
+          "anon": false,
+          "authenticated": false,
+          "service_role": true
+        },
+        "tableDml": "function owner only"
       }
     },
     "aiow_mail_run_complete_v1": {
@@ -12083,10 +12178,83 @@
         "authenticated": false,
         "service_role": true
       },
-      "cas": "same advisory/row lock; pending + exact tuple/digest/current token only; wrong token/state revision_conflict, changed digest idempotency_conflict",
+      "cas": "same key advisory/row lock; pending + exact original request_id/digest/current token only; wrong token/state/request_id is revision_conflict, changed digest is idempotency_conflict",
       "responseValidation": "status, headers and body validated as one correlated MailRunStoredResponse: 200 requires mail_run OutboxBatchACK; 503 requires closed Error; headers closed no-store; malformed/undeclared invalid_request",
       "completion": "atomic update stores only validated response fields, state completed, completed_at=updated_at=transaction_timestamp(); returns completed; no caller timestamp",
-      "replay": "repeated exact completion returns replay only when token, digest, status, headers and RFC 8785 canonical body bytes equal stored completion; otherwise conflict; original never changes"
+      "replay": "repeated exact completion returns replay only when token, digest, status, headers and RFC 8785 canonical body bytes equal stored completion; otherwise conflict; original never changes",
+      "functionAuthority": {
+        "security": "SECURITY DEFINER",
+        "owner": "aiow_mail_run_receipt_owner",
+        "ownerRole": "NOLOGIN",
+        "searchPath": "pg_catalog, public",
+        "executeAcl": {
+          "PUBLIC": false,
+          "anon": false,
+          "authenticated": false,
+          "service_role": true
+        },
+        "tableDml": "function owner only"
+      }
+    },
+    "aiow_mail_run_receipts_delete_expired_v1": {
+      "transport": "sql_rpc",
+      "name": "aiow_mail_run_receipts_delete_expired_v1",
+      "auth": "service_role_private_retention_worker",
+      "visibility": "private_server_only",
+      "args": [
+        {
+          "name": "p_cutoff",
+          "sqlType": "timestamptz",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/TrustedServerTime"
+        },
+        {
+          "name": "p_limit",
+          "sqlType": "integer",
+          "nullable": false,
+          "default": null,
+          "validationRef": "#/$defs/OutboxBatchLimit"
+        }
+      ],
+      "ackRef": "#/$defs/MailRunRetentionACK",
+      "errors": {
+        "22023": {
+          "code": "invalid_request",
+          "httpStatus": 400,
+          "schemaRef": "#/$defs/Error"
+        },
+        "42501": {
+          "code": "forbidden",
+          "httpStatus": 403,
+          "schemaRef": "#/$defs/Error"
+        }
+      },
+      "returns": {
+        "sqlType": "jsonb",
+        "schemaRef": "#/$defs/MailRunRetentionACK",
+        "cardinality": "exactly_one"
+      },
+      "grants": {
+        "PUBLIC": false,
+        "anon": false,
+        "authenticated": false,
+        "service_role": true
+      },
+      "functionAuthority": {
+        "security": "SECURITY DEFINER",
+        "owner": "aiow_mail_run_receipt_owner",
+        "ownerRole": "NOLOGIN",
+        "searchPath": "pg_catalog, public",
+        "executeAcl": {
+          "PUBLIC": false,
+          "anon": false,
+          "authenticated": false,
+          "service_role": true
+        },
+        "tableDml": "function owner only"
+      },
+      "deletion": "SECURITY DEFINER owner deletes at most p_limit receipts whose 90-day trusted retention anchor is strictly before p_cutoff; stable idempotency_key ordering; no caller can delete by key/request ID; service_role has EXECUTE only and no direct DELETE"
     },
     "aiow_quote_prepare_v1": {
       "transport": "sql_rpc",
@@ -13196,7 +13364,7 @@
         "authenticated": false,
         "service_role": true
       },
-      "batchSemantics": "stale_recovery: one JSON batch ACK row; ordered items length 0..p_limit; every transitioned lease appears exactly once with full owner/token/expiry/payload digest/revision",
+      "batchSemantics": "stale_recovery: atomically transition every selected expired leased job, at attempts 1..5, to review; clear lease fields/next_attempt_at; persist ProviderAmbiguous {schemaKind:provider_ambiguous,category:ambiguous,code:unknown_acceptance,receipt with null acceptance}; one ordered JSON batch ACK reports each transitioned lease snapshot exactly once; never retry or dead automatically",
       "runtimeValidator": {
         "name": "validateOutboxBatchAckV1",
         "module": "lib/aiow-v1/commercial-contract-validator.mjs",
@@ -13204,7 +13372,8 @@
           "operation": "stale_recovery",
           "requestedLimitFrom": "p_limit"
         }
-      }
+      },
+      "recoveryFence": "leased is a durable pre-dispatch fence: expiry cannot prove Graph non-acceptance, so every expired lease becomes review/unknown_acceptance for all attempt counts and is never claimable until explicit ops_admin resolution"
     },
     "aiow_mail_outbox_cancel_v2": {
       "transport": "sql_rpc",
@@ -13601,13 +13770,13 @@
         "operation-specific-fields"
       ],
       "mail_run": [
-        "X-AIOW-Request-Id",
+        "registered endpoint",
         "Idempotency-Key",
         "lowercaseHexSha256(rawRequestBodyBytes)"
       ]
     },
     "transportDigestOverrides": {
-      "mail_run": "lowercase SHA-256 of exact raw request body bytes from x-aiow-internal-hmac; no Unicode, JSON, or transport normalization"
+      "mail_run": "identity is registered endpoint + exact Idempotency-Key only; exact raw-body SHA-256 is conflict digest; X-AIOW-Request-Id is immutable first-request correlation, not identity or digest input"
     }
   },
   "x-aiow-lifecycle": {
@@ -14251,7 +14420,6 @@
           }
         },
         "primaryKey": [
-          "request_id",
           "idempotency_key"
         ],
         "checks": [
@@ -14295,22 +14463,20 @@
           "enabled": true,
           "forced": true,
           "policies": [],
-          "authority": "service_role bypass only; no row policy grants application roles access"
+          "authority": "service_role may SELECT for private diagnostics; no application role has direct INSERT/UPDATE/DELETE; SECURITY DEFINER owner mediates every write"
         },
         "acl": {
           "PUBLIC": [],
           "anon": [],
           "authenticated": [],
           "service_role": [
-            "SELECT",
-            "INSERT",
-            "UPDATE",
-            "DELETE"
+            "SELECT"
           ]
         },
         "writeAuthority": [
           "aiow_mail_run_begin_v1",
-          "aiow_mail_run_complete_v1"
+          "aiow_mail_run_complete_v1",
+          "aiow_mail_run_receipts_delete_expired_v1"
         ],
         "bounds": {
           "idempotencyKeyUtf8Characters": [
@@ -14329,7 +14495,8 @@
         "retention": {
           "days": 90,
           "anchor": "completed_at for completed rows; updated_at for abandoned pending rows",
-          "action": "delete entire receipt after expiry; no exception"
+          "action": "delete entire receipt after expiry; no exception",
+          "authority": "aiow_mail_run_receipts_delete_expired_v1 SECURITY DEFINER only; service_role has EXECUTE but no table DELETE"
         },
         "trustedTimestamps": {
           "lease_expires_at": "transaction_timestamp() plus exactly 300 seconds at insert/takeover",
@@ -14337,6 +14504,23 @@
           "updated_at": "transaction_timestamp() at every accepted transition",
           "completed_at": "transaction_timestamp() only on pending-to-completed CAS; equals updated_at",
           "callerTimestampAccepted": false
+        },
+        "columnAuthority": {
+          "request_id": "immutable correlation set on first insert and never updated",
+          "idempotency_key": "endpoint-scoped primary key and immutable",
+          "body_digest": "immutable; mismatch conflicts"
+        },
+        "functionOwner": {
+          "role": "aiow_mail_run_receipt_owner",
+          "login": false,
+          "ownsTable": true,
+          "ownsFunctions": [
+            "aiow_mail_run_begin_v1",
+            "aiow_mail_run_complete_v1",
+            "aiow_mail_run_receipts_delete_expired_v1"
+          ],
+          "serviceRoleDirectDml": [],
+          "serviceRoleExecuteOnly": true
         }
       },
       "commercial_events": {
@@ -15003,8 +15187,9 @@
       "durationSeconds": 300,
       "token": "cryptographically random UUID",
       "owner": "persisted lease_owner text",
-      "claim": "pending|retry when due -> leased by worker CAS; attempts increments exactly once",
-      "finalize": "same lease_owner + lease_token + unexpired lease + unchanged payload SHA-256 + expected revision CAS"
+      "claim": "pending|retry when due -> leased by worker CAS before any Graph HTTP; attempts increments exactly once; leased/review/sent are never claimable",
+      "finalize": "same lease_owner + lease_token + unexpired lease + unchanged payload SHA-256 + expected revision CAS",
+      "staleRecovery": "every expired leased job at every attempt count -> review with ProviderAmbiguous code unknown_acceptance; never retry/dead automatically"
     },
     "maxAttempts": 5,
     "providerCategories": [
@@ -15017,7 +15202,8 @@
       "accepted": "sent",
       "transient_pre_acceptance": "retry until max then dead",
       "permanent_pre_acceptance": "dead",
-      "ambiguous": "review"
+      "ambiguous": "review",
+      "expired_lease": "review with unknown_acceptance at attempts 1..5"
     },
     "acceptedGraph": "HTTP 202 requires acceptanceKind and attemptReceipt; providerMessageId may be null",
     "ambiguous": "never auto-resend",
@@ -15132,13 +15318,15 @@
         "from": [
           "leased"
         ],
-        "to": "retry",
-        "writer": "service_role stale-lease recovery only",
+        "to": "review",
+        "writer": "service_role stale-lease ambiguity recovery only",
         "rpc": "aiow_mail_outbox_recover_stale_v2",
         "preconditions": [
           "lease expired",
+          "attempts between 1 and 5 inclusive",
           "payload hash unchanged",
-          "expected revision CAS"
+          "expected revision CAS",
+          "persist ambiguous unknown_acceptance"
         ]
       },
       {
@@ -15183,7 +15371,34 @@
       "dead",
       "cancelled"
     ],
-    "illegal": "every transition absent from transitions is denied; terminal states have no outgoing edges"
+    "illegal": "every transition absent from transitions is denied; terminal states have no outgoing edges",
+    "crashMatrix": [
+      {
+        "point": "after outbox claim and before provider call",
+        "durableJobState": "leased",
+        "recovery": "expired lease -> review with ambiguous unknown_acceptance",
+        "secondProviderCall": false
+      },
+      {
+        "point": "Graph accepted or may have accepted before sent CAS",
+        "durableJobState": "leased",
+        "recovery": "expired lease -> review with ambiguous unknown_acceptance",
+        "secondProviderCall": false
+      },
+      {
+        "point": "sent CAS committed before mail-run complete",
+        "durableJobState": "sent",
+        "recovery": "mail-run lease may expire and execute again, but sent job is not claimable",
+        "secondProviderCall": false
+      },
+      {
+        "point": "mail-run complete RPC fails or response is lost",
+        "durableJobState": "each job remains sent, review, or leased according to its last committed outbox CAS",
+        "recovery": "later mail-run execute can claim only pending/retry jobs; any remaining expired leased job -> review unknown_acceptance",
+        "secondProviderCallForAcceptedOrPossiblyAcceptedJob": false
+      }
+    ],
+    "noSecondProviderCallInvariant": "no accepted or possibly accepted job can reach a second provider call: sent is terminal/unclaimable, leased expires only to review, review requires explicit audited resolution, and automatic claim accepts only pending/retry"
   },
   "x-aiow-provider-gate": {
     "defaultState": "disabled",
@@ -15378,7 +15593,8 @@
         "days": 90,
         "anchor": "completed_at, or updated_at for abandoned pending leases",
         "action": "delete exact HTTP replay receipt",
-        "exceptions": []
+        "exceptions": [],
+        "authority": "aiow_mail_run_receipts_delete_expired_v1 owned by NOLOGIN aiow_mail_run_receipt_owner; SECURITY DEFINER; service_role EXECUTE only, no direct table DML"
       },
       "non_pii_audit_facts": {
         "days": 365,
@@ -15401,7 +15617,7 @@
       "delete": [
         "orphan documents",
         "expired raw events",
-        "expired commercial_mail_run_receipts"
+        "expired commercial_mail_run_receipts only via aiow_mail_run_receipts_delete_expired_v1"
       ]
     },
     "abandonment": {
@@ -15535,7 +15751,7 @@
       "constant-time signature comparison",
       "atomic replay/idempotency check"
     ],
-    "replay": "mail_run authenticated requestId + idempotencyKey + exact raw-body SHA-256 are durably mediated by begin/complete RPCs; same tuple/digest returns original status, closed no-store headers and canonical JSON bytes, changed digest stable 409; timestamp validation before begin",
+    "replay": "mail_run endpoint + idempotencyKey are durable identity; exact raw-body SHA-256 is conflict digest; first authenticated requestId is immutable correlation and later same-key/same-digest requests return it on in_progress/replay; timestamp validation occurs before begin",
     "unauthenticated": {
       "status": 401,
       "code": "unauthenticated",
@@ -15550,9 +15766,9 @@
       "receiptTable": "commercial_mail_run_receipts",
       "beginRpc": "aiow_mail_run_begin_v1",
       "completeRpc": "aiow_mail_run_complete_v1",
-      "requestBinding": "exact HMAC requestId, key and raw-body digest passed unchanged; no caller time",
-      "workerFence": "only execute invokes worker; unexpired pending and completed cannot execute",
-      "durabilityFence": "completion commits exact response before HTTP write; post-worker completion failure returns unavailable and quarantines without bypassing outbox job idempotency"
+      "requestBinding": "exact HMAC incoming requestId, key and raw-body digest plus private AIOW_MAIL_WORKER_ID passed unchanged to begin; endpoint+key is identity and first requestId is immutable correlation; no caller time",
+      "workerFence": "outbox claim commits leased before any Graph HTTP; mail-run only execute invokes worker; expired mail-run may execute again, but sent is unclaimable and stale leased always becomes review/unknown_acceptance rather than retry/dead",
+      "durabilityFence": "completion commits exact response before HTTP write; complete failure returns unstored unavailable; crash matrix proves accepted/possibly accepted outbox jobs cannot reach a second provider call"
     }
   },
   "x-aiow-public-tls": {

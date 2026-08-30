@@ -9,7 +9,7 @@ import {
   validateMailRunBeginAckV1,
   validateMailRunCompleteAckV1,
   validateMailRunStoredResponseV1,
-  serializeMailRunStoredResponseV1,
+  serializeMailRunResponseBodyV1,
   validateOutboxBatchAckV1,
   validateProviderGateCurrentV1,
   validateQuoteAbandonBatchAckV1,
@@ -183,7 +183,7 @@ test("operation registry freezes all HTTP and SQL authorities with resolvable sc
   assert.equal(quotePdf.authorityAckRef,"#/$defs/QuoteCommitACK");
   assert.match(quotePdf.replay,/original status, headers and identical PDF bytes/);
   assert.equal(ops.events.responses["503"],"#/$defs/AnalyticsError");
-  const rpcNames = ["aiow_mail_run_begin_v1","aiow_mail_run_complete_v1","aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"];
+  const rpcNames = ["aiow_mail_run_begin_v1","aiow_mail_run_complete_v1","aiow_mail_run_receipts_delete_expired_v1","aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"];
   assert.deepEqual(Object.keys(ops).filter((name) => ops[name].transport === "sql_rpc"), rpcNames);
   function assertRefs(value) { if (typeof value === "string" && value.startsWith("#/$defs/")) return void deref({$ref:value}); if (Array.isArray(value)) return value.forEach(assertRefs); if (!value || typeof value !== "object") return; for (const child of Object.values(value)) assertRefs(child); }
   assertRefs(ops);
@@ -249,16 +249,16 @@ function validateOpsMutationAck(value, persistedReplay = value) {
   return !value.replayed || stableJson(value) === stableJson(persistedReplay);
 }
 
-test("canonical fixture registry contains exactly 77 independently frozen records", () => {
-  const expectedCounts = { requests:11, acks:10, errors:7, projections:10, events:12, providerResults:4, rpcBoundaries:21, migrationScenarios:2 };
+test("canonical fixture registry contains exactly 79 independently frozen records", () => {
+  const expectedCounts = { requests:11, acks:11, errors:7, projections:10, events:12, providerResults:4, rpcBoundaries:22, migrationScenarios:2 };
   const expectedDigests = {
     requests:"991e4fde39e0144c7a378f7a5ceb194fca400286c9a1ab5abebd83fd62e877d2",
-    acks:"6d2e7c87a1181b73da47697f3e3a7fa0799a3ee86ce734388796d294363d2fc1",
+    acks:"8610d219732ac8a36b6cfe0c4ad0fe2828768fe8c1f33cb5fa956a3f78f033e6",
     errors:"431fca98f45b3acb589ebc39402c4c63042c0b67f8062f6c5a0abe6368a59e3d",
     projections:"01a4d4ef2134a4f0a779d2ed946556bda56afb5f2a64f8e684ca8c16e0fdaeeb",
     events:"ea4aced2945e90e903d95f27514e90f4b366df6ea4913e028f9029dd51df5d83",
     providerResults:"ce715ea6a8c88bbe647e2ec182fe3e2b691e01706ffb279d52c10df7b377c12d",
-    rpcBoundaries:"70c43f7f09210668e7f9f357935345a8e9b61f22794c105839724940e9e58732",
+    rpcBoundaries:"9e2c18277381fde966cea4554c06661700249a22ddd2783c870e751962dd76aa",
     migrationScenarios:"4cd373a06b638959ecc151112882dd3ed6513b06f15c87f4cd839292589e69de",
   };
   assert.equal(canonicalFixtures.fixtureVersion, 1);
@@ -268,8 +268,8 @@ test("canonical fixture registry contains exactly 77 independently frozen record
     assert.equal(sha256(canonicalFixtures[group]), expectedDigests[group], `${group} digest`);
   }
   const records = Object.entries(expectedCounts).flatMap(([group]) => Object.entries(canonicalFixtures[group]).map(([name, value]) => ({group,name,value}))).sort((a,b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
-  assert.equal(records.length, 77);
-  assert.equal(sha256(records), "bec51489c726322b60672416ed65b432ea7e4c8018adbaa469c470610c973a69");
+  assert.equal(records.length, 79);
+  assert.equal(sha256(records), "520dca582a6b6d949151b7aefb6ddf3dcecb47509b22865f23c866e2c78a0259");
   for (const group of ["requests","acks","errors","projections","events","providerResults"])
     for (const [name, value] of Object.entries(canonicalFixtures[group])) assert.equal(validateRoot(value), true, `${group}/${name}: ${ajv.errorsText(validateRoot.errors)}`);
   const ops = contract["x-aiow-operations"];
@@ -292,8 +292,8 @@ test("canonical fixture registry contains exactly 77 independently frozen record
 
 test("operation and RPC registries freeze typed order, private service-role authority and HMAC", () => {
   const ops = contract["x-aiow-operations"], auth = contract["x-aiow-operator-auth"], hmac = contract["x-aiow-internal-hmac"];
-  assert.equal(Object.keys(ops).length, 30);
-  assert.equal(sha256(contract["x-aiow-operations"]),"f1c00efdcb86ff8fbce7cbbc3cfdcd3ae2bc68c2b673e91f8dd983ea3df91d42");
+  assert.equal(Object.keys(ops).length, 31);
+  assert.equal(sha256(contract["x-aiow-operations"]),"ae4a8c740af2b22cefde493a578601fca06d578c1c0dc8dced46c763b472211b");
   assert.deepEqual(auth.canonicalActor, {id:"richard",role:"ops_admin",source:"private server configuration AIOW_OPS_OPERATOR_ID; exact value richard; missing or different value fails closed"});
   assert.match(auth.sqlDelegation, /service-role only/); assert.match(auth.rpcActorDerivation, /caller actor\/JWT\/p_operator_id is forbidden/);
   assert.deepEqual(auth.directRpcPolicy, {PUBLIC:"EXECUTE revoked",anon:"EXECUTE revoked",authenticated:"EXECUTE revoked",service_role:"only grantee",browser:"direct invocation denied"});
@@ -324,19 +324,32 @@ test("operation and RPC registries freeze typed order, private service-role auth
 
 test("mail-run receipt table and RPC boundaries freeze private durable authority", () => {
   const ops=contract["x-aiow-operations"], table=contract["x-aiow-persistence"].tables.commercial_mail_run_receipts;
-  assert.deepEqual(table.primaryKey,["request_id","idempotency_key"]);
+  assert.deepEqual(table.primaryKey,["idempotency_key"]);
   assert.deepEqual(Object.keys(table.columns),["request_id","idempotency_key","body_digest","state","revision","worker_id","lease_token","lease_expires_at","response_status","response_headers","response_body","created_at","updated_at","completed_at"]);
-  assert.deepEqual(table.rowLevelSecurity,{enabled:true,forced:true,policies:[],authority:"service_role bypass only; no row policy grants application roles access"});
-  assert.deepEqual(table.acl,{PUBLIC:[],anon:[],authenticated:[],service_role:["SELECT","INSERT","UPDATE","DELETE"]});
+  assert.deepEqual(table.acl,{PUBLIC:[],anon:[],authenticated:[],service_role:["SELECT"]});
+  assert.deepEqual(table.functionOwner.serviceRoleDirectDml,[]);
+  assert.equal(table.functionOwner.role,"aiow_mail_run_receipt_owner"); assert.equal(table.functionOwner.login,false); assert.equal(table.functionOwner.serviceRoleExecuteOnly,true);
+  for (const rpc of table.writeAuthority) {
+    assert.equal(ops[rpc].functionAuthority.security,"SECURITY DEFINER",rpc);
+    assert.equal(ops[rpc].functionAuthority.owner,"aiow_mail_run_receipt_owner",rpc);
+    assert.equal(ops[rpc].functionAuthority.ownerRole,"NOLOGIN",rpc);
+    assert.deepEqual(ops[rpc].functionAuthority.executeAcl,{PUBLIC:false,anon:false,authenticated:false,service_role:true},rpc);
+  }
   assert.equal(table.retention.days,90); assert.equal(table.bounds.leaseDurationSeconds,300); assert.equal(table.bounds.responseBodyCanonicalBytesMax,262144);
   assert.deepEqual(ops.aiow_mail_run_begin_v1.args.map((arg)=>[arg.name,arg.sqlType]),[["p_request_id","uuid"],["p_idempotency_key","text"],["p_body_digest","text"],["p_worker_id","text"]]);
   assert.deepEqual(ops.aiow_mail_run_complete_v1.args.map((arg)=>[arg.name,arg.sqlType]),[["p_request_id","uuid"],["p_idempotency_key","text"],["p_body_digest","text"],["p_lease_token","uuid"],["p_response_status","integer"],["p_response_headers","jsonb"],["p_response_body","jsonb"]]);
   assert.ok([...ops.aiow_mail_run_begin_v1.args,...ops.aiow_mail_run_complete_v1.args].every((arg)=>!arg.name.includes("time")),"no caller timestamp");
-  assert.match(ops.aiow_mail_run_begin_v1.atomicity,/advisory lock.*SELECT FOR UPDATE.*exactly one execute/);
+  assert.match(ops.aiow_mail_run_begin_v1.atomicity,/idempotency_key.*SELECT FOR UPDATE.*exactly one first insert\/execute/);
   assert.match(ops.aiow_mail_run_begin_v1.stateMachine.pending_unexpired,/in_progress.*without worker execution/);
-  assert.match(ops.aiow_mail_run_begin_v1.stateMachine.pending_expired,/increment revision once.*replace.*token.*trusted server time/);
-  assert.match(ops.aiow_mail_run_complete_v1.cas,/wrong token\/state revision_conflict.*changed digest idempotency_conflict/);
+  assert.match(ops.aiow_mail_run_begin_v1.stateMachine.pending_expired,/increments revision once.*replaces worker_id, token and expiry.*immutable original request_id/);
+  assert.match(ops.aiow_mail_run_complete_v1.cas,/wrong token\/state\/request_id is revision_conflict.*changed digest is idempotency_conflict/);
   assert.match(ops.aiow_mail_run_complete_v1.responseValidation,/200 requires mail_run OutboxBatchACK.*503 requires closed Error.*invalid_request/);
+  assert.equal(ops.mail_run.responses["400"],"#/$defs/Error");
+  assert.deepEqual(ops.mail_run.workerIdentity,{source:"private server configuration AIOW_MAIL_WORKER_ID",pattern:"^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$",utf8Characters:[1,100],default:"mail-run-worker",failure:ops.mail_run.workerIdentity.failure});
+  assert.match(ops.mail_run.routeAlgorithm.orderedSteps.join("\n"),/constant-time compare HMAC-SHA256 before JSON parsing/);
+  assert.match(ops.mail_run.routeAlgorithm.orderedSteps.join("\n"),/executeMailOutboxRun\(\{limit: parsedBody.limit, workerId, store: commercialMailOutboxStoreV2, provider: microsoftGraphMailProvider\}\)/);
+  assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1,{"22023":"400 invalid_request","23505":"409 idempotency_conflict",P0001:"409 revision_conflict"});
+  assert.deepEqual(ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_complete_v1,ops.mail_run.routeAlgorithm.sqlstateMap.aiow_mail_run_begin_v1);
   assert.equal(contract["x-aiow-retention"].classes.mail_run_receipts.days,90);
 });
 
@@ -360,45 +373,63 @@ test("mail-run ACK validators reject changed digest, malformed completion and no
   assert.equal(validateMailRunCompleteAckV1({...error,responseBody:{...error.responseBody,code:"idempotency_in_progress"}},context),false,"in-progress is not a storable completion");
   assert.equal(validateMailRunStoredResponseV1({...stored,responseHeaders:{...stored.responseHeaders,injected:"x"}},context),false);
   const reordered={responseBody:structuredClone(stored.responseBody),responseHeaders:{xAiowRequestId:stored.responseHeaders.xAiowRequestId,cacheControl:"no-store",contentType:"application/json; charset=utf-8"},responseStatus:200};
-  assert.equal(serializeMailRunStoredResponseV1(stored,context),serializeMailRunStoredResponseV1(reordered,context),"canonical JSON and headers replay byte-equivalently");
-  assert.equal(serializeMailRunStoredResponseV1({...stored,responseBody:{...stored.responseBody,items:[{}]}},context),null);
+  assert.equal(serializeMailRunResponseBodyV1(stored,context),serializeMailRunResponseBodyV1(reordered,context),"canonical JSON and headers replay byte-equivalently");
+  assert.deepEqual(JSON.parse(serializeMailRunResponseBodyV1(stored,context)),stored.responseBody,"initial success is the body, not an envelope");
+  assert.deepEqual(JSON.parse(serializeMailRunResponseBodyV1({responseStatus:begin.replay.responseStatus,responseHeaders:begin.replay.responseHeaders,responseBody:begin.replay.responseBody},context)),begin.replay.responseBody,"replay success parses directly as OutboxBatchACK");
+  const errorStored={responseStatus:error.responseStatus,responseHeaders:error.responseHeaders,responseBody:error.responseBody};
+  assert.deepEqual(JSON.parse(serializeMailRunResponseBodyV1(errorStored,context)),error.responseBody,"initial and replay errors parse directly as Error");
+  assert.equal(serializeMailRunResponseBodyV1({...stored,responseBody:{...stored.responseBody,items:[{}]}},context),null);
+  const cyclic=structuredClone(stored); cyclic.responseBody.items.push(cyclic.responseBody);
+  assert.doesNotThrow(()=>validateMailRunStoredResponseV1(cyclic,context)); assert.equal(validateMailRunStoredResponseV1(cyclic,context),false);
+  let nested={leaf:true}; for (let index=0;index<70;index+=1) nested={nested};
+  assert.equal(validateMailRunStoredResponseV1({...stored,responseBody:{...stored.responseBody,injected:nested}},context),false,"bounded depth");
+  assert.equal(validateMailRunStoredResponseV1({...errorStored,responseBody:{...errorStored.responseBody,message:"\ud800"}},context),false,"ill-formed surrogate string");
+  const hostile=new Proxy({}, {ownKeys(){throw new Error("hostile")}});
+  assert.doesNotThrow(()=>validateMailRunStoredResponseV1(hostile,context)); assert.equal(validateMailRunStoredResponseV1(hostile,context),false,"validators never throw");
 });
 
-test("mail-run authority model admits one execute, expiry takeover and exact sequential replay", async () => {
+test("mail-run authority races on endpoint key and preserves original request correlation", async () => {
   const canonical=canonicalFixtures.rpcBoundaries.aiow_mail_run_begin_v1.canonicalResults.execute;
   const completed=canonicalFixtures.rpcBoundaries.aiow_mail_run_complete_v1.canonicalResults.completed;
   class Authority {
     constructor() { this.row=null; this.tokenSequence=50; }
     token() { return `123e4567-e89b-42d3-a456-4266141740${String(this.tokenSequence++).padStart(2,"0")}`; }
     begin({requestId,idempotencyKey,bodyDigest},now) {
-      if (this.row && (this.row.requestId!==requestId || this.row.idempotencyKey!==idempotencyKey)) throw new Error("identity");
-      if (this.row && this.row.bodyDigest!==bodyDigest) return {disposition:"conflict",code:"idempotency_conflict"};
-      if (this.row?.state==="completed") return {disposition:"replay",response:structuredClone(this.row.response)};
-      if (this.row && now<this.row.leaseExpiresAt) return {disposition:"in_progress",revision:this.row.revision};
+      if (this.row && this.row.idempotencyKey!==idempotencyKey) throw new Error("wrong endpoint key");
+      if (this.row && this.row.bodyDigest!==bodyDigest) return {disposition:"conflict",code:"idempotency_conflict",requestId:this.row.requestId};
+      if (this.row?.state==="completed") return {disposition:"replay",requestId:this.row.requestId,response:structuredClone(this.row.response)};
+      if (this.row && now<this.row.leaseExpiresAt) return {disposition:"in_progress",requestId:this.row.requestId,revision:this.row.revision};
       const revision=(this.row?.revision??0)+1, leaseToken=this.token();
-      this.row={requestId,idempotencyKey,bodyDigest,state:"pending",revision,leaseToken,leaseExpiresAt:now+300000};
-      return {disposition:"execute",revision,leaseToken};
+      this.row={requestId:this.row?.requestId??requestId,idempotencyKey,bodyDigest,state:"pending",revision,leaseToken,leaseExpiresAt:now+300000};
+      return {disposition:"execute",requestId:this.row.requestId,revision,leaseToken};
     }
-    complete({bodyDigest,leaseToken,response}) {
+    complete({requestId,bodyDigest,leaseToken,response}) {
       if (!this.row || this.row.bodyDigest!==bodyDigest) return {disposition:"conflict",code:"idempotency_conflict"};
-      if (this.row.state!=="pending" || this.row.leaseToken!==leaseToken) return {disposition:"conflict",code:"revision_conflict"};
+      if (this.row.requestId!==requestId || this.row.state!=="pending" || this.row.leaseToken!==leaseToken) return {disposition:"conflict",code:"revision_conflict"};
       if (!validateMailRunStoredResponseV1(response,{requestId:this.row.requestId})) return {disposition:"invalid_request"};
       this.row={...this.row,state:"completed",response:structuredClone(response)};
-      return {disposition:"completed",response:structuredClone(response)};
+      return {disposition:"completed",requestId:this.row.requestId,response:structuredClone(response)};
     }
   }
   const request={requestId:canonical.requestId,idempotencyKey:canonical.idempotencyKey,bodyDigest:canonical.bodyDigest};
+  const otherRequestId="123e4567-e89b-42d3-a456-426614174099";
   const concurrent=new Authority();
-  const pair=await Promise.all([Promise.resolve().then(()=>concurrent.begin(request,0)),Promise.resolve().then(()=>concurrent.begin(request,0))]);
+  const pair=await Promise.all([
+    Promise.resolve().then(()=>concurrent.begin(request,0)),
+    Promise.resolve().then(()=>concurrent.begin({...request,requestId:otherRequestId},0)),
+  ]);
   assert.deepEqual(pair.map((item)=>item.disposition).sort(),["execute","in_progress"]);
-  assert.deepEqual(concurrent.begin({...request,bodyDigest:"b".repeat(64)},1),{disposition:"conflict",code:"idempotency_conflict"});
+  const originalRequestId=pair.find((item)=>item.disposition==="execute").requestId;
+  assert.ok(pair.every((item)=>item.requestId===originalRequestId),"race loser returns winner correlation");
+  assert.deepEqual(concurrent.begin({...request,requestId:otherRequestId,bodyDigest:"b".repeat(64)},1),{disposition:"conflict",code:"idempotency_conflict",requestId:originalRequestId});
   const takeover=new Authority(), first=takeover.begin(request,0);
-  assert.equal(takeover.begin(request,299999).disposition,"in_progress");
-  const second=takeover.begin(request,300000); assert.equal(second.disposition,"execute"); assert.equal(second.revision,2); assert.notEqual(second.leaseToken,first.leaseToken);
+  assert.equal(takeover.begin({...request,requestId:otherRequestId},299999).requestId,request.requestId);
+  const second=takeover.begin({...request,requestId:otherRequestId},300000); assert.equal(second.disposition,"execute"); assert.equal(second.revision,2); assert.equal(second.requestId,request.requestId); assert.notEqual(second.leaseToken,first.leaseToken);
   const response={responseStatus:completed.responseStatus,responseHeaders:completed.responseHeaders,responseBody:completed.responseBody};
-  assert.deepEqual(takeover.complete({bodyDigest:request.bodyDigest,leaseToken:first.leaseToken,response}),{disposition:"conflict",code:"revision_conflict"},"old token cannot complete after takeover");
-  assert.equal(takeover.complete({bodyDigest:request.bodyDigest,leaseToken:second.leaseToken,response}).disposition,"completed");
-  const replay=takeover.begin(request,300001); assert.equal(replay.disposition,"replay"); assert.equal(stableJson(replay.response),stableJson(response));
+  assert.deepEqual(takeover.complete({requestId:request.requestId,bodyDigest:request.bodyDigest,leaseToken:first.leaseToken,response}),{disposition:"conflict",code:"revision_conflict"},"old token cannot complete after takeover");
+  assert.equal(takeover.complete({requestId:request.requestId,bodyDigest:request.bodyDigest,leaseToken:second.leaseToken,response}).disposition,"completed");
+  const replay=takeover.begin({...request,requestId:otherRequestId},300001); assert.equal(replay.disposition,"replay"); assert.equal(replay.requestId,request.requestId); assert.equal(stableJson(replay.response),stableJson(response));
+  assert.equal(validateMailRunBeginAckV1({...canonicalFixtures.rpcBoundaries.aiow_mail_run_begin_v1.canonicalResults.inProgress},{requestId:otherRequestId,idempotencyKey:request.idempotencyKey,bodyDigest:request.bodyDigest}),true,"incoming request ID is not key identity");
   assert.equal(takeover.begin(request,999999).disposition,"replay","completed never executes after lease age");
 });
 
@@ -471,11 +502,15 @@ test("outbox state machine, leases and Graph-only provider outcomes reject hosti
   const outbox = contract["x-aiow-outbox"], ops = contract["x-aiow-operations"];
   const edges = outbox.transitions.flatMap((transition) => transition.from.flatMap((from) => (Array.isArray(transition.to) ? transition.to : [transition.to]).map((to) => `${from}->${to}@${transition.rpc}`))).sort();
   assert.deepEqual(edges, [
-    "leased->dead@aiow_mail_outbox_dead_v2","leased->retry@aiow_mail_outbox_recover_stale_v2","leased->retry@aiow_mail_outbox_retry_v2","leased->review@aiow_mail_outbox_review_v2","leased->sent@aiow_mail_outbox_sent_v2",
+    "leased->dead@aiow_mail_outbox_dead_v2","leased->retry@aiow_mail_outbox_retry_v2","leased->review@aiow_mail_outbox_recover_stale_v2","leased->review@aiow_mail_outbox_review_v2","leased->sent@aiow_mail_outbox_sent_v2",
     "pending->cancelled@aiow_mail_outbox_cancel_v2","pending->leased@aiow_mail_outbox_claim_v2","retry->cancelled@aiow_mail_outbox_cancel_v2","retry->leased@aiow_mail_outbox_claim_v2",
     "review->cancelled@aiow_mail_outbox_cancel_v2","review->dead@aiow_mail_outbox_resolve_v2","review->retry@aiow_mail_outbox_resolve_v2","review->sent@aiow_mail_outbox_resolve_v2",
   ].sort());
   assert.deepEqual(outbox.terminal,["sent","dead","cancelled"]); assert.match(outbox.illegal,/absent.*denied/);
+  assert.equal(outbox.crashMatrix.length,4);
+  assert.ok(outbox.crashMatrix.every((row)=>row.secondProviderCall===false || row.secondProviderCallForAcceptedOrPossiblyAcceptedJob===false));
+  assert.match(outbox.lease.staleRecovery,/every expired leased job at every attempt count.*review.*unknown_acceptance.*never retry\/dead/);
+  assert.match(outbox.noSecondProviderCallInvariant,/sent is terminal\/unclaimable.*leased expires only to review/);
   const finalizeArgs = ["p_job_id","p_lease_owner","p_lease_token","p_payload_digest","p_expected_revision","p_result"];
   for (const rpc of ["aiow_mail_outbox_sent_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2"])
     assert.deepEqual(ops[rpc].args.map((arg) => arg.name), finalizeArgs, rpc);
@@ -548,7 +583,7 @@ test("runtime validators fail closed on malformed values without secret or logge
 
 test("persistence mappings and retention anchors are exact and exception-complete", () => {
   const db=contract["x-aiow-persistence"], retention=contract["x-aiow-retention"], lead=db.tables.commercial_leads;
-  assert.equal(sha256(db),"2eaf2aa54294e0406e08273ad97b4b1c4cc1d0e7fd1eb82a4f4e8ab2f2668a18");
+  assert.equal(sha256(db),"5564cff9b9bbf329eb09690277fa5e9384219cc404a6dc93e3fb8d40bafe8513");
   assert.equal(sha256(db.sourceMappings),"f413c8d62f92cb18d60338f7d5a66fd421ea8a89a41085b5211a8e61965a5a85");
   const projectionFields=contract.$defs.LeadProjection.required;
   for (const source of ["booking","quote"]) {
