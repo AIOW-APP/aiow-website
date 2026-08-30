@@ -1,5 +1,23 @@
 begin;
 
+create temporary table aiow_closure_temporary_role_memberships(
+ role_name name primary key
+) on commit drop;
+create temporary table aiow_closure_temporary_schema_create_privileges(
+ role_name name primary key
+) on commit drop;
+do $closure_runtime_reader_capability$
+begin
+ if not pg_has_role(current_user,'aiow_mail_runtime_reader','SET') then
+  insert into aiow_closure_temporary_role_memberships(role_name) values('aiow_mail_runtime_reader');
+  execute format('grant %I to %I with admin false, inherit false, set true','aiow_mail_runtime_reader',current_user);
+ end if;
+ if not has_schema_privilege('aiow_mail_runtime_reader','public','CREATE') then
+  insert into aiow_closure_temporary_schema_create_privileges(role_name) values('aiow_mail_runtime_reader');
+  grant create on schema public to aiow_mail_runtime_reader;
+ end if;
+end $closure_runtime_reader_capability$;
+
 -- The browser hashes the complete validated BookingRequest, including its
 -- schemaKind discriminator. Keep the effective database writer byte-identical.
 create or replace function public.aiow_booking_commit_v1(p_request_id uuid,p_idempotency_key text,p_payload_digest text,p_booking jsonb,p_source jsonb) returns jsonb
@@ -62,6 +80,7 @@ set payload=d.payload,payload_sha256=d.payload->>'payloadSha256'
 from digested d where o.id=d.id;
 
 -- Effective lease readers must bind to the V2 digest selected by 1303/0004.
+set role aiow_mail_runtime_reader;
 create or replace function public.aiow_mail_outbox_load_leased_job_v1(p_job_id uuid,p_lease_owner text,p_lease_token uuid,p_expected_revision bigint,p_payload_digest text) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,public as $$
 declare v public.commercial_mail_outbox%rowtype;
@@ -94,6 +113,7 @@ begin
  then raise exception using errcode='42501',message='AIOW_GATE_UNAVAILABLE'; end if;
  return v_target;
 end $$;
+reset role;
 
 -- invalid_payload is produced by the local closed validator before Graph can be
 -- called. It may therefore dead-letter without a dispatch marker. Every result
@@ -201,5 +221,19 @@ declare r record; begin
   grant execute on function public.aiow_mail_payload_digest_v2(jsonb),public.aiow_provider_gate_binding_bytes_v2(jsonb) to aiow_mail_runtime_reader;
  end if;
 end $acl$;
+
+do $closure_restore_runtime_reader_capability$
+declare
+ v_role name;
+begin
+ for v_role in select role_name from aiow_closure_temporary_schema_create_privileges
+ loop
+  execute format('revoke create on schema public from %I',v_role);
+ end loop;
+ for v_role in select role_name from aiow_closure_temporary_role_memberships
+ loop
+  execute format('revoke %I from %I',v_role,current_user);
+ end loop;
+end $closure_restore_runtime_reader_capability$;
 
 commit;
