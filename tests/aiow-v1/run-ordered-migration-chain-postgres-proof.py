@@ -292,6 +292,41 @@ def prove_acl_and_obsolete_absent(env: dict[str, str]) -> int:
     return all_count
 
 
+def prove_managed_owner_membership_restore(env: dict[str, str]) -> None:
+    migration = (MIGRATION_DIR / "202608300003_aiow_mail_run_runtime_remediation.sql").read_text()
+    prelude_start = migration.index("create temporary table aiow_temporary_role_memberships")
+    prelude_end = migration.index("grant usage on schema public, extensions", prelude_start)
+    restore_start = migration.index("do $restore_owner_membership$")
+    restore_end = migration.index("\n\ncommit;", restore_start)
+    prelude = migration[prelude_start:prelude_end]
+    restore = migration[restore_start:restore_end]
+    runner = "aiow_managed_migration_probe"
+    sql(env, f"""create role {runner} nologin createrole;
+      grant create on schema public to {runner} with grant option;
+      grant aiow_mail_run_receipt_owner to {runner} with admin true, inherit false, set false;
+      grant aiow_mail_runtime_reader to {runner} with admin true, inherit false, set false;""")
+    sql(env, f"""begin;
+      create table public.aiow_managed_owner_probe(id integer);
+      alter table public.aiow_managed_owner_probe owner to {runner};
+      set role {runner};
+      {prelude}
+      alter table public.aiow_managed_owner_probe owner to aiow_mail_run_receipt_owner;
+      {restore}
+      reset role;
+      commit;""")
+    options = sql(env, f"""select r.rolname||':'||m.admin_option||':'||m.inherit_option||':'||m.set_option
+      from pg_auth_members m join pg_roles r on r.oid=m.roleid
+      where m.member={q(runner)}::regrole and r.rolname in ('aiow_mail_run_receipt_owner','aiow_mail_runtime_reader')
+      order by r.rolname;""").stdout.splitlines()
+    assert options == [
+        "aiow_mail_run_receipt_owner:true:false:false",
+        "aiow_mail_runtime_reader:true:false:false",
+    ], options
+    assert sql(env, "select has_schema_privilege('aiow_mail_run_receipt_owner','public','CREATE')||':'||has_schema_privilege('aiow_mail_runtime_reader','public','CREATE');").stdout.strip() == "false:false"
+    assert sql(env, "select pg_get_userbyid(relowner) from pg_class where oid='public.aiow_managed_owner_probe'::regclass;").stdout.strip() == "aiow_mail_run_receipt_owner"
+    sql(env, f"drop table public.aiow_managed_owner_probe; revoke create on schema public from {runner}; drop role {runner};")
+
+
 def main() -> None:
     def step(name: str) -> None:
         print(f"PG_ORDERED_CHAIN_PROOF_STEP {name}", flush=True)
@@ -327,7 +362,9 @@ def main() -> None:
         prove_malformed_predispatch(env)
         step("obsolete-overload-and-exhaustive-effective-acl")
         acl_count = prove_acl_and_obsolete_absent(env)
-        print(f"POSTGRES_ORDERED_MIGRATION_CHAIN_PROOF_PASS migrations={len(migrations)} apply=lexical-once duplicate-prefix=reject booking=browser-adapter-js-sql legacy=pending+retry-v2 lifecycle=booking+quote gate=concurrent-replay malformed=predispatch-dead marker=provider-results-bound obsolete-overload=absent aiow-acl-inventory={acl_count}", flush=True)
+        step("managed-createrole-set-false-owner-transfer-restore")
+        prove_managed_owner_membership_restore(env)
+        print(f"POSTGRES_ORDERED_MIGRATION_CHAIN_PROOF_PASS migrations={len(migrations)} apply=lexical-once duplicate-prefix=reject booking=browser-adapter-js-sql legacy=pending+retry-v2 lifecycle=booking+quote gate=concurrent-replay malformed=predispatch-dead marker=provider-results-bound obsolete-overload=absent managed-owner-options=restored aiow-acl-inventory={acl_count}", flush=True)
     finally:
         if started:
             run(["pg_ctl", "-D", str(data), "-m", "fast", "-w", "stop"], env, False)
