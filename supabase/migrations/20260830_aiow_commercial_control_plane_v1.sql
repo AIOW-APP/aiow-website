@@ -161,16 +161,78 @@ alter table public.quote_leads add constraint quote_leads_check1 check(
   (state='abandoned' and committed_at is null)
 );
 
+-- Keep predecessor lead_id for released workers while adding the exact
+-- normative document identity append-only.
+alter table public.quote_documents add column quote_lead_id uuid;
+update public.quote_documents set quote_lead_id=lead_id;
+alter table public.quote_documents alter column quote_lead_id set not null;
+alter table public.quote_documents add constraint quote_documents_quote_lead_fk
+ foreign key(quote_lead_id) references public.quote_leads(id) on delete restrict;
+
+create function public.aiow_next_business_day_v1(p_value timestamptz) returns timestamptz
+language plpgsql immutable strict set search_path=pg_catalog as $$
+declare v_local timestamp:=p_value at time zone 'Europe/Amsterdam'; v_date date; begin
+ v_date:=v_local::date+1;
+ while extract(isodow from v_date) in (6,7) loop v_date:=v_date+1; end loop;
+ return (v_date+v_local::time) at time zone 'Europe/Amsterdam';
+end $$;
+
+create function public.aiow_json_canonical_v1(p_value jsonb) returns text
+language plpgsql immutable strict set search_path=pg_catalog as $$
+declare v_type text:=jsonb_typeof(p_value); v_result text; v_key text; v_item jsonb; begin
+ if v_type in ('null','boolean','number') then return p_value::text;
+ elsif v_type='string' then return to_jsonb(p_value#>>'{}')::text;
+ elsif v_type='array' then
+  v_result:='[';
+  for v_item in select value from jsonb_array_elements(p_value) loop
+   if v_result<>'[' then v_result:=v_result||','; end if;
+   v_result:=v_result||public.aiow_json_canonical_v1(v_item);
+  end loop;
+  return v_result||']';
+ elsif v_type='object' then
+  v_result:='{';
+  for v_key,v_item in select key,value from jsonb_each(p_value) order by key loop
+   if v_result<>'{' then v_result:=v_result||','; end if;
+   v_result:=v_result||to_jsonb(v_key)::text||':'||public.aiow_json_canonical_v1(v_item);
+  end loop;
+  return v_result||'}';
+ end if;
+ raise exception using errcode='22023',message='AIOW_JSON_INVALID';
+end $$;
+
+create function public.aiow_sha256_json_v1(p_value jsonb) returns text
+language sql immutable strict set search_path=pg_catalog,extensions as $$
+ select encode(extensions.digest(convert_to(public.aiow_json_canonical_v1(p_value),'UTF8'),'sha256'),'hex')
+$$;
+
+create function public.aiow_digest_matches_v1(p_value jsonb,p_digest text) returns boolean
+language sql immutable strict set search_path=pg_catalog as $$
+ select p_digest~'^[0-9a-f]{64}$' and public.aiow_sha256_json_v1(p_value)=p_digest
+$$;
+
+create function public.aiow_idempotency_lock_v1(p_endpoint text,p_key text) returns void
+language plpgsql volatile security definer set search_path=pg_catalog as $$ begin
+ if p_key is null or length(p_key) not between 16 and 128 or p_key!~'^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$'
+ then raise exception using errcode='22023',message='AIOW_IDEMPOTENCY_KEY_INVALID'; end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_endpoint||E'\n'||p_key,0));
+end $$;
+
+create function public.aiow_email_valid_v1(p_value text) returns boolean
+language sql immutable set search_path=pg_catalog as $$
+ select p_value is not null and length(p_value) between 3 and 254 and p_value!~E'[\r\n]'
+  and p_value~'^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+$$;
+
 -- Backfill every predecessor quote one-to-one. Prepared rows exist but queue reads
 -- suppress them until commit.
 insert into public.commercial_leads(id,source,source_id,status,priority,unread,revision,route,locale,display_name,email,phone,organisation,sla_due_at,created_at,updated_at)
-select extensions.gen_random_uuid(),'quote',q.id,'new','normal',true,1,
+select extensions.gen_random_uuid(),'quote',q.id,'new','normal',(q.state='committed'),1,
   case when q.source->>'locale'='en' then coalesce(nullif(q.source->>'route',''),'/en') else coalesce(nullif(q.source->>'route',''),'/') end,
   case when q.source->>'locale'='en' then 'en' else 'nl' end,
   left(coalesce(nullif(btrim(q.contact->>'name'),''),'Quote lead'),100),
   lower(coalesce(nullif(q.contact->>'email',''),'unknown@invalid.local')),
   nullif(left(btrim(q.contact->>'phone'),40),''), nullif(left(btrim(q.contact->>'company'),120),''),
-  coalesce(q.committed_at,q.prepared_at)+interval '1 day',coalesce(q.committed_at,q.prepared_at),coalesce(q.committed_at,q.prepared_at)
+  case when q.state='committed' then public.aiow_next_business_day_v1(q.committed_at) else q.prepared_at end,coalesce(q.committed_at,q.prepared_at),coalesce(q.committed_at,q.prepared_at)
 from public.quote_leads q;
 update public.quote_leads q set commercial_lead_id=c.id, expires_at=q.prepared_at+interval '24 hours'
 from public.commercial_leads c where c.source='quote' and c.source_id=q.id;
@@ -185,10 +247,6 @@ language sql immutable strict set search_path=pg_catalog as $$
   select to_char(p_value at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
 $$;
 
-create function public.aiow_sha256_json_v1(p_value jsonb) returns text
-language sql immutable strict set search_path=pg_catalog,extensions as $$
-  select encode(extensions.digest(convert_to(p_value::text,'UTF8'),'sha256'),'hex')
-$$;
 
 create function public.aiow_outbox_projection_v2(p_row public.commercial_mail_outbox) returns jsonb
 language sql stable strict set search_path=pg_catalog as $$
@@ -225,7 +283,7 @@ create function public.aiow_audit_v1(p_lead uuid,p_action text,p_facts jsonb) re
 language plpgsql volatile security definer set search_path=pg_catalog,extensions as $$
 declare v_id uuid:=extensions.gen_random_uuid(); begin
  insert into public.commercial_audit(id,commercial_lead_id,actor_id,actor_role,action,facts,occurred_at,redact_after)
- values(v_id,p_lead,'richard','ops_admin',p_action,p_facts||'{"nonPiiFactsOnly":true}'::jsonb,transaction_timestamp(),transaction_timestamp()+interval '365 days');
+ values(v_id,p_lead,'richard','ops_admin',p_action,p_facts||'{"nonPiiFactsOnly":true}'::jsonb,transaction_timestamp(),'infinity'::timestamptz);
  return v_id;
 end $$;
 
@@ -244,6 +302,113 @@ language sql volatile security definer set search_path=pg_catalog as $$
  values(p_endpoint,p_key,p_digest,200,p_outcome,transaction_timestamp())
 $$;
 
+create function public.aiow_booking_valid_v1(p_booking jsonb) returns boolean
+language plpgsql immutable set search_path=pg_catalog as $$ begin
+ return public.aiow_jsonb_exact_keys_v1(p_booking,array['schemaKind','subject','details','date','slot','name','email','company','locale','consentAccepted','consentVersion'])
+  and p_booking->>'schemaKind'='booking_request' and p_booking->>'subject' in ('bedrijf','woning','gebouw','anders')
+  and length(btrim(p_booking->>'details')) between 1 and 1200
+  and (p_booking->>'date')~'^[0-9]{4}-[0-9]{2}-[0-9]{2}$' and ((p_booking->>'date')::date)::text=p_booking->>'date'
+  and (p_booking->>'slot')~'^[0-2][0-9]:[0-5][0-9]$'
+  and length(btrim(p_booking->>'name')) between 1 and 100 and public.aiow_email_valid_v1(p_booking->>'email')
+  and length(p_booking->>'company')<=120 and p_booking->>'locale' in ('nl','en')
+  and p_booking->'consentAccepted'='true'::jsonb and p_booking->>'consentVersion'='aiow-booking-v1';
+exception when others then return false; end $$;
+
+create function public.aiow_quote_valid_v1(p_quote jsonb,p_contact jsonb,p_consent jsonb,p_source jsonb,p_country text) returns boolean
+language plpgsql immutable set search_path=pg_catalog as $$
+declare c jsonb:=p_quote->'configuration'; begin
+ if not public.aiow_jsonb_exact_keys_v1(p_quote,array['schemaKind','configuration','contact','consent','source','country'])
+  or p_quote->>'schemaKind'<>'quote_request' or p_quote->'contact'<>p_contact or p_quote->'consent'<>p_consent or p_quote->'source'<>p_source or p_quote->>'country'<>p_country
+  or not public.aiow_jsonb_exact_keys_v1(c,array['segment','serviceRoute','contextSlug','people','squareMetres','homeSubtype','smartDesignModules'])
+  or c->>'segment' not in ('business','building','home') or c->>'serviceRoute' not in ('standard','comfort')
+  or not (c->'contextSlug'='null'::jsonb or c->>'contextSlug' in ('accountants','business-services','care','education','hospitality','retail','logistics','manufacturing','real-estate','government','woning','bedrijfshal-industrie'))
+  or not (c->'people'='null'::jsonb or (jsonb_typeof(c->'people')='number' and (c->>'people')::integer between 1 and 10000 and to_jsonb((c->>'people')::integer)=c->'people'))
+  or not (c->'squareMetres'='null'::jsonb or (jsonb_typeof(c->'squareMetres')='number' and (c->>'squareMetres')::integer between 1 and 1000000 and to_jsonb((c->>'squareMetres')::integer)=c->'squareMetres'))
+  or not (c->'homeSubtype'='null'::jsonb or c->>'homeSubtype' in ('home','signature'))
+  or jsonb_typeof(c->'smartDesignModules')<>'array' or jsonb_array_length(c->'smartDesignModules')>3
+  or exists(select 1 from jsonb_array_elements_text(c->'smartDesignModules') x where x not in ('scan','blueprint','supervision'))
+  or (select count(*) from jsonb_array_elements_text(c->'smartDesignModules'))<>(select count(distinct x) from jsonb_array_elements_text(c->'smartDesignModules') x)
+  or not public.aiow_jsonb_exact_keys_v1(p_contact,array['name','email','phone','company','postcode','kvk','startDate','note'])
+  or length(btrim(p_contact->>'name')) not between 1 and 100 or not public.aiow_email_valid_v1(p_contact->>'email') or length(p_contact->>'phone') not between 6 and 40
+  or not (p_contact->'company'='null'::jsonb or length(p_contact->>'company')<=120)
+  or not (p_contact->'postcode'='null'::jsonb or p_contact->>'postcode'~'^[1-9][0-9]{3} ?[A-Z]{2}$')
+  or not (p_contact->'kvk'='null'::jsonb or p_contact->>'kvk'~'^[0-9]{8}$')
+  or not (p_contact->'startDate'='null'::jsonb or ((p_contact->>'startDate')~'^[0-9]{4}-[0-9]{2}-[0-9]{2}$' and ((p_contact->>'startDate')::date)::text=p_contact->>'startDate'))
+  or not (p_contact->'note'='null'::jsonb or length(p_contact->>'note')<=2000)
+  or p_consent<>'{"accepted":true,"version":"aiow-quote-v1"}'::jsonb
+  or not public.aiow_jsonb_exact_keys_v1(p_source,array['route','locale']) or p_source->>'locale' not in ('nl','en')
+  or not ((p_source->>'locale'='nl' and p_source->>'route' in ('/','/booking','/quote','/knowledge','/context')) or (p_source->>'locale'='en' and p_source->>'route' in ('/en','/en/booking','/en/quote','/en/knowledge')))
+  or p_country!~'^[A-Z]{2}$' then return false; end if;
+ return true;
+exception when others then return false; end $$;
+
+create function public.aiow_mail_job_valid_v1(p_job jsonb,p_kind text,p_lead uuid) returns boolean
+language plpgsql immutable set search_path=pg_catalog,extensions as $$
+declare a jsonb; v bytea; begin
+ if not public.aiow_jsonb_exact_keys_v1(p_job,array['schemaKind','jobId','commercialLeadId','kind','from','to','subject','text','html','attachments','payloadSha256','attempt','leaseOwner','leaseToken','leaseExpiresAt'])
+  or p_job->>'schemaKind'<>'mail_job' or (p_job->>'jobId')::uuid is null or (p_job->>'commercialLeadId')::uuid<>p_lead or p_job->>'kind'<>p_kind
+  or not public.aiow_email_valid_v1(p_job->>'from') or jsonb_typeof(p_job->'to')<>'array' or jsonb_array_length(p_job->'to') not between 1 and 5
+  or exists(select 1 from jsonb_array_elements_text(p_job->'to') x where not public.aiow_email_valid_v1(x))
+  or (select count(*) from jsonb_array_elements_text(p_job->'to'))<>(select count(distinct x) from jsonb_array_elements_text(p_job->'to') x)
+  or length(p_job->>'subject') not between 1 and 200 or length(p_job->>'text') not between 1 and 20000 or length(p_job->>'html') not between 1 and 50000
+  or jsonb_typeof(p_job->'attachments')<>'array' or jsonb_array_length(p_job->'attachments')>2 or p_job->>'payloadSha256'!~'^[0-9a-f]{64}$'
+  or (p_job->>'attempt')::integer not between 1 and 5 or length(p_job->>'leaseOwner') not between 1 and 100
+  or (p_job->>'leaseToken')::uuid is null or (p_job->>'leaseExpiresAt')::timestamptz is null then return false; end if;
+ for a in select value from jsonb_array_elements(p_job->'attachments') loop
+  if not public.aiow_jsonb_exact_keys_v1(a,array['filename','mimeType','base64','sha256']) or length(a->>'filename') not between 1 and 128
+   or a->>'mimeType' not in ('application/pdf','text/calendar') or length(a->>'base64')>2000000 or a->>'sha256'!~'^[0-9a-f]{64}$' then return false; end if;
+  begin v:=decode(a->>'base64','base64'); exception when others then return false; end;
+  if encode(extensions.digest(v,'sha256'),'hex')<>a->>'sha256' then return false; end if;
+ end loop;
+ return true;
+exception when others then return false; end $$;
+
+create function public.aiow_event_valid_v1(p_event jsonb,p_now timestamptz) returns boolean
+language plpgsql stable set search_path=pg_catalog as $$
+declare n text:=p_event->>'event'; e jsonb:=p_event->'experiment'; keys text[]; begin
+ if jsonb_typeof(p_event)<>'object' or (p_event->>'eventId')::uuid is null or abs(extract(epoch from(p_now-(p_event->>'occurredAt')::timestamptz)))>600
+  or not ((p_event->>'locale'='nl' and p_event->>'route' in ('/','/booking','/quote','/knowledge','/context')) or (p_event->>'locale'='en' and p_event->>'route' in ('/en','/en/booking','/en/quote','/en/knowledge'))) then return false; end if;
+ keys:=case n when 'page_view' then array['schemaKind','eventId','event','occurredAt','route','locale','viewport']
+  when 'calculator_changed' then array['schemaKind','eventId','event','occurredAt','route','locale','segment','serviceRoute']
+  when 'context_opened' then array['schemaKind','eventId','event','occurredAt','route','locale','contextSlug']
+  when 'quote_opened' then array['schemaKind','eventId','event','occurredAt','route','locale']
+  when 'quote_succeeded' then array['schemaKind','eventId','event','occurredAt','route','locale','experiment']
+  when 'quote_failed' then array['schemaKind','eventId','event','occurredAt','route','locale','failureClass']
+  when 'booking_opened' then array['schemaKind','eventId','event','occurredAt','route','locale']
+  when 'booking_succeeded' then array['schemaKind','eventId','event','occurredAt','route','locale','experiment']
+  when 'booking_failed' then array['schemaKind','eventId','event','occurredAt','route','locale','failureClass']
+  when 'scan_cta_clicked' then array['schemaKind','eventId','event','occurredAt','route','locale','experiment']
+  when 'knowledge_cta_clicked' then array['schemaKind','eventId','event','occurredAt','route','locale']
+  when 'experiment_exposed' then array['schemaKind','eventId','event','occurredAt','route','locale','experiment'] else null end;
+ if keys is null or not public.aiow_jsonb_exact_keys_v1(p_event,keys) or p_event->>'schemaKind'<>'analytics_'||n then return false; end if;
+ if n='page_view' and p_event->>'viewport' not in ('mobile','tablet','desktop') then return false;
+ elsif n='calculator_changed' and (p_event->>'segment' not in ('business','building','home') or p_event->>'serviceRoute' not in ('standard','comfort')) then return false;
+ elsif n='context_opened' and p_event->>'contextSlug' not in ('accountants','care','education','hospitality','retail','logistics','manufacturing','woning','bedrijfshal-industrie') then return false;
+ elsif n in ('quote_failed','booking_failed') and p_event->>'failureClass' not in ('validation','rate_limit','unavailable','conflict') then return false; end if;
+ if n in ('quote_succeeded','booking_succeeded','scan_cta_clicked') then
+  if not (e='null'::jsonb or (public.aiow_jsonb_exact_keys_v1(e,array['experimentId','variant']) and e->>'experimentId'='scan_cta_copy_v1' and e->>'variant' in ('control','outcome_summary'))) then return false; end if;
+ elsif n='experiment_exposed' then
+  if not (public.aiow_jsonb_exact_keys_v1(e,array['experimentId','variant']) and e->>'experimentId'='scan_cta_copy_v1' and e->>'variant' in ('control','outcome_summary')) then return false; end if;
+ elsif p_event ? 'experiment' then return false; end if;
+ return true;
+exception when others then return false; end $$;
+
+create function public.aiow_provider_result_valid_v1(p_result jsonb,p_category text) returns boolean
+language plpgsql stable set search_path=pg_catalog as $$
+declare r jsonb:=p_result->'receipt'; c text:=p_result->>'code'; begin
+ if not public.aiow_jsonb_exact_keys_v1(p_result,array['schemaKind','category','code','receipt']) or p_result->>'category'<>p_category
+  or not public.aiow_jsonb_exact_keys_v1(r,array['provider','httpStatus','graphRequestId','providerMessageId','acceptanceKind','attemptReceipt','observedAt'])
+  or r->>'provider'<>'microsoft_graph' or (r->>'httpStatus')::integer not between 100 and 599
+  or not (r->'graphRequestId'='null'::jsonb or length(r->>'graphRequestId') between 1 and 200)
+  or not (r->'providerMessageId'='null'::jsonb or length(r->>'providerMessageId') between 1 and 512)
+  or length(r->>'attemptReceipt') not between 1 and 2000 or (r->>'observedAt')::timestamptz is null then return false; end if;
+ if p_category='accepted' then return p_result->>'schemaKind'='provider_accepted' and p_result->'code'='null'::jsonb and r->>'httpStatus'='202' and r->>'acceptanceKind'='graph_http_202';
+ elsif p_category='transient_pre_acceptance' then return p_result->>'schemaKind'='provider_transient_pre_acceptance' and c in ('timeout_before_response','network_before_response','throttled_429','graph_5xx') and r->'acceptanceKind'='null'::jsonb;
+ elsif p_category='permanent_pre_acceptance' then return p_result->>'schemaKind'='provider_permanent_pre_acceptance' and c in ('oauth_authentication_failed','exchange_rbac_denied','invalid_recipient','invalid_payload','retry_exhausted') and r->'acceptanceKind'='null'::jsonb;
+ elsif p_category='ambiguous' then return p_result->>'schemaKind'='provider_ambiguous' and c in ('timeout_after_request_body','connection_lost_after_dispatch','unknown_acceptance') and r->'acceptanceKind'='null'::jsonb; end if;
+ return false;
+exception when others then return false; end $$;
+
 -- Replace v1 quote wire routines forward-only: UUID request IDs, common lead mapping,
 -- v2 outbox. Historical v1 outbox rows remain drainable by the predecessor worker.
 drop function public.aiow_quote_prepare_v1(text,text,timestamptz,text,jsonb,jsonb,jsonb,jsonb);
@@ -254,38 +419,37 @@ create function public.aiow_quote_prepare_v1(
  p_quote jsonb,p_contact jsonb,p_consent jsonb,p_source jsonb) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,extensions as $$
 declare v_now timestamptz:=transaction_timestamp(); v_year integer; v_hash text; v_q public.quote_leads%rowtype;
- v_seq integer; v_qid uuid:=extensions.gen_random_uuid(); v_cid uuid:=extensions.gen_random_uuid(); v_ack jsonb;
+ v_seq integer; v_qid uuid:=extensions.gen_random_uuid(); v_cid uuid:=extensions.gen_random_uuid(); v_ack jsonb; v_replay jsonb;
 begin
- if p_idempotency_key is null or length(p_idempotency_key) not between 16 and 128 or p_idempotency_key!~'^[A-Za-z0-9][A-Za-z0-9._:-]+$'
-  or p_received_at is null or abs(extract(epoch from(v_now-p_received_at)))>300 or p_country!~'^[A-Z]{2}$'
-  or jsonb_typeof(p_quote)<>'object' or jsonb_typeof(p_contact)<>'object' or jsonb_typeof(p_source)<>'object'
-  or p_consent<>'{"accepted":true,"version":"aiow-quote-v1"}'::jsonb
-  or p_source->>'locale' not in ('nl','en') or p_source->>'route' is null
-  or nullif(btrim(p_contact->>'name'),'') is null or nullif(btrim(p_contact->>'email'),'') is null
+ if p_request_id is null or p_received_at is null or abs(extract(epoch from(v_now-p_received_at)))>300
+  or not public.aiow_quote_valid_v1(p_quote,p_contact,p_consent,p_source,p_country)
  then raise exception using errcode='22023',message='AIOW_QUOTE_INVALID_PREPARE'; end if;
- v_hash:=public.aiow_sha256_json_v1(jsonb_build_object('country',p_country,'quote',p_quote,'contact',p_contact,'consent',p_consent,'source',p_source));
+ v_hash:=public.aiow_sha256_json_v1(p_quote-'schemaKind');
+ perform public.aiow_idempotency_lock_v1('quote_prepare',p_idempotency_key);
+ v_replay:=public.aiow_idempotency_replay_v1('quote_prepare',p_idempotency_key,v_hash);
+ if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
  select * into v_q from public.quote_leads where idempotency_key=p_idempotency_key for update;
  if found then
   if v_q.request_payload_hash<>v_hash then raise exception using errcode='23505',message='AIOW_QUOTE_IDEMPOTENCY_CONFLICT'; end if;
-  return jsonb_build_object('schemaKind','quote_prepare_ack','accepted',true,'requestId',lower(v_q.request_id),'leadId',lower(v_q.id::text),
-   'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','prepared','expiresAt',public.aiow_iso_v1(v_q.expires_at),'replayed',true);
+  v_ack:=jsonb_build_object('schemaKind','quote_prepare_ack','accepted',true,'requestId',lower(v_q.request_id),'leadId',lower(v_q.id::text),
+   'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','prepared','expiresAt',public.aiow_iso_v1(v_q.expires_at),'replayed',false);
+  perform public.aiow_idempotency_store_v1('quote_prepare',p_idempotency_key,v_hash,v_ack);
+  return jsonb_set(v_ack,'{replayed}','true'::jsonb);
  end if;
  v_year:=extract(year from v_now at time zone 'Europe/Amsterdam');
  insert into public.quote_sequences(year,next_value,updated_at) values(v_year,1,v_now)
  on conflict(year) do update set next_value=public.quote_sequences.next_value+1,updated_at=excluded.updated_at where public.quote_sequences.next_value<9999
  returning next_value into v_seq;
  if v_seq is null then raise exception using errcode='P0001',message='AIOW_QUOTE_SEQUENCE_EXHAUSTED'; end if;
- insert into public.commercial_leads(id,source,source_id,route,locale,display_name,email,phone,organisation,sla_due_at,created_at,updated_at)
- values(v_cid,'quote',v_qid,p_source->>'route',p_source->>'locale',left(btrim(p_contact->>'name'),100),lower(p_contact->>'email'),
-  nullif(left(btrim(p_contact->>'phone'),40),''),nullif(left(btrim(p_contact->>'company'),120),''),v_now+interval '1 day',v_now,v_now);
+ insert into public.commercial_leads(id,source,source_id,unread,route,locale,display_name,email,phone,organisation,sla_due_at,created_at,updated_at)
+ values(v_cid,'quote',v_qid,false,p_source->>'route',p_source->>'locale',left(btrim(p_contact->>'name'),100),lower(p_contact->>'email'),
+  nullif(left(btrim(p_contact->>'phone'),40),''),nullif(left(btrim(p_contact->>'company'),120),''),v_now,v_now,v_now);
  insert into public.quote_leads(id,idempotency_key,request_id,quote_number,quote_year,quote_sequence,state,request_payload_hash,normalized_quote,contact,consent,source,country,received_at,prepared_at,commercial_lead_id,expires_at)
  values(v_qid,p_idempotency_key,lower(p_request_id::text),'AIOW-'||v_year||'-'||lpad(v_seq::text,4,'0'),v_year,v_seq,'prepared',v_hash,p_quote,p_contact,p_consent,p_source,p_country,p_received_at,v_now,v_cid,v_now+interval '24 hours') returning * into v_q;
- return jsonb_build_object('schemaKind','quote_prepare_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),
+ v_ack:=jsonb_build_object('schemaKind','quote_prepare_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),
    'commercialLeadId',lower(v_cid::text),'quoteNumber',v_q.quote_number,'state','prepared','expiresAt',public.aiow_iso_v1(v_q.expires_at),'replayed',false);
-exception when unique_violation then
- select * into v_q from public.quote_leads where idempotency_key=p_idempotency_key for update;
- if found and v_q.request_payload_hash=v_hash then return jsonb_build_object('schemaKind','quote_prepare_ack','accepted',true,'requestId',lower(v_q.request_id),'leadId',lower(v_q.id::text),'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','prepared','expiresAt',public.aiow_iso_v1(v_q.expires_at),'replayed',true); end if;
- raise exception using errcode='23505',message='AIOW_QUOTE_IDEMPOTENCY_CONFLICT';
+ perform public.aiow_idempotency_store_v1('quote_prepare',p_idempotency_key,v_hash,v_ack);
+ return v_ack;
 end $$;
 
 create function public.aiow_quote_commit_v1(
@@ -293,59 +457,80 @@ create function public.aiow_quote_commit_v1(
  p_pdf_base64 text,p_pdf_sha256 text,p_customer_mail jsonb,p_internal_mail jsonb,p_quote jsonb,p_contact jsonb,p_source jsonb,p_country text) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,extensions as $$
 declare v_q public.quote_leads%rowtype; v_bytes bytea; v_now timestamptz:=transaction_timestamp(); v_ack jsonb; v_doc public.quote_documents%rowtype;
+ v_hash text; v_replay jsonb;
 begin
- select * into v_q from public.quote_leads where id=p_lead_id for update;
- if not found then raise exception using errcode='P0001',message='AIOW_QUOTE_PREPARE_NOT_FOUND'; end if;
- if v_q.idempotency_key<>p_idempotency_key or v_q.quote_number<>p_quote_number or v_q.normalized_quote<>p_quote or v_q.contact<>p_contact
-  or v_q.source<>p_source or v_q.country<>p_country or p_pdf_filename<>p_quote_number||'.pdf' or p_pdf_mime_type<>'application/pdf'
-  or p_pdf_sha256!~'^[0-9a-f]{64}$' or jsonb_typeof(p_customer_mail)<>'object' or jsonb_typeof(p_internal_mail)<>'object'
-  or p_customer_mail->>'kind'<>'customer_quote' or p_internal_mail->>'kind'<>'internal_lead'
-  or p_customer_mail->>'commercialLeadId'<>lower(v_q.commercial_lead_id::text) or p_internal_mail->>'commercialLeadId'<>lower(v_q.commercial_lead_id::text)
+ if p_request_id is null or not public.aiow_quote_valid_v1(p_quote,p_contact,p_quote->'consent',p_source,p_country)
+  or p_pdf_filename<>p_quote_number||'.pdf' or p_pdf_mime_type<>'application/pdf' or p_pdf_sha256!~'^[0-9a-f]{64}$'
  then raise exception using errcode='22023',message='AIOW_QUOTE_INVALID_COMMIT'; end if;
  begin v_bytes:=decode(p_pdf_base64,'base64'); exception when others then raise exception using errcode='22023',message='AIOW_QUOTE_INVALID_PDF'; end;
  if octet_length(v_bytes) not between 5 and 1500000 or substring(v_bytes from 1 for 5)<>convert_to('%PDF-','UTF8') or encode(extensions.digest(v_bytes,'sha256'),'hex')<>p_pdf_sha256
  then raise exception using errcode='22023',message='AIOW_QUOTE_INVALID_PDF'; end if;
+ v_hash:=public.aiow_sha256_json_v1(jsonb_build_object('leadId',lower(p_lead_id::text),'commercialLeadId',p_customer_mail->>'commercialLeadId','quoteNumber',p_quote_number,
+  'pdf',jsonb_build_object('filename',p_pdf_filename,'mimeType',p_pdf_mime_type,'sha256',p_pdf_sha256)));
+ perform public.aiow_idempotency_lock_v1('quote_commit',p_idempotency_key);
+ v_replay:=public.aiow_idempotency_replay_v1('quote_commit',p_idempotency_key,v_hash);
+ if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ select * into v_q from public.quote_leads where id=p_lead_id for update;
+ if not found then raise exception using errcode='P0001',message='AIOW_QUOTE_PREPARE_NOT_FOUND'; end if;
+ v_replay:=public.aiow_idempotency_replay_v1('quote_commit',p_idempotency_key,v_hash);
+ if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ if v_q.idempotency_key<>p_idempotency_key or v_q.quote_number<>p_quote_number or v_q.normalized_quote<>p_quote or v_q.contact<>p_contact
+  or v_q.source<>p_source or v_q.country<>p_country
+  or not public.aiow_mail_job_valid_v1(p_customer_mail,'customer_quote',v_q.commercial_lead_id)
+  or not public.aiow_mail_job_valid_v1(p_internal_mail,'internal_lead',v_q.commercial_lead_id)
+ then raise exception using errcode='22023',message='AIOW_QUOTE_INVALID_COMMIT'; end if;
  if v_q.state='abandoned' then raise exception using errcode='P0001',message='AIOW_QUOTE_ABANDONED'; end if;
  if v_q.state='committed' then
-  select * into v_doc from public.quote_documents where lead_id=v_q.id;
-  if v_doc.sha256<>p_pdf_sha256 or not exists(select 1 from public.commercial_mail_outbox where commercial_lead_id=v_q.commercial_lead_id and kind='customer_quote' and payload=p_customer_mail)
+  select * into v_doc from public.quote_documents where quote_lead_id=v_q.id;
+  if v_doc.sha256<>p_pdf_sha256 or v_doc.document_bytes<>v_bytes
+   or not exists(select 1 from public.commercial_mail_outbox where commercial_lead_id=v_q.commercial_lead_id and kind='customer_quote' and payload=p_customer_mail)
    or not exists(select 1 from public.commercial_mail_outbox where commercial_lead_id=v_q.commercial_lead_id and kind='internal_lead' and payload=p_internal_mail)
   then raise exception using errcode='23505',message='AIOW_QUOTE_COMMIT_CONFLICT'; end if;
-  return jsonb_build_object('schemaKind','quote_commit_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','committed','pdfSha256',p_pdf_sha256,'committedAt',public.aiow_iso_v1(v_q.committed_at),'replayed',true,'pdfDeliveryPermitted',true);
+  v_ack:=jsonb_build_object('schemaKind','quote_commit_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','committed','pdfSha256',p_pdf_sha256,'committedAt',public.aiow_iso_v1(v_q.committed_at),'replayed',false,'pdfDeliveryPermitted',true);
+  perform public.aiow_idempotency_store_v1('quote_commit',p_idempotency_key,v_hash,v_ack);
+  return jsonb_set(v_ack,'{replayed}','true'::jsonb);
  end if;
- insert into public.quote_documents(lead_id,filename,mime_type,document_bytes,sha256) values(v_q.id,p_pdf_filename,p_pdf_mime_type,v_bytes,p_pdf_sha256);
+ insert into public.quote_documents(lead_id,quote_lead_id,filename,mime_type,document_bytes,sha256) values(v_q.id,v_q.id,p_pdf_filename,p_pdf_mime_type,v_bytes,p_pdf_sha256);
  insert into public.commercial_mail_outbox(commercial_lead_id,kind,payload,payload_sha256,next_attempt_at)
  values(v_q.commercial_lead_id,'customer_quote',p_customer_mail,public.aiow_sha256_json_v1(p_customer_mail),v_now),
        (v_q.commercial_lead_id,'internal_lead',p_internal_mail,public.aiow_sha256_json_v1(p_internal_mail),v_now);
  update public.quote_leads set state='committed',committed_at=v_now where id=v_q.id;
- update public.commercial_leads set created_at=v_now,updated_at=v_now,sla_due_at=v_now+interval '1 day' where id=v_q.commercial_lead_id;
- return jsonb_build_object('schemaKind','quote_commit_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','committed','pdfSha256',p_pdf_sha256,'committedAt',public.aiow_iso_v1(v_now),'replayed',false,'pdfDeliveryPermitted',true);
+ update public.commercial_leads set unread=true,created_at=v_now,updated_at=v_now,sla_due_at=public.aiow_next_business_day_v1(v_now) where id=v_q.commercial_lead_id;
+ v_ack:=jsonb_build_object('schemaKind','quote_commit_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_q.id::text),'commercialLeadId',lower(v_q.commercial_lead_id::text),'quoteNumber',v_q.quote_number,'state','committed','pdfSha256',p_pdf_sha256,'committedAt',public.aiow_iso_v1(v_now),'replayed',false,'pdfDeliveryPermitted',true);
+ perform public.aiow_idempotency_store_v1('quote_commit',p_idempotency_key,v_hash,v_ack);
+ return v_ack;
 end $$;
 
 create function public.aiow_booking_commit_v1(p_request_id uuid,p_idempotency_key text,p_payload_digest text,p_booking jsonb,p_source jsonb) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,extensions as $$
-declare v_replay jsonb; v_bid uuid:=extensions.gen_random_uuid(); v_cid uuid:=extensions.gen_random_uuid(); v_now timestamptz:=transaction_timestamp(); v_ack jsonb; v_customer jsonb; v_internal jsonb;
+declare v_replay jsonb; v_bid uuid:=extensions.gen_random_uuid(); v_cid uuid:=extensions.gen_random_uuid(); v_now timestamptz:=transaction_timestamp(); v_ack jsonb; v_customer jsonb; v_internal jsonb; v_canonical jsonb; v_digest text;
 begin
- if p_idempotency_key is null or length(p_idempotency_key) not between 16 and 128 or p_payload_digest!~'^[0-9a-f]{64}$'
-  or jsonb_typeof(p_booking)<>'object' or p_booking->>'schemaKind'<>'booking_request' or p_booking->>'consentVersion'<>'aiow-booking-v1' or p_booking->>'consentAccepted'<>'true'
-  or p_booking->>'subject' not in ('bedrijf','woning','gebouw','anders') or p_booking->>'locale' not in ('nl','en')
-  or p_source<>jsonb_build_object('route',case p_booking->>'locale' when 'nl' then '/booking' else '/en/booking' end,'locale',p_booking->>'locale')
-  or nullif(btrim(p_booking->>'name'),'') is null or nullif(btrim(p_booking->>'email'),'') is null
+ if p_request_id is null or not public.aiow_booking_valid_v1(p_booking)
+  or not public.aiow_jsonb_exact_keys_v1(p_source,array['route','locale'])
+  or p_source<>jsonb_build_object('route',case p_booking->>'locale' when 'nl' then '/' else '/en' end,'locale',p_booking->>'locale')
  then raise exception using errcode='22023',message='AIOW_BOOKING_INVALID'; end if;
- v_replay:=public.aiow_idempotency_replay_v1('booking',p_idempotency_key,p_payload_digest);
+ v_canonical:=jsonb_build_object('subject',p_booking->'subject','details',btrim(p_booking->>'details'),'date',p_booking->'date','slot',p_booking->'slot',
+  'name',btrim(p_booking->>'name'),'email',lower(p_booking->>'email'),'company',btrim(p_booking->>'company'),'locale',p_booking->'locale',
+  'consentAccepted',p_booking->'consentAccepted','consentVersion',p_booking->'consentVersion');
+ v_digest:=public.aiow_sha256_json_v1(v_canonical);
+ if p_payload_digest<>v_digest then raise exception using errcode='22023',message='AIOW_PAYLOAD_DIGEST_INVALID'; end if;
+ perform public.aiow_idempotency_lock_v1('booking',p_idempotency_key);
+ v_replay:=public.aiow_idempotency_replay_v1('booking',p_idempotency_key,v_digest);
  if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
  insert into public.commercial_leads(id,source,source_id,route,locale,display_name,email,organisation,sla_due_at,created_at,updated_at)
- values(v_cid,'booking',v_bid,p_source->>'route',p_source->>'locale',left(btrim(p_booking->>'name'),100),lower(p_booking->>'email'),nullif(left(btrim(p_booking->>'company'),120),''),v_now+interval '1 day',v_now,v_now);
- insert into public.booking_leads(id,commercial_lead_id,request_id,payload_digest,payload,created_at) values(v_bid,v_cid,p_request_id,p_payload_digest,p_booking,v_now);
- v_customer:=jsonb_build_object('schemaKind','mail_job','jobId',lower(extensions.gen_random_uuid()::text),'commercialLeadId',lower(v_cid::text),'kind','customer_booking','from','booking@aiow.ai','to',jsonb_build_array(lower(p_booking->>'email')),'subject','Booking ontvangen','text','Booking received','html','<p>Booking received</p>','attachments','[]'::jsonb);
- v_internal:=jsonb_build_object('schemaKind','mail_job','jobId',lower(extensions.gen_random_uuid()::text),'commercialLeadId',lower(v_cid::text),'kind','internal_booking','from','booking@aiow.ai','to',jsonb_build_array('booking@aiow.ai'),'subject','Nieuwe booking','text','New booking','html','<p>New booking</p>','attachments','[]'::jsonb);
+ values(v_cid,'booking',v_bid,p_source->>'route',p_source->>'locale',left(btrim(p_booking->>'name'),100),lower(p_booking->>'email'),nullif(left(btrim(p_booking->>'company'),120),''),public.aiow_next_business_day_v1(v_now),v_now,v_now);
+ insert into public.booking_leads(id,commercial_lead_id,request_id,payload_digest,payload,created_at) values(v_bid,v_cid,p_request_id,v_digest,p_booking,v_now);
+ v_customer:=jsonb_build_object('schemaKind','mail_job','jobId',lower(extensions.gen_random_uuid()::text),'commercialLeadId',lower(v_cid::text),'kind','customer_booking','from','booking@aiow.ai','to',jsonb_build_array(lower(p_booking->>'email')),'subject','Booking ontvangen','text','Booking received','html','<p>Booking received</p>','attachments','[]'::jsonb,'payloadSha256',repeat('0',64),'attempt',1,'leaseOwner','pending','leaseToken',lower(extensions.gen_random_uuid()::text),'leaseExpiresAt',public.aiow_iso_v1(v_now));
+ v_customer:=jsonb_set(v_customer,'{payloadSha256}',to_jsonb(public.aiow_sha256_json_v1(v_customer-'payloadSha256')));
+ v_internal:=jsonb_build_object('schemaKind','mail_job','jobId',lower(extensions.gen_random_uuid()::text),'commercialLeadId',lower(v_cid::text),'kind','internal_booking','from','booking@aiow.ai','to',jsonb_build_array('booking@aiow.ai'),'subject','Nieuwe booking','text','New booking','html','<p>New booking</p>','attachments','[]'::jsonb,'payloadSha256',repeat('0',64),'attempt',1,'leaseOwner','pending','leaseToken',lower(extensions.gen_random_uuid()::text),'leaseExpiresAt',public.aiow_iso_v1(v_now));
+ v_internal:=jsonb_set(v_internal,'{payloadSha256}',to_jsonb(public.aiow_sha256_json_v1(v_internal-'payloadSha256')));
+ if not public.aiow_mail_job_valid_v1(v_customer,'customer_booking',v_cid) or not public.aiow_mail_job_valid_v1(v_internal,'internal_booking',v_cid)
+ then raise exception using errcode='22023',message='AIOW_MAIL_INVALID'; end if;
  insert into public.commercial_mail_outbox(commercial_lead_id,kind,payload,payload_sha256,next_attempt_at)
  values(v_cid,'customer_booking',v_customer,public.aiow_sha256_json_v1(v_customer),v_now),(v_cid,'internal_booking',v_internal,public.aiow_sha256_json_v1(v_internal),v_now);
  v_ack:=jsonb_build_object('schemaKind','booking_ack','accepted',true,'requestId',lower(p_request_id::text),'leadId',lower(v_cid::text),'revision',1,
   'preference',jsonb_build_object('date',p_booking->>'date','slot',p_booking->>'slot','subject',p_booking->>'subject'),'durableAt',public.aiow_iso_v1(v_now),'replayed',false);
- perform public.aiow_idempotency_store_v1('booking',p_idempotency_key,p_payload_digest,v_ack); return v_ack;
-exception when unique_violation then
- v_replay:=public.aiow_idempotency_replay_v1('booking',p_idempotency_key,p_payload_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if; raise;
+ perform public.aiow_idempotency_store_v1('booking',p_idempotency_key,v_digest,v_ack); return v_ack;
 end $$;
 
 create function public.aiow_commercial_queue_v1(p_cursor_created_at timestamptz,p_cursor_id uuid,p_limit integer) returns jsonb
@@ -367,12 +552,16 @@ end $$;
 
 create function public.aiow_commercial_mutate_v1(p_idempotency_key text,p_payload_digest text,p_mutation jsonb) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,extensions as $$
-declare v_replay jsonb; v_lead public.commercial_leads%rowtype; v_before bigint; v_now timestamptz:=transaction_timestamp(); v_op text; v_audit uuid; v_effect jsonb; v_ack jsonb; v_to text; v_allowed boolean;
+declare v_replay jsonb; v_lead public.commercial_leads%rowtype; v_before bigint; v_now timestamptz:=transaction_timestamp(); v_op text; v_audit uuid; v_effect jsonb; v_ack jsonb; v_to text; v_allowed boolean; v_digest text;
 begin
- if p_payload_digest!~'^[0-9a-f]{64}$' or jsonb_typeof(p_mutation)<>'object' or p_mutation->>'idempotencyKey'<>p_idempotency_key then raise exception using errcode='22023',message='AIOW_MUTATION_INVALID'; end if;
- v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,p_payload_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
+ if jsonb_typeof(p_mutation)<>'object' or p_mutation->>'idempotencyKey'<>p_idempotency_key then raise exception using errcode='22023',message='AIOW_MUTATION_INVALID'; end if;
+ v_digest:=public.aiow_sha256_json_v1(p_mutation-'schemaKind'-'idempotencyKey');
+ if p_payload_digest<>v_digest then raise exception using errcode='22023',message='AIOW_PAYLOAD_DIGEST_INVALID'; end if;
+ perform public.aiow_idempotency_lock_v1('ops_mutation',p_idempotency_key);
+ v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,v_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
  select * into v_lead from public.commercial_leads where id=(p_mutation->>'leadId')::uuid for update;
  if not found then raise exception using errcode='P0001',message='AIOW_LEAD_NOT_FOUND'; end if;
+ v_replay:=public.aiow_idempotency_replay_v1('ops_mutation',p_idempotency_key,v_digest); if v_replay is not null then return jsonb_set(v_replay,'{replayed}','true'::jsonb); end if;
  if v_lead.revision<>(p_mutation->>'expectedRevision')::bigint then raise exception using errcode='40001',message='AIOW_REVISION_CONFLICT'; end if;
  v_before:=v_lead.revision; v_op:=p_mutation->>'operation';
  if v_op='mark_read' then
@@ -402,7 +591,7 @@ begin
  select * into v_lead from public.commercial_leads where id=v_lead.id;
  v_audit:=public.aiow_audit_v1(v_lead.id,v_op,jsonb_build_object('beforeRevision',v_before,'afterRevision',v_lead.revision,'idempotencyKeyHash',encode(extensions.digest(convert_to(p_idempotency_key,'UTF8'),'sha256'),'hex')));
  v_ack:=jsonb_build_object('schemaKind','ops_mutation_ack','accepted',true,'projection',public.aiow_lead_projection_v1(v_lead),'previousRevision',v_before,'revision',v_lead.revision,'actorId','richard','serverTime',public.aiow_iso_v1(v_now),'auditId',lower(v_audit::text),'replayed',false,'operation',v_op,'effect',v_effect);
- perform public.aiow_idempotency_store_v1('ops_mutation',p_idempotency_key,p_payload_digest,v_ack); return v_ack;
+ perform public.aiow_idempotency_store_v1('ops_mutation',p_idempotency_key,v_digest,v_ack); return v_ack;
 end $$;
 
 create function public.aiow_commercial_report_v1(p_from date,p_through date) returns jsonb
@@ -413,24 +602,28 @@ declare v jsonb; begin if p_from>p_through or p_through-p_from>366 then raise ex
 
 create function public.aiow_commercial_event_v1(p_idempotency_key text,p_payload_digest text,p_event jsonb) returns jsonb
 language plpgsql security definer set search_path=pg_catalog as $$
-declare v_replay jsonb; v_id uuid; v_now timestamptz:=transaction_timestamp(); v_ack jsonb; v_name text; v_route text; v_locale text; v_eid text; v_variant text; begin
- if p_payload_digest!~'^[0-9a-f]{64}$' or jsonb_typeof(p_event)<>'object' or p_event ?| array['email','name','phone','company','details','note','referrer','query','utm','userAgent','ip']
-  or p_event::text ~* '([?&](email|utm_)|@)' then raise exception using errcode='22023',message='AIOW_EVENT_PII_REJECTED'; end if;
- v_replay:=public.aiow_idempotency_replay_v1('event_ingest',p_idempotency_key,p_payload_digest); if v_replay is not null then return jsonb_set(v_replay,'{deduplicated}','true'::jsonb); end if;
- v_id:=(p_event->>'eventId')::uuid; v_name:=p_event->>'event'; v_route:=p_event->>'route'; v_locale:=p_event->>'locale';
- if v_name not in ('page_view','calculator_changed','context_opened','quote_opened','quote_succeeded','quote_failed','booking_opened','booking_succeeded','booking_failed','scan_cta_clicked','knowledge_cta_clicked','experiment_exposed')
-  or not ((v_locale='nl' and v_route in ('/','/booking','/quote','/knowledge','/context')) or (v_locale='en' and v_route in ('/en','/en/booking','/en/quote','/en/knowledge')))
- then raise exception using errcode='22023',message='AIOW_EVENT_INVALID'; end if;
+declare v_replay jsonb; v_id uuid; v_now timestamptz:=transaction_timestamp(); v_ack jsonb; v_name text; v_route text; v_locale text; v_eid text; v_variant text; v_digest text; v_existing public.commercial_events%rowtype; begin
+ if not public.aiow_event_valid_v1(p_event,v_now) then raise exception using errcode='22023',message='AIOW_EVENT_INVALID'; end if;
+ v_digest:=public.aiow_sha256_json_v1(p_event-'schemaKind');
+ if p_payload_digest<>v_digest then raise exception using errcode='22023',message='AIOW_PAYLOAD_DIGEST_INVALID'; end if;
+ perform public.aiow_idempotency_lock_v1('event_ingest',p_idempotency_key);
+ v_replay:=public.aiow_idempotency_replay_v1('event_ingest',p_idempotency_key,v_digest); if v_replay is not null then return jsonb_set(v_replay,'{deduplicated}','true'::jsonb); end if;
+ v_id:=(p_event->>'eventId')::uuid;
+ select * into v_existing from public.commercial_events where event_id=v_id for update;
+ if found then
+  if v_existing.payload_digest<>v_digest then raise exception using errcode='23505',message='AIOW_EVENT_CONFLICT'; end if;
+  select outcome into v_ack from public.commercial_idempotency where endpoint='event_ingest' and outcome->>'eventId'=lower(v_id::text) order by created_at limit 1;
+  if v_ack is null then v_ack:=jsonb_build_object('schemaKind','analytics_ack','accepted',true,'eventId',lower(v_id::text),'deduplicated',false,'storedAt',public.aiow_iso_v1(v_existing.occurred_at)); end if;
+  perform public.aiow_idempotency_store_v1('event_ingest',p_idempotency_key,v_digest,v_ack);
+  return jsonb_set(v_ack,'{deduplicated}','true'::jsonb);
+ end if;
+ v_name:=p_event->>'event'; v_route:=p_event->>'route'; v_locale:=p_event->>'locale';
  v_eid:=coalesce(p_event#>>'{experiment,experimentId}','__none__'); v_variant:=coalesce(p_event#>>'{experiment,variant}','__none__');
- if not ((v_eid='__none__' and v_variant='__none__') or (v_eid='scan_cta_copy_v1' and v_variant in ('control','outcome_summary') and v_name in ('experiment_exposed','quote_succeeded','booking_succeeded','scan_cta_clicked'))) then raise exception using errcode='22023',message='AIOW_EVENT_EXPERIMENT_INVALID'; end if;
- insert into public.commercial_events(event_id,payload_digest,event,occurred_at,expires_at) values(v_id,p_payload_digest,p_event,(p_event->>'occurredAt')::timestamptz,(p_event->>'occurredAt')::timestamptz+interval '30 days');
+ insert into public.commercial_events(event_id,payload_digest,event,occurred_at,expires_at) values(v_id,v_digest,p_event,(p_event->>'occurredAt')::timestamptz,(p_event->>'occurredAt')::timestamptz+interval '30 days');
  insert into public.commercial_event_daily(day,event_name,route,locale,experiment_id,variant,count) values(((p_event->>'occurredAt')::timestamptz at time zone 'UTC')::date,v_name,v_route,v_locale,v_eid,v_variant,1)
  on conflict(day,event_name,route,locale,experiment_id,variant) do update set count=public.commercial_event_daily.count+1;
  v_ack:=jsonb_build_object('schemaKind','analytics_ack','accepted',true,'eventId',lower(v_id::text),'deduplicated',false,'storedAt',public.aiow_iso_v1(v_now));
- perform public.aiow_idempotency_store_v1('event_ingest',p_idempotency_key,p_payload_digest,v_ack); return v_ack;
-exception when unique_violation then
- select outcome into v_ack from public.commercial_idempotency where endpoint='event_ingest' and idempotency_key=p_idempotency_key and payload_digest=p_payload_digest;
- if v_ack is not null then return jsonb_set(v_ack,'{deduplicated}','true'::jsonb); end if; raise exception using errcode='23505',message='AIOW_EVENT_CONFLICT';
+ perform public.aiow_idempotency_store_v1('event_ingest',p_idempotency_key,v_digest,v_ack); return v_ack;
 end $$;
 
 create function public.aiow_mail_outbox_claim_v2(p_worker_id text,p_limit integer,p_now timestamptz) returns jsonb
@@ -449,13 +642,22 @@ end $$;
 
 create function public.aiow_outbox_finalize_v2(p_job_id uuid,p_owner text,p_token uuid,p_digest text,p_revision bigint,p_result jsonb,p_category text,p_state text,p_next timestamptz default null) returns jsonb
 language plpgsql security definer set search_path=pg_catalog as $$
-declare v public.commercial_mail_outbox%rowtype; begin
- if p_digest!~'^[0-9a-f]{64}$' or p_result->>'category'<>p_category or p_result#>>'{receipt,provider}'<>'microsoft_graph' then raise exception using errcode='22023',message='AIOW_OUTBOX_RESULT_INVALID'; end if;
+declare v public.commercial_mail_outbox%rowtype; v_effective_state text; begin
+ if not public.aiow_provider_result_valid_v1(p_result,p_category) then raise exception using errcode='22023',message='AIOW_OUTBOX_RESULT_INVALID'; end if;
+ if not ((p_category='accepted' and p_state='sent') or (p_category='transient_pre_acceptance' and p_state='retry') or (p_category='permanent_pre_acceptance' and p_state='dead') or (p_category='ambiguous' and p_state='review'))
+ then raise exception using errcode='22023',message='AIOW_OUTBOX_RESULT_INVALID'; end if;
  select * into v from public.commercial_mail_outbox where id=p_job_id for update;
  if not found then raise exception using errcode='P0001',message='AIOW_OUTBOX_NOT_FOUND'; end if;
- if v.state<>'leased' or v.lease_owner<>p_owner or v.lease_token<>p_token or v.lease_expires_at<transaction_timestamp() or v.payload_sha256<>p_digest or v.revision<>p_revision then raise exception using errcode='40001',message='AIOW_OUTBOX_LEASE_CONFLICT'; end if;
- if p_state='retry' and (v.attempts>=5 or p_next<>v.updated_at+make_interval(secs=>case v.attempts when 1 then 60 when 2 then 300 when 3 then 1800 when 4 then 7200 else 0 end)) then raise exception using errcode='22023',message='AIOW_OUTBOX_BACKOFF_INVALID'; end if;
- update public.commercial_mail_outbox set state=p_state,revision=revision+1,lease_owner=null,lease_token=null,lease_expires_at=null,next_attempt_at=case when p_state='retry' then p_next else null end,provider_result=p_result,updated_at=transaction_timestamp() where id=p_job_id returning * into v;
+ if v.state<>'leased' or v.lease_owner<>p_owner or v.lease_token<>p_token or v.lease_expires_at<transaction_timestamp()
+  or v.payload_sha256<>p_digest or public.aiow_sha256_json_v1(v.payload)<>p_digest or v.revision<>p_revision
+ then raise exception using errcode='40001',message='AIOW_OUTBOX_LEASE_CONFLICT'; end if;
+ v_effective_state:=case when p_category='transient_pre_acceptance' and v.attempts>=5 then 'dead' else p_state end;
+ if p_category='transient_pre_acceptance' and v.attempts<5 and p_next<>v.updated_at+make_interval(secs=>case v.attempts when 1 then 60 when 2 then 300 when 3 then 1800 when 4 then 7200 end)
+  or p_category='transient_pre_acceptance' and v.attempts>=5 and p_next is not null
+ then raise exception using errcode='22023',message='AIOW_OUTBOX_BACKOFF_INVALID'; end if;
+ update public.commercial_mail_outbox set state=v_effective_state,revision=revision+1,lease_owner=null,lease_token=null,lease_expires_at=null,
+  next_attempt_at=case when v_effective_state='retry' then p_next else null end,provider_result=p_result,updated_at=transaction_timestamp()
+ where id=p_job_id returning * into v;
  return public.aiow_outbox_projection_v2(v);
 end $$;
 
@@ -477,7 +679,7 @@ declare v_replay jsonb; v public.commercial_mail_outbox%rowtype; v_state text; v
  if not found then raise exception using errcode='P0001',message='AIOW_OUTBOX_NOT_FOUND'; end if;
  if v.state<>'review' or v.revision<>p_expected_revision then raise exception using errcode='40001',message='AIOW_REVISION_CONFLICT'; end if;
  v_state:=case p_resolution when 'sent' then 'sent' when 'resend' then 'retry' else 'dead' end;
- update public.commercial_mail_outbox set state=v_state,revision=revision+1,next_attempt_at=case when v_state='retry' then transaction_timestamp() else null end,provider_result=case when v_state='sent' then jsonb_build_object('schemaKind','provider_accepted','category','accepted','code',null,'receipt',jsonb_build_object('provider','microsoft_graph','httpStatus',202,'graphRequestId',null,'providerMessageId',null,'acceptanceKind','manual_evidence','attemptReceipt',p_evidence,'observedAt',public.aiow_iso_v1(transaction_timestamp()))) else provider_result end,updated_at=transaction_timestamp() where id=v.id returning * into v;
+ update public.commercial_mail_outbox set state=v_state,revision=revision+1,next_attempt_at=case when v_state='retry' then transaction_timestamp() else null end,provider_result=case when v_state='sent' then jsonb_build_object('schemaKind','provider_accepted','category','accepted','code',null,'receipt',jsonb_build_object('provider','microsoft_graph','httpStatus',202,'graphRequestId',null,'providerMessageId',null,'acceptanceKind','graph_http_202','attemptReceipt',p_evidence,'observedAt',public.aiow_iso_v1(transaction_timestamp()))) else provider_result end,updated_at=transaction_timestamp() where id=v.id returning * into v;
  perform public.aiow_audit_v1(v.commercial_lead_id,'resolve_outbox',jsonb_build_object('jobId',lower(v.id::text),'resolution',p_resolution,'reasonCode',encode(extensions.digest(convert_to(p_reason,'UTF8'),'sha256'),'hex'))); v_out:=public.aiow_outbox_projection_v2(v); perform public.aiow_idempotency_store_v1('outbox_resolve',p_idempotency_key,p_payload_digest,v_out); return v_out;
 end $$;
 
@@ -486,7 +688,10 @@ language plpgsql security definer set search_path=pg_catalog as $$
 declare v_items jsonb; begin
  if p_limit not between 1 and 50 or length(p_worker_id) not between 1 and 100 or abs(extract(epoch from(transaction_timestamp()-p_now)))>5 then raise exception using errcode='22023',message='AIOW_STALE_INVALID'; end if;
  with candidates as (select id from public.commercial_mail_outbox where state='leased' and lease_expires_at<p_now order by lease_expires_at,id limit p_limit for update skip locked),
- recovered as (update public.commercial_mail_outbox o set state=case when attempts>=5 then 'dead' else 'retry' end,revision=revision+1,next_attempt_at=case when attempts>=5 then null else p_now end,provider_result=case when attempts>=5 then jsonb_build_object('schemaKind','provider_permanent_pre_acceptance','category','permanent_pre_acceptance','code','retry_exhausted','receipt',null) else jsonb_build_object('schemaKind','provider_transient_pre_acceptance','category','transient_pre_acceptance','code','lease_expired','receipt',null) end,lease_owner=null,lease_token=null,lease_expires_at=null,updated_at=p_now from candidates c where o.id=c.id returning o.*)
+ recovered as (update public.commercial_mail_outbox o set state=case when attempts>=5 then 'dead' else 'retry' end,revision=revision+1,next_attempt_at=case when attempts>=5 then null else p_now end,
+  provider_result=case when attempts>=5 then jsonb_build_object('schemaKind','provider_permanent_pre_acceptance','category','permanent_pre_acceptance','code','retry_exhausted','receipt',jsonb_build_object('provider','microsoft_graph','httpStatus',504,'graphRequestId',null,'providerMessageId',null,'acceptanceKind',null,'attemptReceipt','lease_expired','observedAt',public.aiow_iso_v1(p_now)))
+   else jsonb_build_object('schemaKind','provider_transient_pre_acceptance','category','transient_pre_acceptance','code','timeout_before_response','receipt',jsonb_build_object('provider','microsoft_graph','httpStatus',504,'graphRequestId',null,'providerMessageId',null,'acceptanceKind',null,'attemptReceipt','lease_expired','observedAt',public.aiow_iso_v1(p_now))) end,
+  lease_owner=null,lease_token=null,lease_expires_at=null,updated_at=p_now from candidates c where o.id=c.id returning o.*)
  select coalesce(jsonb_agg(jsonb_build_object('id',lower(id::text),'commercialLeadId',lower(commercial_lead_id::text),'kind',kind,'revision',revision,'payloadSha256',payload_sha256,'attempts',attempts,'leaseOwner',p_worker_id,'leaseToken',lower(extensions.gen_random_uuid()::text),'leaseExpiresAt',public.aiow_iso_v1(p_now),'nextAttemptAt',public.aiow_iso_v1(coalesce(next_attempt_at,p_now)),'createdAt',public.aiow_iso_v1(created_at)) order by created_at,id),'[]'::jsonb) into v_items from recovered;
  return jsonb_build_object('schemaKind','outbox_batch_ack','operation','stale_recovery','requestedLimit',p_limit,'itemCount',jsonb_array_length(v_items),'items',v_items); end $$;
 
@@ -546,14 +751,48 @@ end $$;
 
 create function public.aiow_commercial_retention_dry_run_v1(p_now timestamptz) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,extensions as $$
-declare v_actions jsonb; v_ids text; v_eligible bigint; v_hold bigint; v_relation bigint; begin
+declare v_actions jsonb; v_ids text; v_counts jsonb; v_hold bigint; v_relation bigint; begin
  if abs(extract(epoch from(transaction_timestamp()-p_now)))>5 then raise exception using errcode='22023',message='AIOW_RETENTION_TIME_INVALID'; end if;
- with candidates as (select *,coalesce(abandoned_at,terminal_at) anchor from public.commercial_leads where status in ('won','lost') and coalesce(abandoned_at,terminal_at)<p_now-interval '90 days'), actions as (
- select jsonb_build_object('class','booking_quote_lead_pii','targetId',lower(id::text),'action','irreversible_redaction','anchor',case when abandoned_at is not null then 'abandoned_at' else 'terminal_at' end,'reason',case when legal_hold then 'excluded_legal_hold' when active_customer_relation then 'excluded_active_customer_relation' else 'age_threshold_met' end,'eligible',not legal_hold and not active_customer_relation) j,id,legal_hold,active_customer_relation from candidates)
- select coalesce(jsonb_agg(j order by id),'[]'::jsonb),coalesce(string_agg(lower(id::text),',' order by id) filter(where not legal_hold and not active_customer_relation),''),count(*) filter(where not legal_hold and not active_customer_relation),count(*) filter(where legal_hold),count(*) filter(where active_customer_relation) into v_actions,v_ids,v_eligible,v_hold,v_relation from actions;
+ with lead_candidates as (
+  select c.*,case when c.abandoned_at is not null then 'abandoned_at' else 'terminal_at' end anchor
+  from public.commercial_leads c where c.status in ('won','lost') and coalesce(c.abandoned_at,c.terminal_at)<p_now-interval '90 days'
+ ), all_actions as (
+  select 'booking_quote_lead_pii' class,lower(c.id::text) target_id,'irreversible_redaction' action,c.anchor,
+   case when c.legal_hold then 'excluded_legal_hold' when c.active_customer_relation then 'excluded_active_customer_relation' else 'age_threshold_met' end reason,
+   not c.legal_hold and not c.active_customer_relation eligible,'lead' target_kind from lead_candidates c
+  union all
+  select 'pdfs_and_outbox_payloads',lower(d.quote_lead_id::text),'delete_bytes',c.anchor,
+   case when c.legal_hold then 'excluded_legal_hold' when c.active_customer_relation then 'excluded_active_customer_relation' else 'age_threshold_met' end,
+   not c.legal_hold and not c.active_customer_relation,'pdf' from public.quote_documents d join public.quote_leads q on q.id=d.quote_lead_id join lead_candidates c on c.id=q.commercial_lead_id
+  union all
+  select 'pdfs_and_outbox_payloads',lower(o.id::text),'redact_payload',c.anchor,
+   case when c.legal_hold then 'excluded_legal_hold' when c.active_customer_relation then 'excluded_active_customer_relation' else 'age_threshold_met' end,
+   not c.legal_hold and not c.active_customer_relation,'outbox' from public.commercial_mail_outbox o join lead_candidates c on c.id=o.commercial_lead_id
+  union all
+  select 'raw_analytics',lower(e.event_id::text),'delete','occurred_at','age_threshold_met',true,'analytics_event' from public.commercial_events e where e.occurred_at<p_now-interval '30 days'
+  union all
+  select 'analytics_aggregates',day::text||':'||event_name||':'||route||':'||locale||':'||experiment_id||':'||variant,'delete','bucket_month_end','age_threshold_met',true,'analytics_aggregate'
+   from public.commercial_event_daily where (date_trunc('month',day::timestamp)+interval '1 month - 1 day'+interval '13 months')<p_now
+  union all
+  select 'provider_receipts',lower(o.id::text),'irreversible_redaction','observed_at',
+   case when c.legal_hold then 'excluded_legal_hold' when c.active_customer_relation then 'excluded_active_customer_relation' else 'age_threshold_met' end,
+   not c.legal_hold and not c.active_customer_relation,'provider_receipt'
+   from public.commercial_mail_outbox o join public.commercial_leads c on c.id=o.commercial_lead_id
+   where o.provider_result#>>'{receipt,observedAt}' is not null and (o.provider_result#>>'{receipt,observedAt}')::timestamptz<p_now-interval '90 days'
+  union all
+  select 'non_pii_audit_facts',lower(a.id::text),'delete','irreversible_pii_redaction','age_threshold_met',true,'audit' from public.commercial_audit a where a.redact_after<p_now
+ ), encoded as (
+  select *,jsonb_build_object('class',class,'targetId',target_id,'action',action,'anchor',anchor,'reason',reason,'eligible',eligible) j from all_actions
+ )
+ select coalesce(jsonb_agg(j order by class,target_kind,target_id),'[]'::jsonb),
+  coalesce(string_agg(class||':'||target_id,',' order by class,target_kind,target_id) filter(where eligible),''),
+  jsonb_build_object('leadPii',count(*) filter(where target_kind='lead' and eligible),'pdfs',count(*) filter(where target_kind='pdf' and eligible),
+   'outboxPayloads',count(*) filter(where target_kind='outbox' and eligible),'analyticsEvents',count(*) filter(where target_kind in ('analytics_event','analytics_aggregate') and eligible),
+   'providerReceipts',count(*) filter(where target_kind='provider_receipt' and eligible),'auditFacts',count(*) filter(where target_kind='audit' and eligible)),
+  count(*) filter(where target_kind='lead' and reason='excluded_legal_hold'),count(*) filter(where target_kind='lead' and reason='excluded_active_customer_relation')
+ into v_actions,v_ids,v_counts,v_hold,v_relation from encoded;
  return jsonb_build_object('schemaKind','retention_redaction_result','dryRun',true,'runId',lower(extensions.gen_random_uuid()::text),'generatedAt',public.aiow_iso_v1(p_now),'policyVersion',1,
-  'eligible',jsonb_build_object('leadPii',v_eligible,'pdfs',(select count(*) from public.quote_documents d join public.quote_leads q on q.id=d.lead_id join public.commercial_leads c on c.id=q.commercial_lead_id where c.status in ('won','lost') and coalesce(c.abandoned_at,c.terminal_at)<p_now-interval '90 days' and not c.legal_hold and not c.active_customer_relation),'outboxPayloads',(select count(*) from public.commercial_mail_outbox o join public.commercial_leads c on c.id=o.commercial_lead_id where c.status in ('won','lost') and coalesce(c.abandoned_at,c.terminal_at)<p_now-interval '90 days' and not c.legal_hold and not c.active_customer_relation),'analyticsEvents',(select count(*) from public.commercial_events where expires_at<p_now),'providerReceipts',(select count(*) from public.commercial_mail_outbox o join public.commercial_leads c on c.id=o.commercial_lead_id where o.provider_result is not null and c.status in ('won','lost') and coalesce(c.abandoned_at,c.terminal_at)<p_now-interval '90 days' and not c.legal_hold and not c.active_customer_relation),'auditFacts',(select count(*) from public.commercial_audit where redact_after<p_now)),
-  'excludedLegalHold',v_hold,'excludedActiveCustomerRelation',v_relation,'wouldRedactIdsSha256',encode(extensions.digest(convert_to(v_ids,'UTF8'),'sha256'),'hex'),'actions',v_actions);
+  'eligible',v_counts,'excludedLegalHold',v_hold,'excludedActiveCustomerRelation',v_relation,'wouldRedactIdsSha256',encode(extensions.digest(convert_to(v_ids,'UTF8'),'sha256'),'hex'),'actions',v_actions);
 end $$;
 
 create function public.aiow_quote_abandon_expired_v1(p_expired_before timestamptz,p_limit integer) returns jsonb
@@ -564,8 +803,10 @@ declare v_items jsonb; v_now timestamptz:=transaction_timestamp(); begin
   select q.id qid,q.commercial_lead_id cid,c.revision prev from public.quote_leads q join public.commercial_leads c on c.id=q.commercial_lead_id
   where q.state='prepared' and q.expires_at<v_now and q.expires_at<=p_expired_before and c.status not in ('won','lost') and not c.legal_hold and not c.active_customer_relation
   order by q.expires_at,q.id limit p_limit for update of q,c skip locked
- ), lead_up as (update public.commercial_leads c set status='lost',revision=c.revision+1,next_action_at=null,terminal_at=v_now,abandoned_at=v_now,updated_at=v_now from candidates x where c.id=x.cid returning c.id,c.revision),
- quote_up as (update public.quote_leads q set state='abandoned' from candidates x where q.id=x.qid returning q.id,q.commercial_lead_id), audited as (
+ ), lead_up as (update public.commercial_leads c set status='lost',revision=c.revision+1,next_action_at=null,terminal_at=v_now,abandoned_at=v_now,
+   display_name='[redacted]',email='redacted@invalid.local',phone=null,organisation=null,updated_at=v_now from candidates x where c.id=x.cid returning c.id,c.revision),
+ quote_up as (update public.quote_leads q set state='abandoned',normalized_quote='{}'::jsonb,contact='{}'::jsonb,consent='{}'::jsonb,source='{}'::jsonb,country=''
+   from candidates x where q.id=x.qid returning q.id,q.commercial_lead_id), audited as (
   insert into public.commercial_audit(id,commercial_lead_id,actor_id,actor_role,action,facts,occurred_at,redact_after)
   select extensions.gen_random_uuid(),x.cid,'richard','ops_admin','quote_abandoned',jsonb_build_object('nonPiiFactsOnly',true,'quoteId',lower(x.qid::text),'beforeRevision',x.prev,'afterRevision',x.prev+1),v_now,v_now+interval '365 days' from candidates x returning id,commercial_lead_id)
  select coalesce(jsonb_agg(jsonb_build_object('quoteId',lower(x.qid::text),'commercialLeadId',lower(x.cid::text),'previousRevision',x.prev,'revision',x.prev+1,'status','lost','quoteState','abandoned','terminalAt',public.aiow_iso_v1(v_now),'abandonedAt',public.aiow_iso_v1(v_now),'auditId',lower(a.id::text)) order by x.qid),'[]'::jsonb) into v_items from candidates x join audited a on a.commercial_lead_id=x.cid;

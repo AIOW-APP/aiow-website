@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Deterministic native PostgreSQL proof for the commercial control-plane migration."""
 from __future__ import annotations
-import base64, concurrent.futures, datetime as dt, hashlib, json, os, pathlib, shutil, socket, subprocess, tempfile, uuid
+import base64, concurrent.futures, copy, datetime as dt, hashlib, json, os, pathlib, shutil, socket, subprocess, tempfile, uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PREDECESSOR = ROOT / "supabase/migrations/20260828_aiow_quote_adapter_v1.sql"
 MIGRATION = ROOT / "supabase/migrations/20260830_aiow_commercial_control_plane_v1.sql"
+FIXTURES = json.loads((ROOT / "tests/fixtures/aiow-commercial-contract-v1.json").read_text())
 EXPECTED_TABLES = {"commercial_leads","booking_leads","commercial_mail_outbox","commercial_events","commercial_event_daily","commercial_audit","commercial_provider_gates","commercial_idempotency"}
 EXPECTED_RPCS = {"aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"}
 DIGEST_A = "a" * 64
@@ -30,20 +31,41 @@ def q(value):
 def j(value):
     return q(json.dumps(value, separators=(",", ":"), sort_keys=True)) + "::jsonb"
 
+def digest(value):
+    return hashlib.sha256(json.dumps(value,separators=(",",":"),sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+
 def call(env, expression, db="postgres"):
     result = sql(env, f"select ({expression})::text;", db, True, "service_role")
     return json.loads(result.stdout.strip())
 
-def booking_expr(key, booking, digest=DIGEST_A, request_id=None):
+def normalized_booking(booking):
+    canonical={k:booking[k] for k in ("subject","details","date","slot","name","email","company","locale","consentAccepted","consentVersion")}
+    canonical.update(details=canonical["details"].strip(),name=canonical["name"].strip(),email=canonical["email"].lower(),company=canonical["company"].strip())
+    return canonical
+
+def booking_expr(key, booking, payload_digest=None, request_id=None, source_override=None):
     request_id = request_id or str(uuid.uuid4())
-    source = {"route":"/booking" if booking["locale"] == "nl" else "/en/booking", "locale":booking["locale"]}
-    return f"public.aiow_booking_commit_v1({q(request_id)}::uuid,{q(key)},{q(digest)},{j(booking)},{j(source)})"
+    source = source_override or {"route":"/" if booking["locale"] == "nl" else "/en", "locale":booking["locale"]}
+    canonical=normalized_booking(booking)
+    return f"public.aiow_booking_commit_v1({q(request_id)}::uuid,{q(key)},{q(payload_digest or digest(canonical))},{j(booking)},{j(source)})"
 
-def mutation_expr(key, digest, mutation):
-    return f"public.aiow_commercial_mutate_v1({q(key)},{q(digest)},{j(mutation)})"
+def mutation_expr(key, mutation, payload_digest=None):
+    canonical={k:v for k,v in mutation.items() if k not in ("schemaKind","idempotencyKey")}
+    return f"public.aiow_commercial_mutate_v1({q(key)},{q(payload_digest or digest(canonical))},{j(mutation)})"
 
-def event_expr(key, digest, event):
-    return f"public.aiow_commercial_event_v1({q(key)},{q(digest)},{j(event)})"
+def event_expr(key, event, payload_digest=None):
+    return f"public.aiow_commercial_event_v1({q(key)},{q(payload_digest or digest({k:v for k,v in event.items() if k!='schemaKind'}))},{j(event)})"
+
+def quote_request_fixture(name, email):
+    value=copy.deepcopy(FIXTURES["requests"]["QuoteRequest"])
+    value["contact"].update(name=name,email=email)
+    return value
+
+def quote_mail_fixture(argument_name, commercial_lead_id):
+    args=FIXTURES["rpcBoundaries"]["aiow_quote_commit_v1"]["args"]
+    value=copy.deepcopy(next(arg["value"] for arg in args if arg["name"]==argument_name))
+    value.update(jobId=str(uuid.uuid4()),commercialLeadId=commercial_lead_id,leaseToken=str(uuid.uuid4()))
+    return value
 
 def assert_error(result, marker):
     assert result.returncode != 0 and marker in result.stderr, (result.returncode, result.stdout, result.stderr)
@@ -77,7 +99,7 @@ def prove_catalog_and_acl(env):
 def prove_booking_and_idempotency(env):
     booking = {"schemaKind":"booking_request","subject":"bedrijf","details":"proof","date":"2026-09-01","slot":"10:00","name":"Proof User","email":"proof@example.com","company":"AIOW","locale":"nl","consentAccepted":True,"consentVersion":"aiow-booking-v1"}
     before = sql(env, "select (select count(*) from commercial_leads)||','||(select count(*) from booking_leads)||','||(select count(*) from commercial_mail_outbox);").stdout.strip()
-    bad = sql(env, f"select {booking_expr('booking-invalid-0001',booking).replace(j({'route':'/booking','locale':'nl'}),j({'route':'/','locale':'nl'}))};", check=False, role="service_role")
+    bad = sql(env, f"select {booking_expr('booking-invalid-0001',booking,source_override={'route':'/booking','locale':'nl'})};", check=False, role="service_role")
     assert_error(bad, "AIOW_BOOKING_INVALID")
     assert sql(env, "select (select count(*) from commercial_leads)||','||(select count(*) from booking_leads)||','||(select count(*) from commercial_mail_outbox);").stdout.strip() == before
     first = call(env, booking_expr("booking-proof-0001", booking))
@@ -85,8 +107,8 @@ def prove_booking_and_idempotency(env):
     assert first["leadId"] == replay["leadId"] and replay["replayed"] is True
     counts = sql(env, f"select (select count(*) from booking_leads b where b.commercial_lead_id={q(first['leadId'])}::uuid)||','||(select count(*) from commercial_mail_outbox o where o.commercial_lead_id={q(first['leadId'])}::uuid);").stdout.strip()
     assert counts == "1,2", counts
-    conflict = sql(env, f"select {booking_expr('booking-proof-0001',booking,DIGEST_B)};", check=False, role="service_role")
-    assert_error(conflict, "AIOW_IDEMPOTENCY_CONFLICT")
+    conflict = sql(env, f"select {booking_expr('booking-proof-0001',{**booking,'details':'changed'},digest(normalized_booking(booking)))};", check=False, role="service_role")
+    assert_error(conflict, "AIOW_PAYLOAD_DIGEST_INVALID")
     key = "booking-race-0001"
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: call(env, booking_expr(key, booking, request_id=str(uuid.uuid4()))), range(2)))
@@ -99,23 +121,26 @@ def prove_queue_mutate_events(env, lead):
     queue = call(env, "public.aiow_commercial_queue_v1(null,null,100)")
     assert any(x["id"] == lead["leadId"] for x in queue["items"])
     mutation = {"schemaKind":"ops_mark_read","idempotencyKey":"mutate-read-0001","leadId":lead["leadId"],"expectedRevision":1,"operation":"mark_read","unread":False}
-    ack = call(env, mutation_expr("mutate-read-0001", DIGEST_A, mutation)); assert ack["revision"] == 2 and ack["projection"]["unread"] is False
-    replay = call(env, mutation_expr("mutate-read-0001", DIGEST_A, {**mutation,"expectedRevision":999})); assert replay["replayed"] is True and replay["revision"] == 2
-    conflict = sql(env, f"select {mutation_expr('mutate-read-0001',DIGEST_B,mutation)};", check=False, role="service_role"); assert_error(conflict,"AIOW_IDEMPOTENCY_CONFLICT")
+    ack = call(env, mutation_expr("mutate-read-0001", mutation)); assert ack["revision"] == 2 and ack["projection"]["unread"] is False
+    replay = call(env, mutation_expr("mutate-read-0001", mutation)); assert replay["replayed"] is True and replay["revision"] == 2
+    changed_mutation={**mutation,"expectedRevision":999}
+    changed_replay = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest({k:v for k,v in mutation.items() if k not in ('schemaKind','idempotencyKey')}))};", check=False, role="service_role")
+    assert_error(changed_replay,"AIOW_PAYLOAD_DIGEST_INVALID")
+    conflict = sql(env, f"select {mutation_expr('mutate-read-0001',changed_mutation,digest({k:v for k,v in changed_mutation.items() if k not in ('schemaKind','idempotencyKey')}))};", check=False, role="service_role"); assert_error(conflict,"AIOW_IDEMPOTENCY_CONFLICT")
     wrong = {**mutation,"idempotencyKey":"mutate-wrong-cas-1","expectedRevision":1,"operation":"set_priority","priority":"urgent"}
-    denied = sql(env, f"select {mutation_expr('mutate-wrong-cas-1',DIGEST_A,wrong)};", check=False, role="service_role"); assert_error(denied,"AIOW_REVISION_CONFLICT")
+    denied = sql(env, f"select {mutation_expr('mutate-wrong-cas-1',wrong)};", check=False, role="service_role"); assert_error(denied,"AIOW_REVISION_CONFLICT")
     now = dt.datetime.now(dt.timezone.utc)
     event = {"schemaKind":"analytics_page_view","eventId":str(uuid.uuid4()),"event":"page_view","occurredAt":now.isoformat(),"route":"/","locale":"nl","viewport":"desktop"}
-    first = call(env,event_expr("event-proof-00001",DIGEST_A,event)); replay = call(env,event_expr("event-proof-00001",DIGEST_A,event))
+    first = call(env,event_expr("event-proof-00001",event)); replay = call(env,event_expr("event-proof-00001",event))
     assert first["deduplicated"] is False and replay["deduplicated"] is True
     pii = {**event,"eventId":str(uuid.uuid4()),"email":"person@example.com"}
-    rejected = sql(env,f"select {event_expr('event-proof-pii01',DIGEST_A,pii)};",check=False,role="service_role"); assert_error(rejected,"AIOW_EVENT_PII_REJECTED")
+    rejected = sql(env,f"select {event_expr('event-proof-pii01',pii)};",check=False,role="service_role"); assert_error(rejected,"AIOW_EVENT_INVALID")
     report = call(env,f"public.aiow_commercial_report_v1({q(now.date())}::date,{q(now.date())}::date)")
     assert any(x["event"] == "page_view" and x["count"] == 1 for x in report["buckets"])
 
 def make_more_bookings(env, booking, count):
     batch = uuid.uuid4().hex[:8]
-    return [call(env, booking_expr(f"booking-{batch}-{i:04d}",booking,DIGEST_A,str(uuid.uuid4()))) for i in range(count)]
+    return [call(env, booking_expr(f"booking-{batch}-{i:04d}",booking,None,str(uuid.uuid4()))) for i in range(count)]
 
 def prove_claims_and_results(env, booking):
     sql(env,"update commercial_mail_outbox set next_attempt_at=transaction_timestamp()+interval '1 hour' where state='pending';")
@@ -151,12 +176,12 @@ def prove_claims_and_results(env, booking):
 
 def prove_quote_v2(env):
     now = dt.datetime.now(dt.timezone.utc); request = str(uuid.uuid4()); key="quote-v2-proof-01"
-    quote={"schemaKind":"quote_request","issueDate":now.date().isoformat()}; contact={"name":"Quote Proof","email":"quote@example.com","phone":"0201234567","company":"AIOW"}; consent={"accepted":True,"version":"aiow-quote-v1"}; source={"route":"/quote","locale":"nl"}
-    prepare=f"public.aiow_quote_prepare_v1({q(request)}::uuid,{q(key)},{q(now.isoformat())}::timestamptz,'NL',{j(quote)},{j(contact)},{j(consent)},{j(source)})"
+    quote=quote_request_fixture("Quote Proof","quote@example.com"); contact=quote["contact"]; consent=quote["consent"]; source=quote["source"]
+    prepare=f"public.aiow_quote_prepare_v1({q(request)}::uuid,{q(key)},{q(now.isoformat())}::timestamptz,{q(quote['country'])},{j(quote)},{j(contact)},{j(consent)},{j(source)})"
     first=call(env,prepare); replay=call(env,prepare); assert first["leadId"]==replay["leadId"] and replay["replayed"] is True
     pdf=b"%PDF-commercial-proof"; digest=hashlib.sha256(pdf).hexdigest(); encoded=base64.b64encode(pdf).decode()
-    customer={"schemaKind":"mail_job","kind":"customer_quote","commercialLeadId":first["commercialLeadId"]}; internal={"schemaKind":"mail_job","kind":"internal_lead","commercialLeadId":first["commercialLeadId"]}
-    commit=f"public.aiow_quote_commit_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(first['quoteNumber'])},{q(first['leadId'])}::uuid,{q(first['quoteNumber']+'.pdf')},'application/pdf',{q(encoded)},{q(digest)},{j(customer)},{j(internal)},{j(quote)},{j(contact)},{j(source)},'NL')"
+    customer=quote_mail_fixture("p_customer_mail",first["commercialLeadId"]); internal=quote_mail_fixture("p_internal_mail",first["commercialLeadId"])
+    commit=f"public.aiow_quote_commit_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(first['quoteNumber'])},{q(first['leadId'])}::uuid,{q(first['quoteNumber']+'.pdf')},'application/pdf',{q(encoded)},{q(digest)},{j(customer)},{j(internal)},{j(quote)},{j(contact)},{j(source)},{q(quote['country'])})"
     ack=call(env,commit); replay_commit=call(env,commit); assert ack["state"]=="committed" and replay_commit["replayed"] is True
     assert sql(env,f"select (select count(*) from quote_documents where lead_id={q(first['leadId'])}::uuid)||','||(select count(*) from commercial_mail_outbox where commercial_lead_id={q(first['commercialLeadId'])}::uuid);").stdout.strip()=="1,2"
     return first
@@ -171,9 +196,9 @@ def prove_gate_retention_abandon(env, booking):
     leads=make_more_bookings(env,booking,3)
     for i,lead in enumerate(leads):
         m={"schemaKind":"ops_transition_status","idempotencyKey":f"lost-retain-{i:04d}","leadId":lead["leadId"],"expectedRevision":1,"operation":"transition_status","status":"lost","reopenReason":None}
-        call(env,mutation_expr(m["idempotencyKey"],DIGEST_A,m))
+        call(env,mutation_expr(m["idempotencyKey"],m))
     hold={"schemaKind":"ops_legal_hold","idempotencyKey":"hold-retain-0001","leadId":leads[1]["leadId"],"expectedRevision":2,"operation":"set_legal_hold","enabled":True,"reason":"litigation"}
-    call(env,mutation_expr(hold["idempotencyKey"],DIGEST_A,hold))
+    call(env,mutation_expr(hold["idempotencyKey"],hold))
     relation=call(env,f"public.aiow_active_customer_relation_set_v1({q(leads[2]['leadId'])}::uuid,2,'relation-retain01',{q(DIGEST_A)},true,'active contract')"); assert relation["projection"]["activeCustomerRelation"] is True
     sql(env,"update commercial_leads set terminal_at=transaction_timestamp()-interval '100 days',abandoned_at=transaction_timestamp()-interval '100 days' where id=any(array["+",".join(q(x["leadId"])+"::uuid" for x in leads)+"]);")
     retention=call(env,"public.aiow_commercial_retention_dry_run_v1(transaction_timestamp())")
@@ -183,12 +208,12 @@ def prove_gate_retention_abandon(env, booking):
     sql(env,f"update quote_leads set expires_at=transaction_timestamp()-interval '2 hours' where id={q(qlead['leadId'])}::uuid;")
     abandoned=call(env,"public.aiow_quote_abandon_expired_v1(transaction_timestamp(),10)"); item=next(x for x in abandoned["items"] if x["quoteId"]==qlead["leadId"])
     reopen={"schemaKind":"ops_transition_status","idempotencyKey":"reopen-quote-0001","leadId":qlead["commercialLeadId"],"expectedRevision":item["revision"],"operation":"transition_status","status":"qualified","reopenReason":"customer returned"}
-    reopened=call(env,mutation_expr(reopen["idempotencyKey"],DIGEST_A,reopen)); assert reopened["projection"]["status"]=="qualified"
+    reopened=call(env,mutation_expr(reopen["idempotencyKey"],reopen)); assert reopened["projection"]["status"]=="qualified"
     state=sql(env,f"select q.state||','||c.status||','||(c.terminal_at is null)||','||(c.abandoned_at is null) from quote_leads q join commercial_leads c on c.id=q.commercial_lead_id where q.id={q(qlead['leadId'])}::uuid;").stdout.strip(); assert state=="abandoned,qualified,true,true",state
 
 def prove_quote_prepare_only(env):
-    now=dt.datetime.now(dt.timezone.utc); key="quote-abandon-001"; quote={"schemaKind":"quote_request","issueDate":now.date().isoformat()}; contact={"name":"Abandon","email":"abandon@example.com"}; consent={"accepted":True,"version":"aiow-quote-v1"}; source={"route":"/quote","locale":"nl"}
-    return call(env,f"public.aiow_quote_prepare_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(now.isoformat())}::timestamptz,'NL',{j(quote)},{j(contact)},{j(consent)},{j(source)})")
+    now=dt.datetime.now(dt.timezone.utc); key="quote-abandon-001"; quote=quote_request_fixture("Abandon","abandon@example.com"); contact=quote["contact"]; consent=quote["consent"]; source=quote["source"]
+    return call(env,f"public.aiow_quote_prepare_v1({q(str(uuid.uuid4()))}::uuid,{q(key)},{q(now.isoformat())}::timestamptz,{q(quote['country'])},{j(quote)},{j(contact)},{j(consent)},{j(source)})")
 
 def prove_upgrade_route(env):
     db="upgrade_proof"; setup_roles(env,db); apply(env,PREDECESSOR,db)
