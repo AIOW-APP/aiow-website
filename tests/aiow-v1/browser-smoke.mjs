@@ -59,6 +59,20 @@ try {
     const controlTargets = await page.locator('header select, header a[hreflang]').evaluateAll((nodes) => nodes.map((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
     assert.equal(controlTargets.length, 2, `theme/language controls missing at ${width}`);
     for (const target of controlTargets) assert.ok(target.width >= 44 && target.height >= 44, `header control below 44px at ${width}: ${JSON.stringify(target)}`);
+    const menuButton = page.getByRole("button", { name: "Menu", exact: true });
+    if (width <= 1000) {
+      assert.equal(await menuButton.isVisible(), true, `responsive menu trigger hidden at ${width}`);
+      assert.equal(await menuButton.getAttribute("aria-expanded"), "false", `responsive menu starts expanded at ${width}`);
+      await menuButton.focus();
+      await page.keyboard.press("Space");
+      assert.equal(await menuButton.getAttribute("aria-expanded"), "true", `Space did not open responsive menu at ${width}`);
+      assert.equal(await page.locator("#primary-navigation").getAttribute("data-open"), "true", `responsive menu state not exposed at ${width}`);
+      await page.keyboard.press("Escape");
+      assert.equal(await menuButton.getAttribute("aria-expanded"), "false", `Escape did not close responsive menu at ${width}`);
+      assert.equal(await menuButton.evaluate((node) => node === document.activeElement), true, `responsive menu focus was not returned at ${width}`);
+    } else {
+      assert.equal(await menuButton.isVisible(), false, `desktop exposes responsive menu trigger at ${width}`);
+    }
     if (width <= 390) {
       const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
       await assert.doesNotReject(() => pricingDeck.waitFor({ state: "visible" }));
@@ -155,7 +169,7 @@ try {
     await quoteDialog.getByRole("button", { name: "Offerteformulier sluiten" }).click();
     assert.equal(await quoteDialog.count(), 0, `home quote close ${width}`);
 
-    const trigger = page.getByRole("button", { name: "Plan een scan", exact: true }).first();
+    const trigger = page.getByRole("button", { name: "Vraag een scan aan", exact: true }).first();
     await trigger.click();
     const dialog = page.getByRole("dialog");
     await dialog.waitFor({ state: "visible" });
@@ -202,6 +216,7 @@ try {
   assert.equal(await successPage.getByText("AIOW-2026-0042", { exact: true }).count(), 1);
   await successPage.getByRole("button", { name: "Sluiten", exact: true }).click();
   await successPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  await successPage.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." }).waitFor();
   assert.equal(await successPage.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." }).count(), 1);
   assert.equal(await successPage.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
   await successPage.close();
@@ -239,7 +254,7 @@ try {
   let englishBookingPayload;
   await englishBookingPage.route("**/api/booking", async (route) => { englishBookingPayload = JSON.parse(route.request().postData()); await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok:true,requestId:"english-booking-proof",booking:{ date:"2026-08-30",slot:"09:00",subject:"bedrijf" } }) }); });
   await englishBookingPage.goto(`${base}/en`, { waitUntil: "networkidle" });
-  await englishBookingPage.getByRole("button", { name: "Book a scan", exact: true }).first().click();
+  await englishBookingPage.getByRole("button", { name: "Request a scan", exact: true }).first().click();
   await englishBookingPage.getByRole("button", { name: "Continue" }).click();
   await englishBookingPage.getByLabel("Date").fill("2026-08-30");
   await englishBookingPage.getByRole("button", { name: "09:00" }).click();
@@ -247,10 +262,10 @@ try {
   await englishBookingPage.getByLabel("Name").fill("English Booking Proof");
   await englishBookingPage.getByLabel("E-mail").fill("english@example.com");
   await englishBookingPage.getByRole("checkbox").check();
-  await englishBookingPage.getByRole("button", { name: "Send request" }).click();
-  await englishBookingPage.getByText("Your scan request is registered.").waitFor();
+  await englishBookingPage.getByRole("button", { name: "Send preferred request" }).click();
+  await englishBookingPage.getByText("Your preferred scan request was received.").waitFor();
   assert.equal(englishBookingPayload.locale, "en");
-  const [calendarDownload] = await Promise.all([englishBookingPage.waitForEvent("download"), englishBookingPage.getByRole("button", { name: "Download calendar file" }).click()]);
+  const [calendarDownload] = await Promise.all([englishBookingPage.waitForEvent("download"), englishBookingPage.getByRole("button", { name: "Download local reminder (.ics)" }).click()]);
   const calendarText = await readFile(await calendarDownload.path(), "utf8");
   assert.match(calendarText, /SUMMARY:AIOW introduction/);
   assert.match(calendarText, /DESCRIPTION:AIOW received your booking request/);
@@ -286,10 +301,13 @@ try {
   for (const englishLabel of ["Logistics", "Construction", "Real estate agents", "Legal practices", "Healthcare", "Office building", "Home", "New-build project"]) assert.equal(pricingCardLabels.filter((label) => label === englishLabel).length, 1, `English pricing card missing: ${englishLabel}`);
   const englishSolutionLinks = page.locator('#solutions a[href="/en/ai-automation"], #solutions a[href="/en/local-ai"], #solutions a[href="/en/smart-office"], #solutions a[href="/en/home"]');
   assert.equal(await englishSolutionLinks.count(), 4);
-  await page.getByRole("button", { name: "Book a scan", exact: true }).first().click();
+  await page.getByRole("button", { name: "Request a scan", exact: true }).first().click();
   assert.equal(await page.getByLabel("Subject").count(), 1);
   assert.equal(await page.getByText("Onderwerp", { exact: true }).count(), 0);
   await page.getByRole("button", { name: "Close" }).click();
+
+  await page.goto(`${base}/en/rates`, { waitUntil: "networkidle" });
+  assert.equal(await page.locator('nav[aria-label="Primary navigation"] a[aria-current="page"]').textContent(), "Rates", "current-page navigation state missing");
 
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -373,7 +391,7 @@ try {
   assert.equal(monthlyM2.billingDuration.unitCode, "MON");
   const schemaText = JSON.stringify(service);
   for (const term of ["automatische incasso", "Providerprijsstijgingen", "volledige vooruitbetaling", "nooit renteloos", "135", "195", "95", "175", "650", "1200", "1950"]) assert.ok(schemaText.includes(term), `tariff schema missing public term ${term}`);
-  const bookingButton = page.getByRole("button", { name: "Plan de kansenscan", exact: true }).first();
+  const bookingButton = page.getByRole("button", { name: "Vraag een scan aan", exact: true }).first();
   await bookingButton.click();
   await page.getByRole("dialog").waitFor();
   await page.getByRole("button", { name: "Sluiten" }).click();

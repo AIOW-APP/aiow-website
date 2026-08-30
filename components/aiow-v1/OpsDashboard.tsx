@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { availableLeadStatuses, buildStatusTransition, isTerminalStatus, MAX_REOPEN_REASON_LENGTH, type LeadStatus } from "./ops-lifecycle";
+import { mergeQueuePage, queuePageUrl } from "./ops-pagination.mjs";
 import styles from "./OpsDashboard.module.css";
 
 type DeliveryState = "pending" | "leased" | "retry" | "sent" | "dead" | "review" | "cancelled";
@@ -14,10 +15,12 @@ type Lead = {
   deliverySummary: { schemaKind: "delivery_summary"; customer: DeliveryState; internal: DeliveryState; hasAmbiguity: boolean; lastAttemptAt: string | null };
   legalHold: boolean; activeCustomerRelation: boolean;
 };
-type Queue = { schemaKind: "queue_projection"; items: Lead[]; counts: { schemaKind: "queue_counts"; total: number; unread: number; actionable: number; overdue: number; exceptions: number }; nextCursor: unknown | null };
+type QueueCursor = { schemaKind: "queue_cursor"; createdAt: string; id: string };
+type Queue = { schemaKind: "queue_projection"; items: Lead[]; counts: { schemaKind: "queue_counts"; total: number; unread: number; actionable: number; overdue: number; exceptions: number }; nextCursor: QueueCursor | null };
 type Report = { schemaKind: "analytics_aggregate_report"; from: string; through: string; generatedAt: string; buckets: { date: string; count: number; event: string; route: string; locale: string; experimentId: string | null; variant: string | null }[] };
 type LoadState<T> = { kind: "loading" } | { kind: "ready"; data: T } | { kind: "empty"; data: T } | { kind: "error"; message: string };
 type MutationState = { kind: "idle" } | { kind: "saving" } | { kind: "saved"; message: string } | { kind: "conflict"; message: string } | { kind: "error"; message: string };
+type PageState = { kind: "idle" } | { kind: "loading" } | { kind: "loaded"; message: string } | { kind: "error"; message: string };
 
 const PRIORITY: Priority[] = ["normal", "high", "urgent"];
 
@@ -36,8 +39,10 @@ function reportRange() { const through = new Date(); const from = new Date(throu
 export function OpsDashboard() {
   const [queue, setQueue] = useState<LoadState<Queue>>({ kind: "loading" });
   const [report, setReport] = useState<LoadState<Report>>({ kind: "loading" });
+  const [pageState, setPageState] = useState<PageState>({ kind: "idle" });
   const range = useMemo(reportRange, []);
   const load = useCallback(async () => {
+    setPageState({ kind: "idle" });
     setQueue({ kind: "loading" }); setReport({ kind: "loading" });
     const [queueResult, reportResult] = await Promise.allSettled([
       fetch("/api/ops/leads?limit=100", { headers: { accept: "application/json" }, cache: "no-store" }),
@@ -54,6 +59,24 @@ export function OpsDashboard() {
   }, [range.from, range.through]);
   useEffect(() => { void load(); }, [load]);
 
+  const loadMore = useCallback(async (cursor: QueueCursor) => {
+    setPageState({ kind: "loading" });
+    try {
+      const response = await fetch(queuePageUrl(cursor, 100), { headers: { accept: "application/json" }, cache: "no-store" });
+      if (!response.ok) throw new Error("queue page rejected");
+      const page = await response.json();
+      if (!isQueue(page)) throw new Error("unknown queue page");
+      setQueue((current) => {
+        if (current.kind !== "ready") return current;
+        const data = mergeQueuePage(current.data, page) as Queue;
+        return { kind: data.items.length ? "ready" : "empty", data };
+      });
+      setPageState({ kind: "loaded", message: `${page.items.length} extra aanvragen geladen.` });
+    } catch {
+      setPageState({ kind: "error", message: "Meer aanvragen niet geladen. De al geladen aanvragen blijven zichtbaar." });
+    }
+  }, []);
+
   const updateLead = useCallback((lead: Lead) => setQueue((current) => current.kind === "ready" || current.kind === "empty" ? { kind: "ready", data: replaceLead(current.data, lead) } : current), []);
   return <main className={styles.page}>
     <header className={styles.header}><div><p className={styles.eyebrow}>AIOW · besloten operatie</p><h1>Commerciële wachtrij</h1><p>Ongelezen aanvragen, opvolging, SLA en afleveruitzonderingen. Beslissingen blijven revisiegebonden.</p></div><button type="button" onClick={() => void load()} className={styles.refresh}>Vernieuwen</button></header>
@@ -62,7 +85,10 @@ export function OpsDashboard() {
       {queue.kind === "loading" && <State role="status" title="Queue laden" body="De actuele serverstatus wordt opgehaald." />}
       {queue.kind === "error" && <State role="alert" title="Queue niet geladen" body={queue.message} action={load} />}
       {queue.kind === "empty" && <State role="status" title="Geen aanvragen in de queue" body="Er is nu niets om te beoordelen of op te volgen." />}
-      {queue.kind === "ready" && <div className={styles.leadList}>{queue.data.items.map((lead) => <LeadCard key={lead.id} lead={lead} onUpdate={updateLead} />)}</div>}
+      {queue.kind === "ready" && <><div className={styles.leadList}>{queue.data.items.map((lead) => <LeadCard key={lead.id} lead={lead} onUpdate={updateLead} />)}</div><div className={styles.pagination}>
+        {queue.data.nextCursor && <button type="button" onClick={() => void loadMore(queue.data.nextCursor!)} disabled={pageState.kind === "loading"}>{pageState.kind === "loading" ? "Meer aanvragen laden…" : pageState.kind === "error" ? "Opnieuw proberen" : "Meer aanvragen laden"}</button>}
+        <p aria-live="polite" role={pageState.kind === "error" ? "alert" : "status"}>{pageState.kind === "loading" ? "Volgende pagina wordt geladen." : pageState.kind === "loaded" || pageState.kind === "error" ? pageState.message : queue.data.nextCursor ? `${queue.data.items.length} van ${queue.data.counts.total} aanvragen geladen.` : `Alle ${queue.data.items.length} aanvragen geladen.`}</p>
+      </div></>}
     </section>
     <section aria-labelledby="report-title" className={styles.section}>
       <div className={styles.sectionTitle}><div><p className={styles.index}>02 / Rapport</p><h2 id="report-title">Aggregaten zonder persoonsprofielen</h2></div><p className={styles.range}>{range.from} — {range.through}</p></div>

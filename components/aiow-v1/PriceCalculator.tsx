@@ -55,7 +55,7 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
       <p className={styles.disclaimer}>{en ? "From indication excluding VAT, hardware and installation, cloud and AI usage. Final scope and price follow the scan." : "Vanafindicatie excl. btw, hardware en installatie, cloud- en AI-gebruik. Definitieve scope en prijs volgen na de scan."}</p>
       <Link className={styles.textLink} href={en ? "/en/rates" : "/tarieven"}>{en ? "View all rates and conditions" : "Bekijk alle tarieven en voorwaarden"} ↗</Link>
       <button type="button" className={styles.quoteButton} onClick={(event) => onQuote(event, quoteConfiguration)}>{en ? "Download quote indication (PDF)" : "Download offerte-indicatie (PDF)"}<span aria-hidden="true">↓</span></button>
-      <button type="button" className={styles.primaryButton} onClick={onBook}>{en ? "Book a scan" : "Plan een scan"}<span aria-hidden="true">↗</span></button>
+      <button type="button" className={styles.primaryButton} onClick={onBook}>{en ? "Request a scan" : "Vraag een scan aan"}<span aria-hidden="true">↗</span></button>
     </section>
   );
 }

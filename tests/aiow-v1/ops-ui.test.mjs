@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { mergeQueuePage, queuePageUrl } from "../../components/aiow-v1/ops-pagination.mjs";
 
 const [page, ui, css, middleware, authority] = await Promise.all([
   readFile(new URL("../../app/portal/admin/page.tsx", import.meta.url), "utf8"),
@@ -26,6 +27,20 @@ test("ops UI closes loading, empty, error, report and retry states", () => {
   assert.match(ui, /Promise\.allSettled/);
   assert.match(ui, /role="alert"/);
   assert.match(ui, /role="status"/);
+});
+
+test("ops queue cursor pagination preserves every lead and exposes load-more announcements", () => {
+  const leads = Array.from({ length: 137 }, (_, index) => ({ id: `lead-${index}`, overdue: index === 112, exception: index === 136 ? "delivery_dead" : null }));
+  const first = { schemaKind: "queue_projection", items: leads.slice(0, 100), counts: { total: 137 }, nextCursor: { schemaKind: "queue_cursor", createdAt: "2026-08-30T12:00:00.000Z", id: "123e4567-e89b-42d3-a456-426614174000" } };
+  const second = { ...first, items: leads.slice(100), nextCursor: null };
+  const merged = mergeQueuePage(first, second);
+  assert.equal(merged.items.length, 137);
+  assert.equal(merged.items.filter((lead) => lead.overdue).length, 1);
+  assert.equal(merged.items.filter((lead) => lead.exception).length, 1);
+  assert.equal(merged.nextCursor, null);
+  assert.match(queuePageUrl(first.nextCursor, 100), /^\/api\/ops\/leads\?limit=100&cursor=/);
+  for (const text of ["Meer aanvragen laden", "Meer aanvragen laden…", "extra aanvragen geladen", "Meer aanvragen niet geladen", "Opnieuw proberen"]) assert.match(ui, new RegExp(text));
+  assert.match(ui, /aria-live="polite"/);
 });
 
 test("ops queue exposes contract fields and revision-bound controls", () => {
