@@ -5,8 +5,8 @@ import base64, concurrent.futures, copy, datetime as dt, hashlib, json, os, path
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PREDECESSOR = ROOT / "supabase/migrations/20260828_aiow_quote_adapter_v1.sql"
-MIGRATION = ROOT / "supabase/migrations/20260830_aiow_commercial_control_plane_v1.sql"
-REMEDIATION = ROOT / "supabase/migrations/20260830_1301_aiow_cross_lane_digest_quote_ops_remediation.sql"
+MIGRATION = ROOT / "supabase/migrations/202608300001_aiow_commercial_control_plane_v1.sql"
+REMEDIATION = ROOT / "supabase/migrations/202608300002_aiow_cross_lane_digest_quote_ops_remediation.sql"
 FIXTURES = json.loads((ROOT / "tests/fixtures/aiow-commercial-contract-v1.json").read_text())
 EXPECTED_TABLES = {"commercial_leads","booking_leads","commercial_mail_outbox","commercial_events","commercial_event_daily","commercial_audit","commercial_provider_gates","commercial_idempotency"}
 EXPECTED_RPCS = {"aiow_quote_prepare_v1","aiow_quote_commit_v1","aiow_quote_prepared_load_v1","aiow_quote_committed_pdf_load_v1","aiow_booking_commit_v1","aiow_commercial_queue_v1","aiow_commercial_mutate_v1","aiow_commercial_report_v1","aiow_commercial_event_v1","aiow_mail_outbox_claim_v2","aiow_mail_outbox_sent_v2","aiow_mail_outbox_retry_v2","aiow_mail_outbox_dead_v2","aiow_mail_outbox_review_v2","aiow_mail_outbox_resolve_v2","aiow_commercial_retention_dry_run_v1","aiow_mail_outbox_recover_stale_v2","aiow_mail_outbox_cancel_v2","aiow_provider_gate_write_v1","aiow_active_customer_relation_set_v1","aiow_quote_abandon_expired_v1"}

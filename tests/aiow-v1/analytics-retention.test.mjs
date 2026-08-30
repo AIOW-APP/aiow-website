@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const migrationUrl = new URL("../../supabase/migrations/20260830_1305_aiow_analytics_retention_remediation.sql", import.meta.url);
+const migrationUrl = new URL("../../supabase/migrations/202608300005_aiow_analytics_retention_remediation.sql", import.meta.url);
 
 test("analytics retention migration provides a narrow dry-run-capable purge authority", async () => {
   const sql = await readFile(migrationUrl, "utf8");

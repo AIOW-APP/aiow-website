@@ -18,8 +18,8 @@ import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PREDECESSOR = ROOT / "supabase/migrations/20260828_aiow_quote_adapter_v1.sql"
-CONTROL_PLANE = ROOT / "supabase/migrations/20260830_aiow_commercial_control_plane_v1.sql"
-REMEDIATION = ROOT / "supabase/migrations/20260830_1303_aiow_mail_provider_remediation.sql"
+CONTROL_PLANE = ROOT / "supabase/migrations/202608300001_aiow_commercial_control_plane_v1.sql"
+REMEDIATION = ROOT / "supabase/migrations/202608300004_aiow_mail_provider_remediation.sql"
 FIXTURES = json.loads((ROOT / "tests/fixtures/aiow-commercial-contract-v1.json").read_text())
 GOLDEN_DIGEST = "5e485190eeab178c230198af385cf87103b65313d20fe8968083915e936f1d63"
 GOLDEN_BYTES = "gateId:27:mail_provider_production_v1\nenvironment:10:production\nprovider:15:microsoft_graph\ntenantId:36:123e4567-e89b-42d3-a456-426614174010\napplicationId:36:123e4567-e89b-42d3-a456-426614174011\nmailbox:12:info@aiow.io\nsender:12:info@aiow.io\ncontrolMailbox:20:rbac-control@aiow.io\nsecretPresent:4:true\noauthClientCredentialsPresent:4:true\nexchangeApplicationRole:21:Application Mail.Send\nexchangeRbacSenderInScope:4:true\nexchangeRbacControlMailboxInScope:5:false\nentraUnscopedMailSendAssigned:5:false\nevidenceSha256:64:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nrevision:1:1\nownerApprovedBy:7:richard\napprovedAt:24:2026-08-30T11:00:00.000Z\nexpiresAt:24:2026-08-30T13:00:00.000Z\nruntimeCapability:9:mail_send\nfallbackProvider:4:null\n"

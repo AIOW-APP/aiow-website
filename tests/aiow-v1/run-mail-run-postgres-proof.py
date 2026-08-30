@@ -17,8 +17,8 @@ import uuid
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 MIGRATIONS = [
     ROOT / "supabase/migrations/20260828_aiow_quote_adapter_v1.sql",
-    ROOT / "supabase/migrations/20260830_aiow_commercial_control_plane_v1.sql",
-    ROOT / "supabase/migrations/20260830_1302_aiow_mail_run_runtime_remediation.sql",
+    ROOT / "supabase/migrations/202608300001_aiow_commercial_control_plane_v1.sql",
+    ROOT / "supabase/migrations/202608300003_aiow_mail_run_runtime_remediation.sql",
 ]
 DIGEST_A = "a" * 64
 DIGEST_B = "b" * 64

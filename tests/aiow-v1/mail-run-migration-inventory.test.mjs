@@ -4,7 +4,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const root=resolve(import.meta.dirname,"../..");
-const migrationName="20260830_1302_aiow_mail_run_runtime_remediation.sql";
+const migrationName="202608300003_aiow_mail_run_runtime_remediation.sql";
 const requiredRoutines=[
   "aiow_mail_run_begin_v1",
   "aiow_mail_run_complete_v1",
