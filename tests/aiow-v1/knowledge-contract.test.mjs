@@ -31,4 +31,5 @@ test("venture-score knowledge route is bilingual, crawlable and authority-bounde
     assert.match(source, /name: "AIOW B\.V\."/);
     assert.match(source, /url: SITE_URL/);
   }
+  for (const source of [nl, en]) assert.doesNotMatch(source, /title: ".*\| AIOW"/);
 });
