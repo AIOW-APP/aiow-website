@@ -8,6 +8,8 @@ export const PUBLIC_ROUTE_PAIRS = [
   ["/smart-office", "/en/smart-office"],
   ["/home", "/en/home"],
   ["/ventures", "/en/ventures"],
+  ["/nl/kennis", "/en/knowledge"],
+  ["/nl/kennis/startup-idee-laten-beoordelen-venture-score", "/en/knowledge/startup-idea-venture-score"],
   ["/privacy", "/en/privacy"],
   ["/bedrijfsgegevens", "/en/company"],
 ] as const;

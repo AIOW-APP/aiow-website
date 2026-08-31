@@ -9,7 +9,7 @@ const routePairs: readonly (readonly [string, string])[] = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-08-28T00:00:00.000Z");
+  const lastModified = new Date("2026-08-31T00:00:00.000Z");
   return routePairs.flatMap(([nl, en], pairIndex) => {
     const languages = { nl: `${SITE_URL}${nl}`, en: `${SITE_URL}${en}`, "x-default": `${SITE_URL}${nl}` };
     return [nl, en].map((path, localeIndex) => ({
