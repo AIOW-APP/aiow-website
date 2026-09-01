@@ -129,6 +129,8 @@ test("internal transactional mail carries context and authoritative receipt time
   assert.match(mails.internalMail.text, new RegExp(`^Ontvangen: ${receivedAt}$`, "m"));
   assert.match(mails.internalMail.html, /Context: accountants/);
   assert.doesNotMatch(mails.customerMail.text, /Context: accountants/);
+  const databasePrecision = "2026-08-28T14:15:16.123456Z";
+  assert.match(buildQuoteMailContent({ quoteNumber: "AIOW-2026-0001", snapshot, contact: data.contact, source: data.source, country: "NL", receivedAt: databasePrecision }).internalMail.text, new RegExp(`^Ontvangen: ${databasePrecision}$`, "m"));
   assert.throws(() => buildQuoteMailContent({ quoteNumber: "AIOW-2026-0001", snapshot, contact: data.contact, source: data.source, country: "NL", receivedAt: "not-a-timestamp" }), /receivedAt/);
 });
 
