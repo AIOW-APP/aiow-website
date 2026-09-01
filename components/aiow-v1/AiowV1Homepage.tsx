@@ -29,7 +29,7 @@ function RouteGlyph({ route }: { route: number }) {
 
 function SolutionRoute({ href, index, children }: { href: string; index: number; children: ReactNode }) {
   const reveal = useRevealMotion(index * 0.07, 30);
-  return <MotionLink href={href} className={styles.solution} data-route={index + 1} {...reveal}>{children}</MotionLink>;
+  return <MotionLink href={href} className={styles.solution} data-route={index + 1} data-reveal="" {...reveal}>{children}</MotionLink>;
 }
 
 export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {

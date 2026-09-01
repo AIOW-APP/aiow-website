@@ -38,9 +38,6 @@ export function ChapterRail({ chapters, label }: { chapters: Chapter[]; label: s
 
   return (
     <nav className={styles.chapterRail} aria-label={label} data-active={active > 0 ? "true" : "false"}>
-      <i className={styles.chapterTrack} aria-hidden="true">
-        <motion.b style={reduced ? { scaleY: scrollYProgress } : { scaleY: progress }} />
-      </i>
       <ol>
         {chapters.map((chapter, index) => (
           <li key={chapter.id} data-on={index === active ? "true" : "false"}>
@@ -51,6 +48,9 @@ export function ChapterRail({ chapters, label }: { chapters: Chapter[]; label: s
           </li>
         ))}
       </ol>
+      <i className={styles.chapterTrack} aria-hidden="true">
+        <motion.b style={reduced ? { scaleY: scrollYProgress } : { scaleY: progress }} />
+      </i>
     </nav>
   );
 }
