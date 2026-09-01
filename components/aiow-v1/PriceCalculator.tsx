@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type MouseEvent } from "react";
 import { track } from "@/core/analytics/client";
+import { buildCalculatorDecision } from "@/lib/aiow-v1/calculator-decision.mjs";
 import { calculateBuildingPrice, calculateBusinessPrice, formatEuroCents } from "@/lib/aiow-v1/pricing.mjs";
 import type { CalculatorQuoteConfig } from "./QuoteModal";
 import styles from "./AiowV1Homepage.module.css";
@@ -26,6 +27,7 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
   const unit = mode === "business" ? (en ? "people" : "mensen") : "m²";
   const minimumApplied = result.minimumApplied.setup || result.minimumApplied.monthly;
   const quoteConfiguration = useMemo<CalculatorQuoteConfig>(() => ({ segment: mode, serviceRoute, ...(mode === "business" ? { people } : { squareMetres }), ...(mode === "home" ? { homeSubtype: homeType } : {}) }), [mode, serviceRoute, people, squareMetres, homeType]);
+  const decision = useMemo(() => buildCalculatorDecision(quoteConfiguration, locale), [quoteConfiguration, locale]);
   function changed(segment: Mode = mode, route: ServiceRoute = serviceRoute) { void track("calculator_changed", { segment, serviceRoute: route }); }
   function changeMode(next: Mode) { if (next === mode) return; setMode(next); changed(next); }
   function changeHomeType(next: "home" | "signature") { if (next === homeType) return; setHomeType(next); changed(); }
@@ -52,10 +54,23 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
         <div className={styles.segment}><button type="button" aria-pressed={serviceRoute === "standard"} onClick={() => changeServiceRoute("standard")}>{en ? "Standard" : "Standaard"}</button><button type="button" aria-pressed={serviceRoute === "comfort"} onClick={() => changeServiceRoute("comfort")}>Comfort</button></div>
         {serviceRoute === "standard" ? <p>{en ? "Default: you contract and pay third-party subscriptions and hardware directly. AIOW configures and manages with limited access." : "Standaard: u sluit abonnementen en hardware rechtstreeks af en betaalt derden zelf. AIOW richt in en beheert met beperkte toegang."}</p> : <p>{en ? "Comfort requires automatic direct debit. Subscriptions are provider cost +25%; provider increases are passed through 1-to-1 plus that 25% margin. Hardware is cost +15% and requires full prepayment or a deposit at least equal to the hardware value before ordering. AIOW never provides interest-free financing. Actual third-party costs remain unknown and are not added as a fixed total." : "Comfort vereist automatische incasso. Abonnementen zijn providerkostprijs +25%; providerprijsstijgingen worden 1-op-1 doorbelast plus die 25% marge. Hardware is kostprijs +15% en vereist vóór bestelling volledige vooruitbetaling of een aanbetaling van ten minste de hardwarewaarde. AIOW financiert nooit renteloos voor. Werkelijke derde-kosten blijven onbekend en tellen niet als vast totaal mee."}</p>}
       </div>
-      <p className={styles.disclaimer}>{en ? "From indication excluding VAT, hardware and installation, cloud and AI usage. Final scope and price follow the scan." : "Vanafindicatie excl. btw, hardware en installatie, cloud- en AI-gebruik. Definitieve scope en prijs volgen na de scan."}</p>
-      <Link className={styles.textLink} href={en ? "/en/rates" : "/tarieven"}>{en ? "View all rates and conditions" : "Bekijk alle tarieven en voorwaarden"} ↗</Link>
-      <button type="button" className={styles.quoteButton} onClick={(event) => onQuote(event, quoteConfiguration)}>{en ? "Download quote indication (PDF)" : "Download offerte-indicatie (PDF)"}<span aria-hidden="true">↓</span></button>
-      <button type="button" className={styles.primaryButton} onClick={onBook}>{en ? "Request a scan" : "Vraag een scan aan"}<span aria-hidden="true">↗</span></button>
+      <section className={styles.decisionSummary} aria-labelledby="calculator-decision-title">
+        <p className={styles.decisionEyebrow}>{en ? "Decision summary" : "Beslissamenvatting"}</p>
+        <h3 id="calculator-decision-title">{en ? <>Recommended starting point: <strong>{decision.recommendation}</strong></> : <>Aanbevolen startpunt: <strong>{decision.recommendation}</strong></>}</h3>
+        <p className={styles.decisionFit}>{decision.fit} {decision.route}</p>
+        <dl className={styles.decisionMoney}>
+          <div><dt>{en ? "Implementation indication" : "Implementatie-indicatie"}</dt><dd>{decision.from && (en ? "from " : "vanaf ")}{formatEuroCents(decision.setupCents, en ? "en-IE" : "nl-NL")}</dd></div>
+          <div><dt>{en ? "Management indication / month" : "Beheerindicatie / maand"}</dt><dd>{decision.from && (en ? "from " : "vanaf ")}{formatEuroCents(decision.monthlyCents, en ? "en-IE" : "nl-NL")}</dd></div>
+        </dl>
+        {decision.minimums.length > 0 && <ul className={styles.decisionMinimums}>{decision.minimums.map((item: string) => <li key={item}>{item}</li>)}</ul>}
+        <div className={styles.decisionColumns}>
+          <div><h4>{en ? "Not included" : "Niet inbegrepen"}</h4><ul>{decision.exclusions.map((item: string) => <li key={item}>{item}</li>)}</ul></div>
+          <div><h4>{en ? "Final-price drivers" : "Bepalers van de eindprijs"}</h4><ul>{decision.finalPriceDrivers.map((item: string) => <li key={item}>{item}</li>)}</ul></div>
+        </div>
+        <p className={styles.decisionBoundary}>{decision.boundary} <Link href={en ? "/en/rates" : "/tarieven"}>{en ? "All rates and conditions" : "Alle tarieven en voorwaarden"} ↗</Link></p>
+        <button type="button" className={`${styles.quoteButton} ${styles.decisionPrimary}`} onClick={(event) => onQuote(event, quoteConfiguration)}>{decision.dominantAction}<span aria-hidden="true">↓</span></button>
+        <button type="button" className={styles.decisionSecondary} onClick={onBook}>{decision.secondaryAction}<span aria-hidden="true">↗</span></button>
+      </section>
     </section>
   );
 }
