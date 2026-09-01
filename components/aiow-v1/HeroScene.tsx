@@ -5,14 +5,14 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "fr
 import styles from "./AiowV1Homepage.module.css";
 
 /**
- * Cinematic hero backdrop: four agents weigh incoming terra signals and a
- * human gives the approval. The film is environment, not signature — the
- * calculator stays the working object on top of it.
+ * Cinematic hero backdrop: in een warm daglicht-atelier materialiseren
+ * werkdocumenten op een glazen instrumentpaneel. The film is environment,
+ * not signature — the calculator stays the working object on top of it.
  *
  * Progressive enhancement: the element renders without an autoplay attribute,
- * so without JS or with prefers-reduced-motion the poster (the approval
- * moment) stands. With JS and full motion the loop starts muted and drifts a
- * few percent on scroll — settled, never scroll-jacked.
+ * so without JS or with prefers-reduced-motion the poster stands. With JS and
+ * full motion the loop starts muted and drifts a few percent on scroll —
+ * settled, never scroll-jacked.
  */
 export function HeroScene() {
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -46,15 +46,14 @@ export function HeroScene() {
         ref={videoRef}
         className={styles.heroFilm}
         style={reduced ? undefined : { y: drift, scale: settle }}
-        poster="/aiow/hero/aiow-agents-weging-poster.jpg"
+        poster="/hero/aiow-hero-poster.jpg"
         muted
         loop
         playsInline
         preload="auto"
         tabIndex={-1}
       >
-        <source src="/aiow/hero/aiow-agents-weging-1080.webm" type="video/webm" />
-        <source src="/aiow/hero/aiow-agents-weging-1080.mp4" type="video/mp4" />
+        <source src="/hero/aiow-hero.mp4" type="video/mp4" />
       </motion.video>
       <i className={styles.heroScrim} />
     </div>
