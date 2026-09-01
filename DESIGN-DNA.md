@@ -80,6 +80,19 @@ Navigation may use one translucent layer over content with a solid fallback. The
 - Experiments may test copy or ordering only. They never alter price, exclusions, availability, privacy, security or provider truth.
 - The private operations queue is not part of the public information architecture and must never render customer PII on `aiow.ai`.
 
+## Public capabilities experience
+
+The paired `/mogelijkheden` and `/en/capabilities` route explains in one direct interaction why AIOW is more than a chat window. It does not compete with the calculator signature and does not add a second cinematic hero.
+
+- **Primary task:** choose one real environment—process, building or home—and inspect one complete reference workflow.
+- **Canonical trace:** signal/input → bounded AI interpretation → connected system action → explicit human checkpoint.
+- **Evidence boundary:** every trace is labelled `public/synthetic reference workflow`; it demonstrates system structure, not a customer result, live backend run, saving, accuracy or autonomous authority.
+- **Visual grammar:** one solid instrument field with a fixed four-stage rail; no repeated feature-card grid, dashboard KPIs, robot art, chatbot mockup, purple glow or body-copy glass.
+- **Interaction law:** honest AI state + intent-to-inspectable record. The user-stated/sensed input, derived interpretation, proposed action and human decision remain visually and semantically distinct.
+- **Motion:** none required for comprehension. Mode changes replace trace content in place with stable controls and geometry; reduced motion uses the same immediate state change.
+- **Scan output:** a compact ordered decision artifact showing current situation, selected workflow/space, verified inputs, dependencies, checkpoints, exceptions, recommended pilot, exclusions, published price basis and next decision.
+- **Mobile:** the four trace stages become one chronological vertical rail; the complete causal chain and CTA remain visible without horizontal scrolling.
+
 ## Copy law
 
 Direct, calm, specific. No invented clients, reviews, addresses, awards, rankings, outcomes or savings. Hardware/installation and cloud/AI use are excluded. Home physical delivery is partner-dependent.
