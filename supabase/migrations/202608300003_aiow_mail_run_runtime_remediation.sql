@@ -86,7 +86,6 @@ create table public.commercial_mail_run_receipts (
 );
 alter table public.commercial_mail_run_receipts enable row level security;
 alter table public.commercial_mail_run_receipts force row level security;
-alter table public.commercial_mail_run_receipts owner to aiow_mail_run_receipt_owner;
 revoke all on table public.commercial_mail_run_receipts from public;
 do $table_acl$
 begin
@@ -97,6 +96,9 @@ begin
     grant select on table public.commercial_mail_run_receipts to service_role;
   end if;
 end $table_acl$;
+-- Close ACLs while the managed migration role still owns the table. Only
+-- then transfer ownership; a SET-capable membership does not imply INHERIT.
+alter table public.commercial_mail_run_receipts owner to aiow_mail_run_receipt_owner;
 
 create function public.aiow_mail_run_begin_v1(p_request_id uuid,p_idempotency_key text,p_body_digest text,p_worker_id text) returns jsonb
 language plpgsql security definer set search_path=pg_catalog,public as $$
@@ -234,12 +236,6 @@ begin
   return v_target;
 end $$;
 
-alter function public.aiow_mail_run_begin_v1(uuid,text,text,text) owner to aiow_mail_run_receipt_owner;
-alter function public.aiow_mail_run_complete_v1(uuid,text,text,uuid,integer,jsonb,jsonb) owner to aiow_mail_run_receipt_owner;
-alter function public.aiow_mail_run_receipts_delete_expired_v1(integer) owner to aiow_mail_run_receipt_owner;
-alter function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text) owner to aiow_mail_runtime_reader;
-alter function public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) owner to aiow_mail_runtime_reader;
-
 revoke all on function public.aiow_mail_run_begin_v1(uuid,text,text,text) from public;
 revoke all on function public.aiow_mail_run_complete_v1(uuid,text,text,uuid,integer,jsonb,jsonb) from public;
 revoke all on function public.aiow_mail_run_receipts_delete_expired_v1(integer) from public;
@@ -259,6 +255,15 @@ begin
   end if;
 end $function_acl$;
 grant execute on function public.aiow_mail_run_receipts_delete_expired_v1(integer) to aiow_mail_run_retention_worker;
+
+-- As with the receipt table, freeze every function ACL before handing the
+-- object to its dedicated NOLOGIN owner. This keeps the migration executable
+-- for realistic PG16/17 LOGIN CREATEROLE sessions with INHERIT false.
+alter function public.aiow_mail_run_begin_v1(uuid,text,text,text) owner to aiow_mail_run_receipt_owner;
+alter function public.aiow_mail_run_complete_v1(uuid,text,text,uuid,integer,jsonb,jsonb) owner to aiow_mail_run_receipt_owner;
+alter function public.aiow_mail_run_receipts_delete_expired_v1(integer) owner to aiow_mail_run_receipt_owner;
+alter function public.aiow_mail_outbox_load_leased_job_v1(uuid,text,uuid,bigint,text) owner to aiow_mail_runtime_reader;
+alter function public.aiow_mail_provider_gate_load_for_lease_v1(uuid,text,uuid,bigint,text) owner to aiow_mail_runtime_reader;
 
 do $restore_owner_membership$
 declare

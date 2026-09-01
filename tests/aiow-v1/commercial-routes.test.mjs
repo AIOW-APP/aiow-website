@@ -80,7 +80,8 @@ function mockServer() {
   });
 }
 async function startNext(port, mockPort, configured = true) {
-  const env = { ...process.env, NEXT_TELEMETRY_DISABLED: "1", AIOW_COMMERCIAL_TEST_MODE: "1", AIOW_BOOKING_WEBHOOK_URL: `http://127.0.0.1:${mockPort}/booking`, AIOW_BOOKING_WEBHOOK_SECRET: secret, AIOW_QUOTE_WEBHOOK_URL: `http://127.0.0.1:${mockPort}/quote`, AIOW_QUOTE_WEBHOOK_SECRET: secret };
+  const env = { ...process.env, NODE_ENV: "development", NEXT_TELEMETRY_DISABLED: "1", AIOW_COMMERCIAL_TEST_MODE: "1", AIOW_BOOKING_WEBHOOK_URL: `http://127.0.0.1:${mockPort}/booking`, AIOW_BOOKING_WEBHOOK_SECRET: secret, AIOW_QUOTE_WEBHOOK_URL: `http://127.0.0.1:${mockPort}/quote`, AIOW_QUOTE_WEBHOOK_SECRET: secret };
+  for (const key of ["VERCEL", "VERCEL_ENV", "VERCEL_TARGET_ENV", "VERCEL_URL", "VERCEL_DEPLOYMENT_ID", "VERCEL_PROJECT_ID"]) delete env[key];
   if (configured) Object.assign(env, { AIOW_SUPABASE_URL: `http://127.0.0.1:${mockPort}`, AIOW_SUPABASE_SERVICE_ROLE_KEY: "service-role", AIOW_OPS_DEPLOYMENT_HOST: "127.0.0.1", AIOW_OPS_BASIC_USERNAME: "operator", AIOW_OPS_BASIC_PASSWORD: "correct horse battery staple", AIOW_OPS_OPERATOR_ID: "richard", AIOW_OPS_LOCAL_PROOF_MODE: "loopback-test" });
   else for (const key of ["AIOW_SUPABASE_URL", "AIOW_SUPABASE_SERVICE_ROLE_KEY", "AIOW_OPS_DEPLOYMENT_HOST", "AIOW_OPS_BASIC_USERNAME", "AIOW_OPS_BASIC_PASSWORD", "AIOW_OPS_OPERATOR_ID", "AIOW_OPS_LOCAL_PROOF_MODE"]) delete env[key];
   const child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], { cwd: new URL(root), env, stdio: ["ignore", "pipe", "pipe"] });

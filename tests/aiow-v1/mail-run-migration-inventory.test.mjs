@@ -47,3 +47,18 @@ test("leased-load authority replaces direct service-role REST table reads",async
   assert.match(store,/aiow_mail_provider_gate_load_for_lease_v1/);
   for(const binding of ["p_job_id","p_lease_owner","p_lease_token","p_expected_revision","p_payload_digest"]) assert.match(store,new RegExp(binding));
 });
+
+test("managed migration closes ACLs before ownership transfer without harness privilege injection",async()=>{
+  const sql=await readFile(resolve(root,"supabase/migrations",migrationName),"utf8");
+  const harness=await readFile(resolve(root,"tests/aiow-v1/run-ordered-migration-chain-postgres-proof.py"),"utf8");
+  const tableAclEnd=sql.indexOf("end $table_acl$;");
+  const tableOwner=sql.indexOf("alter table public.commercial_mail_run_receipts owner to aiow_mail_run_receipt_owner;");
+  const functionAclEnd=sql.indexOf("end $function_acl$;");
+  const retentionGrant=sql.indexOf("grant execute on function public.aiow_mail_run_receipts_delete_expired_v1(integer) to aiow_mail_run_retention_worker;");
+  const firstFunctionOwner=sql.indexOf("alter function public.aiow_mail_run_begin_v1(uuid,text,text,text) owner to aiow_mail_run_receipt_owner;");
+  assert.ok(tableAclEnd>=0 && tableOwner>tableAclEnd,"receipt table ACLs must close before OWNER TO");
+  assert.ok(functionAclEnd>=0 && retentionGrant>functionAclEnd && firstFunctionOwner>retentionGrant,"function ACLs and retention grant must close before OWNER TO");
+  assert.doesNotMatch(harness,/bootstrap_managed_owner_roles/);
+  assert.doesNotMatch(harness,/grant aiow_mail_run_receipt_owner to \{MANAGED_LOGIN\}/);
+  assert.doesNotMatch(harness,/grant aiow_mail_runtime_reader to \{MANAGED_LOGIN\}/);
+});

@@ -315,27 +315,9 @@ def setup_managed_database(env: dict[str, str], database: str) -> None:
       alter default privileges in schema public grant execute on functions to anon,authenticated,service_role;""", user=MANAGED_LOGIN, database=database)
 
 
-def bootstrap_managed_owner_roles(env: dict[str, str], database: str, migrations: list[pathlib.Path]) -> None:
-    source = next(path for path in migrations if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql").read_text()
-    start = source.index("do $roles$")
-    end = source.index("end $roles$;", start) + len("end $roles$;")
-    sql(env, source[start:end], user=MANAGED_LOGIN, database=database)
-    assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
-
-
 def apply_managed_migrations(env: dict[str, str], database: str, migrations: list[pathlib.Path]) -> None:
     for path in migrations:
         version = VERSION.match(path.name).group(1)  # type: ignore[union-attr]
-        if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql":
-            # PG17 gives a CREATEROLE creator ADMIN=true, INHERIT=false,
-            # SET=false. The already-published 0003 changes owners before its
-            # ACL statements, so supply one scoped INHERIT+SET self-grant
-            # around that exact migration. The harness revokes its grantor row
-            # immediately afterward and proves the automatic rows unchanged.
-            if managed_membership_inventory(env):
-                assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
-                sql(env, f"""grant aiow_mail_run_receipt_owner to {MANAGED_LOGIN} with admin false, inherit true, set true;
-                  grant aiow_mail_runtime_reader to {MANAGED_LOGIN} with admin false, inherit true, set true;""", user=MANAGED_LOGIN, database=database)
         run([
             "psql", "-X", "-v", "ON_ERROR_STOP=1", "-qAt",
             "-U", MANAGED_LOGIN, "-d", database,
@@ -343,10 +325,7 @@ def apply_managed_migrations(env: dict[str, str], database: str, migrations: lis
             "-c", "select current_user,session_user,has_schema_privilege(current_user,'supabase_migrations','USAGE'),has_table_privilege(current_user,'supabase_migrations.schema_migrations','INSERT');",
             "-c", f"insert into supabase_migrations.schema_migrations(version,name) values({q(version)},{q(path.name)});",
         ], env)
-        if path.name == "202608300003_aiow_mail_run_runtime_remediation.sql":
-            sql(env, f"""revoke aiow_mail_run_receipt_owner from {MANAGED_LOGIN};
-              revoke aiow_mail_runtime_reader from {MANAGED_LOGIN};""", user=MANAGED_LOGIN, database=database)
-            assert managed_membership_inventory(env) == MANAGED_AUTO_MEMBERSHIPS
+
 
 
 def managed_catalog_fingerprint(env: dict[str, str], database: str) -> str:
@@ -372,7 +351,6 @@ def prove_managed_full_chain(env: dict[str, str], migrations: list[pathlib.Path]
     setup_managed_database(env, MANAGED_DATABASE)
     assert sql(env, f"""select pg_get_userbyid(datdba)||':'||(select pg_get_userbyid(nspowner) from pg_namespace where nspname='public')
       from pg_database where datname={q(MANAGED_DATABASE)};""", database=MANAGED_DATABASE).stdout.strip() == f"{MANAGED_LOGIN}:{MANAGED_LOGIN}"
-    bootstrap_managed_owner_roles(env, MANAGED_DATABASE, migrations)
     apply_managed_migrations(env, MANAGED_DATABASE, migrations)
 
     applied = sql(env, "select version||':'||name from supabase_migrations.schema_migrations order by name;", user=MANAGED_LOGIN, database=MANAGED_DATABASE).stdout.splitlines()
