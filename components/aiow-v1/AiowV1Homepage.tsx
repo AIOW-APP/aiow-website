@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { track } from "@/core/analytics/client";
 import { BookingModal } from "./BookingModal";
+import { ChapterRail, type Chapter } from "./ChapterRail";
 import { HeroScene } from "./HeroScene";
 import { MotionLink, Reveal, useRevealMotion } from "./MotionCraft";
+import { MotionScroll } from "./MotionScroll";
 import { OperationalField } from "./OperationalField";
 import { PriceCalculator } from "./PriceCalculator";
 import { PricingGuide } from "./PricingGuide";
@@ -35,6 +38,14 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
   const [quote, setQuote] = useState<CalculatorQuoteConfig | null>(null);
   const bookingTrigger = useRef<HTMLElement | null>(null);
   const quoteTrigger = useRef<HTMLElement | null>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
+  const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const copyLift = useSpring(useTransform(heroProgress, [0, 1], [0, -56]), { stiffness: 130, damping: 23, mass: 1 });
+  const copyFade = useTransform(heroProgress, [0, 0.75], [1, 0.3]);
+  const chapters: Chapter[] = en
+    ? [["instrument", "Instrument"], ["statement", "Statement"], ["solutions", "Solutions"], ["rates", "Rates"], ["approach", "Approach"], ["ventures", "Ventures"], ["conversation", "Conversation"]].map(([id, label]) => ({ id, label }))
+    : [["instrument", "Instrument"], ["standpunt", "Standpunt"], ["oplossingen", "Oplossingen"], ["tarieven", "Tarieven"], ["aanpak", "Aanpak"], ["ventures", "Ventures"], ["gesprek", "Gesprek"]].map(([id, label]) => ({ id, label }));
   function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; void track("scan_cta_clicked", { experiment: null }); setBooking(true); }
   function openQuote(event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) { quoteTrigger.current = event.currentTarget; void track("quote_opened", {}); setQuote(configuration); }
   const solutions = en ? [
@@ -50,11 +61,13 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
   ];
 
   return <div className={styles.site}>
+    <MotionScroll />
     <PublicHeader locale={locale} onBook={openBooking} />
+    <ChapterRail chapters={chapters} label={en ? "Chapters" : "Hoofdstukken"} />
     <main>
-      <section className={`${styles.hero} ${styles.heroCinematic}`}>
+      <section id="instrument" ref={heroRef} className={`${styles.hero} ${styles.heroCinematic}`}>
         <HeroScene />
-        <div className={styles.heroCopy}>
+        <motion.div className={styles.heroCopy} style={reduced ? undefined : { y: copyLift, opacity: copyFade }}>
           <Reveal as="p" className={styles.eyebrow} y={18} mount>{en ? "AI, installed with precision" : "AI, precies geïnstalleerd"}</Reveal>
           <Reveal as="h1" delay={0.08} mount>{en ? <>AI for processes, <em>buildings and homes.</em></> : <>AI voor processen, <em>gebouwen en woningen.</em></>}</Reveal>
           <Reveal as="p" className={styles.lead} delay={0.16} mount>{en ? "AI for business processes, buildings and homes — designed and managed by one party. Start with a transparent indication; set the final scope after a scan." : "AI voor bedrijfsprocessen, gebouwen en woningen — ontworpen en beheerd door één partij. Begin met een transparante indicatie; bepaal de definitieve scope na een scan."}</Reveal>
@@ -64,7 +77,7 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
             <div><dt>{en ? "First step" : "Eerste stap"}</dt><dd>{en ? "Practical scan" : "Praktische scan"}</dd></div>
             <div><dt>{en ? "Terms" : "Voorwaarden"}</dt><dd>{en ? "Published" : "Gepubliceerd"}</dd></div>
           </dl></Reveal>
-        </div>
+        </motion.div>
         <div className={styles.heroInstrument} data-premium-instrument="calculator">
           <OperationalField />
           <div className={styles.instrumentPlate} aria-hidden="true"><span>01</span><i /><span>WP / 2.0</span></div>
@@ -72,7 +85,7 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
         </div>
       </section>
 
-      <section className={styles.statement}>
+      <section id={en ? "statement" : "standpunt"} className={styles.statement}>
         <OperationalField variant="statement" />
         <div className={styles.statementRail} aria-hidden="true"><span>01</span><i /><span>04</span></div>
         <Reveal as="p" y={16}>{en ? "Not another AI presentation." : "Geen volgende AI-presentatie."}</Reveal>
@@ -101,7 +114,7 @@ export function AiowV1Homepage({ locale = "nl" }: { locale?: "nl" | "en" }) {
         <Reveal delay={0.12}><p>{en ? "Ventures is the separate product-building branch of AIOW. It develops owned propositions; it is not included in a Solutions implementation." : "Ventures is de afzonderlijke producttak van AIOW. Hier ontwikkelen we eigen proposities; dit is niet inbegrepen in een Solutions-implementatie."}</p><Link href={en ? "/en/ventures" : "/ventures"}>{en ? "Visit Ventures" : "Naar Ventures"} ↗</Link></Reveal>
       </section>
 
-      <section className={styles.finalCta}>
+      <section id={en ? "conversation" : "gesprek"} className={styles.finalCta}>
         <OperationalField variant="closing" />
         <Reveal className={styles.finalCtaInner} y={36}><p className={styles.eyebrow}>{en ? "A useful first conversation" : "Een nuttig eerste gesprek"}</p><h2>{en ? "Bring one process or one space." : "Neem één proces of één ruimte mee."}</h2><p>{en ? "We will determine what can be built now, what depends on partners or hardware, and what should not be automated." : "We bepalen wat nu gebouwd kan worden, wat van partners of hardware afhangt en wat je beter niet automatiseert."}</p><button className={styles.primaryButton} onClick={openBooking}>{en ? "Request a scan" : "Vraag een scan aan"}</button></Reveal>
       </section>
