@@ -12,6 +12,8 @@ export const PUBLIC_ROUTE_PAIRS = [
   ["/nl/kennis/startup-idee-laten-beoordelen-venture-score", "/en/knowledge/startup-idea-venture-score"],
   ["/privacy", "/en/privacy"],
   ["/bedrijfsgegevens", "/en/company"],
+  ["/mogelijkheden", "/en/capabilities"],
+  ["/scan", "/en/scan"],
 ] as const;
 
 export function localizedPath(pathname: string, locale: AiowLocale): string {
