@@ -62,7 +62,7 @@ const content: Record<AiowLocale,{ eyebrow:string; title:string; lead:string; ch
 export function CapabilitiesExperience({ locale="nl" }:{ locale?:AiowLocale }){
   const [mode,setMode]=useState<Mode>("process"); const t=content[locale]; const trace=t.modes[mode]; const en=locale==="en";
   return <div className={styles.site}><PublicHeader locale={locale}/><main>
-    <header className={styles.hero}><p className={styles.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.lead}</p><div className={styles.heroActions}><a href="#experience">{t.choose} ↓</a><Link href={en?"/en#booking":"/#booking"}>{t.cta} ↗</Link></div></header>
+    <header className={styles.hero}><p className={styles.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.lead}</p><div className={styles.heroActions}><a href="#experience">{t.choose} ↓</a><Link href={en?"/en/scan":"/scan"}>{t.cta} ↗</Link></div></header>
     <section id="experience" className={styles.experience} aria-labelledby="experience-title">
       <div className={styles.experienceTop}><div><p className={styles.eyebrow}>{t.reference}</p><h2 id="experience-title" aria-live="polite">{trace.title}</h2><p>{trace.intro}</p></div><span>{trace.eyebrow}</span></div>
       <div className={styles.modeSwitch} aria-label={t.choose}>{(["process","building","home"] as Mode[]).map(key=><button key={key} type="button" aria-pressed={mode===key} aria-controls="capability-trace" onClick={()=>setMode(key)}>{t.modes[key].label}</button>)}</div>
@@ -71,6 +71,6 @@ export function CapabilitiesExperience({ locale="nl" }:{ locale?:AiowLocale }){
     </section>
     <section className={styles.beyond}><div><p className={styles.eyebrow}>{en?"Beyond chat":"Meer dan chat"}</p><h2>{t.beyondTitle}</h2><p>{t.beyondLead}</p></div><ol>{t.capabilities.map((item,index)=><li key={item}><span>{String(index+1).padStart(2,"0")}</span>{item}</li>)}</ol></section>
     <section className={styles.scan}><div><p className={styles.eyebrow}>{t.scanEyebrow}</p><h2>{t.scanTitle}</h2><p>{t.scanLead}</p></div><ol>{t.deliverables.map((item,index)=><li key={item}><span>{String(index+1).padStart(2,"0")}</span>{item}</li>)}</ol></section>
-    <section className={styles.cta}><p className={styles.eyebrow}>{en?"Your starting point":"Uw startpunt"}</p><h2>{t.ctaTitle}</h2><p>{t.ctaBody}</p><div><Link href={en?"/en#booking":"/#booking"}>{t.cta}</Link><Link href={en?"/en/rates":"/tarieven"}>{t.rates}</Link></div></section>
+    <section className={styles.cta}><p className={styles.eyebrow}>{en?"Your starting point":"Uw startpunt"}</p><h2>{t.ctaTitle}</h2><p>{t.ctaBody}</p><div><Link href={en?"/en/scan":"/scan"}>{t.cta}</Link><Link href={en?"/en/rates":"/tarieven"}>{t.rates}</Link></div></section>
   </main><PublicFooter locale={locale} showYear/></div>;
 }

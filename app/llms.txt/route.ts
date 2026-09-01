@@ -14,6 +14,10 @@ const body = `# AIOW
 - [Lokale AI](${SITE_URL}/lokale-ai): local, private and hybrid AI architectures
 - [Smart Office](${SITE_URL}/smart-office): software and AI around building signals
 - [AIOW Home](${SITE_URL}/home): partner-dependent residential intelligence
+- [AI-mogelijkheden](${SITE_URL}/mogelijkheden): synthetic reference workflows showing signal, AI interpretation, bounded system action and human authority
+- [AI capabilities](${SITE_URL}/en/capabilities): English paired capabilities experience with the same evidence boundaries
+- [Praktische AI-scan aanvragen](${SITE_URL}/scan): direct preferred scan-request flow pending separate human confirmation
+- [Request a practical AI scan](${SITE_URL}/en/scan): English paired request flow pending separate human confirmation
 - [English](${SITE_URL}/en): English overview
 - [AIOW kennis](${SITE_URL}/nl/kennis): current, evidence-led Dutch knowledge index
 - [Venture-score uitgelegd](${SITE_URL}/nl/kennis/startup-idee-laten-beoordelen-venture-score): seven dimensions, counter-evidence and a human decision gate
@@ -34,7 +38,7 @@ The calculator configuration is validated and all quote amounts are recomputed o
 ## Contact
 AIOW B.V. · KvK 71887466 · info@aiow.io · service area: Netherlands. Final scope, exclusions and conditions are supplied with the written proposal. Use the preferred booking intake on ${SITE_URL}/; a durable receipt is not provider calendar confirmation and human confirmation follows separately. Public intake data is retained for no more than 90 days unless an active customer relationship or legal obligation requires longer retention.
 
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 `;
 
 export function GET() { return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" } }); }

@@ -21,16 +21,24 @@ test("scan output is one bounded decision artifact with all ten promised parts",
   assert.match(source,/U krijgt een besluitbaar ontwerp, geen AI-presentatie/);
   assert.match(source,/You receive a decision-ready design, not an AI presentation/);
   assert.match(source,/Breng één proces of één ruimte mee/); assert.match(source,/Bring one process or one space/);
+  assert.equal((source.match(/en\?"\/en\/scan":"\/scan"/g)||[]).length,2);
+  assert.doesNotMatch(source,/\/#booking|\/en#booking/);
 });
 
 test("capabilities routes are paired, crawlable and directly reachable from primary navigation",async()=>{
-  const [nl,en,locale,header,sitemap,css]=await Promise.all([
-    read("app/mogelijkheden/page.tsx"),read("app/en/capabilities/page.tsx"),read("lib/aiow-v1/locale.ts"),read("components/aiow-v1/PublicHeader.tsx"),read("app/sitemap.ts"),read("components/aiow-v1/CapabilitiesExperience.module.css"),
+  const [nl,en,locale,header,sitemap,css,scanNl,scanEn,llms,llmsFull]=await Promise.all([
+    read("app/mogelijkheden/page.tsx"),read("app/en/capabilities/page.tsx"),read("lib/aiow-v1/locale.ts"),read("components/aiow-v1/PublicHeader.tsx"),read("app/sitemap.ts"),read("components/aiow-v1/CapabilitiesExperience.module.css"),read("app/scan/page.tsx"),read("app/en/scan/page.tsx"),read("app/llms.txt/route.ts"),read("app/llms-full.txt/route.ts"),
   ]);
   assert.match(nl,/path:"\/mogelijkheden"/); assert.match(en,/path:"\/en\/capabilities"/);
   assert.match(locale,/\["\/mogelijkheden", "\/en\/capabilities"\]/);
+  assert.match(locale,/\["\/scan", "\/en\/scan"\]/);
   assert.match(header,/key: "capabilities"/); assert.match(header,/Mogelijkheden/); assert.match(header,/Capabilities/);
+  assert.match(header,/const scanHref = en \? "\/en\/scan" : "\/scan"/);
+  assert.match(scanNl,/ScanRequestPage locale="nl"/); assert.match(scanEn,/ScanRequestPage locale="en"/);
+  assert.match(scanNl,/mens bevestigd/); assert.match(scanEn,/confirmed separately by a person/);
   assert.match(sitemap,/PUBLIC_ROUTE_PAIRS/);
+  for(const source of [llms,llmsFull]) { assert.match(source,/mogelijkheden/); assert.match(source,/en\/capabilities/); assert.match(source,/\/scan/); assert.match(source,/\/en\/scan/); }
   assert.match(css,/@media\(max-width:600px\)/); assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/:global\(html\[data-theme="light"\]\) \.site/); assert.match(css,/:global\(html\[data-theme="dark"\]\) \.site/); assert.match(css,/@media\(prefers-color-scheme:light\)/);
   assert.doesNotMatch(css,/backdrop-filter|filter:\s*blur|animation:[^;]*(?:infinite|linear)/);
 });
