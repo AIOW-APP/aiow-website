@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { PricingContext, PricingPackage } from "./pricing-contexts";
 import type { AiowLocale } from "./locale";
 import { localizedSchema } from "./seo-schema-localized";
+import { AIOW_COMPANY } from "./company.mjs";
 
 export const SITE_URL = "https://aiow.ai";
 export const homeFaq = [
@@ -20,10 +21,10 @@ export function organizationNode(locale: AiowLocale = "nl") {
   const en = locale === "en";
   return {
     "@context": "https://schema.org", "@type": "Organization", "@id": `${SITE_URL}/#organization`,
-    name: "AIOW", alternateName: "AI Operating Workflows", legalName: "AIOW B.V.", url: SITE_URL, email: "info@aiow.io",
-    identifier: { "@type": "PropertyValue", propertyID: "KvK", value: "71887466" },
-    address: { "@type": "PostalAddress", streetAddress: "Bijlmermeerstraat 30", postalCode: "2131 HC", addressLocality: "Hoofddorp", addressCountry: "NL" },
-    areaServed: { "@type": "Country", name: en ? "Netherlands" : "Nederland" },
+    name: AIOW_COMPANY.name, alternateName: AIOW_COMPANY.alternateName, legalName: AIOW_COMPANY.legalName, url: AIOW_COMPANY.website, email: AIOW_COMPANY.publicEmail,
+    identifier: { "@type": "PropertyValue", propertyID: "KvK", value: AIOW_COMPANY.chamberOfCommerce },
+    address: { "@type": "PostalAddress", streetAddress: AIOW_COMPANY.streetAddress, postalCode: AIOW_COMPANY.postalCode, addressLocality: AIOW_COMPANY.locality, addressCountry: AIOW_COMPANY.countryCode },
+    areaServed: { "@type": "Country", name: en ? AIOW_COMPANY.countryEn : AIOW_COMPANY.countryNl },
     description: en ? "Dutch company designing, installing and maintaining bounded AI systems for business processes, buildings and homes." : "Nederlands bedrijf dat begrensde AI-systemen ontwerpt, installeert en beheert voor bedrijfsprocessen, gebouwen en woningen.",
   };
 }

@@ -9,7 +9,7 @@ test("business decision summary derives exact canonical tier, money and minimum"
     minimums:["Het maandminimum voor beheer is van toepassing."], route:"Standaard laat abonnementen en hardware rechtstreeks bij u.",
     exclusions:["Btw","Hardware en fysieke installatie","Cloud-, AI- en leveranciersgebruik"],
     finalPriceDrivers:["Geverifieerde scope van proces of ruimte","Technische en fysieke afhankelijkheden","Werkelijk derdegebruik en gekozen serviceroute"],
-    dominantAction:"Genereer offerte-indicatie", secondaryAction:"Vraag in plaats daarvan een scan aan", boundary:"Dit is een beslissteun, geen eindofferte of technische toezegging.",
+    dominantAction:"Ontvang uw indicatie als PDF", secondaryAction:"Vraag in plaats daarvan een scan aan", boundary:"Dit is een beslissteun, geen eindofferte of technische toezegging.",
   });
 });
 

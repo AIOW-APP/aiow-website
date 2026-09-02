@@ -86,6 +86,7 @@ test("generated NL and EN customer mail and PDF use non-reserving scan request w
     const expectedRequest = `${requestLabel}: ${snapshot.bookingUrl}`;
     assert.ok(mails.customerMail.text.includes(`${expectedRequest}\n${confirmation}`));
     assert.ok(mails.customerMail.html.includes(requestLabel));
+    for (const companyFact of ["AIOW B.V.", "Bijlmermeerstraat 30", "2131 HC Hoofddorp", "KvK 71887466", "info@aiow.io", "https://aiow.ai"]) assert.ok(mails.customerMail.text.includes(companyFact));
     const pdf = await generateQuotePdf({ quoteNumber: "AIOW-2026-0042", snapshot, contact: data.contact });
     const pdfText = await generatedPdfText(pdf);
     assert.ok(pdfText.includes(expectedRequest));

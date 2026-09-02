@@ -11,13 +11,16 @@ test("calculator mounts one canonical bilingual decision summary with one domina
     readFile(new URL("components/aiow-v1/AiowV1Homepage.module.css",root),"utf8"),
   ]);
   assert.match(calculator,/buildCalculatorDecision\(quoteConfiguration, locale\)/);
-  assert.match(calculator,/Beslissamenvatting/); assert.match(calculator,/Decision summary/);
+  assert.match(calculator,/Bekijk advies, pakket en grenzen/); assert.match(calculator,/View advice, package and boundaries/);
   assert.match(calculator,/decision\.recommendation/); assert.match(calculator,/decision\.fit/);
   assert.match(calculator,/decision\.exclusions/); assert.match(calculator,/decision\.finalPriceDrivers/);
-  assert.match(calculator,/decision\.dominantAction/); assert.match(calculator,/decision\.secondaryAction/);
+  assert.match(calculator,/decision\.dominantAction/); assert.doesNotMatch(calculator,/decision\.secondaryAction/);
   assert.equal((calculator.match(/decisionPrimary/g)||[]).length,1);
+  assert.equal((calculator.match(/formatEuroCents\(result\.setupCents/g)||[]).length,1);
+  assert.equal((calculator.match(/formatEuroCents\(result\.monthlyCents/g)||[]).length,1);
+  assert.match(calculator,/<details className=\{`\$\{styles\.decisionSummary\} \$\{styles\.calculatorDetails\}`\}>/);
   assert.match(decision,/calculateBusinessPrice\(config\.people\)/); assert.match(decision,/calculateBuildingPrice/);
   assert.doesNotMatch(decision,/fetch\(|Math\.random|Date\(|localStorage|document|window/);
-  assert.match(css,/\.decisionSummary/); assert.match(css,/\.decisionPrimary/); assert.match(css,/\.decisionSecondary/);
+  assert.match(css,/\.decisionSummary/); assert.match(css,/\.decisionPrimary/); assert.match(css,/\.calculatorDetails/);
   assert.match(css,/@media\(max-width:600px\)[^]*\.decisionMoney,\.decisionColumns\{grid-template-columns:1fr\}/);
 });

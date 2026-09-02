@@ -11,7 +11,7 @@ import styles from "./AiowV1Homepage.module.css";
 type Mode = "business" | "building" | "home";
 type ServiceRoute = "standard" | "comfort";
 
-export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "nl" | "en"; onBook: (event: MouseEvent<HTMLButtonElement>) => void; onQuote: (event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) => void }) {
+export function PriceCalculator({ locale = "nl", onQuote }: { locale?: "nl" | "en"; onQuote: (event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) => void }) {
   const [mode, setMode] = useState<Mode>("business");
   const [people, setPeople] = useState(10);
   const [squareMetres, setSquareMetres] = useState(120);
@@ -29,7 +29,12 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
   const quoteConfiguration = useMemo<CalculatorQuoteConfig>(() => ({ segment: mode, serviceRoute, ...(mode === "business" ? { people } : { squareMetres }), ...(mode === "home" ? { homeSubtype: homeType } : {}) }), [mode, serviceRoute, people, squareMetres, homeType]);
   const decision = useMemo(() => buildCalculatorDecision(quoteConfiguration, locale), [quoteConfiguration, locale]);
   function changed(segment: Mode = mode, route: ServiceRoute = serviceRoute) { void track("calculator_changed", { segment, serviceRoute: route }); }
-  function changeMode(next: Mode) { if (next === mode) return; setMode(next); changed(next); }
+  function changeMode(next: Mode) {
+    if (next === mode) return;
+    if (next === "home" && squareMetres > 1000) setSquareMetres(1000);
+    setMode(next);
+    changed(next);
+  }
   function changeHomeType(next: "home" | "signature") { if (next === homeType) return; setHomeType(next); changed(); }
   function changeServiceRoute(next: ServiceRoute) { if (next === serviceRoute) return; setServiceRoute(next); changed(mode, next); }
   function changeInput(value: number) { if (value === input) return; setInput(value); changed(); }
@@ -41,6 +46,7 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
       <div aria-label={en ? "Select calculation" : "Kies berekening"} className={styles.tabs}>
         {tabs.map((tab) => <button key={tab.id} type="button" aria-pressed={mode === tab.id} className={mode === tab.id ? styles.activeTab : styles.tab} onClick={() => changeMode(tab.id)}>{tab.label}</button>)}
       </div>
+      <p className={styles.calculatorModeHelp}>{mode === "business" ? (en ? "Recurring office work for a team." : "Terugkerend kantoorwerk voor een team.") : mode === "building" ? (en ? "Building management for an office or commercial property." : "Gebouwbeheer voor een kantoor- of bedrijfspand.") : (en ? "House rules and connected home systems." : "Huisregels en gekoppelde installaties.")}</p>
       {mode === "home" && <div className={styles.segment} aria-label={en ? "Choose home package" : "Kies woningpakket"}><button type="button" aria-pressed={homeType === "home"} onClick={() => changeHomeType("home")}>Home</button><button type="button" aria-pressed={homeType === "signature"} onClick={() => changeHomeType("signature")}>Signature</button></div>}
       <div className={styles.rangeHeader}><label htmlFor="price-range">{mode === "business" ? (en ? "Team size" : "Teamgrootte") : (en ? "Surface" : "Oppervlakte")}</label><output htmlFor="price-range">{input} {unit}</output></div>
       <input id="price-range" className={styles.range} type="range" min={min} max={max} step="1" value={input} onChange={(event) => changeInput(Number(event.target.value))} />
@@ -50,27 +56,15 @@ export function PriceCalculator({ locale = "nl", onBook, onQuote }: { locale?: "
         <p>{result.label}{result.estimate ? (en ? " · estimate/quote" : " · indicatie/offerte") : ""}</p>
         {minimumApplied && <p className={styles.minimumNotice}>{en ? "Minimum rate applies" : "minimumtarief van toepassing"}</p>}
       </div>
-      <div className={styles.routeChoice} aria-label={en ? "Choose payment route" : "Kies betaalroute"}>
-        <div className={styles.segment}><button type="button" aria-pressed={serviceRoute === "standard"} onClick={() => changeServiceRoute("standard")}>{en ? "Standard" : "Standaard"}</button><button type="button" aria-pressed={serviceRoute === "comfort"} onClick={() => changeServiceRoute("comfort")}>Comfort</button></div>
-        {serviceRoute === "standard" ? <p>{en ? "Default: you contract and pay third-party subscriptions and hardware directly. AIOW configures and manages with limited access." : "Standaard: u sluit abonnementen en hardware rechtstreeks af en betaalt derden zelf. AIOW richt in en beheert met beperkte toegang."}</p> : <p>{en ? "Comfort requires automatic direct debit. Subscriptions are provider cost +25%; provider increases are passed through 1-to-1 plus that 25% margin. Hardware is cost +15% and requires full prepayment or a deposit at least equal to the hardware value before ordering. AIOW never provides interest-free financing. Actual third-party costs remain unknown and are not added as a fixed total." : "Comfort vereist automatische incasso. Abonnementen zijn providerkostprijs +25%; providerprijsstijgingen worden 1-op-1 doorbelast plus die 25% marge. Hardware is kostprijs +15% en vereist vóór bestelling volledige vooruitbetaling of een aanbetaling van ten minste de hardwarewaarde. AIOW financiert nooit renteloos voor. Werkelijke derde-kosten blijven onbekend en tellen niet als vast totaal mee."}</p>}
-      </div>
-      <section className={styles.decisionSummary} aria-labelledby="calculator-decision-title">
-        <p className={styles.decisionEyebrow}>{en ? "Decision summary" : "Beslissamenvatting"}</p>
-        <h3 id="calculator-decision-title">{en ? <>Recommended starting point: <strong>{decision.recommendation}</strong></> : <>Aanbevolen startpunt: <strong>{decision.recommendation}</strong></>}</h3>
+      <button type="button" className={`${styles.quoteButton} ${styles.decisionPrimary}`} onClick={(event) => onQuote(event, quoteConfiguration)}>{decision.dominantAction}<span aria-hidden="true">↓</span></button>
+      <details className={`${styles.decisionSummary} ${styles.calculatorDetails}`}>
+        <summary>{en ? "View advice, package and boundaries" : "Bekijk advies, pakket en grenzen"}</summary>
+        <h3>{en ? <>Recommended starting point: <strong>{decision.recommendation}</strong></> : <>Aanbevolen startpunt: <strong>{decision.recommendation}</strong></>}</h3>
         <p className={styles.decisionFit}>{decision.fit} {decision.route}</p>
-        <dl className={styles.decisionMoney}>
-          <div><dt>{en ? "Implementation indication" : "Implementatie-indicatie"}</dt><dd>{decision.from && (en ? "from " : "vanaf ")}{formatEuroCents(decision.setupCents, en ? "en-IE" : "nl-NL")}</dd></div>
-          <div><dt>{en ? "Management indication / month" : "Beheerindicatie / maand"}</dt><dd>{decision.from && (en ? "from " : "vanaf ")}{formatEuroCents(decision.monthlyCents, en ? "en-IE" : "nl-NL")}</dd></div>
-        </dl>
         {decision.minimums.length > 0 && <ul className={styles.decisionMinimums}>{decision.minimums.map((item: string) => <li key={item}>{item}</li>)}</ul>}
-        <div className={styles.decisionColumns}>
-          <div><h4>{en ? "Not included" : "Niet inbegrepen"}</h4><ul>{decision.exclusions.map((item: string) => <li key={item}>{item}</li>)}</ul></div>
-          <div><h4>{en ? "Final-price drivers" : "Bepalers van de eindprijs"}</h4><ul>{decision.finalPriceDrivers.map((item: string) => <li key={item}>{item}</li>)}</ul></div>
-        </div>
+        <div className={styles.routeChoice} aria-label={en ? "Choose payment route" : "Kies betaalroute"}><div className={styles.segment}><button type="button" aria-pressed={serviceRoute === "standard"} onClick={() => changeServiceRoute("standard")}>{en ? "Standard" : "Standaard"}</button><button type="button" aria-pressed={serviceRoute === "comfort"} onClick={() => changeServiceRoute("comfort")}>Comfort</button></div>{serviceRoute === "standard" ? <p>{en ? "You contract and pay third-party subscriptions and hardware directly. AIOW configures and manages with limited access." : "U sluit abonnementen en hardware rechtstreeks af en betaalt derden zelf. AIOW richt in en beheert met beperkte toegang."}</p> : <p>{en ? "Comfort requires automatic direct debit. Subscriptions are provider cost +25%; hardware is cost +15%. Actual third-party costs are not part of this fixed indication." : "Comfort vereist automatische incasso. Abonnementen zijn providerkostprijs +25%; hardware is kostprijs +15%. Werkelijke derde-kosten staan niet in deze vaste indicatie."}</p>}</div><div className={styles.decisionColumns}><div><h4>{en ? "Not included" : "Niet inbegrepen"}</h4><ul>{decision.exclusions.map((item: string) => <li key={item}>{item}</li>)}</ul></div><div><h4>{en ? "Final-price drivers" : "Bepalers van de eindprijs"}</h4><ul>{decision.finalPriceDrivers.map((item: string) => <li key={item}>{item}</li>)}</ul></div></div>
         <p className={styles.decisionBoundary}>{decision.boundary} <Link href={en ? "/en/rates" : "/tarieven"}>{en ? "All rates and conditions" : "Alle tarieven en voorwaarden"} ↗</Link></p>
-        <button type="button" className={`${styles.quoteButton} ${styles.decisionPrimary}`} onClick={(event) => onQuote(event, quoteConfiguration)}>{decision.dominantAction}<span aria-hidden="true">↓</span></button>
-        <button type="button" className={styles.decisionSecondary} onClick={onBook}>{decision.secondaryAction}<span aria-hidden="true">↗</span></button>
-      </section>
+      </details>
     </section>
   );
 }

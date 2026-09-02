@@ -9,8 +9,15 @@ This file governs the public AIOW V1 surface at `aiow.ai`. It preserves the exis
 - **Audience:** Dutch owners and operators evaluating practical AI for a company, office or home.
 - **Primary task:** get a transparent, honest price indication and book a scan.
 - **Platform:** responsive public web, mobile-first.
-- **Courage:** 3/5 — restrained editorial confidence, with the calculator as the signature object.
+- **Courage:** 3.5/5 — restrained editorial confidence; added courage belongs in one causal signal sequence and one user-initiated film moment, never in decorative spectacle.
 - **Emotional core:** calm, exact, materially credible.
+
+## Promise and plain-language law
+
+**Promise:** “U hoeft AI niet te begrijpen. Wij zorgen dat het voor u werkt.”
+**Proposition:** “AIOW ontwerpt, installeert en beheert AI voor uw bedrijf, pand of woning. U bepaalt wat het mag doen; wij zorgen dat het werkt.”
+
+Every public surface leads with what becomes easier for the person, then explains technology and boundaries. Truth remains exact; words remain human. Public NL uses `u/uw` consistently. Customer-facing UI, PDF and mail never expose implementation vocabulary such as outbox, adapter, canonical snapshot, durable receipt, frozen request, mail task or lead. Prefer `aanvraag ontvangen`, `vastgelegd`, `uw indicatie`, `voorbeeld` and `beperkte toegang`.
 
 ## Brand world
 
@@ -44,7 +51,7 @@ Surfaces follow a paper / steel / instrument hierarchy:
 - the desktop header is the only glass layer: a floating instrument rail with a deliberate opaque fallback;
 - statement sections become dark technical scenes with measured grids, rails and asymmetry rather than empty colour bands;
 - solutions use route rails with route-specific line glyphs, not repeated generic icon cards;
-- pricing links remain a complete crawlable set but become a dense reference deck: grouped on desktop and horizontally scrollable with snap, overflow affordance and keyboard access on narrow screens;
+- the homepage shows three representative pricing routes and one route to the complete crawlable tariff index; the 15-route reference deck lives on `/tarieven` rather than lengthening the homepage;
 - approach uses one architectural three-stage rail, horizontal on wide screens and vertical on mobile;
 - the final CTA is a contained closing instrument scene, not another blank beige band.
 
@@ -56,9 +63,13 @@ Light, Dark and System are equal design modes. Light uses drafting paper as the 
 
 ## Signature and motion
 
-**Signature:** deterministic live price instrument inside the Operational Field. It changes model and output in place, keeps the input/output anchors stable, uses tabular numbers, and explains exclusions beside the result. Price changes may settle with a short directional transition; reduced motion snaps immediately. The complete task works without animation.
+**Signature:** deterministic price instrument inside the Operational Field. Level 1 always shows environment, size, package, one-time connection price, monthly management price, one boundary line and the next action. Each amount appears exactly once. Level 2 uses one disclosure for package limits, Standard/Comfort explanation, minima, exclusions and price drivers. Nothing that changes the result is hidden. Labels are consistent everywhere: `Aansluiting (eenmalig)`, `Beheer (per maand)`, `Minimum`, `Indicatie`. Price changes may settle with a short directional transition; reduced motion snaps immediately. The complete task works without animation.
 
 The Operational Field has one calm physical character: a slow deterministic drafting/signal sweep and sparse node pulse. Entrance and hover motion only clarify hierarchy and route affordance; nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables ambient, entrance and smooth scrolling and preserves the complete static technical composition.
+
+Motion has five bounded bands: ambient field; fail-open section reveal; short control response; one signal-to-decision signature sequence; and one user-initiated section-level film. Public routes use CSS plus one small IntersectionObserver, not Framer Motion. No scroll-linked parallax or pointer-following. Reveal is visible by default and may enter a pre-state only after JS and motion preference are known. Target budgets: motion JS ≤3 KB gzip added, public JS growth ≤5 KB gzip for the motion sprint, LCP ≤2.0 s on emulated mobile 4G, CLS <0.05, INP <200 ms and Lighthouse mobile performance ≥90.
+
+The homepage remains document-scroll. A film never replaces the hero or calculator. The film belongs once in the `Zo voelt het` section, starts only after a user gesture, reserves 16:9 geometry, uses `preload="none"`, captions on, transcript in HTML, pause/mute controls, Save-Data denial and poster-only reduced-motion behavior.
 
 Navigation may use one translucent layer over content with a solid fallback. The booking dialog is a solid overlay. Body copy never sits on glass. Maximum glass layers: one.
 
@@ -79,6 +90,22 @@ Navigation may use one translucent layer over content with a solid fallback. The
 - Knowledge pages live outside the homepage and use dated sources, visible boundaries and a restrained route back to the scan.
 - Experiments may test copy or ordering only. They never alter price, exclusions, availability, privacy, security or provider truth.
 - The private operations queue is not part of the public information architecture and must never render customer PII on `aiow.ai`.
+- The customer journey is one line: indication → PDF indication → free human scan → scan memo/decision → written proposal → connection → management. The website never collapses an indication into a final proposal.
+- The homepage and header lead to the calculator with `Bekijk uw indicatie`; the calculator action is `Ontvang uw indicatie als PDF`. `Vraag een scan aan` appears after the indication and on deeper routes where the visitor already has enough context.
+
+## Navigation, identity and communication law
+
+- Primary navigation contains four destinations plus one CTA: Oplossingen, Mogelijkheden, Tarieven, Bedrijf, Vraag een scan aan. Ventures remains available from the footer, not as homepage real estate.
+- The approach has four stages: Scan, Scope, Bouw, Beheer. Beheer may never disappear from the visible journey because ongoing management is a core differentiator.
+- Canonical company facts come from one shared source and render identically in site, schema, PDF and mail: AIOW B.V. · Bijlmermeerstraat 30 · 2131 HC Hoofddorp · KvK 71887466. `info@aiow.ai` and a public 023 number may join this block only after provider activation and readback proof.
+- Exactly one public e-mail address appears on public surfaces. Automated customer mail has a monitored reply-to and a plain-text alternative; no `noreply@` identity is used for AIOW sales or scan communication.
+- Telephone recording is off by default. A private 06 is never public. Any future AI receptionist identifies itself as AI and offers a direct human route.
+
+## Film, photography and voice law
+
+- Visual storytelling uses Warm Precision documentary scenes: recognizable Dutch work, building and home environments; natural light; graphite/drafting overlays; restrained copper signal lines; real product screens. No institutional chambers, generic luxury stock, robots, neon glow or fake dashboards.
+- Every synthetic scenario is labelled as an example, not a customer case. AI-generated imagery and synthetic narration are disclosed.
+- Narration uses one original, commercially licensed synthetic voice: Dutch, warm-low, unhurried, slightly dry, neutral Randstad register, never a clone or celebrity imitation. Audio never autoplays. Script, voice/model version, licence, provenance and checksums are registered before release.
 
 ## Public capabilities experience
 
