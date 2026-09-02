@@ -47,13 +47,11 @@ function PricingDeck({ children, cue, label }: { children: ReactNode; cue: strin
 
 export function PricingGuide({ locale = "nl" }: { locale?: "nl" | "en" }) {
   const en = locale === "en";
-  const branches = pricingContexts.filter((context) => context.category === "business");
-  const buildings = pricingContexts.filter((context) => context.category === "building");
+  const featured = ["accountants", "kantoorpand", "woning"].map((slug) => pricingContexts.find((context) => context.slug === slug)).filter((context): context is (typeof pricingContexts)[number] => Boolean(context));
   const cards = (items: typeof pricingContexts) => items.map((context, index) => <Link href={en ? `/en/rates/${context.slug}` : `/tarieven/${context.slug}`} key={context.slug}><b aria-hidden="true">{String(index + 1).padStart(2, "0")}</b><span>{en ? context.labelEn : context.labelNl}</span><small>{en ? "Advice and calculation" : "Advies en rekenvoorbeeld"} ↗</small></Link>);
   const deck = (items: typeof pricingContexts, label: string) => <PricingDeck cue={en ? "Scroll" : "Schuif"} label={`${label} — ${en ? "horizontal pricing links; use arrow keys to scroll" : "horizontale prijslinks; gebruik pijltjestoetsen om te scrollen"}`}>{cards(items)}</PricingDeck>;
   return <section className={styles.guide} aria-labelledby="pricing-guide-title">
     <div className={styles.heading}><p>{en ? "Pricing guide" : "Prijswegwijzer"}</p><h2 id="pricing-guide-title">{en ? "Which published rate fits your context?" : "Wat kost het voor u?"}</h2><div><p>{en ? "Choose your context. Each detail page shows practical applications, package advice and a transparent calculation—without invented industry outcomes." : "Kies uw context. Elke detailpagina toont concrete toepassingen, pakketadvies en een transparante berekening—zonder verzonnen branche-uitkomst."}</p><Link href={en ? "/en/rates" : "/tarieven"}>{en ? "Complete rates" : "Volledige tarieven"} ↗</Link></div></div>
-    <div className={styles.group}><h3>{en ? "Business processes" : "Bedrijfsprocessen"}</h3>{deck(branches, en ? "Business process rates" : "Tarieven voor bedrijfsprocessen")}</div>
-    <div className={styles.group}><h3>{en ? "Buildings and projects" : "Gebouwen en projecten"}</h3>{deck(buildings, en ? "Building and project rates" : "Tarieven voor gebouwen en projecten")}</div>
+    <div className={styles.group}><h3>{en ? "Three recognisable examples" : "Drie herkenbare voorbeelden"}</h3>{deck(featured, en ? "Featured rates" : "Uitgelichte tarieven")}</div>
   </section>;
 }

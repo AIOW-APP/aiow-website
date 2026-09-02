@@ -17,11 +17,11 @@ async function schemas(page) {
 }
 
 async function fillBusinessQuote(page, name = "Browser Proof") {
-  const dialog = page.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." });
+  const dialog = page.getByRole("dialog", { name: "Uw configuratie, helder vastgelegd." });
   await dialog.getByLabel("Context (optioneel)").selectOption("accountants");
   await dialog.getByLabel("Naam", { exact: true }).fill(name);
   await dialog.getByLabel("E-mail", { exact: true }).fill("browser@example.com");
-  await dialog.getByLabel("Telefoon", { exact: true }).fill("+31 20 123 4567");
+  await dialog.getByLabel(/Telefoon/).fill("+31 20 123 4567");
   await dialog.getByLabel("Bedrijfsnaam", { exact: true }).fill("Browser Proof BV");
   await dialog.getByLabel(/Ik ga ermee akkoord/).check();
   return dialog;
@@ -54,8 +54,8 @@ try {
     assert.equal(await operationalFields.count(), 3, `operational field count at ${width}`);
     for (const field of await operationalFields.all()) assert.equal(await field.getAttribute("aria-hidden"), "true", `operational field must be decorative at ${width}`);
     assert.equal(await page.locator('[data-premium-instrument="calculator"]').count(), 1, `premium calculator instrument missing at ${width}`);
-    assert.equal(await page.locator('[data-approach-rail="true"] li').count(), 3, `approach rail structure at ${width}`);
-    assert.equal(await page.locator('[data-pricing-deck="true"] a').count(), 15, `pricing guide must retain 15 links at ${width}`);
+    assert.equal(await page.locator('[data-approach-rail="true"] li').count(), 4, `approach rail structure at ${width}`);
+    assert.equal(await page.locator('[data-pricing-deck="true"] a').count(), 3, `homepage pricing guide must show three representative links at ${width}`);
     const controlTargets = await page.locator('header select, header a[hreflang]').evaluateAll((nodes) => nodes.map((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
     assert.equal(controlTargets.length, 2, `theme/language controls missing at ${width}`);
     for (const target of controlTargets) assert.ok(target.width >= 44 && target.height >= 44, `header control below 44px at ${width}: ${JSON.stringify(target)}`);
@@ -125,9 +125,9 @@ try {
     }
     await page.emulateMedia({ reducedMotion: "no-preference" });
 
-    const quoteTrigger = page.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true });
+    const quoteTrigger = page.getByRole("button", { name: "Ontvang uw indicatie als PDF", exact: true });
     await quoteTrigger.click();
-    let quoteDialog = page.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." });
+    let quoteDialog = page.getByRole("dialog", { name: "Uw configuratie, helder vastgelegd." });
     await quoteDialog.waitFor({ state: "visible" });
     assert.equal(await quoteDialog.getByText("Bedrijf", { exact: true }).count(), 1);
     assert.equal(await quoteDialog.getByText("10 mensen", { exact: true }).count(), 1);
@@ -141,9 +141,9 @@ try {
     assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
     await quoteDialog.getByLabel("Blauwdruk", { exact: true }).check();
     assert.equal(await quoteDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
-    assert.equal(await quoteDialog.getByText(/Smart Design gebruikt de oppervlakte uit de calculator/).count(), 1);
+    assert.equal(await quoteDialog.getByText(/Voor deze indicatie rekenen we met 12 m² per persoon/).count(), 1);
     const quoteClose = quoteDialog.getByRole("button", { name: "Offerteformulier sluiten" });
-    const quoteSubmit = quoteDialog.getByRole("button", { name: "Genereer en download PDF" });
+    const quoteSubmit = quoteDialog.getByRole("button", { name: "Ontvang uw indicatie als PDF" });
     await quoteSubmit.focus(); await page.keyboard.press("Tab"); assert.equal(await quoteClose.evaluate((node) => node === document.activeElement), true, `quote forward focus trap ${width}`);
     await quoteClose.focus(); await page.keyboard.press("Shift+Tab"); assert.equal(await quoteSubmit.evaluate((node) => node === document.activeElement), true, `quote reverse focus trap ${width}`);
     await page.keyboard.press("Escape"); assert.equal(await quoteDialog.count(), 0, `quote Escape close ${width}`);
@@ -156,14 +156,15 @@ try {
     await page.getByText("Smart Office XL · indicatie/offerte", { exact: true }).waitFor();
 
     await page.getByRole("button", { name: "Woning", exact: true }).click();
+    assert.equal(await page.getByRole("slider").inputValue(), "1000", `home surface was not clamped after switching from a >1000 m² building at ${width}`);
     assert.equal(await page.getByRole("button", { name: "Home", exact: true }).count(), 1);
     assert.equal(await page.getByRole("button", { name: "Signature", exact: true }).count(), 1);
     await page.getByRole("button", { name: "Signature", exact: true }).click();
     await page.getByRole("slider").fill("400");
-    await page.getByText("AIOW Signature", { exact: true }).waitFor();
+    await page.getByText("AIOW Signature", { exact: true }).first().waitFor();
 
     await quoteTrigger.click();
-    quoteDialog = page.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." });
+    quoteDialog = page.getByRole("dialog", { name: "Uw configuratie, helder vastgelegd." });
     await quoteDialog.waitFor();
     assert.equal(await quoteDialog.getByLabel("Postcode", { exact: true }).getAttribute("required"), "");
     assert.equal(await quoteDialog.getByLabel("Bedrijfsnaam", { exact: true }).count(), 0);
@@ -194,17 +195,17 @@ try {
     await route.fulfill({ status: 200, body: tinyPdf, headers: { "content-type": "application/pdf", "content-disposition": 'attachment; filename="AIOW-2026-0042.pdf"', "x-aiow-quote-number": "AIOW-2026-0042", "x-aiow-request-id": "browser-proof-request", "cache-control": "no-store" } });
   });
   await successPage.goto(base, { waitUntil: "networkidle" });
-  await successPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  await successPage.getByRole("button", { name: "Ontvang uw indicatie als PDF", exact: true }).click();
   const successDialog = await fillBusinessQuote(successPage);
   await successDialog.getByLabel("Scan", { exact: true }).check();
   await successDialog.getByLabel("Blauwdruk", { exact: true }).check();
   assert.equal(await successDialog.getByLabel("Smart Design-oppervlakte (m²)", { exact: true }).count(), 0);
   assert.equal(await successDialog.getByLabel("Technologiebudget (€; optioneel)", { exact: true }).count(), 0);
   await successDialog.getByLabel("Blauwdruk", { exact: true }).uncheck();
-  assert.equal(await successDialog.getByText(/Smart Design gebruikt de oppervlakte uit de calculator/).count(), 1);
+  assert.equal(await successDialog.getByText(/Voor deze indicatie rekenen we met 12 m² per persoon/).count(), 1);
   const [download] = await Promise.all([
     successPage.waitForEvent("download"),
-    successDialog.getByRole("button", { name: "Genereer en download PDF" }).click(),
+    successDialog.getByRole("button", { name: "Ontvang uw indicatie als PDF" }).click(),
   ]);
   assert.equal(download.suggestedFilename(), "AIOW-2026-0042.pdf");
   assert.deepEqual(await readFile(await download.path()), tinyPdf);
@@ -213,13 +214,13 @@ try {
   assert.equal(submittedQuote.configuration.contextSlug, "accountants");
   assert.deepEqual(submittedQuote.configuration.smartDesignModules, ["scan"]);
   assert.equal("technologyBudgetEuros" in submittedQuote.configuration, false);
-  await successPage.getByText("Duurzaam geaccepteerd", { exact: true }).waitFor();
+  await successPage.getByText("Indicatie ontvangen", { exact: true }).waitFor();
   assert.equal(await successPage.getByText("AIOW-2026-0042", { exact: true }).count(), 1);
   await successPage.getByRole("button", { name: "Sluiten", exact: true }).click();
-  await successPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
-  await successPage.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." }).waitFor();
-  assert.equal(await successPage.getByRole("dialog", { name: "Je configuratie, helder vastgelegd." }).count(), 1);
-  assert.equal(await successPage.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
+  await successPage.getByRole("button", { name: "Ontvang uw indicatie als PDF", exact: true }).click();
+  await successPage.getByRole("dialog", { name: "Uw configuratie, helder vastgelegd." }).waitFor();
+  assert.equal(await successPage.getByRole("dialog", { name: "Uw configuratie, helder vastgelegd." }).count(), 1);
+  assert.equal(await successPage.getByText("Indicatie ontvangen", { exact: true }).count(), 0);
   await successPage.close();
 
   const failurePage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
@@ -227,12 +228,12 @@ try {
   failurePage.on("download", () => { failedDownloads += 1; });
   await failurePage.route("**/api/quote", (route) => route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ ok: false, error: "rejected", requestId: "browser-proof-failure" }) }));
   await failurePage.goto(base, { waitUntil: "networkidle" });
-  await failurePage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  await failurePage.getByRole("button", { name: "Ontvang uw indicatie als PDF", exact: true }).click();
   const failureDialog = await fillBusinessQuote(failurePage, "Preserved Input");
-  await failureDialog.getByRole("button", { name: "Genereer en download PDF" }).click();
-  await failureDialog.getByText(/Duurzame acceptatie van lead, PDF en beide mailtaken mislukte/).waitFor();
+  await failureDialog.getByRole("button", { name: "Ontvang uw indicatie als PDF" }).click();
+  await failureDialog.getByText(/Uw indicatie kon niet worden vastgelegd/).waitFor();
   assert.equal(await failureDialog.getByLabel("Naam", { exact: true }).inputValue(), "Preserved Input");
-  assert.equal(await failureDialog.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
+  assert.equal(await failureDialog.getByText("Indicatie ontvangen", { exact: true }).count(), 0);
   await failurePage.waitForTimeout(100);
   assert.equal(failedDownloads, 0, "502 response triggered a download");
   await failurePage.close();
@@ -242,11 +243,11 @@ try {
   malformedPdfPage.on("download", () => { malformedDownloads += 1; });
   await malformedPdfPage.route("**/api/quote", (route) => route.fulfill({ status: 200, body: "not-a-pdf", headers: { "content-type": "application/pdf", "x-aiow-quote-number": "AIOW-2026-0043" } }));
   await malformedPdfPage.goto(base, { waitUntil: "networkidle" });
-  await malformedPdfPage.getByRole("button", { name: "Download offerte-indicatie (PDF)", exact: true }).click();
+  await malformedPdfPage.getByRole("button", { name: "Ontvang uw indicatie als PDF", exact: true }).click();
   const malformedDialog = await fillBusinessQuote(malformedPdfPage, "Malformed PDF");
-  await malformedDialog.getByRole("button", { name: "Genereer en download PDF" }).click();
-  await malformedDialog.getByText(/De aanvraag is niet geaccepteerd/).waitFor();
-  assert.equal(await malformedDialog.getByText("Duurzaam geaccepteerd", { exact: true }).count(), 0);
+  await malformedDialog.getByRole("button", { name: "Ontvang uw indicatie als PDF" }).click();
+  await malformedDialog.getByText(/Uw indicatie kon niet worden vastgelegd/).waitFor();
+  assert.equal(await malformedDialog.getByText("Indicatie ontvangen", { exact: true }).count(), 0);
   await malformedPdfPage.waitForTimeout(100);
   assert.equal(malformedDownloads, 0, "malformed PDF response triggered a download");
   await malformedPdfPage.close();
@@ -257,7 +258,7 @@ try {
   await englishBookingPage.goto(`${base}/en`, { waitUntil: "networkidle" });
   await englishBookingPage.getByRole("button", { name: "Request a scan", exact: true }).first().click();
   const englishBookingDialog = englishBookingPage.getByRole("dialog", { name: "Request a practical scan" });
-  await englishBookingDialog.getByRole("textbox", { name: "Context" }).fill("English booking browser proof");
+  await englishBookingDialog.getByRole("textbox", { name: "What would you like to make easier?" }).fill("English booking browser proof");
   await englishBookingDialog.getByRole("button", { name: "Continue" }).click();
   await englishBookingDialog.getByLabel("Date").fill("2026-09-30");
   await englishBookingDialog.getByRole("button", { name: "09:00" }).click();
@@ -265,8 +266,8 @@ try {
   await englishBookingDialog.getByLabel("Name").fill("English Booking Proof");
   await englishBookingDialog.getByLabel("E-mail").fill("english@example.com");
   await englishBookingDialog.getByRole("checkbox").check();
-  await englishBookingDialog.getByRole("button", { name: "Send preferred request" }).click();
-  await englishBookingPage.getByText("Your preferred scan request was received.").waitFor();
+  await englishBookingDialog.getByRole("button", { name: "Send scan request" }).click();
+  await englishBookingPage.getByText("Your scan request has been received.").waitFor();
   assert.equal(englishBookingPayload.locale, "en");
   const [calendarDownload] = await Promise.all([englishBookingPage.waitForEvent("download"), englishBookingPage.getByRole("button", { name: "Download local reminder (.ics)" }).click()]);
   const calendarText = await readFile(await calendarDownload.path(), "utf8");
@@ -293,20 +294,20 @@ try {
   assert.equal(await page.locator("html").getAttribute("lang"), "en");
   assert.equal(await page.locator("#solutions").count(), 1);
   assert.equal(await page.locator("#approach").count(), 1);
-  assert.equal(await page.locator("#ventures").count(), 1);
+  assert.equal(await page.locator("#ventures").count(), 0);
   const englishHomeNodes = await schemas(page);
   assert.ok(englishHomeNodes.some((node) => node["@type"] === "Service" && node.url === "https://aiow.ai/en" && node.inLanguage === "en-GB" && node["@id"] === "https://aiow.ai/en#service"), "English home Service identity missing");
-  assert.equal(await page.locator('nav[aria-label="Primary navigation"] a').filter({ hasText: "Ventures" }).getAttribute("href"), "/en/ventures");
+  assert.equal(await page.locator('footer a').filter({ hasText: "Ventures" }).getAttribute("href"), "/en/ventures");
   const ratesLink = page.getByRole("link", { name: "Rates", exact: true }).first();
   assert.equal(await ratesLink.getAttribute("href"), "/en/rates");
   const pricingCardLabels = await page.locator('a[href^="/en/rates/"] > span').allTextContents();
   for (const dutchLabel of ["Logistiek", "Bouw", "Makelaars", "Advocatuur", "Zorg", "Kantoorpand", "Woning", "Nieuwbouwproject"]) assert.equal(pricingCardLabels.includes(dutchLabel), false, `Dutch pricing card leaked on EN: ${dutchLabel}`);
-  for (const englishLabel of ["Logistics", "Construction", "Real estate agents", "Legal practices", "Healthcare", "Office building", "Home", "New-build project"]) assert.equal(pricingCardLabels.filter((label) => label === englishLabel).length, 1, `English pricing card missing: ${englishLabel}`);
+  for (const englishLabel of ["Accountancy", "Office building", "Home"]) assert.equal(pricingCardLabels.filter((label) => label === englishLabel).length, 1, `English pricing card missing: ${englishLabel}`);
   const englishSolutionLinks = page.locator('#solutions a[href="/en/ai-automation"], #solutions a[href="/en/local-ai"], #solutions a[href="/en/smart-office"], #solutions a[href="/en/home"]');
   assert.equal(await englishSolutionLinks.count(), 4);
   await page.getByRole("button", { name: "Request a scan", exact: true }).first().click();
-  assert.equal(await page.getByLabel("Subject").count(), 1);
-  assert.equal(await page.getByText("Onderwerp", { exact: true }).count(), 0);
+  assert.equal(await page.getByLabel("What is this about?").count(), 1);
+  assert.equal(await page.getByText("Waar gaat het om?", { exact: true }).count(), 0);
   await page.getByRole("button", { name: "Close" }).click();
 
   await page.goto(`${base}/en/rates`, { waitUntil: "networkidle" });

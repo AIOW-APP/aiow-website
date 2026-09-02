@@ -8,13 +8,14 @@ const [booking, request, css] = await Promise.all([
   readFile(new URL("../../components/aiow-v1/AiowV1Homepage.module.css", import.meta.url), "utf8"),
 ]);
 
-test("booking copy describes a preferred request, durable 2xx receipt and human confirmation", () => {
+test("booking copy describes a scan request, durable 2xx receipt and human confirmation without backend jargon", () => {
   assert.match(request, /response\.ok/);
   assert.ok(request.indexOf("response.ok") < request.indexOf('emit("booking_succeeded"'));
-  assert.match(booking, /Voorkeursaanvraag/);
-  assert.match(booking, /Duurzaam ontvangstbewijs/);
-  assert.match(booking, /Een mens bevestigt datum en tijd apart/);
-  assert.match(booking, /does not reserve provider calendar capacity/);
+  assert.match(booking, /Scanaanvraag/);
+  assert.match(booking, /Aanvraag ontvangen/);
+  assert.match(booking, /Een medewerker neemt contact op om de praktische datum en tijd te bevestigen/);
+  assert.match(booking, /preferred request, not a reservation/);
+  assert.doesNotMatch(booking, /Duurzaam ontvangstbewijs|duurzame adapter|mailtaken/);
 });
 
 test("ICS is a local reminder and modal accessibility behavior remains intact", () => {
