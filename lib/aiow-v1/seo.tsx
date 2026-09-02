@@ -13,13 +13,25 @@ export const homeFaq = [
 export function pageMetadata({ title, description, path, pairedPaths, locale = "nl" }: { title: string; description: string; path: string; pairedPaths: { nl: string; en: string }; locale?: AiowLocale }): Metadata {
   const canonical = `${SITE_URL}${path}`;
   const languages = { nl: `${SITE_URL}${pairedPaths.nl}`, en: `${SITE_URL}${pairedPaths.en}`, "x-default": `${SITE_URL}${pairedPaths.nl}` };
-  return { title, description, alternates: { canonical, languages }, openGraph: { type: "website", siteName: "AIOW", title, description, url: canonical, locale: locale === "nl" ? "nl_NL" : "en_GB", alternateLocale: [locale === "nl" ? "en_GB" : "nl_NL"], images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: "AIOW — Working AI, precisely installed" }] }, twitter: { card: "summary_large_image", title, description, images: [`${SITE_URL}/opengraph-image`] } };
+  return { title: { absolute: title }, description, alternates: { canonical, languages }, openGraph: { type: "website", siteName: "AIOW", title, description, url: canonical, locale: locale === "nl" ? "nl_NL" : "en_GB", alternateLocale: [locale === "nl" ? "en_GB" : "nl_NL"], images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: "AIOW — Working AI, precisely installed" }] }, twitter: { card: "summary_large_image", title, description, images: [`${SITE_URL}/opengraph-image`] } };
+}
+
+export function organizationNode(locale: AiowLocale = "nl") {
+  const en = locale === "en";
+  return {
+    "@context": "https://schema.org", "@type": "Organization", "@id": `${SITE_URL}/#organization`,
+    name: "AIOW", alternateName: "AI Operating Workflows", legalName: "AIOW B.V.", url: SITE_URL, email: "info@aiow.io",
+    identifier: { "@type": "PropertyValue", propertyID: "KvK", value: "71887466" },
+    address: { "@type": "PostalAddress", streetAddress: "Bijlmermeerstraat 30", postalCode: "2131 HC", addressLocality: "Hoofddorp", addressCountry: "NL" },
+    areaServed: { "@type": "Country", name: en ? "Netherlands" : "Nederland" },
+    description: en ? "Dutch company designing, installing and maintaining bounded AI systems for business processes, buildings and homes." : "Nederlands bedrijf dat begrensde AI-systemen ontwerpt, installeert en beheert voor bedrijfsprocessen, gebouwen en woningen.",
+  };
 }
 
 export function homeSchemas(locale: "nl" | "en" = "nl") {
   const en = locale === "en";
   return [
-    { "@context": "https://schema.org", "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "AIOW", url: SITE_URL, description: en ? "AI for business processes, buildings and homes — designed and managed by one party." : "AI voor bedrijfsprocessen, gebouwen en woningen — ontworpen en beheerd door één partij." },
+    organizationNode(locale),
     { "@context": "https://schema.org", "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "AIOW", inLanguage: ["nl-NL", "en"] },
     { "@context": "https://schema.org", "@type": "Service", "@id": en ? `${SITE_URL}/en#service` : `${SITE_URL}/#service`, url: en ? `${SITE_URL}/en` : SITE_URL, inLanguage: en ? "en-GB" : "nl-NL", provider: { "@id": `${SITE_URL}/#organization` }, name: en ? "Practical AI implementation and management" : "Praktische AI-implementatie en beheer", areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", price: "2950", description: en ? "Published starting indication excluding VAT and third-party costs; final after scan." : "Gepubliceerde vanaf-indicatie excl. btw en derde-kosten; definitief na scan." } },
   ];
@@ -29,6 +41,7 @@ export function pillarSchemas(data: { slug: string; title: string; answer: strin
   const url = `${SITE_URL}/${locale === "en" ? `en/${data.slug}` : data.slug}`;
   const language = locale === "en" ? "en-GB" : "nl-NL";
   return [
+    organizationNode(locale),
     { "@context": "https://schema.org", "@type": "Service", "@id": `${url}/#service`, name: data.title, description: data.answer, url, inLanguage: language, provider: { "@id": `${SITE_URL}/#organization` }, areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", description: `${data.pricing.headline}. ${data.pricing.note}` } },
     { "@context": "https://schema.org", "@type": "FAQPage", inLanguage: language, mainEntity: data.faq.map((item) => ({ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } })) },
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
@@ -67,6 +80,7 @@ export function tariffSchemas(locale: AiowLocale = "nl") {
   const url = `${SITE_URL}${en ? "/en/rates" : "/tarieven"}`;
   const serviceOffers = Object.values(packageOffers);
   const schemas = [
+    organizationNode(locale),
     { "@context":"https://schema.org", "@type":"Service", "@id":`${url}/#service`, name:en ? "AIOW implementation, management and Smart Design" : "AIOW implementatie, beheer en Smart Design", description:en ? "AI for business processes, buildings and homes with public starting prices, units, cadence and minimums." : "AI voor bedrijfsprocessen, gebouwen en woningen met publieke vanafprijzen, eenheden, cadans en minima.", url, inLanguage:en ? "en-GB" : "nl-NL", provider:{"@id":`${SITE_URL}/#organization`}, areaServed:"NL", offers:[
       ...serviceOffers,
       { "@type":"Offer",name:"Comfort",description:"Optioneel en alleen met verplichte automatische incasso. Abonnementen: werkelijke providerkostprijs +25%. Providerprijsstijgingen worden 1-op-1 doorbelast plus die 25% marge. Hardware: kostprijs +15%, met volledige vooruitbetaling of een aanbetaling van ten minste de hardwarewaarde vóór bestelling. AIOW financiert nooit renteloos voor. Onbekende derde-kosten vormen geen vast eindbedrag.",additionalProperty:[{"@type":"PropertyValue",name:"Abonnementenmarge",value:25,unitText:"PERCENT"},{"@type":"PropertyValue",name:"Hardwaremarge",value:15,unitText:"PERCENT"},{"@type":"PropertyValue",name:"Automatische incasso",value:"verplicht"}] },
@@ -89,8 +103,23 @@ export function pricingContextSchemas(data: PricingContext, locale: AiowLocale =
   const en = locale === "en";
   const url = `${SITE_URL}${en ? "/en/rates" : "/tarieven"}/${data.slug}`;
   return [
+    organizationNode(locale),
     { "@context":"https://schema.org", "@type":"Service", "@id":`${url}/#service`, name:data.title, description:data.introduction, url, inLanguage:en ? "en-GB" : "nl-NL", provider:{"@id":`${SITE_URL}/#organization`}, areaServed:"NL", offers:localizedSchema(packageOffers[data.package], locale) },
     { "@context":"https://schema.org", "@type":"BreadcrumbList", inLanguage:en ? "en-GB" : "nl-NL", itemListElement:[{"@type":"ListItem",position:1,name:"AIOW",item:en ? `${SITE_URL}/en` : SITE_URL},{"@type":"ListItem",position:2,name:en ? "Rates" : "Tarieven",item:`${SITE_URL}${en ? "/en/rates" : "/tarieven"}`},{"@type":"ListItem",position:3,name:en ? data.labelEn : data.labelNl,item:url}] },
+  ];
+}
+
+export function capabilitiesSchemas(locale: AiowLocale = "nl") {
+  const en = locale === "en";
+  const path = en ? "/en/capabilities" : "/mogelijkheden";
+  const url = `${SITE_URL}${path}`;
+  return [
+    organizationNode(locale),
+    { "@context": "https://schema.org", "@type": "WebPage", "@id": `${url}#webpage`, url, name: en ? "AI capabilities in practice" : "AI-mogelijkheden in de praktijk", description: en ? "Synthetic reference workflows showing how signals, AI interpretation, bounded system actions and human authority work together." : "Synthetische referentieworkflows die laten zien hoe signalen, AI-interpretatie, begrensde systeemacties en menselijke autoriteit samenwerken.", inLanguage: en ? "en-GB" : "nl-NL", isPartOf: { "@id": `${SITE_URL}/#website` }, about: { "@id": `${SITE_URL}/#organization` } },
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "AIOW", item: en ? `${SITE_URL}/en` : SITE_URL },
+      { "@type": "ListItem", position: 2, name: en ? "Capabilities" : "Mogelijkheden", item: url },
+    ] },
   ];
 }
 

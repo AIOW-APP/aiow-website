@@ -7,7 +7,8 @@ import { PublicHeader } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
 import styles from "./CapabilitiesExperience.module.css";
 
-type Mode = "process" | "building" | "home";
+export type CapabilityMode = "process" | "building" | "home";
+type Mode = CapabilityMode;
 type Trace = { label:string; eyebrow:string; title:string; intro:string; steps:{ label:string; state:string; title:string; body:string }[]; boundary:string };
 
 const content: Record<AiowLocale,{ eyebrow:string; title:string; lead:string; choose:string; reference:string; modes:Record<Mode,Trace>; beyondTitle:string; beyondLead:string; capabilities:string[]; scanEyebrow:string; scanTitle:string; scanLead:string; deliverables:string[]; ctaTitle:string; ctaBody:string; cta:string; rates:string }> = {
@@ -59,18 +60,30 @@ const content: Record<AiowLocale,{ eyebrow:string; title:string; lead:string; ch
   },
 };
 
-export function CapabilitiesExperience({ locale="nl" }:{ locale?:AiowLocale }){
-  const [mode,setMode]=useState<Mode>("process"); const t=content[locale]; const trace=t.modes[mode]; const en=locale==="en";
+export function CapabilitiesExperience({ locale="nl", initialMode="process" }:{ locale?:AiowLocale; initialMode?:CapabilityMode }){
+  const [mode,setMode]=useState<Mode>(initialMode); const t=content[locale]; const trace=t.modes[mode]; const en=locale==="en";
+  const routeLinks = {
+    process:{pillar:en?"/en/ai-automation":"/ai-automatisering",rates:en?"/en/rates#business":"/tarieven#bedrijf",pillarLabel:en?"AI automation":"AI-automatisering",ratesLabel:en?"Business rates":"Bedrijfstarieven"},
+    building:{pillar:en?"/en/smart-office":"/smart-office",rates:en?"/en/rates#building":"/tarieven#pand",pillarLabel:"Smart Office",ratesLabel:en?"Building rates":"Pandtarieven"},
+    home:{pillar:en?"/en/home":"/home",rates:en?"/en/rates#home":"/tarieven#woning",pillarLabel:"AIOW Home",ratesLabel:en?"Home rates":"Woningtarieven"},
+  }[mode];
+  function chooseMode(next:Mode){
+    setMode(next);
+    const url=new URL(location.href);const values:Record<Mode,string>=en?{process:"process",building:"building",home:"home"}:{process:"bedrijfsproces",building:"gebouw",home:"woning"};
+    url.searchParams.delete(en?"omgeving":"environment");url.searchParams.set(en?"environment":"omgeving",values[next]);
+    history.replaceState(history.state,"",`${url.pathname}${url.search}${url.hash}`);
+  }
   return <div className={styles.site}><PublicHeader locale={locale}/><main>
-    <header className={styles.hero}><p className={styles.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.lead}</p><div className={styles.heroActions}><a href="#experience">{t.choose} ↓</a><Link href={en?"/en/scan":"/scan"}>{t.cta} ↗</Link></div></header>
+    <header className={styles.hero}><p className={styles.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.lead}</p><div className={styles.heroActions}><a href="#experience">{t.choose} ↓</a><Link href={en?"/en/scan":"/scan"}>{t.cta} ↗</Link></div><p className={styles.ctaQualifier}>{en?"Free opportunity scan · about 30 minutes maximum · a person confirms date and time.":"Gratis kansenscan · maximaal circa 30 minuten · een mens bevestigt datum en tijd."}</p></header>
     <section id="experience" className={styles.experience} aria-labelledby="experience-title">
       <div className={styles.experienceTop}><div><p className={styles.eyebrow}>{t.reference}</p><h2 id="experience-title" aria-live="polite">{trace.title}</h2><p>{trace.intro}</p></div><span>{trace.eyebrow}</span></div>
-      <div className={styles.modeSwitch} aria-label={t.choose}>{(["process","building","home"] as Mode[]).map(key=><button key={key} type="button" aria-pressed={mode===key} aria-controls="capability-trace" onClick={()=>setMode(key)}>{t.modes[key].label}</button>)}</div>
+      <div className={styles.modeSwitch} aria-label={t.choose}>{(["process","building","home"] as Mode[]).map(key=><button key={key} type="button" aria-pressed={mode===key} aria-controls="capability-trace" onClick={()=>chooseMode(key)}>{t.modes[key].label}</button>)}</div>
       <ol id="capability-trace" className={styles.trace}>{trace.steps.map(step=><li key={step.label}><div className={styles.traceMeta}><span>{step.label}</span><em>{step.state}</em></div><h3>{step.title}</h3><p>{step.body}</p></li>)}</ol>
       <p className={styles.boundary}>{trace.boundary}</p>
+      <nav aria-label={en?"Related route and rates":"Bijbehorende route en tarieven"}><Link href={routeLinks.pillar}>{routeLinks.pillarLabel} ↗</Link><Link href={routeLinks.rates}>{routeLinks.ratesLabel} ↗</Link></nav>
     </section>
     <section className={styles.beyond}><div><p className={styles.eyebrow}>{en?"Beyond chat":"Meer dan chat"}</p><h2>{t.beyondTitle}</h2><p>{t.beyondLead}</p></div><ol>{t.capabilities.map((item,index)=><li key={item}><span>{String(index+1).padStart(2,"0")}</span>{item}</li>)}</ol></section>
     <section className={styles.scan}><div><p className={styles.eyebrow}>{t.scanEyebrow}</p><h2>{t.scanTitle}</h2><p>{t.scanLead}</p></div><ol>{t.deliverables.map((item,index)=><li key={item}><span>{String(index+1).padStart(2,"0")}</span>{item}</li>)}</ol></section>
-    <section className={styles.cta}><p className={styles.eyebrow}>{en?"Your starting point":"Uw startpunt"}</p><h2>{t.ctaTitle}</h2><p>{t.ctaBody}</p><div><Link href={en?"/en/scan":"/scan"}>{t.cta}</Link><Link href={en?"/en/rates":"/tarieven"}>{t.rates}</Link></div></section>
+    <section className={styles.cta}><p className={styles.eyebrow}>{en?"Your starting point":"Uw startpunt"}</p><h2>{t.ctaTitle}</h2><p>{t.ctaBody}</p><p className={styles.ctaQualifier}>{en?"Free opportunity scan · about 30 minutes maximum · a person confirms date and time.":"Gratis kansenscan · maximaal circa 30 minuten · een mens bevestigt datum en tijd."}</p><div><Link href={en?"/en/scan":"/scan"}>{t.cta}</Link><Link href={en?"/en/rates":"/tarieven"}>{t.rates}</Link></div></section>
   </main><PublicFooter locale={locale} showYear/></div>;
 }
