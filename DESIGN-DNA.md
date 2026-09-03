@@ -86,6 +86,7 @@ Navigation may use one translucent layer over content with a solid fallback. The
 - The Living Blueprint is the single hero signature. The calculator remains the canonical pricing authority later in the page; conversion improvements may not duplicate either object or add a floating sales widget.
 - The scan CTA promises a bounded decision artifact: workflow or space, dependencies, human checkpoints, route recommendation and explicit build / prepare / do-not-automate advice.
 - Context pages use one context-specific intake prompt while preserving the same booking flow and pricing authority.
+- The six priority contexts—accountants, legal practices, estate agents, office buildings, homes and Signature villas—show one plain-language `Nu vaak → Met AIOW → menselijke beslissing` journey before feature examples. It is a labelled reference workflow, never a customer result or ROI claim.
 - Evidence is labelled as `reference architecture`, `internal demonstration`, `pilot` or `customer case`. A customer case, testimonial, saving or outcome is forbidden without recorded evidence and publication approval.
 - Knowledge pages live outside the homepage and use dated sources, visible boundaries and a restrained route back to the scan.
 - Experiments may test copy or ordering only. They never alter price, exclusions, availability, privacy, security or provider truth.
