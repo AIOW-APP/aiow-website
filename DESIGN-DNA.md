@@ -1,4 +1,4 @@
-# AIOW — Warm Precision 2.0
+# AIOW — Living Blueprint
 
 ## Scope and authority
 
@@ -7,10 +7,10 @@ This file governs the public AIOW V1 surface at `aiow.ai`. It preserves the exis
 ## Product intent
 
 - **Audience:** Dutch owners and operators evaluating practical AI for a company, office or home.
-- **Primary task:** get a transparent, honest price indication and book a scan.
+- **Primary task:** understand what AIOW can build for work, property or private life and request one bounded system scan. The transparent indication supports that decision later; it does not lead the first viewport.
 - **Platform:** responsive public web, mobile-first.
-- **Courage:** 3.5/5 — restrained editorial confidence; added courage belongs in one causal signal sequence and one user-initiated film moment, never in decorative spectacle.
-- **Emotional core:** calm, exact, materially credible.
+- **Courage:** 4/5 — restrained editorial confidence with one unmistakable causal system in motion; never decorative spectacle.
+- **Emotional core:** “this is where I have my AI built” — calm, exact, materially credible and visibly capable.
 
 ## Promise and plain-language law
 
@@ -41,16 +41,16 @@ Avoid: purple/blue AI glow, robots, generic AI-agency claims, fake social proof,
 
 ## Composition and visual grammar
 
-The hero is a split editorial field whose dominant working object is the calculator—not a screenshot or decorative scene. Warm Precision 2.0 frames that object with an **Operational Field**: an architectural coordinate grid, engraved arcs, measured signal paths and sparse copper nodes. The field is semantic only as a visual signature, remains `aria-hidden`, never competes with content and compresses to a quiet cropped instrument plate on mobile.
+The hero is one editorial campaign image: `Hier laat u uw AI bouwen.` beside the **Living Blueprint**. The blueprint is an interactive, semantic example of one AIOW discipline applied to three worlds—Process, Property and Home & private life. Its causal route is always visible: `Source → Rule → AI proposal → Human approval → Action → Management`. The human-approval node is the visual anchor. The calculator moves below the first trust and capability explanation.
 
 Surfaces follow a paper / steel / instrument hierarchy:
 
 - solid drafting-paper or graphite fields carry all body copy;
 - steel rails, fine engraved rules and offset section indices create structure;
-- the calculator is the one elevated instrument, with layered material shadows and a precise top plate;
+- the Living Blueprint is the one elevated hero instrument; the deterministic calculator remains the elevated commercial instrument later in the journey;
 - the desktop header is the only glass layer: a floating instrument rail with a deliberate opaque fallback;
 - statement sections become dark technical scenes with measured grids, rails and asymmetry rather than empty colour bands;
-- solutions use route rails with route-specific line glyphs, not repeated generic icon cards;
+- Process, Property and Home & private life use one shared causal system with world-specific labels and distinct compositions, not repeated generic icon cards;
 - the homepage shows three representative pricing routes and one route to the complete crawlable tariff index; the 15-route reference deck lives on `/tarieven` rather than lengthening the homepage;
 - approach uses one architectural three-stage rail, horizontal on wide screens and vertical on mobile;
 - the final CTA is a contained closing instrument scene, not another blank beige band.
@@ -63,9 +63,9 @@ Light, Dark and System are equal design modes. Light uses drafting paper as the 
 
 ## Signature and motion
 
-**Signature:** deterministic price instrument inside the Operational Field. Level 1 always shows environment, size, package, one-time connection price, monthly management price, one boundary line and the next action. Each amount appears exactly once. Level 2 uses one disclosure for package limits, Standard/Comfort explanation, minima, exclusions and price drivers. Nothing that changes the result is hidden. Labels are consistent everywhere: `Aansluiting (eenmalig)`, `Beheer (per maand)`, `Minimum`, `Indicatie`. Price changes may settle with a short directional transition; reduced motion snaps immediately. The complete task works without animation.
+**Signature:** the Living Blueprint causal route. On first entry, one copper signal draws from source to management, pauses at `Human approval`, then settles. Switching Process, Property or Home & private life replaces the example labels within the same stable system and never changes the authority model. Reduced motion shows the finished route immediately. The deterministic price instrument remains intact below the capability story: Level 1 always shows environment, size, package, one-time connection price, monthly management price, one boundary line and the next action. Each amount appears exactly once.
 
-The Operational Field has one calm physical character: a slow deterministic drafting/signal sweep and sparse node pulse. Entrance and hover motion only clarify hierarchy and route affordance; nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables ambient, entrance and smooth scrolling and preserves the complete static technical composition.
+The Living Blueprint has one calm physical character: a deterministic draw, one travelling signal and a measured pause at human authority. Entrance and hover motion only clarify hierarchy and route affordance; nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables draw, ambient movement, entrance motion and smooth scrolling while preserving the complete static causal composition.
 
 Motion has five bounded bands: ambient field; fail-open section reveal; short control response; one signal-to-decision signature sequence; and one user-initiated section-level film. Public routes use CSS plus one small IntersectionObserver, not Framer Motion. No scroll-linked parallax or pointer-following. Reveal is visible by default and may enter a pre-state only after JS and motion preference are known. Target budgets: motion JS ≤3 KB gzip added, public JS growth ≤5 KB gzip for the motion sprint, LCP ≤2.0 s on emulated mobile 4G, CLS <0.05, INP <200 ms and Lighthouse mobile performance ≥90.
 
@@ -83,7 +83,7 @@ Navigation may use one translucent layer over content with a solid fallback. The
 
 ## Conversion and evidence law
 
-- The calculator remains the single signature object. Conversion improvements extend its decision clarity; they do not add a second hero, floating sales widget or repeated card system.
+- The Living Blueprint is the single hero signature. The calculator remains the canonical pricing authority later in the page; conversion improvements may not duplicate either object or add a floating sales widget.
 - The scan CTA promises a bounded decision artifact: workflow or space, dependencies, human checkpoints, route recommendation and explicit build / prepare / do-not-automate advice.
 - Context pages use one context-specific intake prompt while preserving the same booking flow and pricing authority.
 - Evidence is labelled as `reference architecture`, `internal demonstration`, `pilot` or `customer case`. A customer case, testimonial, saving or outcome is forbidden without recorded evidence and publication approval.
@@ -91,7 +91,7 @@ Navigation may use one translucent layer over content with a solid fallback. The
 - Experiments may test copy or ordering only. They never alter price, exclusions, availability, privacy, security or provider truth.
 - The private operations queue is not part of the public information architecture and must never render customer PII on `aiow.ai`.
 - The customer journey is one line: indication → PDF indication → free human scan → scan memo/decision → written proposal → connection → management. The website never collapses an indication into a final proposal.
-- The homepage and header lead to the calculator with `Bekijk uw indicatie`; the calculator action is `Ontvang uw indicatie als PDF`. `Vraag een scan aan` appears after the indication and on deeper routes where the visitor already has enough context.
+- The homepage and header lead with one commercial action: `Vraag een systeemscan aan`. The hero explains the three worlds and the authority model first. The later calculator action remains `Ontvang uw indicatie als PDF` and supports—not competes with—the system scan.
 
 ## Navigation, identity and communication law
 
@@ -126,8 +126,8 @@ Direct, calm, specific. No invented clients, reviews, addresses, awards, ranking
 
 ## Responsive and accessibility law
 
-Designed at 320, 390, 768 and 1440px. Controls are at least 44px, inputs remain 16px on mobile, focus is visible, tabs and dialog are keyboard-operable, there is no horizontal overflow, and `prefers-reduced-motion` removes non-essential transitions.
+Designed and separately composed at 320, 375, 390, 768, 1024 and 1440px. Controls are at least 44px, inputs remain 16px on mobile, focus is visible, tabs and dialog are keyboard-operable, there is no horizontal overflow, and `prefers-reduced-motion` removes non-essential transitions. Mobile turns the causal path into a vertical timeline and places the three-world segmented control directly below the proposition. Display type is fluid but the hero and final decision are the only maximum-scale moments.
 
 ## Anti-generic gate
 
-The logo-away identity is the warm drafting-paper/graphite/copper instrument language and the calculator as the first useful object. A competitor name cannot be swapped in without contradicting AIOW's exact published tiers, exclusions and Solutions/Ventures split. No centered generic AI hero, neon gradient, robot, fake metric or repeated glass-card grid is allowed.
+The logo-away identity is the warm drafting-paper/graphite/copper material language plus the causal Living Blueprint that visibly anchors AI work at human authority. A competitor name cannot be swapped in without contradicting AIOW's three-world system, management promise, published pricing and explicit authority model. No centered generic AI hero, neon gradient, robot, fake metric or repeated glass-card grid is allowed.

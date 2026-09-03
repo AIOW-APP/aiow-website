@@ -18,7 +18,7 @@ function currentNavKey(pathname: string): NavKey | null {
   return null;
 }
 
-export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan" }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price" }) {
+export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean }) {
   const en = locale === "en";
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,7 +57,7 @@ export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan" }: 
     if (event.shiftKey && index > 0) { event.preventDefault(); items[index - 1]?.focus(); }
   }
 
-  return <header className={styles.header}>
+  return <header className={styles.header} data-compact-mobile={compactMobile ? "true" : undefined}>
     <Link href={en ? "/en" : "/"} className={styles.logo} aria-label={en ? "AIOW English home" : "AIOW home"}><span>AIOW</span><i /></Link>
     <button ref={menuButton} type="button" className={styles.menuButton} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen((open) => !open)}>{en ? "Menu" : "Menu"}<span aria-hidden="true">{menuOpen ? "×" : "☰"}</span></button>
     <nav ref={navigation} id="primary-navigation" data-open={menuOpen} aria-label={en ? "Primary navigation" : "Hoofdnavigatie"} onKeyDown={navigateOpenMenu}>
