@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const root=new URL("../../",import.meta.url);
-const[home,enHome,page,stage,css,sharedCss,dna,analytics,nextConfig]=await Promise.all([
+const[home,enHome,page,blueprint,css,blueprintCss,sharedCss,dna,analytics,nextConfig]=await Promise.all([
  readFile(new URL("app/page.tsx",root),"utf8"),
  readFile(new URL("app/en/page.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.tsx",root),"utf8"),
- readFile(new URL("components/aiow-v1/LivingBlueprintStage.tsx",root),"utf8"),
+ readFile(new URL("components/aiow-v1/ThreeWorldsBlueprint.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.module.css",root),"utf8"),
+ readFile(new URL("components/aiow-v1/ThreeWorldsBlueprint.module.css",root),"utf8"),
  readFile(new URL("components/aiow-v1/AiowV1Homepage.module.css",root),"utf8"),
  readFile(new URL("DESIGN-DNA.md",root),"utf8"),
  readFile(new URL("core/analytics/Analytics.tsx",root),"utf8"),
@@ -20,39 +21,40 @@ test("paired home routes mount the Living Blueprint and preserve canonical schem
  assert.match(enHome,/locale="en"/);
 });
 
-test("Living Blueprint leads with one system-scan journey and keeps pricing later",()=>{
- assert.match(page,/Hier laat u/);assert.match(page,/your AI built/);assert.match(page,/Vraag een systeemscan aan/);assert.match(page,/Request a system scan/);
- assert.ok(page.indexOf("<LivingBlueprintStage")<page.indexOf("<LivingBlueprintCalculator"));
+test("homepage leads with one concrete scan journey and keeps pricing later",()=>{
+ for(const marker of["Wij bouwen AI","werk, pand en leven","Laat één proces of ruimte scannen","We build AI","work, property and life","Scan one process or space"])assert.match(page,new RegExp(marker));
+ assert.ok(page.indexOf("<ThreeWorldsBlueprint")<page.indexOf("<LivingBlueprintCalculator"));
  assert.equal((page.match(/<LivingBlueprintCalculator/g)||[]).length,1);
- assert.match(page,/id="booking"/);assert.match(page,/id=\{locale==="en"\?"solutions":"oplossingen"\}/);
+ assert.match(page,/id="booking"/);assert.match(page,/id=\{locale === "en" \? "solutions" : "oplossingen"\}/);
 });
 
-test("three worlds share one accessible six-node authority model",()=>{
- for(const marker of["process","building","home"])assert.match(stage,new RegExp(`${marker}:\\{tab:`));
- assert.equal((stage.match(/nodes:\[/g)||[]).length,6);
- assert.match(stage,/role="tablist"/);assert.match(stage,/role="tab"/);assert.match(stage,/aria-selected/);assert.match(stage,/ArrowLeft/);assert.match(stage,/ArrowRight/);
- assert.match(stage,/index===3/);assert.match(stage,/Human approval/);assert.match(stage,/Menselijk akkoord/);
+test("three worlds are simultaneously present and emphasis never replaces them",()=>{
+ for(const marker of["process","property","private"])assert.match(blueprint,new RegExp(`id: "${marker}"`));
+ assert.match(blueprint,/DesktopWorld/);assert.match(blueprint,/MobileWorld/);
+ assert.match(blueprint,/aria-pressed=\{active === item\.id\}/);assert.match(blueprint,/current === world \? "all" : world/);
+ assert.match(blueprint,/U houdt de bevoegdheid/);assert.match(blueprint,/You retain authority/);
+ assert.doesNotMatch(blueprint,/<video/);
 });
 
-test("responsive and motion contract is explicit and fail-safe",()=>{
- assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/@media\(max-width:340px\)/);assert.match(css,/signal-draw-y/);assert.match(css,/prefers-reduced-motion:reduce/);
- assert.match(css,/grid-template-columns:1fr/);assert.match(css,/animation:none!important/);
- assert.match(dna,/# AIOW — Living Blueprint/);assert.match(dna,/Source → Rule → AI proposal → Human approval → Action → Management/);
+test("rejected tabbed video and repeated page structures are removed",()=>{
+ assert.doesNotMatch(page,/LivingBlueprintStage/);assert.doesNotMatch(page,/buildStory/);assert.doesNotMatch(page,/causalChain/);assert.doesNotMatch(page,/worldCard/);
+ assert.equal((page.match(/className=\{styles\.authority\}/g)||[]).length,1);
+ assert.equal((page.match(/className=\{styles\.method\}/g)||[]).length,1);
 });
 
-test("three verified media worlds play once and retain poster fallbacks",()=>{
- for(const name of["process","building","home"]){assert.match(stage,new RegExp(`/aiow/living-blueprint/${name}\\.mp4`));assert.match(stage,new RegExp(`/aiow/living-blueprint/${name}-poster\\.webp`))}
- assert.match(stage,/autoPlay muted playsInline preload="metadata"/);
- assert.doesNotMatch(stage,/<video[^>]*\sloop(?:\s|=|\/|>)/);
- assert.match(stage,/prefers-reduced-motion: reduce/);assert.match(stage,/saveData/);
- assert.match(css,/\.worldMedia video/);assert.match(css,/prefers-reduced-motion:reduce[^]*\.worldMedia video\{display:none!important\}/);
+test("responsive signature is separately composed and motion fails safe",()=>{
+ assert.match(blueprintCss,/\.desktopSvg\{display:block\}/);assert.match(blueprintCss,/\.mobileSvg\{display:none\}/);
+ assert.match(blueprintCss,/@media\(max-width:1050px\)[^]*\.desktopSvg\{display:none\}\.mobileSvg\{display:block\}/);
+ assert.match(blueprintCss,/@media\(max-width:600px\)/);assert.match(blueprintCss,/prefers-reduced-motion:reduce/);assert.match(blueprintCss,/stroke-dashoffset:0/);
+ assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/\.desktopTitle\{display:none\}\.mobileTitle\{display:block\}/);
+ assert.match(dna,/Three Worlds, One Blueprint/);assert.match(dna,/may never hide the other two/);
 });
 
-test("quality rails preserve dark-section contrast and silence local analytics delivery",()=>{
- assert.match(css,/\.buildStory \.eyebrow\{color:#d9a441\}/);
+test("quality rails preserve contrast, metadata and silent local analytics",()=>{
+ assert.match(sharedCss,/\.header\[data-compact-mobile="true"\]\{height:calc\(58px \+ env\(safe-area-inset-top\)\);top:0;max-width:100%;margin:0/);
+ assert.match(sharedCss,/\.header\[data-compact-mobile="true"\] \.menuButton,\.header\[data-compact-mobile="true"\] \.language\{border:0;background:transparent/);
  assert.match(sharedCss,/\.header\[data-compact-mobile="true"\] \.headerCta\{color:#fffaf1\}/);
  assert.match(sharedCss,/:global\(html\[data-theme="dark"\]\) \.header\[data-compact-mobile="true"\] \.headerCta\{color:#14161a\}/);
- assert.match(analytics,/\["localhost", "127\.0\.0\.1", "::1"\]/);
- assert.match(analytics,/window\.location\.hostname/);
+ assert.match(analytics,/\["localhost", "127\.0\.0\.1", "::1"\]/);assert.match(analytics,/window\.location\.hostname/);
  assert.match(nextConfig,/htmlLimitedBots:\s*\/\.\*\//);
 });

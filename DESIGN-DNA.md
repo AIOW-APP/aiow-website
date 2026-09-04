@@ -41,7 +41,7 @@ Avoid: purple/blue AI glow, robots, generic AI-agency claims, fake social proof,
 
 ## Composition and visual grammar
 
-The hero is one editorial campaign image: `Hier laat u uw AI bouwen.` beside the **Living Blueprint**. The blueprint is an interactive, semantic example of one AIOW discipline applied to three worlds—Process, Property and Home & private life. Its causal route is always visible: `Source → Rule → AI proposal → Human approval → Action → Management`. The human-approval node is the visual anchor. The calculator moves below the first trust and capability explanation.
+The hero is one editorial campaign image: `Wij bouwen AI die uw werk, pand en leven eenvoudiger maakt.` beside **Three Worlds, One Blueprint**. A bespoke isometric drawing makes Process, Property and Home & private life visible simultaneously at rest. One central copper control spine links all three and resolves through a fixed Human Authority node into managed action. Interaction may emphasize one world but may never hide the other two. The calculator moves below understanding, authority and delivery.
 
 Surfaces follow a paper / steel / instrument hierarchy:
 
@@ -50,7 +50,7 @@ Surfaces follow a paper / steel / instrument hierarchy:
 - the Living Blueprint is the one elevated hero instrument; the deterministic calculator remains the elevated commercial instrument later in the journey;
 - the desktop header is the only glass layer: a floating instrument rail with a deliberate opaque fallback;
 - statement sections become dark technical scenes with measured grids, rails and asymmetry rather than empty colour bands;
-- Process, Property and Home & private life use one shared causal system with world-specific labels and distinct compositions, not repeated generic icon cards;
+- Process, Property and Home & private life are three joined quarters of one isometric world, not tabs, repeated cards or alternating stock-image rows;
 - the homepage shows three representative pricing routes and one route to the complete crawlable tariff index; the 15-route reference deck lives on `/tarieven` rather than lengthening the homepage;
 - approach uses one architectural three-stage rail, horizontal on wide screens and vertical on mobile;
 - the final CTA is a contained closing instrument scene, not another blank beige band.
@@ -63,9 +63,9 @@ Light, Dark and System are equal design modes. Light uses drafting paper as the 
 
 ## Signature and motion
 
-**Signature:** the Living Blueprint causal route. On first entry, one copper signal draws from source to management, pauses at `Human approval`, then settles. Switching Process, Property or Home & private life replaces the example labels within the same stable system and never changes the authority model. Reduced motion shows the finished route immediately. The deterministic price instrument remains intact below the capability story: Level 1 always shows environment, size, package, one-time connection price, monthly management price, one boundary line and the next action. Each amount appears exactly once.
+**Signature:** Three Worlds, One Blueprint. On first entry, one finite copper signal draws through the complete Process–Property–Private world, pauses at `Human Authority`, then settles with zero idle animation. Hover, focus or tap emphasizes a quarter and exposes one concise DOM explanation while all three worlds remain visible. Reduced motion shows the complete lit route immediately. The deterministic price instrument remains intact below the capability story.
 
-The Living Blueprint has one calm physical character: a deterministic draw, one travelling signal and a measured pause at human authority. Entrance and hover motion only clarify hierarchy and route affordance; nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables draw, ambient movement, entrance motion and smooth scrolling while preserving the complete static causal composition.
+The blueprint has one calm physical character: construction-line reveal, copper routing and a measured stop at human authority. No video or WebGL is required for comprehension. Nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables drawing and transitions while preserving the complete static composition.
 
 Motion has five bounded bands: ambient field; fail-open section reveal; short control response; one signal-to-decision signature sequence; and one user-initiated section-level film. Public routes use CSS plus one small IntersectionObserver, not Framer Motion. No scroll-linked parallax or pointer-following. Reveal is visible by default and may enter a pre-state only after JS and motion preference are known. Target budgets: motion JS ≤3 KB gzip added, public JS growth ≤5 KB gzip for the motion sprint, LCP ≤2.0 s on emulated mobile 4G, CLS <0.05, INP <200 ms and Lighthouse mobile performance ≥90.
 
@@ -83,7 +83,7 @@ Navigation may use one translucent layer over content with a solid fallback. The
 
 ## Conversion and evidence law
 
-- The Living Blueprint is the single hero signature. The calculator remains the canonical pricing authority later in the page; conversion improvements may not duplicate either object or add a floating sales widget.
+- Three Worlds, One Blueprint is the single hero signature. The calculator remains the canonical pricing authority later in the page; conversion improvements may not duplicate either object or add a floating sales widget.
 - The scan CTA promises a bounded decision artifact: workflow or space, dependencies, human checkpoints, route recommendation and explicit build / prepare / do-not-automate advice.
 - Context pages use one context-specific intake prompt while preserving the same booking flow and pricing authority.
 - The six priority contexts—accountants, legal practices, estate agents, office buildings, homes and Signature villas—show one plain-language `Nu vaak → Met AIOW → menselijke beslissing` journey before feature examples. It is a labelled reference workflow, never a customer result or ROI claim.
@@ -92,7 +92,7 @@ Navigation may use one translucent layer over content with a solid fallback. The
 - Experiments may test copy or ordering only. They never alter price, exclusions, availability, privacy, security or provider truth.
 - The private operations queue is not part of the public information architecture and must never render customer PII on `aiow.ai`.
 - The customer journey is one line: indication → PDF indication → free human scan → scan memo/decision → written proposal → connection → management. The website never collapses an indication into a final proposal.
-- The homepage and header lead with one commercial action: `Vraag een systeemscan aan`. The hero explains the three worlds and the authority model first. The later calculator action remains `Ontvang uw indicatie als PDF` and supports—not competes with—the system scan.
+- The homepage and header lead with one commercial action: `Laat één proces of ruimte scannen`. Its adjacent contract states what the visitor receives: what can be built, which boundaries are needed and where a human remains authorised. The later calculator action remains `Ontvang uw indicatie als PDF` and supports—not competes with—the scan.
 
 ## Navigation, identity and communication law
 
@@ -127,7 +127,7 @@ Direct, calm, specific. No invented clients, reviews, addresses, awards, ranking
 
 ## Responsive and accessibility law
 
-Designed and separately composed at 320, 375, 390, 768, 1024 and 1440px. Controls are at least 44px, inputs remain 16px on mobile, focus is visible, tabs and dialog are keyboard-operable, there is no horizontal overflow, and `prefers-reduced-motion` removes non-essential transitions. Mobile turns the causal path into a vertical timeline and places the three-world segmented control directly below the proposition. Display type is fluid but the hero and final decision are the only maximum-scale moments.
+Designed and separately composed at 320, 375, 390, 768, 1024, 1440 and 1920px. Controls are at least 44px, inputs remain 16px on mobile, focus is visible, there is no horizontal overflow, and `prefers-reduced-motion` removes non-essential transitions. Mobile uses its own portrait isometric composition around one vertical authority spine; it never shrinks the desktop world or hides a domain behind a tab. Display type is fluid but the hero and final decision are the only maximum-scale moments.
 
 ## Anti-generic gate
 
