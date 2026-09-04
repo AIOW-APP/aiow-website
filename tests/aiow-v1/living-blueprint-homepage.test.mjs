@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const root=new URL("../../",import.meta.url);
-const[home,enHome,page,stage,css,dna,analytics,nextConfig]=await Promise.all([
+const[home,enHome,page,stage,css,sharedCss,dna,analytics,nextConfig]=await Promise.all([
  readFile(new URL("app/page.tsx",root),"utf8"),
  readFile(new URL("app/en/page.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintStage.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.module.css",root),"utf8"),
+ readFile(new URL("components/aiow-v1/AiowV1Homepage.module.css",root),"utf8"),
  readFile(new URL("DESIGN-DNA.md",root),"utf8"),
  readFile(new URL("core/analytics/Analytics.tsx",root),"utf8"),
  readFile(new URL("next.config.ts",root),"utf8"),
@@ -49,6 +50,8 @@ test("three verified media worlds play once and retain poster fallbacks",()=>{
 
 test("quality rails preserve dark-section contrast and silence local analytics delivery",()=>{
  assert.match(css,/\.buildStory \.eyebrow\{color:#d9a441\}/);
+ assert.match(sharedCss,/\.header\[data-compact-mobile="true"\] \.headerCta\{color:#fffaf1\}/);
+ assert.match(sharedCss,/:global\(html\[data-theme="dark"\]\) \.header\[data-compact-mobile="true"\] \.headerCta\{color:#14161a\}/);
  assert.match(analytics,/\["localhost", "127\.0\.0\.1", "::1"\]/);
  assert.match(analytics,/window\.location\.hostname/);
  assert.match(nextConfig,/htmlLimitedBots:\s*\/\.\*\//);
