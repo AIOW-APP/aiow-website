@@ -51,6 +51,8 @@ test("responsive signature is separately composed and motion fails safe",()=>{
 });
 
 test("quality rails preserve contrast, metadata and silent local analytics",()=>{
+ assert.match(sharedCss,/\.header\[data-compact-mobile="true"\]\{height:calc\(58px \+ env\(safe-area-inset-top\)\);top:0;max-width:100%;margin:0/);
+ assert.match(sharedCss,/\.header\[data-compact-mobile="true"\] \.menuButton,\.header\[data-compact-mobile="true"\] \.language\{border:0;background:transparent/);
  assert.match(sharedCss,/\.header\[data-compact-mobile="true"\] \.headerCta\{color:#fffaf1\}/);
  assert.match(sharedCss,/:global\(html\[data-theme="dark"\]\) \.header\[data-compact-mobile="true"\] \.headerCta\{color:#14161a\}/);
  assert.match(analytics,/\["localhost", "127\.0\.0\.1", "::1"\]/);assert.match(analytics,/window\.location\.hostname/);
