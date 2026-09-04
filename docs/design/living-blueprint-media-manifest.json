@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "project": "AIOW Living Blueprint",
+  "privacyClass": "public-synthetic-illustrative",
+  "status": "candidate-integrated",
+  "generatedAt": "2026-09-04",
+  "provider": "xAI Grok Imagine Video",
+  "rules": {
+    "customerCaseClaim": false,
+    "autoplayAudio": false,
+    "bakedText": false,
+    "humanAuthorityVisible": true,
+    "playback": "autoplay once, muted, no loop, hold final frame",
+    "reducedMotion": "static poster",
+    "saveData": "static poster",
+    "mobile": "contained panel crop verified at 320, 375 and 390 CSS pixels"
+  },
+  "scenes": [
+    {
+      "id": "process",
+      "role": "hero-world",
+      "labelNl": "Illustratieve procesomgeving · geen klantcase",
+      "durationSeconds": 4.833333,
+      "aspect": "16:9",
+      "sourceRequestId": "c3ad5824-a148-9aee-92d9-e6e73622ff82",
+      "sourceUrl": "https://files-cdn.x.ai/_g1G80fvQWi37yWJoF4Xxg/file_4d3c462b-458d-4c6a-83f2-b927dd38285d.mp4",
+      "videoPath": "/aiow/living-blueprint/process.mp4",
+      "videoSha256": "f411c51b0a155337dac6b663ab78d86a097df123f9365eb1bb0d789d4a5645b4",
+      "posterPath": "/aiow/living-blueprint/process-poster.webp",
+      "posterSha256": "f5e7d462b925c8526d521ff87411c22d03525422e565fa76af0908c4a3246360",
+      "audioStreams": 0,
+      "qa": "VIDEO_ASSET_PASS",
+      "status": "candidate"
+    },
+    {
+      "id": "building",
+      "role": "hero-world",
+      "labelNl": "Illustratieve gebouwomgeving · geen klantcase",
+      "durationSeconds": 4.833333,
+      "aspect": "16:9",
+      "sourceRequestId": "f6cf3a91-d030-9a49-97f1-26c18bec2620",
+      "sourceUrl": "https://files-cdn.x.ai/9_HSjBx2TLC-JYaEgO_YbQ/file_76cc21d5-89ed-4b1b-bbd3-9da40c76e2b1.mp4",
+      "videoPath": "/aiow/living-blueprint/building.mp4",
+      "videoSha256": "41acdb95ef8b09cc32e813f13ead146004e9459bb493167600236e5e96344bd1",
+      "posterPath": "/aiow/living-blueprint/building-poster.webp",
+      "posterSha256": "3037358f218ee941142a4fc30f0d75dd559ff456bc0f5b247c7c56d189020017",
+      "audioStreams": 0,
+      "qa": "VIDEO_ASSET_PASS",
+      "status": "candidate"
+    },
+    {
+      "id": "home",
+      "role": "hero-world",
+      "labelNl": "Illustratieve woonomgeving · geen klantcase",
+      "durationSeconds": 4.833333,
+      "aspect": "16:9",
+      "sourceRequestId": "baa62e15-ff71-9920-8023-cc6ef27814e6",
+      "sourceUrl": "https://files-cdn.x.ai/LruK45XSR9ikDRPPySICWg/file_3e6ad4bf-242f-47a9-8eff-7163211a5787.mp4",
+      "videoPath": "/aiow/living-blueprint/home.mp4",
+      "videoSha256": "34f38f3d19fa5f9cd3bc316ad7543ea5b47468b35ce12f3a86ede194a44e024d",
+      "posterPath": "/aiow/living-blueprint/home-poster.webp",
+      "posterSha256": "87e7ce63b99ce7d29079b0103f161255c8f6fd6a4b5fe77b298257d313bb06ea",
+      "audioStreams": 0,
+      "qa": "VIDEO_ASSET_PASS",
+      "status": "candidate"
+    }
+  ]
+}

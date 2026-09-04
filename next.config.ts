@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Keep metadata in <head> for crawlers, audits and no-JS clients.
+  // Streaming it after <body> caused valid descriptions to be missed.
+  htmlLimitedBots: /.*/,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },
