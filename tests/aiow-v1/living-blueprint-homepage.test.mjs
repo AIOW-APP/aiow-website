@@ -36,3 +36,11 @@ test("responsive and motion contract is explicit and fail-safe",()=>{
  assert.match(css,/grid-template-columns:1fr/);assert.match(css,/animation:none!important/);
  assert.match(dna,/# AIOW — Living Blueprint/);assert.match(dna,/Source → Rule → AI proposal → Human approval → Action → Management/);
 });
+
+test("three verified media worlds play once and retain poster fallbacks",()=>{
+ for(const name of["process","building","home"]){assert.match(stage,new RegExp(`/aiow/living-blueprint/${name}\\.mp4`));assert.match(stage,new RegExp(`/aiow/living-blueprint/${name}-poster\\.webp`))}
+ assert.match(stage,/autoPlay muted playsInline preload="metadata"/);
+ assert.doesNotMatch(stage,/<video[^>]*\sloop(?:\s|=|\/|>)/);
+ assert.match(stage,/prefers-reduced-motion: reduce/);assert.match(stage,/saveData/);
+ assert.match(css,/\.worldMedia video/);assert.match(css,/prefers-reduced-motion:reduce[^]*\.worldMedia video\{display:none!important\}/);
+});

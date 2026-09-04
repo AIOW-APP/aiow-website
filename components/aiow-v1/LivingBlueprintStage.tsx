@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
+
 import styles from "./LivingBlueprintHomepage.module.css";
 
 type Mode = "process" | "building" | "home";
@@ -18,6 +19,11 @@ const worlds:Record<Locale,Record<Mode,World>>={
   home:{tab:"Home & life",eyebrow:"Home and private life",title:"From separate systems to understandable living rules.",body:"Home, information and private workflows work around your preferences. You can confirm, change or stop.",state:"The resident decides",nodes:["Your request","House rule","AI proposal","Human approval","Home action","AIOW manages"]}}
 };
 const order:readonly Mode[]=["process","building","home"];
+const media:Record<Mode,{video:string;poster:string}>={
+ process:{video:"/aiow/living-blueprint/process.mp4",poster:"/aiow/living-blueprint/process-poster.webp"},
+ building:{video:"/aiow/living-blueprint/building.mp4",poster:"/aiow/living-blueprint/building-poster.webp"},
+ home:{video:"/aiow/living-blueprint/home.mp4",poster:"/aiow/living-blueprint/home-poster.webp"},
+};
 
 function WorldMark({mode}:{mode:Mode}){
  if(mode==="building")return <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M13 105V49h34v56M55 105V18h52v87M25 66h12M25 82h12M69 38h24M69 57h24M69 76h24"/><circle cx="80" cy="92" r="8"/></svg>;
@@ -26,11 +32,19 @@ function WorldMark({mode}:{mode:Mode}){
 }
 
 export function LivingBlueprintStage({locale="nl"}:{locale?:Locale}){
- const[mode,setMode]=useState<Mode>("process");const world=worlds[locale][mode];
- function onTabsKeyDown(event:KeyboardEvent<HTMLDivElement>){if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const current=order.indexOf(mode);const next=event.key==="Home"?0:event.key==="End"?order.length-1:event.key==="ArrowRight"?(current+1)%order.length:(current-1+order.length)%order.length;const nextMode=order[next];setMode(nextMode);requestAnimationFrame(()=>document.getElementById(`world-tab-${nextMode}`)?.focus())}
- return <section className={styles.blueprint} aria-labelledby="blueprint-title">
-  <div className={styles.modebar} role="tablist" aria-label={locale==="en"?"Choose where AIOW should work":"Kies waar AIOW moet werken"} onKeyDown={onTabsKeyDown}>{order.map(item=><button id={`world-tab-${item}`} key={item} type="button" role="tab" aria-selected={mode===item} aria-controls="blueprint-panel" tabIndex={mode===item?0:-1} onClick={()=>setMode(item)}>{worlds[locale][item].tab}</button>)}</div>
+ const[mode,setMode]=useState<Mode>("process");const[mediaAllowed,setMediaAllowed]=useState(false);const[mediaEnabled,setMediaEnabled]=useState(false);const world=worlds[locale][mode];
+ useEffect(()=>{const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;const saveData=(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData===true;setMediaAllowed(!reduced&&!saveData)},[]);
+ function selectMode(next:Mode){setMode(next);if(mediaAllowed)setMediaEnabled(true)}
+ function onTabsKeyDown(event:KeyboardEvent<HTMLDivElement>){if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const current=order.indexOf(mode);const next=event.key==="Home"?0:event.key==="End"?order.length-1:event.key==="ArrowRight"?(current+1)%order.length:(current-1+order.length)%order.length;const nextMode=order[next];selectMode(nextMode);requestAnimationFrame(()=>document.getElementById(`world-tab-${nextMode}`)?.focus())}
+ return <section className={styles.blueprint} aria-labelledby="blueprint-title" onPointerEnter={()=>{if(mediaAllowed)setMediaEnabled(true)}}>
+ <div className={styles.modebar} role="tablist" aria-label={locale==="en"?"Choose where AIOW should work":"Kies waar AIOW moet werken"} onKeyDown={onTabsKeyDown}>{order.map(item=><button id={`world-tab-${item}`} key={item} type="button" role="tab" aria-selected={mode===item} aria-controls="blueprint-panel" tabIndex={mode===item?0:-1} onClick={()=>selectMode(item)}>{worlds[locale][item].tab}</button>)}</div>
   <div id="blueprint-panel" role="tabpanel" aria-labelledby={`world-tab-${mode}`} className={styles.blueprintPanel} data-world={mode} key={mode}>
+   <div className={styles.worldMedia} aria-hidden="true">
+    {/* Pre-optimised 22–44 kB WebP avoids a runtime image transform on the LCP path. */}
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src={media[mode].poster} alt="" width="1280" height="720" fetchPriority={mode==="process"?"high":"auto"} loading={mode==="process"?"eager":"lazy"} decoding="async"/>
+    {mediaEnabled&&<video key={mode} src={media[mode].video} poster={media[mode].poster} autoPlay muted playsInline preload="metadata"/>}
+   </div>
    <div className={styles.worldScene} aria-hidden="true"><span/><span/><span/><WorldMark mode={mode}/></div>
    <p className={styles.blueprintLabel}>{locale==="en"?"Public reference architecture · not a customer case":"Publieke referentiearchitectuur · geen klantcase"}</p>
    <div className={styles.worldCopy}><p>{world.eyebrow}</p><h2 id="blueprint-title">{world.title}</h2><span>{world.body}</span></div>
