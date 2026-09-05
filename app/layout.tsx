@@ -4,13 +4,13 @@ import { headers } from "next/headers";
 import { Analytics } from "@/core/analytics/Analytics";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "optional" });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "optional" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aiow.ai"),
-  title: { default: "AIOW — Werkende AI voor bedrijf en gebouw", template: "%s · AIOW" },
-  description: "AIOW inventariseert, bouwt en beheert praktische AI-systemen voor bedrijven en gebouwen, met transparante prijsindicaties.",
+  title: { default: "AIOW — AI voor werk, bedrijfspanden en woningen", template: "%s · AIOW" },
+  description: "AIOW ontwerpt, bouwt, koppelt en beheert AI-systemen voor werk, bedrijfspanden en woningen en villa’s. De mens bepaalt wat er gebeurt.",
   applicationName: "AIOW",
   alternates: { canonical: "https://aiow.ai", languages: { nl: "https://aiow.ai", en: "https://aiow.ai/en", "x-default": "https://aiow.ai" } },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },

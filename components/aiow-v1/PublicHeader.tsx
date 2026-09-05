@@ -18,7 +18,7 @@ function currentNavKey(pathname: string): NavKey | null {
   return null;
 }
 
-export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean }) {
+export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false, showCta = true }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean; showCta?: boolean }) {
   const en = locale === "en";
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,11 +62,11 @@ export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", co
     <button ref={menuButton} type="button" className={styles.menuButton} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen((open) => !open)}>{en ? "Menu" : "Menu"}<span aria-hidden="true">{menuOpen ? "×" : "☰"}</span></button>
     <nav ref={navigation} id="primary-navigation" data-open={menuOpen} aria-label={en ? "Primary navigation" : "Hoofdnavigatie"} onKeyDown={navigateOpenMenu}>
       {items.map((item) => <Link key={item.key} href={item.href} aria-current={active === item.key ? "page" : undefined} onClick={() => setMenuOpen(false)}>{item.label}</Link>)}
-      {onBook && primaryAction === "scan" ? <button type="button" className={styles.mobileMenuCta} onClick={requestScan}>{actionLabel}</button> : <Link className={styles.mobileMenuCta} href={actionHref} onClick={() => setMenuOpen(false)}>{actionLabel}</Link>}
+      {showCta ? (onBook && primaryAction === "scan" ? <button type="button" className={styles.mobileMenuCta} onClick={requestScan}>{actionLabel}</button> : <Link className={styles.mobileMenuCta} href={actionHref} onClick={() => setMenuOpen(false)}>{actionLabel}</Link>) : null}
     </nav>
     <div className={styles.headerActions}>
       <ThemeLanguageControls locale={locale} />
-      {onBook && primaryAction === "scan" ? <button type="button" className={styles.headerCta} onClick={requestScan}>{actionLabel}</button> : <Link className={styles.headerCta} href={actionHref}>{actionLabel}</Link>}
+      {showCta ? (onBook && primaryAction === "scan" ? <button type="button" className={styles.headerCta} onClick={requestScan}>{actionLabel}</button> : <Link className={styles.headerCta} href={actionHref}>{actionLabel}</Link>) : null}
     </div>
   </header>;
 }

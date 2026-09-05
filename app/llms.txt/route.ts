@@ -5,10 +5,10 @@ const contextLinks = pricingContexts.map((context) => `- [${context.labelNl}](${
 
 const body = `# AIOW
 
-> AI voor bedrijfsprocessen, gebouwen en woningen — ontworpen en beheerd door één partij. AIOW publiceert transparante indicaties, minima en uitsluitingen; de definitieve scope volgt na een scan.
+> AIOW ontwerpt, bouwt, koppelt en beheert AI-systemen voor exact drie categorieën: Werk, Bedrijfspanden en Woningen & villa’s. De mens bepaalt de bevoegdheid; hardware, fysieke installatie en partnerwerk worden apart gescoped.
 
 ## Canonical pages
-- [Home](${SITE_URL}/): proposition, calculator and booking intake
+- [Home](${SITE_URL}/): three-category proposition — Werk, Bedrijfspanden and Woningen & villa’s — plus bounded scan and pricing routes
 - [Volledige tarieven](${SITE_URL}/tarieven): v3.2 packages, hard minima, Standard/Comfort, change work, advice and Smart Design
 - [AI-automatisering](${SITE_URL}/ai-automatisering): controlled workflow automation
 - [Lokale AI](${SITE_URL}/lokale-ai): local, private and hybrid AI architectures

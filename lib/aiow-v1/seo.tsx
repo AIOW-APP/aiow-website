@@ -25,7 +25,7 @@ export function organizationNode(locale: AiowLocale = "nl") {
     identifier: { "@type": "PropertyValue", propertyID: "KvK", value: AIOW_COMPANY.chamberOfCommerce },
     address: { "@type": "PostalAddress", streetAddress: AIOW_COMPANY.streetAddress, postalCode: AIOW_COMPANY.postalCode, addressLocality: AIOW_COMPANY.locality, addressCountry: AIOW_COMPANY.countryCode },
     areaServed: { "@type": "Country", name: en ? AIOW_COMPANY.countryEn : AIOW_COMPANY.countryNl },
-    description: en ? "Dutch company designing, installing and maintaining bounded AI systems for business processes, buildings and homes." : "Nederlands bedrijf dat begrensde AI-systemen ontwerpt, installeert en beheert voor bedrijfsprocessen, gebouwen en woningen.",
+    description: en ? "Dutch company designing, building, connecting and managing bounded AI systems for work, commercial buildings and homes and villas." : "Nederlands bedrijf dat begrensde AI-systemen ontwerpt, bouwt, koppelt en beheert voor werk, bedrijfspanden en woningen en villa’s.",
   };
 }
 
@@ -34,7 +34,11 @@ export function homeSchemas(locale: "nl" | "en" = "nl") {
   return [
     organizationNode(locale),
     { "@context": "https://schema.org", "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "AIOW", inLanguage: ["nl-NL", "en"] },
-    { "@context": "https://schema.org", "@type": "Service", "@id": en ? `${SITE_URL}/en#service` : `${SITE_URL}/#service`, url: en ? `${SITE_URL}/en` : SITE_URL, inLanguage: en ? "en-GB" : "nl-NL", provider: { "@id": `${SITE_URL}/#organization` }, name: en ? "Practical AI implementation and management" : "Praktische AI-implementatie en beheer", areaServed: "NL", offers: { "@type": "Offer", priceCurrency: "EUR", price: "2950", description: en ? "Published starting indication excluding VAT and third-party costs; final after scan." : "Gepubliceerde vanaf-indicatie excl. btw en derde-kosten; definitief na scan." } },
+    { "@context": "https://schema.org", "@type": "Service", "@id": en ? `${SITE_URL}/en#service` : `${SITE_URL}/#service`, url: en ? `${SITE_URL}/en` : SITE_URL, inLanguage: en ? "en-GB" : "nl-NL", provider: { "@id": `${SITE_URL}/#organization` }, name: en ? "AI systems for work, commercial buildings and homes" : "AI-systemen voor werk, bedrijfspanden en woningen", description: en ? "AIOW designs, builds, connects and manages bounded digital systems across three concrete environments. Human authority and physical scope are agreed explicitly." : "AIOW ontwerpt, bouwt, koppelt en beheert begrensde digitale systemen in drie concrete omgevingen. Menselijke bevoegdheid en fysieke scope worden expliciet afgesproken.", areaServed: "NL", hasOfferCatalog: { "@type": "OfferCatalog", name: en ? "Three AIOW categories" : "Drie AIOW-categorieën", itemListElement: [
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: en ? "Work" : "Werk", url: `${SITE_URL}${en ? "/en/ai-automation" : "/ai-automatisering"}` } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: en ? "Commercial buildings" : "Bedrijfspanden", url: `${SITE_URL}${en ? "/en/smart-office" : "/smart-office"}` } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: en ? "Homes & villas" : "Woningen & villa’s", url: `${SITE_URL}${en ? "/en/home" : "/home"}` } },
+    ] } },
   ];
 }
 

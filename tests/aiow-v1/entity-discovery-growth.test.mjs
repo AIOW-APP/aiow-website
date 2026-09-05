@@ -26,7 +26,7 @@ test("metadata titles carry AIOW once and sitemap uses route-specific freshness"
   const [seo,nlHome,enHome,nlCap,enCap,sitemap]=await Promise.all([read("lib/aiow-v1/seo.tsx"),read("app/page.tsx"),read("app/en/page.tsx"),read("app/mogelijkheden/page.tsx"),read("app/en/capabilities/page.tsx"),read("app/sitemap.ts")]);
   assert.match(seo,/title: \{ absolute: title \}/);
   for(const source of [nlHome,enHome,nlCap,enCap]) assert.equal((source.match(/title:[^\n]*AIOW/g)||[]).length,1);
-  assert.match(nlHome,/Beheerde AI voor proces, pand en woning/);assert.match(enHome,/Managed AI for process, building and home/);
+  assert.match(nlHome,/AI voor werk, bedrijfspanden en woningen/);assert.match(enHome,/AI for work, commercial buildings and homes/);
   assert.match(sitemap,/routeDates/);assert.match(sitemap,/isStable\?"yearly":isHome\?"weekly":"monthly"/);assert.doesNotMatch(sitemap,/changeFrequency: "weekly"/);
 });
 
