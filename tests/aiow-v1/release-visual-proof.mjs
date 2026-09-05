@@ -50,7 +50,11 @@ async function inspect(page, viewport, theme, locale) {
   if (result.commercialActions.length !== 1) throw new Error(`${locale.code}/${viewport.width}/${theme}: first-viewport scan actions=${result.commercialActions.length}`);
   for (const target of [...result.categoryRects, result.ctaRect]) if (target.width < 44 || target.height < 44) throw new Error(`${locale.code}/${viewport.width}/${theme}: target=${JSON.stringify(target)}`);
   result.categoryContentRects.forEach((children, index) => children.forEach((child) => { const parent = result.categoryRects[index]; if (child.left < parent.left - 1 || child.right > parent.right + 1 || child.top < parent.top - 1 || child.bottom > parent.bottom + 1) throw new Error(`${locale.code}/${viewport.width}/${theme}: category content escapes parent=${JSON.stringify({ parent, child })}`); }));
-  if (Math.max(...result.categoryRects.map((box) => box.bottom)) > viewport.height) throw new Error(`${locale.code}/${viewport.width}/${theme}: category ledger below fold ${JSON.stringify(result.categoryRects)}`);
+  result.categoryRects.forEach((category, index) => {
+    if (category.left < -1 || category.right > viewport.width + 1 || category.top < -1 || category.bottom > viewport.height + 1) {
+      throw new Error(`${locale.code}/${viewport.width}/${theme}: category ${index + 1} outside viewport=${JSON.stringify(category)}`);
+    }
+  });
   return result;
 }
 
