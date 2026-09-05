@@ -6,8 +6,8 @@ This file governs the public AIOW V1 surface at `aiow.ai`. It preserves the exis
 
 ## Product intent
 
-- **Audience:** Dutch owners and operators evaluating practical AI for a company, office or home.
-- **Primary task:** understand what AIOW can build for work, property or private life and request one bounded system scan. The transparent indication supports that decision later; it does not lead the first viewport.
+- **Audience:** Dutch owners and operators evaluating practical AI for their work, a commercial building, or a home/villa.
+- **Primary task:** recognise one of exactly three purchasable environments—**Werk**, **Bedrijfspanden**, **Woningen & villa's**—understand what AIOW can design, build, connect and manage there, and request one bounded scan. The transparent indication supports that decision later; it does not lead the first viewport.
 - **Platform:** responsive public web, mobile-first.
 - **Courage:** 4/5 — restrained editorial confidence with one unmistakable causal system in motion; never decorative spectacle.
 - **Emotional core:** “this is where I have my AI built” — calm, exact, materially credible and visibly capable.
@@ -15,7 +15,7 @@ This file governs the public AIOW V1 surface at `aiow.ai`. It preserves the exis
 ## Promise and plain-language law
 
 **Promise:** “U hoeft AI niet te begrijpen. Wij zorgen dat het voor u werkt.”
-**Proposition:** “AIOW ontwerpt, installeert en beheert AI voor uw bedrijf, pand of woning. U bepaalt wat het mag doen; wij zorgen dat het werkt.”
+**Proposition:** “AI voor uw werk, uw bedrijfspand en uw woning. AIOW ontwerpt, bouwt, koppelt en beheert de digitale systemen die uw bedrijf, gebouw of villa slimmer laten werken. U bepaalt wat er gebeurt.”
 
 Every public surface leads with what becomes easier for the person, then explains technology and boundaries. Truth remains exact; words remain human. Public NL uses `u/uw` consistently. Customer-facing UI, PDF and mail never expose implementation vocabulary such as outbox, adapter, canonical snapshot, durable receipt, frozen request, mail task or lead. Prefer `aanvraag ontvangen`, `vastgelegd`, `uw indicatie`, `voorbeeld` and `beperkte toegang`.
 
@@ -41,7 +41,7 @@ Avoid: purple/blue AI glow, robots, generic AI-agency claims, fake social proof,
 
 ## Composition and visual grammar
 
-The hero is one editorial campaign image: `Wij bouwen AI die uw werk, pand en leven eenvoudiger maakt.` beside **Three Worlds, One Blueprint**. A bespoke isometric drawing makes Process, Property and Home & private life visible simultaneously at rest. One central copper control spine links all three and resolves through a fixed Human Authority node into managed action. Interaction may emphasize one world but may never hide the other two. The calculator moves below understanding, authority and delivery.
+The hero is one complete server-rendered architectural sheet: `AI voor uw werk, uw bedrijfspand en uw woning.` beside **Three Sections, One Controlled Conductor**. Three recognisable section drawings make a working desk/system, a commercial building and a home/villa visible simultaneously at rest. One copper conductor originates at a customer-controlled switch labelled `U bepaalt`, connects all three environments and then settles. The three exact category names and descriptors are permanent links, never controls that hide or replace another category. The calculator moves below category recognition, authority and delivery.
 
 Surfaces follow a paper / steel / instrument hierarchy:
 
@@ -50,7 +50,7 @@ Surfaces follow a paper / steel / instrument hierarchy:
 - the Living Blueprint is the one elevated hero instrument; the deterministic calculator remains the elevated commercial instrument later in the journey;
 - the desktop header is the only glass layer: a floating instrument rail with a deliberate opaque fallback;
 - statement sections become dark technical scenes with measured grids, rails and asymmetry rather than empty colour bands;
-- Process, Property and Home & private life are three joined quarters of one isometric world, not tabs, repeated cards or alternating stock-image rows;
+- Werk, Bedrijfspanden and Woningen & villa's are three joined sections of one architectural world, not tabs, repeated cards or alternating stock-image rows;
 - the homepage shows three representative pricing routes and one route to the complete crawlable tariff index; the 15-route reference deck lives on `/tarieven` rather than lengthening the homepage;
 - approach uses one architectural three-stage rail, horizontal on wide screens and vertical on mobile;
 - the final CTA is a contained closing instrument scene, not another blank beige band.
@@ -63,7 +63,7 @@ Light, Dark and System are equal design modes. Light uses drafting paper as the 
 
 ## Signature and motion
 
-**Signature:** Three Worlds, One Blueprint. On first entry, one finite copper signal draws through the complete Process–Property–Private world, pauses at `Human Authority`, then settles with zero idle animation. Hover, focus or tap emphasizes a quarter and exposes one concise DOM explanation while all three worlds remain visible. Reduced motion shows the complete lit route immediately. The deterministic price instrument remains intact below the capability story.
+**Signature:** Three Sections, One Controlled Conductor. On first entry, a customer switch labelled `U bepaalt` closes once; one finite copper signal reaches Werk, Bedrijfspanden and Woningen & villa's, then settles with zero idle animation. All scenes, labels, descriptors and links are complete at first paint without client JavaScript. Hover/focus may strengthen one section but never dim another below recognition. Reduced motion and weak-device routes show the complete final state immediately. The deterministic price instrument remains intact below the capability story.
 
 The blueprint has one calm physical character: construction-line reveal, copper routing and a measured stop at human authority. No video or WebGL is required for comprehension. Nothing scroll-jacks, chases the pointer or implies backend activity. `prefers-reduced-motion: reduce` disables drawing and transitions while preserving the complete static composition.
 
@@ -112,7 +112,7 @@ Navigation may use one translucent layer over content with a solid fallback. The
 
 The paired `/mogelijkheden` and `/en/capabilities` route explains in one direct interaction why AIOW is more than a chat window. It does not compete with the calculator signature and does not add a second cinematic hero.
 
-- **Primary task:** choose one real environment—process, building or home—and inspect one complete reference workflow.
+- **Primary task:** inspect one of the same three real environments—Werk, Bedrijfspanden or Woningen & villa's—and read one complete reference workflow.
 - **Canonical trace:** signal/input → bounded AI interpretation → connected system action → explicit human checkpoint.
 - **Evidence boundary:** every trace is labelled `public/synthetic reference workflow`; it demonstrates system structure, not a customer result, live backend run, saving, accuracy or autonomous authority.
 - **Visual grammar:** one solid instrument field with a fixed four-stage rail; no repeated feature-card grid, dashboard KPIs, robot art, chatbot mockup, purple glow or body-copy glass.
@@ -127,8 +127,20 @@ Direct, calm, specific. No invented clients, reviews, addresses, awards, ranking
 
 ## Responsive and accessibility law
 
-Designed and separately composed at 320, 375, 390, 768, 1024, 1440 and 1920px. Controls are at least 44px, inputs remain 16px on mobile, focus is visible, there is no horizontal overflow, and `prefers-reduced-motion` removes non-essential transitions. Mobile uses its own portrait isometric composition around one vertical authority spine; it never shrinks the desktop world or hides a domain behind a tab. Display type is fluid but the hero and final decision are the only maximum-scale moments.
+Designed and separately composed at 320, 375, 390, 768, 1024, 1440 and 1920px. Controls are at least 44px, inputs remain 16px on mobile, focus is visible, there is no horizontal overflow, and `prefers-reduced-motion` removes non-essential transitions. Mobile uses a compact horizontal three-scene frieze over the same controlled conductor plus a full-width three-row category ledger; it never hides a domain behind a tab. The complete proposition, three category names, CTA contract and final signal state remain available without client JavaScript. Display type is fluid but the hero and final decision are the only maximum-scale moments.
 
 ## Anti-generic gate
 
-The logo-away identity is the warm drafting-paper/graphite/copper material language plus the causal Living Blueprint that visibly anchors AI work at human authority. A competitor name cannot be swapped in without contradicting AIOW's three-world system, management promise, published pricing and explicit authority model. No centered generic AI hero, neon gradient, robot, fake metric or repeated glass-card grid is allowed.
+The logo-away identity is the warm drafting-paper/graphite/copper material language plus three architectural sections connected from the `U bepaalt` switch. A generic automation agency cannot own the commercial-building and villa sections; a smart-building installer cannot own the work/software section; a smart-home installer cannot own the work and commercial-building sections. No centered generic AI hero, neon gradient, robot, fake metric, tabs or repeated glass-card grid is allowed.
+
+## Three-category truth contract
+
+The top-level public truth is exactly:
+
+1. **Werk** — processes, websites, internal apps and integrations.
+2. **Bedrijfspanden** — energy, climate, access, safety and maintenance.
+3. **Woningen & villa's** — comfort, lighting, climate, energy and safety.
+
+Every category exposes one labelled reference workflow with four explicit stages: `signaal → AI-interpretatie → begrensde actie/systeem → menselijke bevoegdheid`, plus four to six concrete examples. These examples describe possibilities, not included hardware, autonomous authority, savings, guarantees, medical outcomes or customer results.
+
+The single primary commercial action remains `Laat één proces of ruimte scannen`. Its adjacent contract names the decision memo, human date/time confirmation, the right to stop and the boundary that hardware, physical installation and qualified partner work are scoped separately. Homepage metadata, social copy, structured data and machine-readable files repeat the same three-category truth. No generic €2.950 umbrella offer may represent all three environments.

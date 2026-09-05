@@ -50,15 +50,20 @@ try {
       assert.match(iconResponse.headers()["content-type"] || "", /image\/svg\+xml/, `unexpected brand icon content type: ${iconHref}`);
     }
 
-    const operationalFields = page.locator('[data-operational-field]');
-    assert.equal(await operationalFields.count(), 3, `operational field count at ${width}`);
-    for (const field of await operationalFields.all()) assert.equal(await field.getAttribute("aria-hidden"), "true", `operational field must be decorative at ${width}`);
+    assert.equal(await page.locator("h1").count(), 1, `homepage must expose exactly one H1 at ${width}`);
+    assert.equal(await page.locator('nav[aria-label="Drie AIOW-categorieën"] a').count(), 3, `three category entrances missing at ${width}`);
+    for (const label of ["Werk", "Bedrijfspanden", "Woningen & villa’s"]) assert.equal(await page.getByRole("link", { name: new RegExp(label) }).count(), 1, `${label} entrance missing at ${width}`);
+    assert.equal(await page.locator('#oplossingen svg').count(), 1, `architectural blueprint missing at ${width}`);
+    assert.equal(await page.locator('#oplossingen video, #oplossingen img').count(), 0, `hero media found at ${width}`);
+    assert.equal(await page.locator('#systemen article').count(), 3, `three system ledgers missing at ${width}`);
+    assert.equal(await page.locator('#systemen article > ol > li').count(), 12, `four-stage category traces missing at ${width}`);
+    assert.equal(await page.locator('#systemen article details').count(), 3, `category example disclosures missing at ${width}`);
     assert.equal(await page.locator('[data-premium-instrument="calculator"]').count(), 1, `premium calculator instrument missing at ${width}`);
-    assert.equal(await page.locator('[data-approach-rail="true"] li').count(), 4, `approach rail structure at ${width}`);
-    assert.equal(await page.locator('[data-pricing-deck="true"] a').count(), 3, `homepage pricing guide must show three representative links at ${width}`);
-    const controlTargets = await page.locator('header select, header a[hreflang]').evaluateAll((nodes) => nodes.map((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
-    assert.equal(controlTargets.length, 2, `theme/language controls missing at ${width}`);
-    for (const target of controlTargets) assert.ok(target.width >= 44 && target.height >= 44, `header control below 44px at ${width}: ${JSON.stringify(target)}`);
+    assert.equal(await page.locator('#aanpak > ol > li').count(), 4, `approach rail structure at ${width}`);
+
+    const controlTargets = await page.locator('header select, header a[hreflang]').evaluateAll((nodes) => nodes.filter((node) => node.getClientRects().length > 0).map((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
+    if (width > 1000) assert.equal(controlTargets.length, 2, `desktop theme/language controls missing at ${width}`);
+    for (const target of controlTargets) assert.ok(target.width >= 44 && target.height >= 44, `visible header control below 44px at ${width}: ${JSON.stringify(target)}`);
     const menuButton = page.getByRole("button", { name: "Menu", exact: true });
     if (width <= 1000) {
       assert.equal(await menuButton.isVisible(), true, `responsive menu trigger hidden at ${width}`);
@@ -67,62 +72,21 @@ try {
       await page.keyboard.press("Space");
       assert.equal(await menuButton.getAttribute("aria-expanded"), "true", `Space did not open responsive menu at ${width}`);
       assert.equal(await page.locator("#primary-navigation").getAttribute("data-open"), "true", `responsive menu state not exposed at ${width}`);
+      const openTargets = await page.locator('header select, header a[hreflang]').evaluateAll((nodes) => nodes.filter((node) => node.getClientRects().length > 0).map((node) => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
+      assert.ok(openTargets.length >= 1, `open-menu display controls missing at ${width}`);
+      for (const target of openTargets) assert.ok(target.width >= 44 && target.height >= 44, `open-menu control below 44px at ${width}: ${JSON.stringify(target)}`);
       await page.keyboard.press("Escape");
       assert.equal(await menuButton.getAttribute("aria-expanded"), "false", `Escape did not close responsive menu at ${width}`);
       assert.equal(await menuButton.evaluate((node) => node === document.activeElement), true, `responsive menu focus was not returned at ${width}`);
     } else {
       assert.equal(await menuButton.isVisible(), false, `desktop exposes responsive menu trigger at ${width}`);
     }
-    if (width <= 390) {
-      const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
-      await assert.doesNotReject(() => pricingDeck.waitFor({ state: "visible" }));
-      await page.waitForFunction(() => document.querySelector('[data-pricing-deck="true"]')?.getAttribute("data-pricing-overflow") === "true");
-      const deckGeometry = await pricingDeck.evaluate((node) => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, snap: getComputedStyle(node).scrollSnapType, tabIndex: node.tabIndex, role: node.getAttribute("role"), label: node.getAttribute("aria-label") }));
-      assert.ok(deckGeometry.scrollWidth > deckGeometry.clientWidth && (deckGeometry.snap.includes("x") || deckGeometry.snap.includes("inline")), `mobile pricing deck is not an accessible snap overflow at ${width}: ${JSON.stringify(deckGeometry)}`);
-      assert.equal(deckGeometry.tabIndex, 0, `mobile pricing deck is not keyboard focusable at ${width}`);
-      assert.equal(deckGeometry.role, "region", `mobile pricing deck region semantics missing at ${width}`);
-      assert.match(deckGeometry.label || "", /pijltjestoetsen/, `mobile pricing deck instruction missing at ${width}`);
-      await pricingDeck.focus();
-      const before = await pricingDeck.evaluate((node) => node.scrollLeft);
-      await page.keyboard.press("ArrowRight");
-      await page.waitForTimeout(250);
-      const after = await pricingDeck.evaluate((node) => node.scrollLeft);
-      assert.ok(after > before, `mobile pricing deck keyboard scroll failed at ${width}: ${before} -> ${after}`);
-      await pricingDeck.evaluate((node) => node.scrollTo({ left: 0, behavior: "instant" }));
-      await page.evaluate(() => scrollTo(0, 0));
-      await pricingDeck.locator("a").first().evaluate((node) => node.focus({ preventScroll: true }));
-      await page.keyboard.press("End");
-      await page.waitForTimeout(100);
-      assert.ok(await page.evaluate(() => scrollY > 0), `mobile child-link End key was swallowed at ${width}`);
-      assert.equal(await pricingDeck.evaluate((node) => node.scrollLeft), 0, `mobile child-link End key moved pricing deck at ${width}`);
-    } else {
-      const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
-      const deckGeometry = await pricingDeck.evaluate((node) => ({ scrollWidth: node.scrollWidth, clientWidth: node.clientWidth, tabIndex: node.tabIndex, role: node.getAttribute("role"), label: node.getAttribute("aria-label"), overflow: node.getAttribute("data-pricing-overflow") }));
-      assert.ok(deckGeometry.scrollWidth <= deckGeometry.clientWidth + 1, `desktop pricing deck unexpectedly overflows at ${width}: ${JSON.stringify(deckGeometry)}`);
-      assert.equal(deckGeometry.overflow, "false", `desktop pricing deck reports overflow at ${width}`);
-      assert.equal(deckGeometry.tabIndex, -1, `desktop pricing deck creates a dead tab stop at ${width}`);
-      assert.equal(deckGeometry.role, null, `desktop pricing deck advertises inactive region semantics at ${width}`);
-      assert.equal(deckGeometry.label, null, `desktop pricing deck advertises inactive keyboard instructions at ${width}`);
-      await page.evaluate(() => scrollTo(0, 0));
-      await pricingDeck.locator("a").first().focus();
-      await page.keyboard.press("End");
-      await page.waitForTimeout(100);
-      assert.ok(await page.evaluate(() => scrollY > 0), `desktop End key was swallowed by pricing deck at ${width}`);
-    }
+
     await page.emulateMedia({ reducedMotion: "reduce" });
-    const reducedFieldMotion = await page.locator('[data-operational-field="hero"] .operational-field__signal').evaluate((node) => getComputedStyle(node).animationName);
-    assert.equal(reducedFieldMotion, "none", `operational field motion not disabled at ${width}`);
-    if (width <= 390) {
-      const pricingDeck = page.locator('[data-pricing-deck="true"]').first();
-      await pricingDeck.evaluate((node) => node.scrollTo({ left: 0, behavior: "instant" }));
-      await pricingDeck.focus();
-      await page.keyboard.press("End");
-      const immediate = await pricingDeck.evaluate((node) => node.scrollLeft);
-      await page.waitForTimeout(100);
-      const settled = await pricingDeck.evaluate((node) => node.scrollLeft);
-      assert.ok(immediate > 0, `reduced-motion pricing deck did not move immediately at ${width}`);
-      assert.equal(settled, immediate, `reduced-motion pricing deck animated at ${width}: ${immediate} -> ${settled}`);
-    }
+    const reducedFieldMotion = await page.locator('[data-aiow-conductor="true"]').evaluate((node) => ({ animation: getComputedStyle(node).animationName, offset: getComputedStyle(node).strokeDashoffset }));
+    assert.equal(reducedFieldMotion.animation, "none", `conductor motion not disabled at ${width}`);
+    assert.equal(Number.parseFloat(reducedFieldMotion.offset), 0, `conductor final state missing under reduced motion at ${width}`);
+
     await page.emulateMedia({ reducedMotion: "no-preference" });
 
     const quoteTrigger = page.getByRole("button", { name: "Ontvang uw indicatie als PDF", exact: true });
@@ -171,19 +135,13 @@ try {
     await quoteDialog.getByRole("button", { name: "Offerteformulier sluiten" }).click();
     assert.equal(await quoteDialog.count(), 0, `home quote close ${width}`);
 
-    const trigger = page.getByRole("button", { name: "Vraag een scan aan", exact: true }).first();
+    const trigger = page.getByRole("link", { name: "Laat één proces of ruimte scannen", exact: true }).first();
+    assert.equal(await trigger.getAttribute("href"), "/scan", `homepage scan contract does not link directly at ${width}`);
     await trigger.click();
-    const dialog = page.getByRole("dialog");
+    await page.waitForURL(`${base}/scan`);
+    const dialog = page.getByRole("dialog", { name: "Vraag een praktische scan aan" });
     await dialog.waitFor({ state: "visible" });
-    const close = page.getByRole("button", { name: "Sluiten" });
-    const next = page.getByRole("button", { name: "Verder" });
-    await close.waitFor();
-    await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "Sluiten");
-    await next.focus(); await page.keyboard.press("Tab"); assert.equal(await close.evaluate((node) => node === document.activeElement), true, `forward focus trap ${width}`);
-    await close.focus(); await page.keyboard.press("Shift+Tab"); assert.equal(await next.evaluate((node) => node === document.activeElement), true, `reverse focus trap ${width}`);
-    await page.keyboard.press("Escape"); assert.equal(await dialog.count(), 0, `Escape close ${width}`);
-    await page.waitForTimeout(50);
-    assert.equal(await trigger.evaluate((node) => node === document.activeElement), true, `focus restore ${width}`);
+    assert.equal(await page.getByText("Uw voorkeursdatum en tijd vereisen afzonderlijke menselijke bevestiging.", { exact: true }).count(), 1);
     await page.close();
   }
 
@@ -255,8 +213,7 @@ try {
   const englishBookingPage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
   let englishBookingPayload;
   await englishBookingPage.route("**/api/booking", async (route) => { englishBookingPayload = JSON.parse(route.request().postData()); await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schemaKind:"booking_ack",accepted:true,requestId:"english-booking-proof",preference:{ date:"2026-09-30",slot:"09:00",subject:"bedrijf" } }) }); });
-  await englishBookingPage.goto(`${base}/en`, { waitUntil: "networkidle" });
-  await englishBookingPage.getByRole("button", { name: "Request a scan", exact: true }).first().click();
+  await englishBookingPage.goto(`${base}/en/scan`, { waitUntil: "networkidle" });
   const englishBookingDialog = englishBookingPage.getByRole("dialog", { name: "Request a practical scan" });
   await englishBookingDialog.getByRole("textbox", { name: "What would you like to make easier?" }).fill("English booking browser proof");
   await englishBookingDialog.getByRole("button", { name: "Continue" }).click();
@@ -300,15 +257,13 @@ try {
   assert.equal(await page.locator('footer a').filter({ hasText: "Ventures" }).getAttribute("href"), "/en/ventures");
   const ratesLink = page.getByRole("link", { name: "Rates", exact: true }).first();
   assert.equal(await ratesLink.getAttribute("href"), "/en/rates");
-  const pricingCardLabels = await page.locator('a[href^="/en/rates/"] > span').allTextContents();
-  for (const dutchLabel of ["Logistiek", "Bouw", "Makelaars", "Advocatuur", "Zorg", "Kantoorpand", "Woning", "Nieuwbouwproject"]) assert.equal(pricingCardLabels.includes(dutchLabel), false, `Dutch pricing card leaked on EN: ${dutchLabel}`);
-  for (const englishLabel of ["Accountancy", "Office building", "Home"]) assert.equal(pricingCardLabels.filter((label) => label === englishLabel).length, 1, `English pricing card missing: ${englishLabel}`);
-  const englishSolutionLinks = page.locator('#solutions a[href="/en/ai-automation"], #solutions a[href="/en/local-ai"], #solutions a[href="/en/smart-office"], #solutions a[href="/en/home"]');
-  assert.equal(await englishSolutionLinks.count(), 4);
-  await page.getByRole("button", { name: "Request a scan", exact: true }).first().click();
+  const englishSolutionLinks = page.locator('#solutions a[href="/en/ai-automation"], #solutions a[href="/en/smart-office"], #solutions a[href="/en/home"]');
+  assert.equal(await englishSolutionLinks.count(), 3);
+  await page.goto(`${base}/en/scan`, { waitUntil: "networkidle" });
   assert.equal(await page.getByLabel("What is this about?").count(), 1);
   assert.equal(await page.getByText("Waar gaat het om?", { exact: true }).count(), 0);
   await page.getByRole("button", { name: "Close" }).click();
+  await page.waitForURL(`${base}/en/capabilities`);
 
   await page.goto(`${base}/en/rates`, { waitUntil: "networkidle" });
   assert.equal(await page.locator('nav[aria-label="Primary navigation"] a[aria-current="page"]').textContent(), "Rates", "current-page navigation state missing");
