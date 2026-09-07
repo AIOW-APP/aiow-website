@@ -18,15 +18,15 @@ Human Industrial entered production on 2026-09-07. The Route Field Cinema extens
 
 NL H1:
 
-`Niet nog een losse tool. Een systeem dat voor u werkt.`
+`AI op maat voor uw bedrijf, bedrijfspand en woning.`
 
 NL support:
 
-`AIOW ontwerpt, bouwt en beheert AI op maat — voor processen, gebouwen en woningen.`
+`Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem voor uw processen, gebouw of huis.`
 
 EN H1:
 
-`Not another disconnected tool. One system built to work for you.`
+`Bespoke AI for your company, commercial building and home.`
 
 Human authority remains explicit: `Een mens beslist. Altijd.` / `A person decides. Always.`
 
@@ -114,10 +114,10 @@ State authority:
 
 Commissioning sequence — one shot after hydration:
 
-- The first route is complete and readable in server HTML before choreography begins.
+- The complete product category and all three buyer environments are readable in the H1 before choreography begins.
 - The identity spine energises, the lacquer field opens and a travelling calibration line connects promise, route list and field.
-- The field then previews `Werk → Pand → Wonen → Werk` once, exposing the breadth of AIOW without moving route links or delaying access.
-- Total authored sequence target: 2.6–3.2 seconds. Any pointer, focus, key or touch intent cancels it immediately and hands authority to the visitor.
+- After the offer headline has had time to register, the field previews `Werk → Pand → Wonen → Werk` once, exposing breadth without moving route links or delaying access.
+- Total authored sequence target: 3.1–3.5 seconds, with the first route change no earlier than approximately 1.2 seconds so the offer headline registers first. Any pointer, focus, key or touch intent cancels it immediately and hands authority to the visitor.
 - It never loops, never replays on theme change and never gates content or navigation.
 
 Route preview:
@@ -164,13 +164,54 @@ The hero does not lead with a generic scan CTA. Visitors choose a world first:
 - Pand → `/smart-office`
 - Wonen → `/home`
 
-Those routes preserve context into:
+Those routes preserve context in both scan surfaces:
 
-- `/scan?intent=proces`
-- `/scan?intent=pand`
-- `/scan?intent=woning`
+- Werk → modal subject `bedrijf` and `/scan?intent=proces&returnTo=/ai-automatisering`
+- Pand → modal subject `pand` and `/scan?intent=pand&returnTo=/smart-office`
+- Wonen → modal subject `woning` and `/scan?intent=woning&returnTo=/home`
+- The URL encoding may escape `/`; the semantic return path stays identical.
+- Only the closed known NL/EN pillar-route set may be used as `returnTo`; direct or invalid scan entries use the capabilities fallback.
+
+Route-page first-viewport contract:
+
+- At widths where the header scan action is visible, it remains the only dominant first-viewport commercial action.
+- At mobile/tablet widths where that header action moves behind Menu, one inline scan action appears immediately after the route H1.
+- That action opens the canonical modal directly; it never scrolls to an intermediate CTA.
+- Its adjacent microcopy states free, approximately max. 30 minutes, decision memo and human date/time confirmation.
+- The longer route explanation remains fully available below; mobile conversion closure may not delete product truth.
+- The three route pages inherit the Human Industrial shell: square geometry, condensed uppercase display type, aluminium/red Day, green/coral Evening and the same header IA. Falling back to the legacy beige/serif shell is a visual-continuity failure.
 
 The scan contract remains: free, approximately max. 30 minutes, human confirmation, decision memo, separate scoping for hardware/installation/external qualified partners.
+
+## Sitewide Human Industrial composition system
+
+Human Industrial is the public-site shell, not a homepage skin. Every mounted public NL/EN route inherits the same aluminium / signal-red Day world, deep-green / coral Evening world, condensed industrial typography, square geometry, thin measurement rules, stable header and semantic focus language.
+
+Page families deliberately use different working instruments:
+
+- Homepage: one-shot Route Field Cinema commissioning and three-environment selection.
+- Pillar routes: route declaration, boundary, applications and implementation sequence.
+- Capabilities: one selected causal trace from signal to human decision; never a feature-card catalogue.
+- Tariffs index: measured tables and commercial boundaries, composed as a technical price sheet.
+- Tariff context: one practical workflow, transparent calculation and bounded next decision.
+- Knowledge / privacy / company: editorial evidence dossiers with numbered sections, rules and verified facts; no cream-serif article template or rounded cards.
+- Scan: one bounded intake surface inside the same shell, with preserved intent and a safe return route.
+- Ventures: an explicit separate-agreement dossier within AIOW identity; never visually mistaken for the Solutions offer.
+
+Motion hierarchy:
+
+- Route Field Cinema remains the only automatic signature moment.
+- Secondary pages use no idle loop and no second cinematic metaphor.
+- Family-level entrances may use the existing fail-open reveal grammar only when content is visible by default, interrupted by input, and snapped for Reduced Motion / Save-Data / no-JS.
+- Navigation, CTA, table and form hit geometry never moves.
+
+Responsive hierarchy:
+
+- 320 / 375 / 390: one recognisable route or document purpose, one first-viewport commercial action where commercial action is appropriate, full-width square controls and no clipped long compound words.
+- 768 / 1024: family composition may split into label rail + content field; never inherit desktop whitespace blindly.
+- 1440+: use asymmetric measurement fields and deliberate empty space, not centred generic landing-page stacks.
+
+The homepage shell is token authority. Family CSS may change layout and density, but may not redefine palette, display family, corner language, focus style or header variant.
 
 ## Knowledge architecture
 

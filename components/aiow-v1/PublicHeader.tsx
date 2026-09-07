@@ -9,26 +9,31 @@ import styles from "./AiowV1Homepage.module.css";
 
 type NavKey = "solutions" | "capabilities" | "rates" | "company";
 
-function currentNavKey(pathname: string): NavKey | null {
-  if (pathname === "/tarieven" || pathname === "/en/rates") return "rates";
-
+function currentNavKey(pathname: string, variant?: "human-industrial"): NavKey | null {
+  if (pathname === "/tarieven" || pathname.startsWith("/tarieven/") || pathname === "/en/rates" || pathname.startsWith("/en/rates/")) return "rates";
+  if (variant === "human-industrial") {
+    if (["/smart-office", "/en/smart-office"].includes(pathname)) return "capabilities";
+    if (["/home", "/en/home"].includes(pathname)) return "company";
+    if (["/ai-automatisering", "/en/ai-automation"].includes(pathname)) return "solutions";
+    return null;
+  }
   if (pathname === "/bedrijfsgegevens" || pathname === "/en/company") return "company";
   if (pathname === "/mogelijkheden" || pathname === "/en/capabilities") return "capabilities";
   if (pathname === "/" || pathname === "/en" || ["/ai-automatisering", "/lokale-ai", "/smart-office", "/home", "/en/ai-automation", "/en/local-ai", "/en/smart-office", "/en/home"].includes(pathname)) return "solutions";
   return null;
 }
 
-export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false, showCta = true, variant }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean; showCta?: boolean; variant?: "human-industrial" }) {
+export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false, showCta = true, variant, scanHref }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean; showCta?: boolean; variant?: "human-industrial"; scanHref?: string }) {
   const en = locale === "en";
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const navigation = useRef<HTMLElement>(null);
-  const scanHref = en ? "/en/scan" : "/scan";
+  const resolvedScanHref = scanHref || (en ? "/en/scan" : "/scan");
   const scanLabel = en ? "Request a scan" : "Vraag een scan aan";
-  const actionHref = primaryAction === "price" ? "#booking" : scanHref;
+  const actionHref = primaryAction === "price" ? "#booking" : resolvedScanHref;
   const actionLabel = primaryAction === "price" ? (en ? "View your indication" : "Bekijk uw indicatie") : scanLabel;
-  const active = currentNavKey(pathname);
+  const active = currentNavKey(pathname, variant);
   const defaultItems: { key: NavKey; href: string; label: string }[] = [
     { key: "solutions", href: en ? "/en#solutions" : "/#oplossingen", label: en ? "Solutions" : "Oplossingen" },
     { key: "capabilities", href: en ? "/en/capabilities" : "/mogelijkheden", label: en ? "Capabilities" : "Mogelijkheden" },

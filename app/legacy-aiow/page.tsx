@@ -8,6 +8,8 @@ import { ScanDebbie } from "@/components/v2/ScanDebbie";
 import { FinalV8 } from "@/components/v2/FinalV8";
 import { Footer } from "@/components/Footer";
 
+export const metadata = { title: "AIOW legacy archive", robots: { index: false, follow: false } };
+
 export default function LegacyAiowPage() {
   return (
     <>

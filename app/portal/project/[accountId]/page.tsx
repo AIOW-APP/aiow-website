@@ -2,6 +2,7 @@ import Link from "next/link";
 import { decodeVentureAccountState, getVentureAccount } from "@/lib/aiow-venture-accounts";
 import styles from "../../Portal.module.css";
 import { WorkspaceActions } from "../WorkspaceActions";
+import shell from "@/components/aiow-v1/HumanIndustrialPublicShell.module.css";
 
 type ProjectPageProps = {
   params: Promise<{ accountId: string }>;
@@ -17,7 +18,7 @@ export default async function ProjectPage({ params, searchParams }: ProjectPageP
 
   if (!account) {
     return (
-      <main className={styles.page}>
+      <main className={`${shell.site} ${styles.page}`}>
         <section className={styles.shell}>
           <div className={styles.card}>
             <p className={styles.eyebrow}>Project link verlopen</p>
@@ -33,7 +34,7 @@ export default async function ProjectPage({ params, searchParams }: ProjectPageP
   const proposalReady = Boolean(account.proposal);
 
   return (
-    <main className={styles.page}>
+    <main className={`${shell.site} ${styles.page}`}>
       <section className={styles.shell}>
         <div className={styles.hero}>
           <div>
@@ -46,7 +47,7 @@ export default async function ProjectPage({ params, searchParams }: ProjectPageP
 
         <div className={styles.grid}>
           <section className={styles.card}>
-            <h1>Projectinfo aanvullen</h1>
+            <h2>Projectinfo aanvullen</h2>
             <WorkspaceActions
               accountId={account.accountId}
               accessToken={token}

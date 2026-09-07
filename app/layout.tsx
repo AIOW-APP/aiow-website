@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://aiow.ai", languages: { nl: "https://aiow.ai", en: "https://aiow.ai/en", "x-default": "https://aiow.ai" } },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#14161A" }, { media: "(prefers-color-scheme: light)", color: "#F4EFE6" }] };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#17382E" }, { media: "(prefers-color-scheme: light)", color: "#E4E5E0" }] };
 const themeScript = `(function(){try{var t=localStorage.getItem('aiow-theme');document.documentElement.dataset.theme=(t==='light'||t==='dark'||t==='system')?t:'system'}catch(e){document.documentElement.dataset.theme='system'}})()`;
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

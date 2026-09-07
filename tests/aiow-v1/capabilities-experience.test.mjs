@@ -33,11 +33,12 @@ test("capabilities routes are paired, crawlable and directly reachable from prim
   assert.match(locale,/\["\/mogelijkheden", "\/en\/capabilities"\]/);
   assert.match(locale,/\["\/scan", "\/en\/scan"\]/);
   assert.match(header,/key: "capabilities"/); assert.match(header,/Mogelijkheden/); assert.match(header,/Capabilities/);
-  assert.match(header,/const scanHref = en \? "\/en\/scan" : "\/scan"/);
+  assert.match(header,/const resolvedScanHref = scanHref \|\| \(en \? "\/en\/scan" : "\/scan"\)/);
+  assert.match(header,/primaryAction === "price" \? "#booking" : resolvedScanHref/);
   assert.match(scanNl,/ScanRequestPage locale="nl"/); assert.match(scanEn,/ScanRequestPage locale="en"/);
   assert.match(scanNl,/mens bevestigd/); assert.match(scanEn,/confirmed separately by a person/);
-  assert.match(scanPage,/import shared from "\.\/AiowV1Homepage\.module\.css"/); assert.match(scanPage,/className=\{`\$\{shared\.site\} \$\{styles\.site\}`\}/);
-  for(const token of ["--bg","--ink","--line","--copper","--muted"]) assert.match(scanCss,new RegExp(`var\\(${token}\\)`));
+  assert.match(scanPage,/import shell from "\.\/HumanIndustrialPublicShell\.module\.css"/); assert.match(scanPage,/className=\{`\$\{shell\.site\} \$\{styles\.site\}`\}/);
+  for(const token of ["--bg","--ink","--line","--accent-text","--muted"]) assert.match(scanCss,new RegExp(`var\\(${token}\\)`));
   assert.doesNotMatch(scanCss,/#14161a|#f4efe6|#2e333c|#d9a441|#a7a297/i);
   assert.match(sitemap,/PUBLIC_ROUTE_PAIRS/);
   for(const source of [llms,llmsFull]) { assert.match(source,/mogelijkheden/); assert.match(source,/en\/capabilities/); assert.match(source,/\/scan/); assert.match(source,/\/en\/scan/); }

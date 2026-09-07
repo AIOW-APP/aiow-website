@@ -1,10 +1,11 @@
 .hero{
   --hi-bg:#e4e5e0;
   --hi-ink:#11110f;
-  --hi-muted:#686963;
+  --hi-muted:#50514c;
   --hi-rule:#9fa09a;
   --hi-accent:#d94b30;
-  --hi-on-accent:#f5f4ee;
+  --hi-accent-text:#8b2418;
+  --hi-on-accent:#11110f;
   --hi-field:#11110f;
   --hi-field-ink:#f5f4ee;
   --hi-field-muted:#a5a59f;
@@ -34,7 +35,7 @@
   flex-direction:column;
   align-items:center;
   background:var(--hi-ink);
-  color:var(--hi-on-accent);
+  color:var(--hi-field-ink);
   font-family:"Avenir Next Condensed","Arial Narrow","Helvetica Neue",sans-serif;
   font-size:44px;
   font-weight:800;
@@ -89,12 +90,12 @@
   text-transform:uppercase;
 }
 .copy h1 span:not(:last-child),.copy h1 strong{white-space:nowrap}
-.hero[data-locale="en"] .copy h1{font-size:clamp(46px,4.2vw,66px)}
+.hero[data-locale="en"] .copy h1{font-size:clamp(45px,4vw,64px)}
 .copy h1 span,.copy h1 strong{display:block;animation:headline-enter .72s cubic-bezier(.22,1,.36,1) both}
-.copy h1 span:nth-child(1){animation-delay:.08s}.copy h1 span:nth-child(2){animation-delay:.13s}.copy h1 strong{animation-delay:.18s}.copy h1 span:nth-child(4){animation-delay:.23s}
+.copy h1 strong{animation-delay:.08s}.copy h1 span:nth-child(2){animation-delay:.13s}.copy h1 span:nth-child(3){animation-delay:.18s}.copy h1 span:nth-child(4){animation-delay:.23s}
 .copy h1 strong{
   min-width:min(100%,620px);
-  margin:13px 0 11px;
+  margin:0 0 11px;
   padding:7px 18px 6px;
   background:var(--hi-accent);
   color:var(--hi-on-accent);
@@ -176,7 +177,7 @@
   transform:translateY(-50%);
 }
 .routeList>a>i::after{content:"";position:absolute;right:-1px;top:5px;width:17px;height:2px;background:currentColor;transform:rotate(-45deg);transform-origin:right}
-.routeList>a[data-active="true"] .routeShort{color:var(--hi-accent);transform:translateX(12px)}
+.routeList>a[data-active="true"] .routeShort{color:var(--hi-accent-text);transform:translateX(12px)}
 .routeIndicator{
   position:absolute;
   z-index:-1;
@@ -283,14 +284,14 @@
 .hero[data-cinema="running"] .aperture{animation:commissioning-aperture 1.08s cubic-bezier(.22,1,.36,1) .18s both}
 
 :global(html[data-theme="dark"]) .hero{
-  --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#9eb7a9;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-on-accent:#17382e;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
+  --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#b9cdbf;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-accent-text:#ffb5a3;--hi-on-accent:#10271f;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
 }
 :global(html[data-theme="dark"]) .spine{background:#10271f}
 :global(html[data-theme="dark"]) .fieldLayer[data-index="1"]{--layer-bg:#d7c6aa;--layer-ink:#17382e;--layer-muted:#496459}
 :global(html[data-theme="dark"]) .fieldLayer[data-index="2"]{--layer-bg:#f56a4d;--layer-ink:#17382e;--layer-muted:#315649}
 @media(prefers-color-scheme:dark){
   :global(html[data-theme="system"]) .hero,:global(html:not([data-theme])) .hero{
-    --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#9eb7a9;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-on-accent:#17382e;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
+    --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#b9cdbf;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-accent-text:#ffb5a3;--hi-on-accent:#10271f;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
   }
   :global(html[data-theme="system"]) .spine,:global(html:not([data-theme])) .spine{background:#10271f}
 }

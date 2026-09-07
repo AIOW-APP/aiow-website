@@ -18,6 +18,7 @@ const[home,enHome,page,hero,director,css,heroCss,sharedCss,dna,analytics,nextCon
  readFile(new URL("lib/aiow-v1/seo.tsx",root),"utf8"),
  readFile(new URL("app/llms.txt/route.ts",root),"utf8"),
 ]);
+const calculator=await readFile(new URL("components/aiow-v1/PriceCalculator.tsx",root),"utf8");
 
 test("paired home routes mount the canonical homepage and preserve schemas",()=>{
  for(const source of[home,enHome]){assert.match(source,/LivingBlueprintHomepage/);assert.match(source,/homeSchemas/);assert.doesNotMatch(source,/<AiowV1Homepage/)}
@@ -30,7 +31,7 @@ test("homepage mounts Human Industrial before the commercial instrument",()=>{
  assert.equal((hero.match(/<h1/g)||[]).length,1);
  assert.ok(page.indexOf("<HumanIndustrialHero")<page.indexOf("<LivingBlueprintCalculator"));
  assert.equal((page.match(/<LivingBlueprintCalculator/g)||[]).length,1);
- assert.match(page,/id="booking"/);
+ assert.match(page,/id="pricing"/);
 });
 
 test("hero owns one route state and keeps all routes semantic",()=>{
@@ -46,11 +47,11 @@ test("hero owns one route state and keeps all routes semantic",()=>{
 });
 
 test("hero copy is authored, route-first and human bounded",()=>{
- for(const marker of["Niet nog een","losse tool","Eén systeem","dat voor u werkt","Not another","disconnected tool","One system","built to work for you"])assert.match(hero,new RegExp(marker));
+ for(const marker of["AI op maat","Voor uw bedrijf","bedrijfspand en","woning","Bespoke AI","For your company","commercial building","and home"])assert.match(hero,new RegExp(marker));
  assert.match(hero,/Een mens beslist\. Altijd\./);
  assert.match(hero,/A person decides\. Always\./);
- assert.match(hero,/AIOW ontwerpt, bouwt en beheert AI op maat/);
- assert.match(hero,/AIOW designs, builds and manages bespoke AI/);
+ assert.match(hero,/AIOW ontwerpt, bouwt, koppelt en beheert één systeem/);
+ assert.match(hero,/AIOW designs, builds, connects and manages one system/);
 });
 
 test("three environments remain calm below the hero and preserve causal truth",()=>{
@@ -115,4 +116,10 @@ test("anti-clutter and platform quality rails remain explicit",()=>{
 test("design DNA uses the canonical public contact source",()=>{
  assert.match(dna,/Company facts remain canonical:[^\n]*info@aiow\.io\./);
  assert.doesNotMatch(dna,/Company facts remain canonical:[^\n]*info@aiow\.ai\./);
+});
+
+test("booking anchor belongs to the calculator only",()=>{
+ assert.match(page,/<section id="pricing" className=\{styles\.pricing\}>/);
+ assert.equal((page.match(/id="booking"/g)||[]).length,0,"outer homepage must not duplicate calculator booking id");
+ assert.match(calculator,/<section id="booking"/);
 });

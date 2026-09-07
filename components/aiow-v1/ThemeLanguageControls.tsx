@@ -36,7 +36,7 @@ export function ThemeLanguageControls({ locale = "nl" }: { locale?: AiowLocale }
     <div className={styles.controls} role="group" aria-label={locale === "nl" ? "Weergave en taal" : "Display and language"}>
       <label className={styles.srOnly} htmlFor="theme-choice">{locale === "nl" ? "Thema" : "Theme"}</label>
       <select id="theme-choice" value={theme} onChange={(event) => update(event.target.value as Theme)} className={styles.select} aria-label={locale === "nl" ? `Thema: ${theme}` : `Theme: ${theme}`}>
-        {themes.map((value) => <option value={value} key={value}>{value === "system" ? (locale === "nl" ? "Systeem" : "System") : value === "light" ? "Light" : "Dark"}</option>)}
+        {themes.map((value) => <option value={value} key={value}>{value === "system" ? (locale === "nl" ? "Systeem" : "System") : value === "light" ? (locale === "nl" ? "Dag" : "Day") : (locale === "nl" ? "Avond" : "Evening")}</option>)}
       </select>
       <a className={styles.language} href={languageHref} hrefLang={targetLocale} lang={targetLocale} onClick={rememberLocale} aria-label={locale === "nl" ? "Bekijk deze pagina in het Engels" : "View this page in Dutch"}>{targetLocale.toUpperCase()}</a>
     </div>

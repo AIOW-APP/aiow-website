@@ -6,6 +6,7 @@ import { amsterdamDateISO } from "@/lib/aiow-v1/booking-runtime.mjs";
 import { track } from "@/core/analytics/client";
 import { requestBooking } from "./booking-request";
 import { buildBookingRequest } from "./commercial-form-payloads.mjs";
+import type { ScanSubject } from "@/lib/aiow-v1/scan-intent";
 import styles from "./AiowV1Homepage.module.css";
 
 type Form = {
@@ -24,10 +25,11 @@ function downloadIcs(form: Form, requestId: string, locale: "nl" | "en") {
   const link = document.createElement("a"); link.href = url; link.download = `aiow-scan-${form.date}.ics`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 500);
 }
 
-export function BookingModal({ open, onClose, locale = "nl", returnFocus }: { open: boolean; onClose: () => void; locale?: "nl" | "en"; returnFocus?: HTMLElement | null }) {
-  const [step, setStep] = useState(1); const [form, setForm] = useState<Form>(initial); const [errors, setErrors] = useState<Record<string, string>>({}); const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle"); const [requestId, setRequestId] = useState("");
+export function BookingModal({ open, onClose, locale = "nl", returnFocus, initialSubject = "bedrijf" }: { open: boolean; onClose: () => void; locale?: "nl" | "en"; returnFocus?: HTMLElement | null; initialSubject?: ScanSubject }) {
+  const [step, setStep] = useState(1); const [form, setForm] = useState<Form>(() => ({ ...initial, subject: initialSubject })); const [errors, setErrors] = useState<Record<string, string>>({}); const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle"); const [requestId, setRequestId] = useState("");
   const dialog = useRef<HTMLDivElement>(null); const operation = useRef({ fingerprint: "", key: "" }); const sending = useRef(false); const en = locale === "en";
   function focusError() { requestAnimationFrame(() => { const node = dialog.current?.querySelector<HTMLElement>('[aria-invalid="true"], [data-error-summary]'); node?.focus(); }); }
+  useEffect(() => { if (!open) setForm((current: Form) => ({ ...current, subject: initialSubject })); }, [initialSubject, open]);
   useEffect(() => {
     if (!open) return;
     void track("booking_opened", {});

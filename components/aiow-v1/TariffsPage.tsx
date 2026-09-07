@@ -7,6 +7,7 @@ import { BookingModal } from "./BookingModal";
 import { PublicFooter } from "./PublicFooter";
 import { PublicHeader } from "./PublicHeader";
 import shared from "./AiowV1Homepage.module.css";
+import shell from "./HumanIndustrialPublicShell.module.css";
 import styles from "./TariffsPage.module.css";
 
 type Row = readonly [ReactNode, ...ReactNode[]];
@@ -62,9 +63,9 @@ export function TariffsPage({ locale = "nl" }: { locale?: AiowLocale }) {
   function openBooking(event: MouseEvent<HTMLButtonElement>) { bookingTrigger.current = event.currentTarget; setBooking(true); }
   const section = (id: string, item: { kicker: string; title: string; table: TableContent }, soft = false) => <section id={id} className={`${styles.section} ${soft ? styles.soft : ""}`}><div className={styles.sectionHead}><p>{item.kicker}</p><h2>{item.title}</h2></div><TariffTable table={item.table} /></section>;
 
-  return <div className={`${shared.site} ${styles.tariffSite}`}><PublicHeader locale={locale} onBook={openBooking} /><main>
+  return <div className={`${shell.site} ${styles.tariffSite}`}><PublicHeader locale={locale} variant="human-industrial" onBook={openBooking} /><main>
     <nav className={styles.breadcrumb} aria-label={t.breadcrumb}><Link href={locale === "en" ? "/en" : "/"}>AIOW</Link><span>/</span><span>{t.rates}</span></nav>
-    <header className={styles.hero}><p className={shared.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.intro}</p><div><a href={locale === "en" ? "#business" : "#bedrijf"}>{t.view}</a><button className={shared.primaryButton} onClick={openBooking}>{t.book}</button></div></header>
+    <header className={styles.hero}><p className={shared.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.intro}</p><div><a href={locale === "en" ? "#business" : "#bedrijf"}>{t.view}</a><button className={`${shared.primaryButton} ${styles.heroScan}`} onClick={openBooking}>{t.book}</button></div></header>
     <section className={styles.notice} aria-label={t.noticeLabel}><strong>{t.notice}</strong><p className={styles.qualification}>{t.qualification}</p></section>
     {section(locale === "en" ? "business" : "bedrijf", t.business)}{section(locale === "en" ? "building" : "pand", t.office, true)}{section(locale === "en" ? "home" : "woning", t.home)}
     <section id="routes" className={`${styles.section} ${styles.soft}`}><div className={styles.sectionHead}><p>{t.routes.kicker}</p><h2>{t.routes.title}</h2></div><div className={styles.routeGrid}><article><span>{t.routes.standardLabel}</span><h3>{t.routes.standardTitle}</h3><p>{t.routes.standardBody}</p></article><article><span>{t.routes.comfortLabel}</span><h3>{t.routes.comfortTitle}</h3><ul>{t.routes.comfortItems.map((item) => <li key={item}>{item}</li>)}</ul><p>{t.routes.comfortBody}</p></article></div></section>

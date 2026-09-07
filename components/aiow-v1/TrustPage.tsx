@@ -1,6 +1,6 @@
 import { PublicFooter } from "./PublicFooter";
 import { PublicHeader } from "./PublicHeader";
-import shared from "./AiowV1Homepage.module.css";
+import shell from "./HumanIndustrialPublicShell.module.css";
 import styles from "@/app/info.module.css";
 import { organizationNode } from "@/lib/aiow-v1/seo";
 import { AIOW_COMPANY } from "@/lib/aiow-v1/company.mjs";
@@ -10,8 +10,8 @@ type Locale = "nl" | "en";
 export function TrustPage({ locale }: { locale: Locale }) {
   const en = locale === "en";
   const schema = organizationNode(locale);
-  return <div className={`${shared.site} ${styles.page}`}>
-    <PublicHeader locale={locale} />
+  return <div className={`${shell.site} ${styles.page}`}>
+    <PublicHeader locale={locale} variant="human-industrial" />
     <main className={styles.main}>
       <p className={styles.eyebrow}>{en ? "Company and contact" : "Bedrijfsgegevens en contact"}</p>
       <h1>{en ? "Know who you are dealing with." : "Weet met wie u zaken doet."}</h1>

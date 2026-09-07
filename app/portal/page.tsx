@@ -1,10 +1,11 @@
 import Link from "next/link";
 import styles from "./Portal.module.css";
 import { PortalLogin } from "./PortalLogin";
+import shell from "@/components/aiow-v1/HumanIndustrialPublicShell.module.css";
 
 export default function PortalPage() {
   return (
-    <main className={styles.page}>
+    <main className={`${shell.site} ${styles.page}`}>
       <section className={styles.shell}>
         <div className={styles.hero}>
           <div>
@@ -17,7 +18,7 @@ export default function PortalPage() {
 
         <div className={styles.grid}>
           <section className={styles.card}>
-            <h1>Account login</h1>
+            <h2>Account login</h2>
             <PortalLogin />
           </section>
           <aside className={styles.panel}>

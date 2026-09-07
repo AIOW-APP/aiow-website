@@ -167,7 +167,7 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
         <ol>{c.method.map(([title, body], index) => <li key={title} data-reveal="step" style={{ "--reveal-order": index % 3 } as CSSProperties}><span>0{index + 1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol>
       </section>
 
-      <section id="booking" className={styles.pricing}>
+      <section id="pricing" className={styles.pricing}>
         <div className={styles.pricingIntro} data-reveal="section"><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p></div>
         <div data-reveal="instrument"><LivingBlueprintCalculator locale={locale}/></div>
       </section>

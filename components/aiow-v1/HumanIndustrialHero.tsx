@@ -20,11 +20,11 @@ type Route = {
 const content = {
   nl: {
     eyebrow: "Maatwerk-AI · Hoofddorp",
-    title: ["Niet nog een", "losse tool."],
-    signal: "Eén systeem",
-    titleEnd: "dat voor u werkt.",
-    lead: "AIOW ontwerpt, bouwt en beheert AI op maat — voor processen, gebouwen en woningen.",
-    choose: "Kies waar het moet werken",
+    title: ["Voor uw bedrijf,", "bedrijfspand en"],
+    signal: "AI op maat",
+    titleEnd: "woning.",
+    lead: "Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem voor uw processen, gebouw of huis.",
+    choose: "Kies uw omgeving",
     authority: "Een mens beslist. Altijd.",
     delivery: ["Ontwerp", "Bouw", "Beheer"],
     visualEyebrow: "Uw gekozen omgeving",
@@ -36,11 +36,11 @@ const content = {
   },
   en: {
     eyebrow: "Bespoke AI · Hoofddorp",
-    title: ["Not another", "disconnected tool."],
-    signal: "One system",
-    titleEnd: "built to work for you.",
-    lead: "AIOW designs, builds and manages bespoke AI for processes, buildings and homes.",
-    choose: "Choose where it must work",
+    title: ["For your company,", "commercial building"],
+    signal: "Bespoke AI",
+    titleEnd: "and home.",
+    lead: "No disconnected tool. AIOW designs, builds, connects and manages one system for your processes, building or home.",
+    choose: "Choose your environment",
     authority: "A person decides. Always.",
     delivery: ["Design", "Build", "Manage"],
     visualEyebrow: "Your selected environment",
@@ -74,10 +74,10 @@ export function HumanIndustrialHero({ locale = "nl" }: { locale?: Locale }) {
     }
     setCinemaState("running");
     commissioningTimers.current = [
-      window.setTimeout(() => setActiveRoute("building"), 820),
-      window.setTimeout(() => setActiveRoute("home"), 1480),
-      window.setTimeout(() => setActiveRoute("work"), 2180),
-      window.setTimeout(() => setCinemaState("settled"), 2860),
+      window.setTimeout(() => setActiveRoute("building"), 1280),
+      window.setTimeout(() => setActiveRoute("home"), 1940),
+      window.setTimeout(() => setActiveRoute("work"), 2600),
+      window.setTimeout(() => setCinemaState("settled"), 3260),
     ];
     const interrupt = () => stopCommissioning();
     window.addEventListener("wheel", interrupt, { once: true, passive: true });
@@ -119,9 +119,9 @@ export function HumanIndustrialHero({ locale = "nl" }: { locale?: Locale }) {
       <div className={styles.copy}>
         <p className={styles.eyebrow}>{c.eyebrow}</p>
         <h1>
+          <strong>{c.signal}{" "}</strong>
           <span>{c.title[0]}{" "}</span>
           <span>{c.title[1]}{" "}</span>
-          <strong>{c.signal}{" "}</strong>
           <span>{c.titleEnd}</span>
         </h1>
         <p className={styles.lead}>{c.lead}</p>
