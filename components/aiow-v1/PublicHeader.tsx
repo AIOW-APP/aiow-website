@@ -10,11 +10,11 @@ import styles from "./AiowV1Homepage.module.css";
 type NavKey = "solutions" | "capabilities" | "rates" | "company";
 
 function currentNavKey(pathname: string, variant?: "human-industrial"): NavKey | null {
-  if (pathname === "/tarieven" || pathname === "/en/rates") return "rates";
+  if (pathname === "/tarieven" || pathname.startsWith("/tarieven/") || pathname === "/en/rates" || pathname.startsWith("/en/rates/")) return "rates";
   if (variant === "human-industrial") {
     if (["/smart-office", "/en/smart-office"].includes(pathname)) return "capabilities";
     if (["/home", "/en/home"].includes(pathname)) return "company";
-    if (["/", "/en", "/ai-automatisering", "/lokale-ai", "/en/ai-automation", "/en/local-ai"].includes(pathname)) return "solutions";
+    if (["/ai-automatisering", "/en/ai-automation"].includes(pathname)) return "solutions";
     return null;
   }
   if (pathname === "/bedrijfsgegevens" || pathname === "/en/company") return "company";

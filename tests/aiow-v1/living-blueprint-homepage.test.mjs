@@ -18,6 +18,7 @@ const[home,enHome,page,hero,director,css,heroCss,sharedCss,dna,analytics,nextCon
  readFile(new URL("lib/aiow-v1/seo.tsx",root),"utf8"),
  readFile(new URL("app/llms.txt/route.ts",root),"utf8"),
 ]);
+const calculator=await readFile(new URL("components/aiow-v1/PriceCalculator.tsx",root),"utf8");
 
 test("paired home routes mount the canonical homepage and preserve schemas",()=>{
  for(const source of[home,enHome]){assert.match(source,/LivingBlueprintHomepage/);assert.match(source,/homeSchemas/);assert.doesNotMatch(source,/<AiowV1Homepage/)}
@@ -30,7 +31,7 @@ test("homepage mounts Human Industrial before the commercial instrument",()=>{
  assert.equal((hero.match(/<h1/g)||[]).length,1);
  assert.ok(page.indexOf("<HumanIndustrialHero")<page.indexOf("<LivingBlueprintCalculator"));
  assert.equal((page.match(/<LivingBlueprintCalculator/g)||[]).length,1);
- assert.match(page,/id="booking"/);
+ assert.match(page,/id="pricing"/);
 });
 
 test("hero owns one route state and keeps all routes semantic",()=>{
@@ -115,4 +116,10 @@ test("anti-clutter and platform quality rails remain explicit",()=>{
 test("design DNA uses the canonical public contact source",()=>{
  assert.match(dna,/Company facts remain canonical:[^\n]*info@aiow\.io\./);
  assert.doesNotMatch(dna,/Company facts remain canonical:[^\n]*info@aiow\.ai\./);
+});
+
+test("booking anchor belongs to the calculator only",()=>{
+ assert.match(page,/<section id="pricing" className=\{styles\.pricing\}>/);
+ assert.equal((page.match(/id="booking"/g)||[]).length,0,"outer homepage must not duplicate calculator booking id");
+ assert.match(calculator,/<section id="booking"/);
 });

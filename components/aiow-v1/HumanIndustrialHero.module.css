@@ -1,10 +1,11 @@
 .hero{
   --hi-bg:#e4e5e0;
   --hi-ink:#11110f;
-  --hi-muted:#686963;
+  --hi-muted:#50514c;
   --hi-rule:#9fa09a;
   --hi-accent:#d94b30;
-  --hi-on-accent:#f5f4ee;
+  --hi-accent-text:#8b2418;
+  --hi-on-accent:#11110f;
   --hi-field:#11110f;
   --hi-field-ink:#f5f4ee;
   --hi-field-muted:#a5a59f;
@@ -176,7 +177,7 @@
   transform:translateY(-50%);
 }
 .routeList>a>i::after{content:"";position:absolute;right:-1px;top:5px;width:17px;height:2px;background:currentColor;transform:rotate(-45deg);transform-origin:right}
-.routeList>a[data-active="true"] .routeShort{color:var(--hi-accent);transform:translateX(12px)}
+.routeList>a[data-active="true"] .routeShort{color:var(--hi-accent-text);transform:translateX(12px)}
 .routeIndicator{
   position:absolute;
   z-index:-1;
@@ -283,14 +284,14 @@
 .hero[data-cinema="running"] .aperture{animation:commissioning-aperture 1.08s cubic-bezier(.22,1,.36,1) .18s both}
 
 :global(html[data-theme="dark"]) .hero{
-  --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#9eb7a9;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-on-accent:#17382e;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
+  --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#b9cdbf;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-accent-text:#ffb5a3;--hi-on-accent:#10271f;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
 }
 :global(html[data-theme="dark"]) .spine{background:#10271f}
 :global(html[data-theme="dark"]) .fieldLayer[data-index="1"]{--layer-bg:#d7c6aa;--layer-ink:#17382e;--layer-muted:#496459}
 :global(html[data-theme="dark"]) .fieldLayer[data-index="2"]{--layer-bg:#f56a4d;--layer-ink:#17382e;--layer-muted:#315649}
 @media(prefers-color-scheme:dark){
   :global(html[data-theme="system"]) .hero,:global(html:not([data-theme])) .hero{
-    --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#9eb7a9;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-on-accent:#17382e;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
+    --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#b9cdbf;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-accent-text:#ffb5a3;--hi-on-accent:#10271f;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
   }
   :global(html[data-theme="system"]) .spine,:global(html:not([data-theme])) .spine{background:#10271f}
 }

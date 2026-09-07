@@ -62,6 +62,14 @@ test("route state, conversion surfaces and browser chrome share the Human Indust
   assert.match(source.layout, /#E4E5E0/);
   assert.match(source.sharedCss, /\.modal\{[^}]*border-radius:0/);
   assert.match(source.sharedCss, /\.formFields input[^}]*border-radius:0/);
+  assert.match(source.sharedCss, /\.calculator\{[^}]*border-radius:0/);
+  assert.match(source.sharedCss, /\.tab,\.activeTab\{[^}]*border-radius:0/);
+  assert.match(source.sharedCss, /\.segment button,\.slots button\{[^}]*border-radius:0/);
+  assert.match(source.sharedCss, /\.rangeHeader output\{font-family:"Avenir Next Condensed"/);
+  assert.match(source.tariffs, /styles\.heroScan/);
+  assert.match(source.pricing, /styles\.heroScan/);
+  assert.match(source.header, /pathname\.startsWith\("\/tarieven\/"\)/);
+  assert.doesNotMatch(source.header, /\["\/", "\/en", "\/ai-automatisering"/);
   assert.match(source.legacy, /robots: \{ index: false, follow: false \}/);
   assert.doesNotMatch(source.info, /href="\/legacy-aiow"/);
 });

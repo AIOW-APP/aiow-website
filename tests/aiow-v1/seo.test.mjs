@@ -15,21 +15,26 @@ function contrast(a, b) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-test("light-theme pricing accent meets WCAG AA on every light surface", async () => {
-  for (const background of ["#F4EFE6", "#E9E2D6", "#FFFAF1"]) {
-    assert.ok(contrast("#795000", background) >= 4.5, `#795000 contrast on ${background} is ${contrast("#795000", background)}`);
+test("Human Industrial text roles meet WCAG AA on every Day and Evening surface", async () => {
+  const themes = [
+    { name: "Day", surfaces: ["#E4E5E0", "#D6D8D2", "#F5F4EE"], text: ["#8B2418", "#50514C", "#8F1D18"] },
+    { name: "Evening", surfaces: ["#17382E", "#10271F", "#21483B"], text: ["#FFB5A3", "#B9CDBF", "#FFB4A8"] },
+  ];
+  for (const theme of themes) for (const foreground of theme.text) for (const background of theme.surfaces) {
+    assert.ok(contrast(foreground, background) >= 4.5, `${theme.name} ${foreground} on ${background} is ${contrast(foreground, background)}`);
   }
-  const shell = await read("components/aiow-v1/HumanIndustrialPublicShell.module.css");
-  const shared = await read("components/aiow-v1/AiowV1Homepage.module.css");
-  const tariffs = await read("components/aiow-v1/TariffsPage.module.css");
-  assert.match(shell, /\.site\{[^}]*--copper:#d94b30/);
-  assert.match(shell, /html\[data-theme="dark"\][^}]*--copper:#f56a4d/);
-  assert.match(shell, /--on-copper:#11110f/);
-  assert.match(shell, /--on-copper:#10271f/);
-  assert.match(tariffs, /\.smartDesign\{[^}]*background:var\(--copper\);color:var\(--on-copper\)/);
   assert.ok(contrast("#11110F", "#D94B30") >= 4.49);
   assert.ok(contrast("#10271F", "#F56A4D") >= 4.5);
+  const shell = await read("components/aiow-v1/HumanIndustrialPublicShell.module.css");
+  const living = await read("components/aiow-v1/LivingBlueprintHomepage.module.css");
+  const shared = await read("components/aiow-v1/AiowV1Homepage.module.css");
+  const tariffs = await read("components/aiow-v1/TariffsPage.module.css");
+  for (const token of ["--accent-text:#8b2418", "--muted:#50514c", "--error-text:#8f1d18", "--accent-text:#ffb5a3", "--muted:#b9cdbf", "--error-text:#ffb4a8"]) {
+    assert.ok(shell.includes(token) && living.includes(token), token);
+  }
+  assert.match(tariffs, /\.smartDesign\{[^}]*background:var\(--copper\);color:var\(--on-copper\)/);
   assert.match(shared, /\.headerCta,\.primaryButton\{[^}]*color:var\(--on-copper\)/);
+  assert.match(shared, /\.formFields small,\.error\{color:var\(--error-text\)\}/);
 });
 
 test("all tariff row headers have row scope and all six regions have unique names", async () => {
