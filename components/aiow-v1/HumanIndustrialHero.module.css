@@ -89,12 +89,12 @@
   text-transform:uppercase;
 }
 .copy h1 span:not(:last-child),.copy h1 strong{white-space:nowrap}
-.hero[data-locale="en"] .copy h1{font-size:clamp(46px,4.2vw,66px)}
+.hero[data-locale="en"] .copy h1{font-size:clamp(45px,4vw,64px)}
 .copy h1 span,.copy h1 strong{display:block;animation:headline-enter .72s cubic-bezier(.22,1,.36,1) both}
-.copy h1 span:nth-child(1){animation-delay:.08s}.copy h1 span:nth-child(2){animation-delay:.13s}.copy h1 strong{animation-delay:.18s}.copy h1 span:nth-child(4){animation-delay:.23s}
+.copy h1 strong{animation-delay:.08s}.copy h1 span:nth-child(2){animation-delay:.13s}.copy h1 span:nth-child(3){animation-delay:.18s}.copy h1 span:nth-child(4){animation-delay:.23s}
 .copy h1 strong{
   min-width:min(100%,620px);
-  margin:13px 0 11px;
+  margin:0 0 11px;
   padding:7px 18px 6px;
   background:var(--hi-accent);
   color:var(--hi-on-accent);

@@ -46,11 +46,11 @@ test("hero owns one route state and keeps all routes semantic",()=>{
 });
 
 test("hero copy is authored, route-first and human bounded",()=>{
- for(const marker of["Niet nog een","losse tool","Eén systeem","dat voor u werkt","Not another","disconnected tool","One system","built to work for you"])assert.match(hero,new RegExp(marker));
+ for(const marker of["AI op maat","Voor uw bedrijf","bedrijfspand en","woning","Bespoke AI","For your company","commercial building","and home"])assert.match(hero,new RegExp(marker));
  assert.match(hero,/Een mens beslist\. Altijd\./);
  assert.match(hero,/A person decides\. Always\./);
- assert.match(hero,/AIOW ontwerpt, bouwt en beheert AI op maat/);
- assert.match(hero,/AIOW designs, builds and manages bespoke AI/);
+ assert.match(hero,/AIOW ontwerpt, bouwt, koppelt en beheert één systeem/);
+ assert.match(hero,/AIOW designs, builds, connects and manages one system/);
 });
 
 test("three environments remain calm below the hero and preserve causal truth",()=>{

@@ -18,15 +18,15 @@ Human Industrial entered production on 2026-09-07. The Route Field Cinema extens
 
 NL H1:
 
-`Niet nog een losse tool. Een systeem dat voor u werkt.`
+`AI op maat voor uw bedrijf, bedrijfspand en woning.`
 
 NL support:
 
-`AIOW ontwerpt, bouwt en beheert AI op maat — voor processen, gebouwen en woningen.`
+`Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem voor uw processen, gebouw of huis.`
 
 EN H1:
 
-`Not another disconnected tool. One system built to work for you.`
+`Bespoke AI for your company, commercial building and home.`
 
 Human authority remains explicit: `Een mens beslist. Altijd.` / `A person decides. Always.`
 
@@ -114,10 +114,10 @@ State authority:
 
 Commissioning sequence — one shot after hydration:
 
-- The first route is complete and readable in server HTML before choreography begins.
+- The complete product category and all three buyer environments are readable in the H1 before choreography begins.
 - The identity spine energises, the lacquer field opens and a travelling calibration line connects promise, route list and field.
-- The field then previews `Werk → Pand → Wonen → Werk` once, exposing the breadth of AIOW without moving route links or delaying access.
-- Total authored sequence target: 2.6–3.2 seconds. Any pointer, focus, key or touch intent cancels it immediately and hands authority to the visitor.
+- After the offer headline has had time to register, the field previews `Werk → Pand → Wonen → Werk` once, exposing breadth without moving route links or delaying access.
+- Total authored sequence target: 3.1–3.5 seconds, with the first route change no earlier than approximately 1.2 seconds so the offer headline registers first. Any pointer, focus, key or touch intent cancels it immediately and hands authority to the visitor.
 - It never loops, never replays on theme change and never gates content or navigation.
 
 Route preview:

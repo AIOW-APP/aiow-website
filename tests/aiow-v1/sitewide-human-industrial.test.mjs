@@ -17,6 +17,11 @@ const files = {
   project: "app/portal/project/[accountId]/page.tsx",
   portalCss: "app/portal/Portal.module.css",
   adminCss: "components/aiow-v1/OpsDashboard.module.css",
+  header: "components/aiow-v1/PublicHeader.tsx",
+  controls: "components/aiow-v1/ThemeLanguageControls.tsx",
+  layout: "app/layout.tsx",
+  legacy: "app/legacy-aiow/page.tsx",
+  sharedCss: "components/aiow-v1/AiowV1Homepage.module.css",
 };
 const source = Object.fromEntries(await Promise.all(Object.entries(files).map(async ([key, file]) => [key, await readFile(new URL(file, root), "utf8")])));
 
@@ -46,4 +51,17 @@ test("portal and operator surfaces use the same material world without generic A
   assert.match(source.adminCss, /--bg:#17382e/);
   assert.match(source.adminCss, /--bg:#e4e5e0/);
   assert.doesNotMatch(source.adminCss, /Fraunces|Georgia/);
+});
+
+test("route state, conversion surfaces and browser chrome share the Human Industrial authority", () => {
+  assert.match(source.header, /smart-office[^]*return "capabilities"/);
+  assert.match(source.header, /home[^]*return "company"/);
+  assert.match(source.header, /currentNavKey\(pathname, variant\)/);
+  for (const label of ["Dag", "Day", "Avond", "Evening"]) assert.ok(source.controls.includes(label), label);
+  assert.match(source.layout, /#17382E/);
+  assert.match(source.layout, /#E4E5E0/);
+  assert.match(source.sharedCss, /\.modal\{[^}]*border-radius:0/);
+  assert.match(source.sharedCss, /\.formFields input[^}]*border-radius:0/);
+  assert.match(source.legacy, /robots: \{ index: false, follow: false \}/);
+  assert.doesNotMatch(source.info, /href="\/legacy-aiow"/);
 });
