@@ -15,6 +15,8 @@ const ALLOWED_REGION_BACKGROUNDS = new Set([
 const ALLOWED_REGION_FONTS = new Set([
   '"Avenir Next", "Segoe UI", system-ui, sans-serif',
   '"Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif',
+  "Avenir Next, Segoe UI, system-ui, sans-serif",
+  "Avenir Next Condensed, Arial Narrow, Helvetica Neue, sans-serif",
 ]);
 
 const ALLOWED_REGION_BACKGROUND_IMAGES = new Set([

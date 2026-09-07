@@ -60,6 +60,10 @@ test("top-level region rules reject legacy geometry, palette, fonts and backgrou
     backgroundColor: "rgb(228, 229, 224)", borderRadius: "0px", backgroundImage: "none",
   };
   assert.deepEqual(findRegionRuleViolations([valid]), []);
+  assert.deepEqual(findRegionRuleViolations([
+    { ...valid, id: "body-unquoted", fontFamily: "Avenir Next, Segoe UI, system-ui, sans-serif" },
+    { ...valid, id: "display-unquoted", fontFamily: "Avenir Next Condensed, Arial Narrow, Helvetica Neue, sans-serif" },
+  ]), []);
   const legacy = [
     { ...valid, id: "rounded", borderRadius: "12px" },
     { ...valid, id: "serif", fontFamily: "Georgia" },
