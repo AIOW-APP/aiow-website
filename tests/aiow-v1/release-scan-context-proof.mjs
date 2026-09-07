@@ -96,11 +96,17 @@ for (const locale of locales) for (const route of routes) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, javaScriptEnabled: false });
   const page = await context.newPage();
   await gotoOk(page, route[locale]);
-  const scanLink = page.getByRole("link", { name: label(locale), exact: true }).first();
+  await page.waitForLoadState("load");
+  const scanLinks = page.getByRole("link", { name: label(locale), exact: true });
+  let scanLink = null;
+  for (let index = 0; index < await scanLinks.count(); index += 1) {
+    const candidate = scanLinks.nth(index);
+    if (await candidate.isVisible()) { scanLink = candidate; break; }
+  }
+  if (!scanLink) throw new Error(`${locale}/${route.subject}/no-js visible scan link missing`);
   const href = await scanLink.getAttribute("href");
   const expected = `${locale === "en" ? "/en" : ""}/scan?intent=${route.intent}&returnTo=${encodeURIComponent(route[locale])}`;
   if (href !== expected) throw new Error(`${locale}/${route.subject}/no-js href=${href}`);
-  if (!(await scanLink.isVisible())) throw new Error(`${locale}/${route.subject}/no-js link hidden`);
   await scanLink.click();
   await page.waitForLoadState("domcontentloaded");
   if (!page.url().includes(expected)) throw new Error(`${locale}/${route.subject}/no-js navigation=${page.url()}`);
