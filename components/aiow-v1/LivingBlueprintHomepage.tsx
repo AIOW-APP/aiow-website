@@ -1,8 +1,10 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { PublicHeader } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
 import { LivingBlueprintCalculator } from "./LivingBlueprintCalculator";
 import { HumanIndustrialHero } from "./HumanIndustrialHero";
+import { HomepageMotionDirector } from "./HomepageMotionDirector";
 import { AIOW_COMPANY, aiowAddressLine } from "@/lib/aiow-v1/company.mjs";
 import styles from "./LivingBlueprintHomepage.module.css";
 
@@ -124,18 +126,19 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
   const scanHref = locale === "en" ? "/en/scan" : "/scan";
 
   return <div className={styles.site}>
+    <HomepageMotionDirector />
     <PublicHeader locale={locale} compactMobile showCta={false} variant="human-industrial" />
     <main>
       <HumanIndustrialHero locale={locale} />
 
       <section id={locale === "en" ? "systems" : "systemen"} className={styles.environments}>
-        <header className={styles.sectionIntro}>
+        <header className={styles.sectionIntro} data-reveal="section">
           <p className={styles.eyebrow}>{c.systemsEyebrow}</p>
           <h2>{c.systemsTitle}</h2>
           <p>{c.systemsIntro}</p>
         </header>
         <div className={styles.environmentList}>
-          {c.categories.map((category) => <article key={category.id} id={category.id}>
+          {c.categories.map((category) => <article key={category.id} id={category.id} data-reveal="row">
             <div className={styles.environmentLead}>
               <h3>{category.title}</h3>
               <p>{category.promise}</p>
@@ -151,27 +154,27 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
       </section>
 
       <section className={styles.authority}>
-        <div className={styles.authorityStatement}>
+        <div className={styles.authorityStatement} data-reveal="section">
           <p className={styles.eyebrow}>{c.authorityEyebrow}</p>
           <h2>{c.authorityTitle}</h2>
           <p>{c.authorityBody}</p>
         </div>
-        <ol>{c.authority.map(([title, body]) => <li key={title}><strong>{title}</strong><span>{body}</span></li>)}</ol>
+        <ol>{c.authority.map(([title, body], index) => <li key={title} data-reveal="step" style={{ "--reveal-order": index % 3 } as CSSProperties}><strong>{title}</strong><span>{body}</span></li>)}</ol>
       </section>
 
       <section id={locale === "en" ? "approach" : "aanpak"} className={styles.method}>
-        <header className={styles.sectionIntro}><p className={styles.eyebrow}>{c.methodEyebrow}</p><h2>{c.methodTitle}</h2></header>
-        <ol>{c.method.map(([title, body], index) => <li key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol>
+        <header className={styles.sectionIntro} data-reveal="section"><p className={styles.eyebrow}>{c.methodEyebrow}</p><h2>{c.methodTitle}</h2></header>
+        <ol>{c.method.map(([title, body], index) => <li key={title} data-reveal="step" style={{ "--reveal-order": index % 3 } as CSSProperties}><span>0{index + 1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol>
       </section>
 
       <section id="booking" className={styles.pricing}>
-        <div className={styles.pricingIntro}><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p></div>
-        <LivingBlueprintCalculator locale={locale}/>
+        <div className={styles.pricingIntro} data-reveal="section"><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p></div>
+        <div data-reveal="instrument"><LivingBlueprintCalculator locale={locale}/></div>
       </section>
 
       <section className={styles.finalCta}>
         <div className={styles.finalDecision}>
-          <div className={styles.finalIntro}>
+          <div className={styles.finalIntro} data-reveal="section">
             <p className={styles.eyebrow}>{c.finalEyebrow}</p>
             <h2>{c.finalTitle}</h2>
             <p>{c.finalBody}</p>
@@ -179,7 +182,7 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
             <p className={styles.finalMeta}>{c.finalMeta}</p>
             <p className={styles.scopeBoundary}>{c.scopeBoundary}</p>
           </div>
-          <div className={styles.memo}><p>{c.memoLabel}</p><ol>{c.memo.map((item,index)=><li key={item}><span>0{index+1}</span><b>{item}</b></li>)}</ol><p className={styles.identity}>{AIOW_COMPANY.legalName} · {aiowAddressLine()} · KvK {AIOW_COMPANY.chamberOfCommerce} · <a href={`mailto:${AIOW_COMPANY.publicEmail}`}>{AIOW_COMPANY.publicEmail}</a></p></div>
+          <div className={styles.memo} data-reveal="instrument"><p>{c.memoLabel}</p><ol>{c.memo.map((item,index)=><li key={item}><span>0{index+1}</span><b>{item}</b></li>)}</ol><p className={styles.identity}>{AIOW_COMPANY.legalName} · {aiowAddressLine()} · KvK {AIOW_COMPANY.chamberOfCommerce} · <a href={`mailto:${AIOW_COMPANY.publicEmail}`}>{AIOW_COMPANY.publicEmail}</a></p></div>
         </div>
       </section>
     </main>

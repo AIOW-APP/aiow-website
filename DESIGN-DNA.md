@@ -2,9 +2,9 @@
 
 ## Authority and status
 
-This file governs the public AIOW homepage redesign on branch `feat/aiow-human-industrial-motion-20260906`. Richard rejected the prior Quiet Monolith and editorial architecture directions because they retained the recognisable visual grammar of AI-generated “premium” sites: fashionable serif/sans pairings, beige/black/gold, generic architecture imagery, glass, and mirrored light/dark themes.
+This file governs the public AIOW homepage and the Route Field Cinema candidate on branch `feat/aiow-route-field-cinema-20260907`. Richard rejected the prior Quiet Monolith and editorial architecture directions because they retained the recognisable visual grammar of AI-generated “premium” sites: fashionable serif/sans pairings, beige/black/gold, generic architecture imagery, glass, and mirrored light/dark themes.
 
-This branch passed local technical, accessibility, motion and product-art review on 2026-09-06. Production remains unchanged until protected PR integration and exact live-domain readback complete.
+Human Industrial entered production on 2026-09-07. The Route Field Cinema extension passed local technical, accessibility, motion and product-art review on 2026-09-07; production remains on the prior exact deployment until protected PR integration and exact live-domain readback complete.
 
 ## Product intent
 
@@ -100,9 +100,9 @@ A fixed-width A-I-O-W identity spine anchors the left edge. The promise and rout
 
 The header is a horizontal instrument line, not a floating rounded navigation pill. Its primary labels mirror the customer journey: `Bedrijf`, `Bedrijfspand`, `Woning`, `Kosten` / `Company`, `Building`, `Home`, `Costs`.
 
-## Signature motion — Route Field
+## Signature motion — Route Field Cinema
 
-Purpose: preview which customer world will open and make route choice feel physical and authored.
+Purpose: make AIOW feel like one precisely commissioned system, then use the same physical grammar to clarify route choice and page progression. This is one signature behaviour at three scales, not three unrelated effects.
 
 State authority:
 
@@ -110,25 +110,42 @@ State authority:
 - Links remain normal semantic links; click/tap navigates directly.
 - Visual layers are decorative and `aria-hidden`.
 - `aria-current` is not used for a hover preview because no navigation has occurred.
+- User input always interrupts and retargets the current visual state; programmed route previews never queue.
 
-Motion:
+Commissioning sequence — one shot after hydration:
 
-- First paint: spine settles and active route field opens once.
-- Route preview: active solid field reveals with one directional `clip-path` shutter.
-- Large route word follows 55–90ms later with a restrained translate/opacity settle.
-- Route indicator moves through a transform, never through layout geometry.
+- The first route is complete and readable in server HTML before choreography begins.
+- The identity spine energises, the lacquer field opens and a travelling calibration line connects promise, route list and field.
+- The field then previews `Werk → Pand → Wonen → Werk` once, exposing the breadth of AIOW without moving route links or delaying access.
+- Total authored sequence target: 2.6–3.2 seconds. Any pointer, focus, key or touch intent cancels it immediately and hands authority to the visitor.
+- It never loops, never replays on theme change and never gates content or navigation.
+
+Route preview:
+
+- Active solid field reveals with one directional shutter assembled from two compositor-safe panels.
+- Large route word follows 55–90ms later with a restrained masked settle; context follows as a quieter delayed layer.
+- Route indicator and calibration line move through transforms, never through layout geometry.
 - Desktop target transition: 460–560ms, cubic-bezier(.22,1,.36,1).
 - Mobile target transition: 320–420ms.
-- No idle loop, particles, cursor following, parallax, scroll-jacking, animated blur or decorative continuous motion.
 
-Invariant anchors: H1, route links, header, scan contract and focus targets never move.
+Scroll continuation:
+
+- One fail-open `IntersectionObserver` director marks major sections and their bounded child sequence once.
+- The same calibration line and shutter logic reveal section headings, environment rows, authority steps, method steps, calculator and decision memo.
+- Desktop uses 20–28px travel with 580–760ms settle; mobile uses 12–16px with 360–480ms settle. Stagger is capped at three levels: 90ms desktop and 55ms mobile.
+- Scroll velocity above the calibrated fast-flick threshold compresses pending reveals to 100–140ms with no stagger, so content never trails the visitor.
+- Scrolling remains native. There is no scroll-jacking, pinned fake timeline, parallax or progress theatre.
+
+Invariant anchors: H1, route links, header, scan contract, calculator controls and focus targets never move.
 
 Reduced motion / weak device / no-JS:
 
-- `prefers-reduced-motion: reduce` and `update: slow` remove animation and transition.
+- `prefers-reduced-motion: reduce`, `update: slow` and Save-Data skip commissioning and remove travel/transition.
+- The reveal system is strictly fail-open: content is visible by default; a root readiness class may hide only not-yet-seen items after observers are registered.
 - Default route content is rendered in settled state in HTML.
-- Without JavaScript all three route links work and the first visual field remains legible.
-- No feature or claim exists only in motion.
+- Without JavaScript all links, content, calculator and the first visual field remain legible and usable.
+- No feature, claim or selected state exists only in motion.
+- No idle loop, particles, cursor following, heavy video, WebGL, animated blur or decorative continuous motion.
 
 ## Theme behavior
 
@@ -210,5 +227,18 @@ Before preview or production:
 - `ACCESSIBILITY_PASS`: one H1, semantic route links, minimum 44px targets, no-JS links, NL/EN and no horizontal overflow.
 - `PRODUCT_ART_PASS`: reviewed at 320 light, 390 Evening, 768 light, 1440 light and settled 1440 `Wonen`; desktop auto-placement, fallback clipping and trust/route overlap blockers were fixed and re-reviewed.
 - Browser receipt: `.team-handsome/AIOW-HI-MOTION-20260906/50-proof/browser-proof.json` — `views=28`, `motion=6`, `no_js=4`.
+- `PREVIEW_READY`: PASS.
+- `LIVE_PROVEN`: pending protected PR, production deployment and custom-domain readback.
+
+### 2026-09-07 Route Field Cinema candidate evidence
+
+- `TECHNICAL_PASS`: 217/217 AIOW tests, lint, whitespace gate and 89-route Next production build.
+- `MOTION_PASS`: two real recorded viewport classes prove the one-shot `Werk → Pand → Wonen → Werk` commissioning sequence, pointer/keyboard/touch/wheel interruption, native-scroll continuation and settled end state.
+- `MOTION_FLOOR_PASS`: route targets remain invariant; new intent retargets immediately; no timer queues or loops; fast-scroll velocity compresses pending reveals to 100–140ms.
+- `ACCESSIBILITY_PASS`: original 28-view NL/EN Day/Evening matrix, six route-input states and four no-JS renders still pass; reduced motion and Save-Data skip cinema without capability loss.
+- `PRODUCT_ART_PASS`: real 1440px motion recording, 390px intro strip and corrected 390px fast-scroll strip reviewed; no blank frames, clipping, overlap, opacity lag or generic AI effects remain.
+- Fast-scroll receipt: 18/18 reveal targets settle on both viewport classes; 17/18 exercise velocity degradation; maximum recorded trigger position is 0.79 viewport on mobile and 0.82 on desktop.
+- Candidate receipts: `.team-handsome/AIOW-ROUTE-FIELD-CINEMA-20260907/70-candidate-responsive/browser-proof.json` and `.team-handsome/AIOW-ROUTE-FIELD-CINEMA-20260907/70-candidate-motion/route-field-cinema-proof.json`.
+- Candidate lab performance: LCP 128ms at 390px and 72ms at 1440px; CLS 0; zero long tasks during the 3.4-second commissioning window.
 - `PREVIEW_READY`: PASS.
 - `LIVE_PROVEN`: pending protected PR, production deployment and custom-domain readback.
