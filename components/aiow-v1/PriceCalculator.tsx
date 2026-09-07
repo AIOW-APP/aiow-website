@@ -56,6 +56,7 @@ export function PriceCalculator({ locale = "nl", onQuote }: { locale?: "nl" | "e
         <p>{result.label}{result.estimate ? (en ? " · estimate/quote" : " · indicatie/offerte") : ""}</p>
         {minimumApplied && <p className={styles.minimumNotice}>{en ? "Minimum rate applies" : "minimumtarief van toepassing"}</p>}
       </div>
+      <p className={styles.deliveryPromise}><strong>{en ? "One request, two deliveries." : "Eén aanvraag, twee leveringen."}</strong> {en ? "Download the PDF directly and receive the same document by email." : "Download de PDF direct en ontvang hetzelfde document per e-mail."}</p>
       <button type="button" className={`${styles.quoteButton} ${styles.decisionPrimary}`} onClick={(event) => onQuote(event, quoteConfiguration)}>{decision.dominantAction}<span aria-hidden="true">↓</span></button>
       <details className={`${styles.decisionSummary} ${styles.calculatorDetails}`}>
         <summary>{en ? "View advice, package and boundaries" : "Bekijk advies, pakket en grenzen"}</summary>

@@ -1,7 +1,6 @@
-export const PRICING_CONTEXT_SLUGS = [
-  "accountants", "logistiek", "bouw", "makelaars", "advocatuur", "zorg", "horeca-retail", "industrie", "vermogende-particulieren",
-  "kantoorpand", "bedrijfshal-industrie", "woning", "villa-signature", "woonproject-vve", "nieuwbouwproject",
-] as const;
+import { PRICING_CONTEXT_SLUGS } from "./public-route-manifest.mjs";
+
+export { PRICING_CONTEXT_SLUGS };
 
 export type PricingContextSlug = (typeof PRICING_CONTEXT_SLUGS)[number];
 export type PricingPackage = "business-start" | "business-growth" | "business-accelerated" | "private-ai" | "smart-office" | "office-xl" | "home" | "signature" | "smart-design-blueprint";

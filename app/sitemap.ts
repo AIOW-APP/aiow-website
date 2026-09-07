@@ -1,12 +1,8 @@
 import type { MetadataRoute } from "next";
-import { PUBLIC_ROUTE_PAIRS } from "@/lib/aiow-v1/locale";
-import { PRICING_CONTEXT_SLUGS } from "@/lib/aiow-v1/pricing-contexts";
+import { SITEMAP_ROUTE_PAIRS } from "@/lib/aiow-v1/public-route-manifest.mjs";
 
 const SITE_URL = "https://aiow.ai";
-const routePairs: readonly (readonly [string, string])[] = [
-  ...PUBLIC_ROUTE_PAIRS,
-  ...PRICING_CONTEXT_SLUGS.map((slug) => [`/tarieven/${slug}`, `/en/rates/${slug}`] as const),
-];
+
 const routeDates: Record<string,string> = {
   "/":"2026-09-01", "/en":"2026-09-01",
   "/mogelijkheden":"2026-09-01", "/en/capabilities":"2026-09-01", "/scan":"2026-09-01", "/en/scan":"2026-09-01",
@@ -27,7 +23,7 @@ function policy(path:string) {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return routePairs.flatMap(([nl, en]) => {
+  return SITEMAP_ROUTE_PAIRS.flatMap(([nl, en]) => {
     const languages = { nl: `${SITE_URL}${nl}`, en: `${SITE_URL}${en}`, "x-default": `${SITE_URL}${nl}` };
     return [nl, en].map((path) => ({
       url: `${SITE_URL}${path}`,

@@ -1,10 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { PRICING_CONTEXT_SLUGS, PUBLIC_ROUTE_PAIRS } from "../../lib/aiow-v1/public-route-manifest.mjs";
 
 const root = new URL("../../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
-const slugs = ["accountants", "logistiek", "bouw", "makelaars", "advocatuur", "zorg", "horeca-retail", "industrie", "vermogende-particulieren", "kantoorpand", "bedrijfshal-industrie", "woning", "villa-signature", "woonproject-vve", "nieuwbouwproject"];
+const slugs = PRICING_CONTEXT_SLUGS;
 
 function luminance(hex) {
   const values = hex.match(/[a-f\d]{2}/gi).map((part) => Number.parseInt(part, 16) / 255).map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
@@ -54,7 +55,7 @@ test("pricing contexts, sitemap and LLM documents retain all 15 routes", async (
     read("lib/aiow-v1/pricing-contexts.ts"), read("app/sitemap.ts"), read("app/llms.txt/route.ts"), read("app/llms-full.txt/route.ts"),
   ]);
   for (const slug of slugs) assert.match(contexts, new RegExp(`slug:\\"${slug}\\"`));
-  assert.match(sitemap, /PRICING_CONTEXT_SLUGS\.map/);
+  assert.match(sitemap, /SITEMAP_ROUTE_PAIRS/);
   assert.match(llms, /pricingContexts\.map/);
   assert.match(full, /pricingContexts\.map/);
   for (const phrase of ["automatic direct debit", "provider price increases", "full prepayment", "never provides interest-free financing", "50% of the Scan", "above 10 homes"]) {
@@ -74,14 +75,13 @@ test("tariff and context schema source encodes public commercial terms", async (
 });
 
 test("every public route publishes reciprocal NL, EN and x-default alternates", async () => {
-  const [seo, sitemap, locale, enContext] = await Promise.all([read("lib/aiow-v1/seo.tsx"), read("app/sitemap.ts"), read("lib/aiow-v1/locale.ts"), read("app/en/rates/[slug]/page.tsx")]);
+  const [seo, sitemap, enContext] = await Promise.all([read("lib/aiow-v1/seo.tsx"), read("app/sitemap.ts"), read("app/en/rates/[slug]/page.tsx")]);
   assert.match(seo, /pairedPaths: \{ nl: string; en: string \}/);
   assert.match(seo, /"x-default": `\$\{SITE_URL\}\$\{pairedPaths\.nl\}`/);
-  assert.match(sitemap, /PUBLIC_ROUTE_PAIRS/);
-  assert.match(sitemap, /PRICING_CONTEXT_SLUGS\.map/);
+  assert.match(sitemap, /SITEMAP_ROUTE_PAIRS/);
   assert.match(sitemap, /alternates: \{ languages \}/);
   for (const pair of [["/tarieven", "/en/rates"], ["/ai-automatisering", "/en/ai-automation"], ["/lokale-ai", "/en/local-ai"], ["/ventures", "/en/ventures"], ["/privacy", "/en/privacy"]]) {
-    assert.ok(pair.every((path) => locale.includes(`"${path}"`)), `missing locale pair ${pair}`);
+    assert.ok(PUBLIC_ROUTE_PAIRS.some(([nlPath,enPath])=>nlPath===pair[0]&&enPath===pair[1]), `missing locale pair ${pair}`);
   }
   assert.match(enContext, /dynamicParams = false/);
   assert.match(enContext, /generateStaticParams/);

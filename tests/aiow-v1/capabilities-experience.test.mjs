@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { PUBLIC_ROUTE_PAIRS } from "../../lib/aiow-v1/public-route-manifest.mjs";
 
 const root=new URL("../../",import.meta.url);
 const read=(path)=>readFile(new URL(path,root),"utf8");
@@ -26,12 +27,11 @@ test("scan output is one bounded decision artifact with all ten promised parts",
 });
 
 test("capabilities routes are paired, crawlable and directly reachable from primary navigation",async()=>{
-  const [nl,en,locale,header,sitemap,css,scanNl,scanEn,llms,llmsFull,scanPage,scanCss]=await Promise.all([
-    read("app/mogelijkheden/page.tsx"),read("app/en/capabilities/page.tsx"),read("lib/aiow-v1/locale.ts"),read("components/aiow-v1/PublicHeader.tsx"),read("app/sitemap.ts"),read("components/aiow-v1/CapabilitiesExperience.module.css"),read("app/scan/page.tsx"),read("app/en/scan/page.tsx"),read("app/llms.txt/route.ts"),read("app/llms-full.txt/route.ts"),read("components/aiow-v1/ScanRequestPage.tsx"),read("components/aiow-v1/ScanRequestPage.module.css"),
+  const [nl,en,header,sitemap,css,scanNl,scanEn,llms,llmsFull,scanPage,scanCss]=await Promise.all([
+    read("app/mogelijkheden/page.tsx"),read("app/en/capabilities/page.tsx"),read("components/aiow-v1/PublicHeader.tsx"),read("app/sitemap.ts"),read("components/aiow-v1/CapabilitiesExperience.module.css"),read("app/scan/page.tsx"),read("app/en/scan/page.tsx"),read("app/llms.txt/route.ts"),read("app/llms-full.txt/route.ts"),read("components/aiow-v1/ScanRequestPage.tsx"),read("components/aiow-v1/ScanRequestPage.module.css"),
   ]);
   assert.match(nl,/path:"\/mogelijkheden"/); assert.match(en,/path:"\/en\/capabilities"/);
-  assert.match(locale,/\["\/mogelijkheden", "\/en\/capabilities"\]/);
-  assert.match(locale,/\["\/scan", "\/en\/scan"\]/);
+  for(const pair of [["/mogelijkheden","/en/capabilities"],["/scan","/en/scan"]]) assert.ok(PUBLIC_ROUTE_PAIRS.some(([nlPath,enPath])=>nlPath===pair[0]&&enPath===pair[1]));
   assert.match(header,/key: "capabilities"/); assert.match(header,/Mogelijkheden/); assert.match(header,/Capabilities/);
   assert.match(header,/const resolvedScanHref = scanHref \|\| \(en \? "\/en\/scan" : "\/scan"\)/);
   assert.match(header,/primaryAction === "price" \? "#booking" : resolvedScanHref/);
@@ -40,9 +40,10 @@ test("capabilities routes are paired, crawlable and directly reachable from prim
   assert.match(scanPage,/import shell from "\.\/HumanIndustrialPublicShell\.module\.css"/); assert.match(scanPage,/className=\{`\$\{shell\.site\} \$\{styles\.site\}`\}/);
   for(const token of ["--bg","--ink","--line","--accent-text","--muted"]) assert.match(scanCss,new RegExp(`var\\(${token}\\)`));
   assert.doesNotMatch(scanCss,/#14161a|#f4efe6|#2e333c|#d9a441|#a7a297/i);
-  assert.match(sitemap,/PUBLIC_ROUTE_PAIRS/);
+  assert.match(sitemap,/SITEMAP_ROUTE_PAIRS/);
   for(const source of [llms,llmsFull]) { assert.match(source,/mogelijkheden/); assert.match(source,/en\/capabilities/); assert.match(source,/\/scan/); assert.match(source,/\/en\/scan/); }
   assert.match(css,/@media\(max-width:600px\)/); assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(css,/:global\(html\[data-theme="light"\]\) \.site/); assert.match(css,/:global\(html\[data-theme="dark"\]\) \.site/); assert.match(css,/@media\(prefers-color-scheme:light\)/);
+  assert.doesNotMatch(css,/:global\(html\[data-theme=/, "the mounted shared Human Industrial shell owns theme authority");
+  for(const token of ["var(--bg)","var(--ink)","var(--steel)","var(--copper)"]) assert.ok(css.includes(token),token);
   assert.doesNotMatch(css,/backdrop-filter|filter:\s*blur|animation:[^;]*(?:infinite|linear)/);
 });

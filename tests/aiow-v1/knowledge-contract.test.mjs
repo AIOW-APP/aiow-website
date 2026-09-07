@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { PUBLIC_ROUTE_PAIRS } from "../../lib/aiow-v1/public-route-manifest.mjs";
 
 const root = new URL("../../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 
 test("venture-score knowledge route is bilingual, crawlable and authority-bounded", async () => {
-  const [locale, sitemap, llms, llmsFull, content, nl, en] = await Promise.all([
-    read("lib/aiow-v1/locale.ts"),
+  const [sitemap, llms, llmsFull, content, nl, en] = await Promise.all([
     read("app/sitemap.ts"),
     read("app/llms.txt/route.ts"),
     read("app/llms-full.txt/route.ts"),
@@ -15,12 +15,13 @@ test("venture-score knowledge route is bilingual, crawlable and authority-bounde
     read("app/nl/kennis/startup-idee-laten-beoordelen-venture-score/page.tsx"),
     read("app/en/knowledge/startup-idea-venture-score/page.tsx"),
   ]);
+  const publicRoutes = new Set(PUBLIC_ROUTE_PAIRS.flat());
   for (const path of ["/nl/kennis", "/en/knowledge", "/nl/kennis/startup-idee-laten-beoordelen-venture-score", "/en/knowledge/startup-idea-venture-score"]) {
-    assert.ok(locale.includes(path), `locale contract missing ${path}`);
+    assert.ok(publicRoutes.has(path), `route manifest missing ${path}`);
     assert.ok(llms.includes(path), `llms.txt contract missing ${path}`);
     assert.ok(llmsFull.includes(path), `llms-full.txt contract missing ${path}`);
   }
-  assert.match(sitemap, /PUBLIC_ROUTE_PAIRS/);
+  assert.match(sitemap, /SITEMAP_ROUTE_PAIRS/);
   for (const phrase of ["geen automatische acceptatie", "verplichte menselijke beslisgate", "does not grant a contract", "not legal, tax or investment advice"]) assert.ok(content.includes(phrase), `authority boundary missing: ${phrase}`);
   assert.match(nl, /"@type": "Article"/);
   assert.match(en, /"@type": "Article"/);

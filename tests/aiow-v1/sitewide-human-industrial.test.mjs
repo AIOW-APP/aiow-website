@@ -7,6 +7,7 @@ const files = {
   shell: "components/aiow-v1/HumanIndustrialPublicShell.module.css",
   pillar: "components/aiow-v1/PillarPage.tsx",
   capabilities: "components/aiow-v1/CapabilitiesExperience.tsx",
+  capabilitiesCss: "components/aiow-v1/CapabilitiesExperience.module.css",
   tariffs: "components/aiow-v1/TariffsPage.tsx",
   pricing: "components/aiow-v1/PricingContextPage.tsx",
   info: "components/aiow-v1/InfoPage.tsx",
@@ -22,6 +23,10 @@ const files = {
   layout: "app/layout.tsx",
   legacy: "app/legacy-aiow/page.tsx",
   sharedCss: "components/aiow-v1/AiowV1Homepage.module.css",
+  homepage: "components/aiow-v1/LivingBlueprintHomepage.tsx",
+  homepageCss: "components/aiow-v1/LivingBlueprintHomepage.module.css",
+  sitewideProof: "tests/aiow-v1/release-sitewide-human-industrial-proof.mjs",
+  dna: "DESIGN-DNA.md",
 };
 const source = Object.fromEntries(await Promise.all(Object.entries(files).map(async ([key, file]) => [key, await readFile(new URL(file, root), "utf8")])));
 
@@ -72,4 +77,29 @@ test("route state, conversion surfaces and browser chrome share the Human Indust
   assert.doesNotMatch(source.header, /\["\/", "\/en", "\/ai-automatisering"/);
   assert.match(source.legacy, /robots: \{ index: false, follow: false \}/);
   assert.doesNotMatch(source.info, /href="\/legacy-aiow"/);
+});
+
+test("pricing surfaces expose one canonical PDF download and email quote route", () => {
+  assert.match(source.homepage, /Direct downloaden/);
+  assert.match(source.homepage, /Dezelfde PDF per e-mail/);
+  assert.match(source.homepage, /Download directly/);
+  assert.match(source.homepage, /The same PDF by email/);
+  assert.match(source.tariffs, /id="offerte"/);
+  assert.match(source.tariffs, /LivingBlueprintCalculator/);
+  assert.match(source.tariffs, /PDF \+ e-mail/);
+  assert.match(source.tariffs, /PDF \+ email/);
+  assert.match(source.dna, /directe PDF-download plus dezelfde PDF per transactionele e-mail/);
+});
+
+test("sitewide browser proof audits every visible top-level page region", () => {
+  for (const marker of ["sectionAudit", "auditedRegions", "legacyVisualViolations", "main > *"]) assert.ok(source.sitewideProof.includes(marker), marker);
+  assert.match(source.sitewideProof, /borderRadius/);
+  assert.match(source.sitewideProof, /fontFamily/);
+  assert.match(source.sitewideProof, /backgroundColor/);
+});
+
+test("capabilities interaction inherits the Human Industrial material and geometry", () => {
+  assert.doesNotMatch(source.capabilitiesCss, /Fraunces|Georgia|border-radius:(?:8|11|12)px|#d9a441|#14161a|#f4efe6|#a7a297/i);
+  assert.match(source.capabilitiesCss, /"Avenir Next Condensed"/);
+  assert.match(source.capabilitiesCss, /background:var\(--steel\)/);
 });

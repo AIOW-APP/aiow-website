@@ -86,6 +86,18 @@ System mode selects day/evening by OS preference. Manual Light/Dark remains avai
 - No body glass. One sticky navigation layer may use a near-solid surface with subtle transparency and solid fallback.
 - The outlined `O` is the physical aperture in the A-I-O-W spine and the primary identity motif.
 
+### Distribution surfaces
+
+Human Industrial continues beyond the mounted page into every automatically generated brand carrier:
+
+- Open Graph / WhatsApp / LinkedIn / X use one 1200×630 Day master: aluminium field, instrument-black spine, lacquer-red offer block, hairline measurement grid and the three stable buyer routes `BEDRIJF / BEDRIJFSPAND / WONING`.
+- The share headline is the product category, never a temporary campaign slogan: `AI op maat voor bedrijf, bedrijfspand en woning.`
+- Essential text stays inside a 72px safe area and remains legible at a 320px-wide chat-card rendering. No gradient glow, cyan, Warm Precision label, stock asset, tiny body paragraph or rounded status token.
+- Social metadata uses the same current proposition and a localized descriptive alt; WhatsApp, LinkedIn and X may crop but may not lose `AI OP MAAT`, AIOW identity or the three buyer worlds.
+- Browser/favicon and Apple touch icon use one square instrument glyph: black field, lacquer aperture and chalk calibration marks. They are glyphs, not miniature collateral.
+- Transactional HTML email uses a solid aluminium technical sheet with black type, lacquer rule, square CTA and plain-text parity. No glass, dark hero, remote decorative image or CSS that mail clients commonly strip.
+- The generic multi-brand OG helper may remain for other products, but AIOW never routes through its cyan/glow preset.
+
 ## Homepage composition
 
 ### Mobile 320/375/390
@@ -183,6 +195,8 @@ Route-page first-viewport contract:
 
 The scan contract remains: free, approximately max. 30 minutes, human confirmation, decision memo, separate scoping for hardware/installation/external qualified partners.
 
+The public pricing journey uses one canonical quote transaction. Before opening the form, the page explicitly states both release channels: `directe PDF-download plus dezelfde PDF per transactionele e-mail` / `direct PDF download plus the same PDF by transactional email`. The server recalculates and durably records the indication before either channel is released; there is no second, weaker mail-only or download-only path. The result remains an indication rather than a final offer, and one dominant action owns both channels.
+
 ## Sitewide Human Industrial composition system
 
 Human Industrial is the public-site shell, not a homepage skin. Every mounted public NL/EN route inherits the same aluminium / signal-red Day world, deep-green / coral Evening world, condensed industrial typography, square geometry, thin measurement rules, stable header and semantic focus language.
@@ -251,7 +265,7 @@ Company facts remain canonical: AIOW B.V. · Bijlmermeerstraat 30 · 2131 HC Hoo
 Before preview or production:
 
 1. tests, lint and production build;
-2. exact responsive screenshots in NL/EN and Day/Evening;
+2. exact responsive screenshots in NL/EN and Day/Evening, with every visible top-level page region inventoried and checked for the Human Industrial font, palette, square geometry and overflow contract;
 3. runtime motion-state probe for pointer, focus and direct navigation;
 4. reduced-motion and no-JS proof;
 5. no-overflow, target size and exactly-one-H1 assertions;
