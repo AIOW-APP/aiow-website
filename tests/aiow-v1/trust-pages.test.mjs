@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { PUBLIC_ROUTE_PAIRS } from "../../lib/aiow-v1/public-route-manifest.mjs";
 
 const root = new URL("../../", import.meta.url);
-const [trust, nl, en, locale, sitemap, llms, header, footer, seo, company] = await Promise.all([
+const [trust, nl, en, sitemap, llms, header, footer, seo, company] = await Promise.all([
   readFile(new URL("components/aiow-v1/TrustPage.tsx", root), "utf8"), readFile(new URL("app/bedrijfsgegevens/page.tsx", root), "utf8"),
-  readFile(new URL("app/en/company/page.tsx", root), "utf8"), readFile(new URL("lib/aiow-v1/locale.ts", root), "utf8"),
+  readFile(new URL("app/en/company/page.tsx", root), "utf8"),
   readFile(new URL("app/sitemap.ts", root), "utf8"), readFile(new URL("app/llms.txt/route.ts", root), "utf8"),
   readFile(new URL("components/aiow-v1/PublicHeader.tsx", root), "utf8"), readFile(new URL("components/aiow-v1/PublicFooter.tsx", root), "utf8"),
   readFile(new URL("lib/aiow-v1/seo.tsx", root), "utf8"), readFile(new URL("lib/aiow-v1/company.mjs", root), "utf8"),
@@ -22,8 +23,8 @@ test("trust metadata, locale alternates, sitemap and navigation remain paired", 
   assert.match(nl, /path: "\/bedrijfsgegevens"/); assert.match(en, /path: "\/en\/company"/);
   assert.match(nl, /pairedPaths: \{ nl: "\/bedrijfsgegevens", en: "\/en\/company" \}/);
   assert.match(en, /locale: "en"/);
-  assert.match(locale, /\["\/bedrijfsgegevens", "\/en\/company"\]/);
-  assert.match(sitemap, /PUBLIC_ROUTE_PAIRS/);
+  assert.ok(PUBLIC_ROUTE_PAIRS.some(([nlPath, enPath]) => nlPath === "/bedrijfsgegevens" && enPath === "/en/company"));
+  assert.match(sitemap, /SITEMAP_ROUTE_PAIRS/);
   assert.match(header, /\/en\/company/); assert.match(footer, /\/bedrijfsgegevens/);
 });
 

@@ -56,6 +56,7 @@ const copy = {
     priceEyebrow: "Publieke indicatie",
     priceTitle: "Eerst helderheid. Dan een prijs.",
     priceBody: "Kies één concrete route voor een transparante indicatie. Brede werk-, pand- en woningprojecten krijgen een prijs na geverifieerde scope.",
+    priceDelivery: [["Direct downloaden", "Na vastlegging start uw persoonlijke PDF direct."], ["Dezelfde PDF per e-mail", "U ontvangt een controleerbare kopie op het ingevulde adres."]],
     finalEyebrow: "Uw eerste besluit",
     finalTitle: "Begin met één proces of één ruimte.",
     finalBody: "In maximaal circa 30 minuten brengen we bronnen, regels en afhankelijkheden in kaart.",
@@ -110,6 +111,7 @@ const copy = {
     priceEyebrow: "Public indication",
     priceTitle: "Clarity first. Then a price.",
     priceBody: "Choose one concrete route for a transparent indication. Broader work, building and home projects are priced after verified scope.",
+    priceDelivery: [["Download directly", "Your personal PDF starts after the indication is recorded."], ["The same PDF by email", "A verifiable copy is sent to the address you enter."]],
     finalEyebrow: "Your first decision",
     finalTitle: "Start with one process or one space.",
     finalBody: "In about 30 minutes maximum, we map the sources, rules and dependencies.",
@@ -168,7 +170,7 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
       </section>
 
       <section id="pricing" className={styles.pricing}>
-        <div className={styles.pricingIntro} data-reveal="section"><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p></div>
+        <div className={styles.pricingIntro} data-reveal="section"><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p><dl className={styles.quoteDelivery}>{c.priceDelivery.map(([title,body],index)=><div key={title}><dt><span>0{index+1}</span>{title}</dt><dd>{body}</dd></div>)}</dl></div>
         <div data-reveal="instrument"><LivingBlueprintCalculator locale={locale}/></div>
       </section>
 

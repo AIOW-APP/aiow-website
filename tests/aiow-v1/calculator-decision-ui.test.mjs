@@ -5,10 +5,12 @@ import { readFile } from "node:fs/promises";
 const root=new URL("../../",import.meta.url);
 
 test("calculator mounts one canonical bilingual decision summary with one dominant action",async()=>{
-  const [calculator,decision,css]=await Promise.all([
+  const [calculator,decision,css,homepage,homepageCss]=await Promise.all([
     readFile(new URL("components/aiow-v1/PriceCalculator.tsx",root),"utf8"),
     readFile(new URL("lib/aiow-v1/calculator-decision.mjs",root),"utf8"),
     readFile(new URL("components/aiow-v1/AiowV1Homepage.module.css",root),"utf8"),
+    readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.tsx",root),"utf8"),
+    readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.module.css",root),"utf8"),
   ]);
   assert.match(calculator,/buildCalculatorDecision\(quoteConfiguration, locale\)/);
   assert.match(calculator,/Bekijk advies, pakket en grenzen/); assert.match(calculator,/View advice, package and boundaries/);
@@ -20,7 +22,11 @@ test("calculator mounts one canonical bilingual decision summary with one domina
   assert.equal((calculator.match(/formatEuroCents\(result\.monthlyCents/g)||[]).length,1);
   assert.match(calculator,/<details className=\{`\$\{styles\.decisionSummary\} \$\{styles\.calculatorDetails\}`\}>/);
   assert.match(decision,/calculateBusinessPrice\(config\.people\)/); assert.match(decision,/calculateBuildingPrice/);
+  assert.match(decision,/PDF \+ e-mail/); assert.match(decision,/PDF \+ email/);
   assert.doesNotMatch(decision,/fetch\(|Math\.random|Date\(|localStorage|document|window/);
   assert.match(css,/\.decisionSummary/); assert.match(css,/\.decisionPrimary/); assert.match(css,/\.calculatorDetails/);
+  for(const marker of ["Direct downloaden","Dezelfde PDF per e-mail","Download directly","The same PDF by email"]) assert.ok(homepage.includes(marker),marker);
+  assert.match(homepage,/styles\.quoteDelivery/); assert.match(homepageCss,/\.quoteDelivery/);
+  assert.match(calculator,/styles\.deliveryPromise/); assert.match(css,/\.deliveryPromise/);
   assert.match(css,/@media\(max-width:600px\)[^]*\.decisionMoney,\.decisionColumns\{grid-template-columns:1fr\}/);
 });

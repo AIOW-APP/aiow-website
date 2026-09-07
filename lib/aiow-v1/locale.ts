@@ -1,20 +1,8 @@
+import { PUBLIC_ROUTE_PAIRS } from "./public-route-manifest.mjs";
+
 export type AiowLocale = "nl" | "en";
 
-export const PUBLIC_ROUTE_PAIRS = [
-  ["/", "/en"],
-  ["/tarieven", "/en/rates"],
-  ["/ai-automatisering", "/en/ai-automation"],
-  ["/lokale-ai", "/en/local-ai"],
-  ["/smart-office", "/en/smart-office"],
-  ["/home", "/en/home"],
-  ["/ventures", "/en/ventures"],
-  ["/nl/kennis", "/en/knowledge"],
-  ["/nl/kennis/startup-idee-laten-beoordelen-venture-score", "/en/knowledge/startup-idea-venture-score"],
-  ["/privacy", "/en/privacy"],
-  ["/bedrijfsgegevens", "/en/company"],
-  ["/mogelijkheden", "/en/capabilities"],
-  ["/scan", "/en/scan"],
-] as const;
+export { PUBLIC_ROUTE_PAIRS };
 
 export function localizedPath(pathname: string, locale: AiowLocale): string {
   const clean = pathname !== "/" ? pathname.replace(/\/$/, "") : pathname;

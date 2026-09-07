@@ -14,7 +14,9 @@ export const homeFaq = [
 export function pageMetadata({ title, description, path, pairedPaths, locale = "nl" }: { title: string; description: string; path: string; pairedPaths: { nl: string; en: string }; locale?: AiowLocale }): Metadata {
   const canonical = `${SITE_URL}${path}`;
   const languages = { nl: `${SITE_URL}${pairedPaths.nl}`, en: `${SITE_URL}${pairedPaths.en}`, "x-default": `${SITE_URL}${pairedPaths.nl}` };
-  return { title: { absolute: title }, description, alternates: { canonical, languages }, openGraph: { type: "website", siteName: "AIOW", title, description, url: canonical, locale: locale === "nl" ? "nl_NL" : "en_GB", alternateLocale: [locale === "nl" ? "en_GB" : "nl_NL"], images: [{ url: `${SITE_URL}/opengraph-image`, width: 1200, height: 630, alt: "AIOW — Working AI, precisely installed" }] }, twitter: { card: "summary_large_image", title, description, images: [`${SITE_URL}/opengraph-image`] } };
+  const socialImage = `${SITE_URL}/opengraph-image?v=human-industrial-20260907`;
+  const socialAlt = locale === "nl" ? "AIOW — AI op maat voor bedrijf, bedrijfspand en woning" : "AIOW — Bespoke AI for company, commercial building and home";
+  return { title: { absolute: title }, description, alternates: { canonical, languages }, openGraph: { type: "website", siteName: "AIOW", title, description, url: canonical, locale: locale === "nl" ? "nl_NL" : "en_GB", alternateLocale: [locale === "nl" ? "en_GB" : "nl_NL"], images: [{ url: socialImage, width: 1200, height: 630, alt: socialAlt }] }, twitter: { card: "summary_large_image", title, description, images: [socialImage] } };
 }
 
 export function organizationNode(locale: AiowLocale = "nl") {

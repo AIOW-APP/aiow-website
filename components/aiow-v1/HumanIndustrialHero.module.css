@@ -331,6 +331,7 @@
   .spine{width:64px;font-size:30px}.spine i{width:36px;border-width:5px}
   .copy{grid-column:1;grid-row:1;padding:52px 28px 24px;align-self:center}
   .hero .copy h1{font-size:clamp(47px,6.6vw,60px);line-height:.9}
+  .copy h1 span:not(:last-child),.copy h1 strong{white-space:normal}
   .copy h1 strong{min-width:145px;padding-inline:12px}
   .hero .lead{margin-top:28px;font-size:14px}
   .hero .authority{margin-top:22px;font-size:10px}
