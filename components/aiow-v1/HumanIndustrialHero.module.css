@@ -35,7 +35,7 @@
   flex-direction:column;
   align-items:center;
   background:var(--hi-ink);
-  color:var(--hi-on-accent);
+  color:var(--hi-field-ink);
   font-family:"Avenir Next Condensed","Arial Narrow","Helvetica Neue",sans-serif;
   font-size:44px;
   font-weight:800;

@@ -25,11 +25,13 @@ test("Human Industrial text roles meet WCAG AA on every Day and Evening surface"
   }
   assert.ok(contrast("#11110F", "#D94B30") >= 4.49);
   assert.ok(contrast("#10271F", "#F56A4D") >= 4.5);
+  assert.ok(contrast("#FFB5A3", "#11110F") >= 4.5);
+  assert.ok(contrast("#FFB5A3", "#10271F") >= 4.5);
   const shell = await read("components/aiow-v1/HumanIndustrialPublicShell.module.css");
   const living = await read("components/aiow-v1/LivingBlueprintHomepage.module.css");
   const shared = await read("components/aiow-v1/AiowV1Homepage.module.css");
   const tariffs = await read("components/aiow-v1/TariffsPage.module.css");
-  for (const token of ["--accent-text:#8b2418", "--muted:#50514c", "--error-text:#8f1d18", "--accent-text:#ffb5a3", "--muted:#b9cdbf", "--error-text:#ffb4a8"]) {
+  for (const token of ["--accent-text:#8b2418", "--muted:#50514c", "--error-text:#8f1d18", "--accent-text:#ffb5a3", "--muted:#b9cdbf", "--error-text:#ffb4a8", "--accent-on-steel:#ffb5a3"]) {
     assert.ok(shell.includes(token) && living.includes(token), token);
   }
   assert.match(tariffs, /\.smartDesign\{[^}]*background:var\(--copper\);color:var\(--on-copper\)/);

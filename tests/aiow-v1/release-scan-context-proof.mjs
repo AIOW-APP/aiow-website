@@ -24,13 +24,14 @@ const browser = await webkit.launch({ headless: true });
 
 function label(locale) { return locale === "en" ? "Request a scan" : "Vraag een scan aan"; }
 function inside(rect, viewport) { return rect && rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= viewport.width + 0.5 && rect.y + rect.height <= viewport.height + 0.5; }
+async function gotoOk(page, route) { const response = await page.goto(new URL(route, base).href, { waitUntil: "domcontentloaded", timeout: 60000 }); if (!response || !response.ok()) throw new Error(`${route}: HTTP ${response?.status() || 0}`); return response; }
 
 for (const locale of locales) for (const route of routes) for (const viewport of viewports) for (const theme of themes) {
   const context = await browser.newContext({ viewport, colorScheme: theme === "dark" ? "dark" : "light", locale: locale === "en" ? "en-GB" : "nl-NL" });
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto(new URL(route[locale], base).href, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await gotoOk(page, route[locale]);
   await page.evaluate(value => document.documentElement.setAttribute("data-theme", value), theme);
   await page.waitForTimeout(200);
   const state = await page.evaluate((scanLabel) => {
@@ -84,7 +85,7 @@ for (const locale of locales) for (const route of routes) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: locale === "en" ? "en-GB" : "nl-NL" });
   const page = await context.newPage();
   const scanPath = `${locale === "en" ? "/en" : ""}/scan?intent=${route.intent}&returnTo=${encodeURIComponent(route[locale])}`;
-  await page.goto(new URL(scanPath, base).href, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await gotoOk(page, scanPath);
   const selected = await page.locator("select#booking-subject").inputValue();
   if (selected !== route.subject) throw new Error(`${scanPath}: selected=${selected}`);
   receipt.direct.push({ locale, intent: route.intent, selected });
@@ -94,7 +95,7 @@ for (const locale of locales) for (const route of routes) {
 for (const locale of locales) for (const route of routes) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto(new URL(route[locale], base).href, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await gotoOk(page, route[locale]);
   const scanLink = page.getByRole("link", { name: label(locale), exact: true }).first();
   const href = await scanLink.getAttribute("href");
   const expected = `${locale === "en" ? "/en" : ""}/scan?intent=${route.intent}&returnTo=${encodeURIComponent(route[locale])}`;
