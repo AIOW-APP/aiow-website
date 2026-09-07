@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const root=new URL("../../",import.meta.url);
-const[home,enHome,page,hero,css,heroCss,sharedCss,dna,analytics,nextConfig,seo,llms]=await Promise.all([
+const[home,enHome,page,hero,director,css,heroCss,sharedCss,dna,analytics,nextConfig,seo,llms]=await Promise.all([
  readFile(new URL("app/page.tsx",root),"utf8"),
  readFile(new URL("app/en/page.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/HumanIndustrialHero.tsx",root),"utf8"),
+ readFile(new URL("components/aiow-v1/HomepageMotionDirector.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.module.css",root),"utf8"),
  readFile(new URL("components/aiow-v1/HumanIndustrialHero.module.css",root),"utf8"),
  readFile(new URL("components/aiow-v1/AiowV1Homepage.module.css",root),"utf8"),
@@ -81,6 +82,19 @@ test("route field motion has stable geometry and complete fail-safe routes",()=>
  assert.doesNotMatch(heroCss,/infinite|cursor:.*none|filter:blur|backdrop-filter|parallax/i);
  assert.match(heroCss,/html\[data-theme="dark"\]/);assert.match(heroCss,/prefers-color-scheme:dark/);
  assert.match(dna,/Signature motion — Route Field/);assert.match(dna,/No idle loop/);assert.match(dna,/Default route content is rendered in settled state/);
+});
+
+test("Route Field Cinema is one-shot, interruptible and fail-open",()=>{
+ assert.match(page,/<HomepageMotionDirector/);assert.ok((page.match(/data-reveal=/g)||[]).length>=10);
+ for(const marker of["building","home","work"])assert.match(hero,new RegExp(`setActiveRoute\\(\\"${marker}\\"\\)`));
+ assert.match(hero,/data-cinema=\{cinemaState\}/);assert.match(hero,/stopCommissioning/);
+ assert.match(hero,/addEventListener\("wheel"/);assert.match(hero,/addEventListener\("touchstart"/);assert.match(hero,/addEventListener\("keydown"/);
+ assert.match(director,/IntersectionObserver/);assert.match(director,/requestAnimationFrame/);assert.match(director,/data-motion-ready/);assert.match(director,/prefers-reduced-motion: reduce/);assert.match(director,/saveData/);
+ assert.match(director,/fastScroll/);assert.match(director,/data-fast-reveal/);assert.match(director,/addEventListener\("scroll"/);
+ assert.match(css,/data-motion-ready/);assert.match(css,/section-calibrate/);assert.match(css,/@media\(max-width:600px\).*transition-duration/s);
+ assert.match(css,/data-fast-reveal/);assert.match(css,/transition-duration:\.1s,\.14s,\.14s/);
+ assert.doesNotMatch(`${hero}\n${director}\n${heroCss}\n${css}`,/setInterval|animation-iteration-count\s*:\s*infinite|scroll-behavior:\s*smooth/i);
+ assert.match(dna,/commissioning sequence/i);assert.match(dna,/never loops/i);assert.match(dna,/strictly fail-open/i);
 });
 
 test("Human Industrial removes the generic AI design grammar",()=>{

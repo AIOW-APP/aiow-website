@@ -197,6 +197,8 @@
   overflow:hidden;
   background:var(--hi-field);
   color:var(--hi-field-ink);
+  container-type:inline-size;
+  transform:translateZ(0);
 }
 .field>p{position:absolute;z-index:5;top:40px;left:40px;color:var(--hi-field-muted)}
 .fieldLayer{
@@ -215,6 +217,19 @@
 .fieldLayer[data-index="1"]{--layer-bg:var(--hi-ink);--layer-ink:var(--hi-field-ink);--layer-muted:var(--hi-field-muted)}
 .fieldLayer[data-index="2"]{--layer-bg:#33433c;--layer-ink:#edf1eb;--layer-muted:#bdc7c0}
 .fieldLayer[data-visible="true"]{z-index:2;clip-path:inset(0);opacity:1;transition:clip-path .52s cubic-bezier(.22,1,.36,1),opacity 0s}
+.fieldLayer::before{
+  content:"";
+  position:absolute;
+  z-index:3;
+  inset:0 auto 0 0;
+  width:1px;
+  background:color-mix(in srgb,var(--layer-ink) 54%,transparent);
+  opacity:0;
+  transform:translateX(0);
+}
+.fieldLayer[data-visible="true"]::before{
+  animation:field-calibrate .72s cubic-bezier(.22,1,.36,1) both;
+}
 .fieldLayer>span{
   color:var(--layer-ink);
   font-family:"Avenir Next Condensed","Arial Narrow","Helvetica Neue",sans-serif;
@@ -247,8 +262,25 @@
   border:7px solid var(--hi-accent);
   border-radius:50%;
   mix-blend-mode:difference;
+  transition:transform .54s cubic-bezier(.22,1,.36,1),border-width .3s ease;
 }
-.aperture i{position:absolute;inset:50% auto auto 50%;width:6px;height:6px;border-radius:50%;background:var(--hi-field-ink);transform:translate(-50%,-50%)}
+.aperture i{position:absolute;left:50%;bottom:50%;width:2px;height:18px;background:var(--hi-field-ink);transform:translateX(-50%) rotate(var(--aperture-angle,0deg));transform-origin:50% 100%;transition:transform .54s cubic-bezier(.22,1,.36,1)}
+.aperture::after{content:"";position:absolute;inset:50% auto auto 50%;width:7px;height:7px;border-radius:50%;background:var(--hi-field-ink);transform:translate(-50%,-50%)}
+.hero[data-active-route="work"]{--aperture-angle:-44deg}
+.hero[data-active-route="building"]{--aperture-angle:0deg}
+.hero[data-active-route="home"]{--aperture-angle:44deg}
+.calibrationSweep{
+  position:absolute;
+  z-index:6;
+  inset:0 auto 0 0;
+  width:2px;
+  background:var(--hi-field-ink);
+  opacity:0;
+  pointer-events:none;
+  transform:translateX(-2px);
+}
+.hero[data-cinema="running"] .calibrationSweep{animation:commissioning-sweep 1.08s cubic-bezier(.22,1,.36,1) .12s both}
+.hero[data-cinema="running"] .aperture{animation:commissioning-aperture 1.08s cubic-bezier(.22,1,.36,1) .18s both}
 
 :global(html[data-theme="dark"]) .hero{
   --hi-bg:#17382e;--hi-ink:#ddeadd;--hi-muted:#9eb7a9;--hi-rule:#4e6b60;--hi-accent:#f56a4d;--hi-on-accent:#17382e;--hi-field:#10271f;--hi-field-ink:#ddeadd;--hi-field-muted:#91aa9d;--hi-field-rule:#47645a;--hi-focus:#f56a4d;
@@ -345,6 +377,7 @@
     margin:18px 18px 0;
   }
   .field>p,.aperture,.fieldLayer>small,.fieldLayer>b{display:none}
+  .calibrationSweep{width:1px}
   .fieldLayer{padding:22px 17px 18px;justify-content:center}
   .fieldLayer>span{font-size:clamp(67px,22vw,88px);line-height:.72}
 }
@@ -367,3 +400,6 @@
 @keyframes headline-enter{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes copy-enter{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes delivery-enter{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes field-calibrate{0%{opacity:0;transform:translateX(0)}18%{opacity:.68}72%{opacity:.35}100%{opacity:0;transform:translateX(calc(100cqw - 1px))}}
+@keyframes commissioning-sweep{0%{opacity:0;transform:translateX(-2px)}12%{opacity:.8}78%{opacity:.38}100%{opacity:0;transform:translateX(calc(100cqw - 2px))}}
+@keyframes commissioning-aperture{0%{transform:scale(.72);border-width:12px}55%{transform:scale(1.12);border-width:4px}100%{transform:scale(1);border-width:7px}}

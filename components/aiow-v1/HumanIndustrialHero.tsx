@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties, type FocusEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FocusEvent, type PointerEvent } from "react";
 import styles from "./HumanIndustrialHero.module.css";
 
 type Locale = "nl" | "en";
@@ -55,9 +55,44 @@ const content = {
 export function HumanIndustrialHero({ locale = "nl" }: { locale?: Locale }) {
   const c = content[locale];
   const [activeRoute, setActiveRoute] = useState<RouteId>("work");
+  const [cinemaState, setCinemaState] = useState<"ready" | "running" | "settled">("ready");
+  const commissioningTimers = useRef<number[]>([]);
   const activeIndex = c.routes.findIndex((route) => route.id === activeRoute);
 
+  const stopCommissioning = useCallback(() => {
+    commissioningTimers.current.forEach(window.clearTimeout);
+    commissioningTimers.current = [];
+    setCinemaState("settled");
+  }, []);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce), (update: slow)").matches;
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (reduced || saveData) {
+      setCinemaState("settled");
+      return;
+    }
+    setCinemaState("running");
+    commissioningTimers.current = [
+      window.setTimeout(() => setActiveRoute("building"), 820),
+      window.setTimeout(() => setActiveRoute("home"), 1480),
+      window.setTimeout(() => setActiveRoute("work"), 2180),
+      window.setTimeout(() => setCinemaState("settled"), 2860),
+    ];
+    const interrupt = () => stopCommissioning();
+    window.addEventListener("wheel", interrupt, { once: true, passive: true });
+    window.addEventListener("touchstart", interrupt, { once: true, passive: true });
+    window.addEventListener("keydown", interrupt, { once: true });
+    return () => {
+      commissioningTimers.current.forEach(window.clearTimeout);
+      window.removeEventListener("wheel", interrupt);
+      window.removeEventListener("touchstart", interrupt);
+      window.removeEventListener("keydown", interrupt);
+    };
+  }, [stopCommissioning]);
+
   function preview(id: RouteId) {
+    stopCommissioning();
     setActiveRoute(id);
   }
 
@@ -71,7 +106,9 @@ export function HumanIndustrialHero({ locale = "nl" }: { locale?: Locale }) {
       id={locale === "en" ? "solutions" : "oplossingen"}
       className={styles.hero}
       data-active-route={activeRoute}
+      data-cinema={cinemaState}
       data-locale={locale}
+      onPointerDown={stopCommissioning}
       style={{ "--route-index": activeIndex } as CSSProperties}
     >
       <div className={styles.spine} aria-hidden="true">
@@ -124,6 +161,7 @@ export function HumanIndustrialHero({ locale = "nl" }: { locale?: Locale }) {
             <b />
           </div>
         ))}
+        <div className={styles.calibrationSweep} />
         <div className={styles.aperture}><i /></div>
       </div>
     </section>
