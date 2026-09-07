@@ -18,15 +18,15 @@ function currentNavKey(pathname: string): NavKey | null {
   return null;
 }
 
-export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false, showCta = true, variant }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean; showCta?: boolean; variant?: "human-industrial" }) {
+export function PublicHeader({ locale = "nl", onBook, primaryAction = "scan", compactMobile = false, showCta = true, variant, scanHref }: { locale?: AiowLocale; onBook?: (event: MouseEvent<HTMLButtonElement>) => void; primaryAction?: "scan" | "price"; compactMobile?: boolean; showCta?: boolean; variant?: "human-industrial"; scanHref?: string }) {
   const en = locale === "en";
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const navigation = useRef<HTMLElement>(null);
-  const scanHref = en ? "/en/scan" : "/scan";
+  const resolvedScanHref = scanHref || (en ? "/en/scan" : "/scan");
   const scanLabel = en ? "Request a scan" : "Vraag een scan aan";
-  const actionHref = primaryAction === "price" ? "#booking" : scanHref;
+  const actionHref = primaryAction === "price" ? "#booking" : resolvedScanHref;
   const actionLabel = primaryAction === "price" ? (en ? "View your indication" : "Bekijk uw indicatie") : scanLabel;
   const active = currentNavKey(pathname);
   const defaultItems: { key: NavKey; href: string; label: string }[] = [

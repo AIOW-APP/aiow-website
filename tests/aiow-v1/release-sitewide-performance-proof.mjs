@@ -1,0 +1,9 @@
+const { webkit } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+const base=process.env.AIOW_PROOF_BASE||'http://127.0.0.1:3111';
+const out=path.resolve('.team-handsome/AIOW-SITEWIDE-HUMAN-INDUSTRIAL-20260907/60-final');await mkdir(out,{recursive:true});
+const browser=await webkit.launch({headless:true});const metrics=[];
+for(const route of ['/','/mogelijkheden','/tarieven','/portal'])for(const viewport of [{width:390,height:844},{width:1440,height:900}]){
+ const c=await browser.newContext({viewport});const p=await c.newPage();await p.addInitScript(()=>{window.__qa={cls:0,long:0,lcp:0};new PerformanceObserver(l=>{for(const e of l.getEntries())window.__qa.cls+=e.value||0}).observe({type:'layout-shift',buffered:true});try{new PerformanceObserver(l=>{for(const e of l.getEntries())window.__qa.lcp=e.startTime}).observe({type:'largest-contentful-paint',buffered:true})}catch{}try{new PerformanceObserver(l=>window.__qa.long+=l.getEntries().length).observe({type:'longtask',buffered:true})}catch{}});const start=Date.now();await p.goto(new URL(route,base).href,{waitUntil:'domcontentloaded',timeout:60000});await p.waitForTimeout(1200);const qa=await p.evaluate(()=>({...(window.__qa||{}),ready:document.readyState,overflow:document.documentElement.scrollWidth-innerWidth,h1:document.querySelector('h1')?.textContent?.trim()}));metrics.push({route,viewport,wallMs:Date.now()-start,...qa});if(route==='/portal')await p.screenshot({path:path.join(out,`portal-${viewport.width}.png`)});await c.close();}
+await browser.close();await writeFile(path.join(out,'performance.json'),JSON.stringify(metrics,null,2));console.log(JSON.stringify(metrics));

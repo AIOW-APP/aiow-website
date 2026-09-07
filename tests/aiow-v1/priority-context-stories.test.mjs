@@ -28,7 +28,7 @@ test("context page renders one optional plain-language journey before feature ex
   for (const marker of ["Wat verandert er praktisch", "Nu vaak", "Met AIOW", "Uw beslissing", "Vraag voor de gratis scan van circa 30 minuten"]) assert.match(page, new RegExp(marker));
   assert.match(page, /aria-label=\{en \? "Reference workflow with human control"/);
   assert.match(page, /\{story \? <>\{advice\}\{calculation\}\{applications\}<\/>/);
-  assert.match(css, /\.journey\{background:#14161a/);
+  assert.match(css, /\.journey\{background:var\(--steel\);color:var\(--on-steel\)/);
   assert.match(css, /@media\(max-width:760px\)[^]*\.journeySteps\{grid-template-columns:1fr\}/);
   assert.match(css, /\.nextStep\{display:grid/);
   assert.match(dna, /Nu vaak → Met AIOW → menselijke beslissing/);

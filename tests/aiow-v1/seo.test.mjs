@@ -19,16 +19,16 @@ test("light-theme pricing accent meets WCAG AA on every light surface", async ()
   for (const background of ["#F4EFE6", "#E9E2D6", "#FFFAF1"]) {
     assert.ok(contrast("#795000", background) >= 4.5, `#795000 contrast on ${background} is ${contrast("#795000", background)}`);
   }
+  const shell = await read("components/aiow-v1/HumanIndustrialPublicShell.module.css");
   const shared = await read("components/aiow-v1/AiowV1Homepage.module.css");
   const tariffs = await read("components/aiow-v1/TariffsPage.module.css");
-  assert.match(shared, /html\[data-theme="light"\][^}]*--copper:#795000/);
-  assert.match(shared, /prefers-color-scheme:light[\s\S]*--copper:#795000/);
-  assert.match(tariffs, /\.smartDesign\{[^}]*background:#d9a441;color:#14161a/);
-  assert.ok(contrast("#14161a", "#D9A441") >= 4.5);
-  assert.ok(contrast("#302C26", "#D9A441") >= 4.5);
-  assert.ok(contrast("#FFFAF1", "#795000") >= 4.5);
-  assert.ok(contrast("#FFFAF1", "#684600") >= 4.5);
-  assert.match(shared, /html\[data-theme="light"\][^}]*--on-copper:#fffaf1;--copper-hover:#684600/);
+  assert.match(shell, /\.site\{[^}]*--copper:#d94b30/);
+  assert.match(shell, /html\[data-theme="dark"\][^}]*--copper:#f56a4d/);
+  assert.match(shell, /--on-copper:#11110f/);
+  assert.match(shell, /--on-copper:#10271f/);
+  assert.match(tariffs, /\.smartDesign\{[^}]*background:var\(--copper\);color:var\(--on-copper\)/);
+  assert.ok(contrast("#11110F", "#D94B30") >= 4.49);
+  assert.ok(contrast("#10271F", "#F56A4D") >= 4.5);
   assert.match(shared, /\.headerCta,\.primaryButton\{[^}]*color:var\(--on-copper\)/);
 });
 

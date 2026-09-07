@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { AiowLocale } from "@/lib/aiow-v1/locale";
 import { PublicHeader } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
+import shell from "./HumanIndustrialPublicShell.module.css";
 import styles from "./CapabilitiesExperience.module.css";
 
 export type CapabilityMode = "process" | "building" | "home";
@@ -73,7 +74,7 @@ export function CapabilitiesExperience({ locale="nl", initialMode="process" }:{ 
     url.searchParams.delete(en?"omgeving":"environment");url.searchParams.set(en?"environment":"omgeving",values[next]);
     history.replaceState(history.state,"",`${url.pathname}${url.search}${url.hash}`);
   }
-  return <div className={styles.site}><PublicHeader locale={locale}/><main>
+  return <div className={shell.site}><PublicHeader locale={locale} variant="human-industrial"/><main>
     <header className={styles.hero}><p className={styles.eyebrow}>{t.eyebrow}</p><h1>{t.title}</h1><p>{t.lead}</p><div className={styles.heroActions}><a href="#experience">{t.choose} ↓</a><Link href={en?"/en/scan":"/scan"}>{t.cta} ↗</Link></div><p className={styles.ctaQualifier}>{en?"Free opportunity scan · about 30 minutes maximum · a person confirms date and time.":"Gratis kansenscan · maximaal circa 30 minuten · een mens bevestigt datum en tijd."}</p></header>
     <section id="experience" className={styles.experience} aria-labelledby="experience-title">
       <div className={styles.experienceTop}><div><p className={styles.eyebrow}>{t.reference}</p><h2 id="experience-title" aria-live="polite">{trace.title}</h2><p>{trace.intro}</p></div><span>{trace.eyebrow}</span></div>

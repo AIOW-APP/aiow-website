@@ -2,13 +2,13 @@ import Link from "next/link";
 import type { AiowLocale } from "@/lib/aiow-v1/locale";
 import { PublicFooter } from "./PublicFooter";
 import { PublicHeader } from "./PublicHeader";
-import shared from "./AiowV1Homepage.module.css";
+import shell from "./HumanIndustrialPublicShell.module.css";
 import styles from "@/app/info.module.css";
 
 type Section = { id?: string; title: string; paragraphs?: readonly React.ReactNode[]; items?: readonly React.ReactNode[]; cards?: readonly { readonly title: string; readonly body: React.ReactNode }[] };
 
 export function InfoPage({ locale, eyebrow, title, lead, sections, footer }: { locale: AiowLocale; eyebrow: string; title: string; lead: string; sections: readonly Section[]; footer?: string }) {
-  return <div className={`${shared.site} ${styles.page}`}><PublicHeader locale={locale} /><main className={styles.main}><p className={styles.eyebrow}>{eyebrow}</p><h1>{title}</h1><p className={styles.lead}>{lead}</p>{sections.map((section) => <section id={section.id} className={styles.section} key={section.title}><h2>{section.title}</h2>{section.cards && <div className={styles.cards}>{section.cards.map((card) => <article className={styles.card} key={card.title}><h3>{card.title}</h3><p>{card.body}</p></article>)}</div>}{section.paragraphs?.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{section.items && <ul>{section.items.map((item, index) => <li key={index}>{item}</li>)}</ul>}</section>)}</main>{footer ? <p className={styles.version}>{footer}</p> : null}<PublicFooter locale={locale} showYear /></div>;
+  return <div className={`${shell.site} ${styles.page}`}><PublicHeader locale={locale} variant="human-industrial" /><main className={styles.main}><p className={styles.eyebrow}>{eyebrow}</p><h1>{title}</h1><p className={styles.lead}>{lead}</p>{sections.map((section) => <section id={section.id} className={styles.section} key={section.title}><h2>{section.title}</h2>{section.cards && <div className={styles.cards}>{section.cards.map((card) => <article className={styles.card} key={card.title}><h3>{card.title}</h3><p>{card.body}</p></article>)}</div>}{section.paragraphs?.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{section.items && <ul>{section.items.map((item, index) => <li key={index}>{item}</li>)}</ul>}</section>)}</main>{footer ? <p className={styles.version}>{footer}</p> : null}<PublicFooter locale={locale} showYear /></div>;
 }
 
 export const privacyContent = {
