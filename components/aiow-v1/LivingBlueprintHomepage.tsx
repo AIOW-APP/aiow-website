@@ -36,9 +36,9 @@ const copy = {
     explore: "Ontdek de mogelijkheden",
     detailLabel: "Bekijk hoe dit systeem werkt",
     examplesLabel: "Mogelijke toepassingen",
-    authorityEyebrow: "Menselijke regie",
+    authorityEyebrow: "Wat de scan oplevert",
     authorityTitle: "U bepaalt. Het systeem werkt daarbinnen.",
-    authorityBody: "AIOW bouwt de intelligentie, koppelingen en controlepunten. Uw mensen bepalen de bronnen, grenzen en uitzonderingen.",
+    authorityBody: "AIOW bouwt de intelligentie, koppelingen en controlepunten. Uw mensen bepalen de bronnen, grenzen en uitzonderingen. En soms is het antwoord: geen AI.",
     authority: [
       ["U bepaalt", "Doel en bevoegdheid"],
       ["AIOW bouwt", "Systeem en koppelingen"],
@@ -60,7 +60,7 @@ const copy = {
     finalEyebrow: "Uw eerste besluit",
     finalTitle: "Begin met één proces of één ruimte.",
     finalBody: "In maximaal circa 30 minuten brengen we bronnen, regels en afhankelijkheden in kaart.",
-    cta: "Laat één proces of ruimte scannen",
+    cta: "Start de scan",
     finalMeta: "Gratis · een mens bevestigt datum en tijd · u beslist pas na het memo.",
     scopeBoundary: "Hardware, levering, fysieke installatie en werk van gekwalificeerde partners worden afzonderlijk gescoped.",
     memoLabel: "Uw beslismemo",
@@ -91,9 +91,9 @@ const copy = {
     explore: "Explore the possibilities",
     detailLabel: "See how this system works",
     examplesLabel: "Possible applications",
-    authorityEyebrow: "Human authority",
+    authorityEyebrow: "What the scan delivers",
     authorityTitle: "You decide. The system works within that boundary.",
-    authorityBody: "AIOW builds the intelligence, integrations and control points. Your people define the sources, limits and exceptions.",
+    authorityBody: "AIOW builds the intelligence, integrations and control points. Your people define the sources, limits and exceptions. And sometimes the answer is: no AI.",
     authority: [
       ["You decide", "Purpose and authority"],
       ["AIOW builds", "System and integrations"],
@@ -115,7 +115,7 @@ const copy = {
     finalEyebrow: "Your first decision",
     finalTitle: "Start with one process or one space.",
     finalBody: "In about 30 minutes maximum, we map the sources, rules and dependencies.",
-    cta: "Scan one process or space",
+    cta: "Start the scan",
     finalMeta: "Free · a person confirms date and time · you decide only after the memo.",
     scopeBoundary: "Hardware, delivery, physical installation and qualified partner work are scoped separately.",
     memoLabel: "Your decision memo",
@@ -132,6 +132,23 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
     <PublicHeader locale={locale} compactMobile showCta={false} variant="human-industrial" />
     <main>
       <HumanIndustrialHero locale={locale} />
+
+      <section className={styles.authority}>
+        <div className={styles.authorityStatement} data-reveal="section">
+          <p className={styles.eyebrow}>{c.authorityEyebrow}</p>
+          <h2>{c.authorityTitle}</h2>
+          <p>{c.authorityBody}</p>
+        </div>
+        <div className={styles.proofOutput} data-reveal="instrument">
+          <div className={styles.memo}><p>{c.memoLabel}</p><ol>{c.memo.map((item,index)=><li key={item}><span>0{index+1}</span><b>{item}</b></li>)}</ol></div>
+          <ol className={styles.boundaries}>{c.authority.map(([title, body], index) => <li key={title} data-reveal="step" style={{ "--reveal-order": index % 3 } as CSSProperties}><strong>{title}</strong><span>{body}</span></li>)}</ol>
+        </div>
+      </section>
+
+      <section id="pricing" className={styles.pricing}>
+        <div className={styles.pricingIntro} data-reveal="section"><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p><dl className={styles.quoteDelivery}>{c.priceDelivery.map(([title,body],index)=><div key={title}><dt><span>0{index+1}</span>{title}</dt><dd>{body}</dd></div>)}</dl></div>
+        <div data-reveal="instrument"><LivingBlueprintCalculator locale={locale}/></div>
+      </section>
 
       <section id={locale === "en" ? "systems" : "systemen"} className={styles.environments}>
         <header className={styles.sectionIntro} data-reveal="section">
@@ -155,23 +172,9 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
         </div>
       </section>
 
-      <section className={styles.authority}>
-        <div className={styles.authorityStatement} data-reveal="section">
-          <p className={styles.eyebrow}>{c.authorityEyebrow}</p>
-          <h2>{c.authorityTitle}</h2>
-          <p>{c.authorityBody}</p>
-        </div>
-        <ol>{c.authority.map(([title, body], index) => <li key={title} data-reveal="step" style={{ "--reveal-order": index % 3 } as CSSProperties}><strong>{title}</strong><span>{body}</span></li>)}</ol>
-      </section>
-
       <section id={locale === "en" ? "approach" : "aanpak"} className={styles.method}>
         <header className={styles.sectionIntro} data-reveal="section"><p className={styles.eyebrow}>{c.methodEyebrow}</p><h2>{c.methodTitle}</h2></header>
         <ol>{c.method.map(([title, body], index) => <li key={title} data-reveal="step" style={{ "--reveal-order": index % 3 } as CSSProperties}><span>0{index + 1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol>
-      </section>
-
-      <section id="pricing" className={styles.pricing}>
-        <div className={styles.pricingIntro} data-reveal="section"><p className={styles.eyebrow}>{c.priceEyebrow}</p><h2>{c.priceTitle}</h2><p>{c.priceBody}</p><dl className={styles.quoteDelivery}>{c.priceDelivery.map(([title,body],index)=><div key={title}><dt><span>0{index+1}</span>{title}</dt><dd>{body}</dd></div>)}</dl></div>
-        <div data-reveal="instrument"><LivingBlueprintCalculator locale={locale}/></div>
       </section>
 
       <section className={styles.finalCta}>
@@ -184,7 +187,7 @@ export function LivingBlueprintHomepage({ locale = "nl" }: { locale?: Locale }) 
             <p className={styles.finalMeta}>{c.finalMeta}</p>
             <p className={styles.scopeBoundary}>{c.scopeBoundary}</p>
           </div>
-          <div className={styles.memo} data-reveal="instrument"><p>{c.memoLabel}</p><ol>{c.memo.map((item,index)=><li key={item}><span>0{index+1}</span><b>{item}</b></li>)}</ol><p className={styles.identity}>{AIOW_COMPANY.legalName} · {aiowAddressLine()} · KvK {AIOW_COMPANY.chamberOfCommerce} · <a href={`mailto:${AIOW_COMPANY.publicEmail}`}>{AIOW_COMPANY.publicEmail}</a></p></div>
+          <div data-reveal="instrument"><p className={styles.identity}>{AIOW_COMPANY.legalName} · {aiowAddressLine()} · KvK {AIOW_COMPANY.chamberOfCommerce} · <a href={`mailto:${AIOW_COMPANY.publicEmail}`}>{AIOW_COMPANY.publicEmail}</a></p></div>
         </div>
       </section>
     </main>

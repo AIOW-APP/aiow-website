@@ -23,7 +23,9 @@ const content = {
     title: ["Voor uw bedrijf,", "bedrijfspand en"],
     signal: "AI op maat",
     titleEnd: "woning.",
-    lead: "Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem voor uw processen, gebouw of huis.",
+    lead: "Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem dat uw werk, gebouw of huis makkelijker maakt. Meer ruimte voor uw privéleven.",
+    scan: "Start de scan",
+    scanMeta: "Gratis · maximaal circa 30 minuten · beslismemo. Een mens bevestigt datum en tijd.",
     choose: "Kies uw omgeving",
     authority: "Een mens beslist. Altijd.",
     delivery: ["Ontwerp", "Bouw", "Beheer"],
@@ -39,7 +41,9 @@ const content = {
     title: ["For your company,", "commercial building"],
     signal: "Bespoke AI",
     titleEnd: "and home.",
-    lead: "No disconnected tool. AIOW designs, builds, connects and manages one system for your processes, building or home.",
+    lead: "No disconnected tool. AIOW designs, builds, connects and manages one system that makes your work, building or home easier. More room for your private life.",
+    scan: "Start the scan",
+    scanMeta: "Free · about 30 minutes maximum · decision memo. A person confirms date and time.",
     choose: "Choose your environment",
     authority: "A person decides. Always.",
     delivery: ["Design", "Build", "Manage"],
@@ -163,6 +167,10 @@ export function HumanIndustrialHero({ locale = "nl" }: { locale?: Locale }) {
         ))}
         <div className={styles.calibrationSweep} />
         <div className={styles.aperture}><i /></div>
+      </div>
+      <div className={styles.scanAction}>
+        <Link className={styles.scanButton} href={locale === "en" ? "/en/scan" : "/scan"}>{c.scan}<span aria-hidden="true">↗</span></Link>
+        <p>{c.scanMeta}</p>
       </div>
     </section>
   );

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const root=new URL("../../",import.meta.url);
-const[home,enHome,page,hero,director,css,heroCss,sharedCss,dna,analytics,nextConfig,seo,llms]=await Promise.all([
+const[home,enHome,page,hero,director,css,heroCss,sharedCss,dna,analytics,nextConfig,seo,llms,company]=await Promise.all([
  readFile(new URL("app/page.tsx",root),"utf8"),
  readFile(new URL("app/en/page.tsx",root),"utf8"),
  readFile(new URL("components/aiow-v1/LivingBlueprintHomepage.tsx",root),"utf8"),
@@ -17,6 +17,7 @@ const[home,enHome,page,hero,director,css,heroCss,sharedCss,dna,analytics,nextCon
  readFile(new URL("next.config.ts",root),"utf8"),
  readFile(new URL("lib/aiow-v1/seo.tsx",root),"utf8"),
  readFile(new URL("app/llms.txt/route.ts",root),"utf8"),
+ readFile(new URL("lib/aiow-v1/company.mjs",root),"utf8"),
 ]);
 const calculator=await readFile(new URL("components/aiow-v1/PriceCalculator.tsx",root),"utf8");
 
@@ -40,10 +41,23 @@ test("hero owns one route state and keeps all routes semantic",()=>{
  assert.match(hero,/onPointerEnter=\{\(\) => preview\(route\.id\)\}/);
  assert.match(hero,/onFocus=\{\(\) => preview\(route\.id\)\}/);
  assert.match(hero,/onPointerLeave=\{preserveFocusedRoute\}/);
- assert.equal((hero.match(/<Link/g)||[]).length,1,"one mapped semantic Link in source");
+ assert.equal((hero.match(/<Link/g)||[]).length,2,"one mapped route Link and one scan Link in source");
  for(const marker of["Voor mijn bedrijf","Voor mijn bedrijfspand","Voor mijn woning of villa","For my company","For my commercial building","For my home or villa"])assert.match(hero,new RegExp(marker));
  for(const href of["/ai-automatisering","/smart-office","/home","/en/ai-automation","/en/smart-office","/en/home"])assert.match(hero,new RegExp(href.replaceAll("/","\\/")));
- assert.doesNotMatch(hero,/<Image|<video|<canvas|\/quiet-monolith\/|href=\{scanHref\}/);
+ assert.doesNotMatch(hero,/<Image|<video|<canvas|\/quiet-monolith\//);
+});
+
+test("hero conversion follows the three worlds without a price action",()=>{
+ assert.match(hero,/één systeem dat uw werk, gebouw of huis makkelijker maakt/);
+ assert.match(hero,/one system that makes your work, building or home easier/);
+ assert.match(hero,/privéleven/); assert.match(hero,/private life/);
+ assert.equal((hero.match(/className=\{styles.scanButton\}/g)||[]).length,1);
+ assert.ok(hero.indexOf("className={styles.scanButton}")>hero.indexOf("className={styles.field}"));
+ assert.match(hero,/Start de scan/); assert.match(hero,/Start the scan/);
+ assert.doesNotMatch(hero,/href=[^\n]*pricing|Jeroen|werkdag|one working day/);
+ assert.match(page,/soms is het antwoord: geen AI/);
+ assert.match(page,/sometimes the answer is: no AI/);
+ assert.match(page,/c.memo.map/); assert.match(page,/AIOW_COMPANY.publicEmail/);
 });
 
 test("hero copy is authored, route-first and human bounded",()=>{
@@ -113,9 +127,14 @@ test("anti-clutter and platform quality rails remain explicit",()=>{
  assert.match(nextConfig,/htmlLimitedBots:\s*\/\.\*\//);
 });
 
-test("design DNA uses the canonical public contact source",()=>{
- assert.match(dna,/Company facts remain canonical:[^\n]*info@aiow\.io\./);
- assert.doesNotMatch(dna,/Company facts remain canonical:[^\n]*info@aiow\.ai\./);
+test("design DNA separates the gated public target from transactional mail",()=>{
+ assert.match(dna,/The target public channel is `info@aiow\.ai`;/);
+ assert.match(dna,/publication requires real external incoming delivery and human mailbox access proof\./);
+ assert.match(dna,/Transactional sender cutover additionally requires real outbound delivery, SPF\/DKIM\/DMARC authentication and provider authorization proof\./);
+ assert.match(company,/publicEmail: "info@aiow\.io"/);
+ assert.match(company,/targetPublicEmail: "info@aiow\.ai"/);
+ assert.match(company,/transactionalEmail: "info@aiow\.io"/);
+ assert.doesNotMatch(company,/publicEmail: "info@aiow\.ai"/);
 });
 
 test("booking anchor belongs to the calculator only",()=>{

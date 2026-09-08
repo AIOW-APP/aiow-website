@@ -1,5 +1,6 @@
 import { pricingContexts } from "@/lib/aiow-v1/pricing-contexts";
 import { SITE_URL } from "@/lib/aiow-v1/seo";
+import { AIOW_COMPANY } from "@/lib/aiow-v1/company.mjs";
 
 const contextLinks = pricingContexts.map((context) => `- [${context.labelNl}](${SITE_URL}/tarieven/${context.slug}): concrete automations, package advice and worked calculation`).join("\n");
 
@@ -23,7 +24,7 @@ const body = `# AIOW
 - [Venture-score uitgelegd](${SITE_URL}/nl/kennis/startup-idee-laten-beoordelen-venture-score): seven dimensions, counter-evidence and a human decision gate
 - [AIOW knowledge](${SITE_URL}/en/knowledge): current English knowledge index
 - [Venture score explained](${SITE_URL}/en/knowledge/startup-idea-venture-score): evidence, risk and human authority boundaries
-- [Bedrijfsgegevens en contact](${SITE_URL}/bedrijfsgegevens): AIOW B.V., KvK 71887466, info@aiow.io and Netherlands service area
+- [Bedrijfsgegevens en contact](${SITE_URL}/bedrijfsgegevens): AIOW B.V., KvK 71887466, ${AIOW_COMPANY.publicEmail} and Netherlands service area
 - [Company and contact](${SITE_URL}/en/company): verified English company details and contact route
 
 ## Pricing contexts
@@ -36,7 +37,7 @@ Published amounts are non-binding indications/from-prices excluding VAT, hardwar
 The calculator configuration is validated and all quote amounts are recomputed on the server; browser-supplied totals are not trusted. The PDF is released only after the configured durable adapter has accepted the lead and then durably accepted the lead, PDF and exactly two transactional mail outbox jobs (customer and internal). Without the adapter, or if either phase fails, no PDF or receipt is returned. Durable outbox acceptance does not claim the messages have already been sent; delivery happens only when the outbox is processed.
 
 ## Contact
-AIOW B.V. · KvK 71887466 · info@aiow.io · service area: Netherlands. Final scope, exclusions and conditions are supplied with the written proposal. Use the preferred booking intake on ${SITE_URL}/; a durable receipt is not provider calendar confirmation and human confirmation follows separately. Public intake data is retained for no more than 90 days unless an active customer relationship or legal obligation requires longer retention.
+AIOW B.V. · KvK 71887466 · ${AIOW_COMPANY.publicEmail} · service area: Netherlands. Final scope, exclusions and conditions are supplied with the written proposal. Use the preferred booking intake on ${SITE_URL}/; a durable receipt is not provider calendar confirmation and human confirmation follows separately. Public intake data is retained for no more than 90 days unless an active customer relationship or legal obligation requires longer retention.
 
 Last updated: 2026-09-01
 `;

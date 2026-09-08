@@ -4,7 +4,7 @@
 
 This file governs the public AIOW homepage and the Route Field Cinema candidate on branch `feat/aiow-route-field-cinema-20260907`. Richard rejected the prior Quiet Monolith and editorial architecture directions because they retained the recognisable visual grammar of AI-generated “premium” sites: fashionable serif/sans pairings, beige/black/gold, generic architecture imagery, glass, and mirrored light/dark themes.
 
-Human Industrial entered production on 2026-09-07. The Route Field Cinema extension passed local technical, accessibility, motion and product-art review on 2026-09-07; production remains on the prior exact deployment until protected PR integration and exact live-domain readback complete.
+Human Industrial and the sitewide pricing/brand closure entered production on 2026-09-08 at merge `68a8407fc6c52e214752f0fad142d1b6465fb4a2`, with exact custom-domain readback and full live route proof. Richard's next direction is commercial authority: AIOW must make work, buildings and private life easier; immediate reachability, real evidence and national discoverability now outrank further decorative expansion.
 
 ## Product intent
 
@@ -12,7 +12,7 @@ Human Industrial entered production on 2026-09-07. The Route Field Cinema extens
 - Primary task: choose the correct world in 3–5 seconds, then see only relevant examples, boundaries, price context and scan flow.
 - Primary worlds: `Werk`, `Pand`, `Wonen` in the expressive hero; full accessible labels remain `Voor mijn bedrijf`, `Voor mijn bedrijfspand`, `Voor mijn woning of villa`.
 - Courage: 5/5. AIOW must look authored, not prompt-generated.
-- Emotional core: precise control with human presence; capable enough to be bold, disciplined enough not to perform intelligence.
+- Emotional core: precise control with human presence; less friction, fewer loose tools and more room for life and real work.
 
 ## Promise
 
@@ -22,7 +22,7 @@ NL H1:
 
 NL support:
 
-`Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem voor uw processen, gebouw of huis.`
+`Geen losse tool. AIOW ontwerpt, bouwt, koppelt en beheert één systeem dat uw werk, gebouw of huis makkelijker maakt.`
 
 EN H1:
 
@@ -102,7 +102,7 @@ Human Industrial continues beyond the mounted page into every automatically gene
 
 ### Mobile 320/375/390
 
-Compact identity/header → short eyebrow → four-line H1 with one lacquer field → concise support → human-authority line → all three route rows → compact active Route Field.
+Compact identity/header → short eyebrow → four-line H1 with one lacquer field → concise support → human-authority line → all three route rows → compact active Route Field → one primary `Start de scan` action.
 
 All three routes must remain identifiable in the first useful viewport at 390×844. At 320px the third route may touch the lower edge but must remain visible and tappable without horizontal overflow.
 
@@ -170,7 +170,9 @@ Day and Evening share information architecture and semantics but not merely colo
 
 ## Conversion
 
-The hero does not lead with a generic scan CTA. Visitors choose a world first:
+The hero presents one primary commercial action only after all three worlds remain readable. It never becomes a generic two-button landing template: route selection remains the orientation instrument, `Start de scan` is the sole button, and pricing stays out of the hero.
+
+Visitors can still choose a world first:
 
 - Werk → `/ai-automatisering`
 - Pand → `/smart-office`
@@ -194,6 +196,8 @@ Route-page first-viewport contract:
 - The three route pages inherit the Human Industrial shell: square geometry, condensed uppercase display type, aluminium/red Day, green/coral Evening and the same header IA. Falling back to the legacy beige/serif shell is a visual-continuity failure.
 
 The scan contract remains: free, approximately max. 30 minutes, human confirmation, decision memo, separate scoping for hardware/installation/external qualified partners.
+
+The primary homepage action may promise a first human contact by Jeroen and a response window only after phone/mail routing and that service level have passed real operational proof. Before then it uses claim-safe scan microcopy without an unproven response-time promise.
 
 The public pricing journey uses one canonical quote transaction. Before opening the form, the page explicitly states both release channels: `directe PDF-download plus dezelfde PDF per transactionele e-mail` / `direct PDF download plus the same PDF by transactional email`. The server recalculates and durably records the indication before either channel is released; there is no second, weaker mail-only or download-only path. The result remains an indication rather than a final offer, and one dominant action owns both channels.
 
@@ -233,6 +237,19 @@ SEO/GEO/GAO depth lives in the knowledge layer and contextual route pages. The p
 
 Priority context pages preserve one optional plain-language journey before feature examples: `Nu vaak → Met AIOW → menselijke beslissing` / `Current situation → With AIOW → human decision`.
 
+National authority is built as an entity-and-answer system, never as a thin page farm:
+
+- one canonical `/over-aiow` / `/en/about-aiow` entity page with legal identity, real people/roles, address, verified contact channels, service definition, boundaries and consistent `Organization`/`LocalBusiness` facts;
+- the three world routes are canonical explanations with direct answers, inclusions/exclusions, process, pricing context, FAQ and human authority;
+- knowledge starts with 6–8 evidence-led Dutch answer pages based on real buyer questions, each with a direct 40–60-word answer, named review/provenance, source dates and an owned next action;
+- `/business.json`, sitemap, internal links, `llms.txt`, IndexNow and crawler policy are machine-readable support layers, not substitutes for useful visible content;
+- Googlebot, Bingbot, OAI-SearchBot, Claude-SearchBot and user-directed retrieval are allowed on public canonicals while private, admin and legacy surfaces remain excluded;
+- no guaranteed ranking or LLM citation, fake mention, generated testimonial, city doorway page, copied answer page or bulk commodity content.
+
+### Homepage proof order
+
+After the three worlds, the homepage proves AIOW with real owned evidence: a real or clearly labelled reference scan artifact, an operational `AI proposes / human approves / human decides` boundary, the legal entity and real people. Synthetic workflows may demonstrate capability but never masquerade as customer adoption. Real cases, outcomes, logos and testimonials appear only with evidence and permission.
+
 ## Accessibility and performance
 
 - Exactly one H1.
@@ -258,7 +275,7 @@ Priority context pages preserve one optional plain-language journey before featu
 
 No invented clients, cases, certifications, savings, rankings, outcomes or autonomous authority. Calculator output remains an indication. Dates and times are confirmed by a person. Hardware, delivery, installation and qualified partner work are separately scoped.
 
-Company facts remain canonical: AIOW B.V. · Bijlmermeerstraat 30 · 2131 HC Hoofddorp · KvK 71887466 · info@aiow.io.
+Company facts remain canonical: AIOW B.V. · Bijlmermeerstraat 30 · 2131 HC Hoofddorp · KvK 71887466. Active public contact and transactional sender remain `info@aiow.io`. The target public channel is `info@aiow.ai`; publication requires real external incoming delivery and human mailbox access proof. Transactional sender cutover additionally requires real outbound delivery, SPF/DKIM/DMARC authentication and provider authorization proof. The target is not an active contact; real delivery remains unverified. The requested mailbox model is licensed primary `richard@aiow.ai` and `jeroen@aiow.ai`, with shared `info@aiow.ai`; this publication correction changes no personal identity, license assignment or Raj/Darshan access. The 023 number is published only after activation and call-routing proof. Inbound implementation interest routes to Jeroen first, with Richard as the documented fallback. Private mobile numbers never become public.
 
 ## Release proof
 

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { AIOW_COMPANY } from "../../lib/aiow-v1/company.mjs";
 import { PRICING_CONTEXT_SLUGS, PUBLIC_ROUTE_PAIRS } from "../../lib/aiow-v1/public-route-manifest.mjs";
 
 const root = new URL("../../", import.meta.url);
@@ -60,6 +61,15 @@ test("pricing contexts, sitemap and LLM documents retain all 15 routes", async (
   assert.match(full, /pricingContexts\.map/);
   for (const phrase of ["automatic direct debit", "provider price increases", "full prepayment", "never provides interest-free financing", "50% of the Scan", "above 10 homes"]) {
     assert.ok(llms.includes(phrase) && full.includes(phrase), `LLM parity missing: ${phrase}`);
+  }
+});
+
+test("both LLM documents use only the canonical public contact identity", async () => {
+  const [llms, full] = await Promise.all([read("app/llms.txt/route.ts"), read("app/llms-full.txt/route.ts")]);
+  assert.equal(AIOW_COMPANY.publicEmail, "info@aiow.io");
+  for (const source of [llms, full]) {
+    assert.match(source, /AIOW_COMPANY\.publicEmail/);
+    assert.doesNotMatch(source, /info@aiow\.io/);
   }
 });
 
