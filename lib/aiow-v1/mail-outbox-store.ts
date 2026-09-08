@@ -1,4 +1,5 @@
 import { quoteAdapterRpc, supabaseConfigured } from "./quote-adapter-store";
+import { AIOW_COMPANY } from "./company.mjs";
 
 type Env = NodeJS.ProcessEnv;
 type Fetch = typeof fetch;
@@ -15,7 +16,7 @@ function leaseArgs(item: LeaseItem) {
 function plain(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === "object" && !Array.isArray(value); }
 function stable(value: unknown) { return JSON.stringify(value); }
 export function mailOutboxConfigured(env: Env = process.env) {
-  return supabaseConfigured(env) && Boolean(env.AIOW_MAIL_WORKER_SECRET && env.AIOW_MICROSOFT_CLIENT_SECRET && env.AIOW_MICROSOFT_TENANT_ID && env.AIOW_MICROSOFT_APPLICATION_ID && env.AIOW_MICROSOFT_MAILBOX === "info@aiow.io" && env.AIOW_MICROSOFT_SENDER === "info@aiow.io" && env.AIOW_MICROSOFT_CONTROL_MAILBOX && env.AIOW_MICROSOFT_CONTROL_MAILBOX !== "info@aiow.io");
+  return supabaseConfigured(env) && Boolean(env.AIOW_MAIL_WORKER_SECRET && env.AIOW_MICROSOFT_CLIENT_SECRET && env.AIOW_MICROSOFT_TENANT_ID && env.AIOW_MICROSOFT_APPLICATION_ID && env.AIOW_MICROSOFT_MAILBOX === AIOW_COMPANY.transactionalEmail && env.AIOW_MICROSOFT_SENDER === AIOW_COMPANY.transactionalEmail && env.AIOW_MICROSOFT_CONTROL_MAILBOX && env.AIOW_MICROSOFT_CONTROL_MAILBOX !== AIOW_COMPANY.transactionalEmail);
 }
 export function createMailOutboxStore(options: { env?: Env; fetchImpl?: Fetch } = {}) {
   const env = options.env ?? process.env; const fetchImpl = options.fetchImpl;

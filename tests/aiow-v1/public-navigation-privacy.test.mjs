@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { AIOW_COMPANY } from "../../lib/aiow-v1/company.mjs";
 
 const root = new URL("../../", import.meta.url);
 const [header, css, home, calculator, context, pillar, tariffs, booking, privacy, quote, quotePdf] = await Promise.all([
@@ -34,4 +35,10 @@ test("human confirmation qualification is adjacent to the initial date and time 
 
 test("NL and EN privacy copy disclose analytics fields, purpose, basis, recipients and retention controls", () => {
   for (const phrase of ["Privacyvriendelijke productanalyse", "event-ID, gebeurtenisnaam, tijdstip, route, taal", "gerechtvaardigd belang", "AIOW en onze contractuele hosting- en databaseverwerkers", "Ruwe analyticsgebeurtenissen en bijbehorend idempotentiemateriaal worden na 30 dagen verwijderd", "Geaggregeerde dagtotalen bevatten geen event-ID", "AIOW bepaalt en beoordeelt de bewaartermijn", "Privacy-friendly product analytics", "event ID, event name, timestamp, route, language", "legitimate interests", "AIOW and our contracted hosting and database processors", "Raw analytics events and associated idempotency material are deleted after 30 days", "Aggregated daily totals do not contain an event ID", "AIOW determines and reviews their retention period"]) assert.match(privacy, new RegExp(phrase));
+});
+
+test("public privacy contact uses only the canonical public email identity", () => {
+  assert.equal(AIOW_COMPANY.publicEmail, "info@aiow.io");
+  assert.match(privacy, /AIOW_COMPANY\.publicEmail/g);
+  assert.doesNotMatch(privacy, /info@aiow\.io|mailto:info@aiow\.io/);
 });

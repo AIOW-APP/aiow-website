@@ -94,6 +94,9 @@ test("generated NL and EN customer mail and PDF use non-reserving scan request w
     assert.doesNotMatch(mails.customerMail.html, /<img|<script|<style|radial-gradient|backdrop-filter/i);
     assert.ok(mails.internalMail.html.includes('data-aiow-brand="human-industrial"'));
     for (const companyFact of ["AIOW B.V.", "Bijlmermeerstraat 30", "2131 HC Hoofddorp", "KvK 71887466", "info@aiow.io", "https://aiow.ai"]) assert.ok(mails.customerMail.text.includes(companyFact));
+    assert.equal(mails.customerMail.from, "info@aiow.io");
+    assert.equal(mails.internalMail.from, "info@aiow.io");
+    assert.deepEqual(mails.internalMail.to, ["info@aiow.io"]);
     const pdf = await generateQuotePdf({ quoteNumber: "AIOW-2026-0042", snapshot, contact: data.contact });
     const pdfText = await generatedPdfText(pdf);
     assert.ok(pdfText.includes(expectedRequest));
