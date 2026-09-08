@@ -246,6 +246,12 @@ National authority is built as an entity-and-answer system, never as a thin page
 - Googlebot, Bingbot, OAI-SearchBot, Claude-SearchBot and user-directed retrieval are allowed on public canonicals while private, admin and legacy surfaces remain excluded;
 - no guaranteed ranking or LLM citation, fake mention, generated testimonial, city doorway page, copied answer page or bulk commodity content.
 
+### Customer outcomes and illustrative memo — local candidate 2026-09-08
+
+Replace the abstract authority/proof section in place, rather than adding a homepage slab. Three compact ruled rows describe intended everyday outcomes for work, commercial buildings and private life/home, explicitly not measured results. A solid technical-sheet memo shows one fictional incoming-request scenario: problem, proposed solution, requirements/dependencies, human decision and next step. The visible example label must say fictional, not a customer case or verified result. A simple form/rule without AI is a legitimate alternative. Keep the memo readable in HTML with a native disclosure for detail, no new client state, CTA, media, metrics or motion signature. The hero, pricing, active info@aiow.io and null phone stay untouched.
+
+Invariant anchors: hero route/scan targets and memo summary. Compressed form: short outcome rows and a native memo disclosure; reduced-motion/weak-device/no-JS use the same semantic HTML. Existing Route Field remains the sole signature. Proof plan: Node 24 tests/lint/build, NL/EN Day/Evening at 320/375/390/768/1024/1440, native keyboard disclosure and no-JS, geometry plus screenshots. Local candidate only; no customer, ROI, SLA or production claim.
+
 ### Homepage proof order
 
 After the three worlds, the homepage proves AIOW with real owned evidence: a real or clearly labelled reference scan artifact, an operational `AI proposes / human approves / human decides` boundary, the legal entity and real people. Synthetic workflows may demonstrate capability but never masquerade as customer adoption. Real cases, outcomes, logos and testimonials appear only with evidence and permission.

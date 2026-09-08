@@ -55,9 +55,8 @@ test("hero conversion follows the three worlds without a price action",()=>{
  assert.ok(hero.indexOf("className={styles.scanButton}")>hero.indexOf("className={styles.field}"));
  assert.match(hero,/Start de scan/); assert.match(hero,/Start the scan/);
  assert.doesNotMatch(hero,/href=[^\n]*pricing|Jeroen|werkdag|one working day/);
- assert.match(page,/soms is het antwoord: geen AI/);
- assert.match(page,/sometimes the answer is: no AI/);
- assert.match(page,/c.memo.map/); assert.match(page,/AIOW_COMPANY.publicEmail/);
+ assert.match(page,/<CustomerOutcomes locale=\{locale\}/);
+ assert.match(page,/AIOW_COMPANY.publicEmail/);
 });
 
 test("hero copy is authored, route-first and human bounded",()=>{
@@ -79,7 +78,7 @@ test("three environments remain calm below the hero and preserve causal truth",(
 
 test("scan contract, physical scope and human authority remain explicit below the hero",()=>{
  for(const marker of["maximaal circa 30 minuten","een mens bevestigt datum en tijd","u beslist pas na het memo","gekwalificeerde partners","about 30 minutes maximum","a person confirms date and time","you decide only after the memo","qualified partner work"])assert.match(page,new RegExp(marker));
- assert.match(page,/U bepaalt\. Het systeem werkt daarbinnen/);assert.match(page,/You decide\. The system works within that boundary/);
+ assert.match(page,/<CustomerOutcomes locale=\{locale\}/);
  assert.match(page,/showCta=\{false\}/);assert.match(page,/variant="human-industrial"/);
 });
 
@@ -100,7 +99,7 @@ test("route field motion has stable geometry and complete fail-safe routes",()=>
 });
 
 test("Route Field Cinema is one-shot, interruptible and fail-open",()=>{
- assert.match(page,/<HomepageMotionDirector/);assert.ok((page.match(/data-reveal=/g)||[]).length>=10);
+ assert.match(page,/<HomepageMotionDirector/);assert.ok((page.match(/data-reveal=/g)||[]).length>=8);
  for(const marker of["building","home","work"])assert.match(hero,new RegExp(`setActiveRoute\\(\\"${marker}\\"\\)`));
  assert.match(hero,/data-cinema=\{cinemaState\}/);assert.match(hero,/stopCommissioning/);
  assert.match(hero,/addEventListener\("wheel"/);assert.match(hero,/addEventListener\("touchstart"/);assert.match(hero,/addEventListener\("keydown"/);
