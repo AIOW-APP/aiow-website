@@ -5,7 +5,7 @@ import { Analytics } from "@/core/analytics/Analytics";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "optional" });
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "optional" });
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "optional", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aiow.ai"),
