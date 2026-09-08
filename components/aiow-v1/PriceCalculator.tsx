@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { track } from "@/core/analytics/client";
 import { buildCalculatorDecision } from "@/lib/aiow-v1/calculator-decision.mjs";
 import { calculateBuildingPrice, calculateBusinessPrice, formatEuroCents } from "@/lib/aiow-v1/pricing.mjs";
@@ -12,6 +12,9 @@ type Mode = "business" | "building" | "home";
 type ServiceRoute = "standard" | "comfort";
 
 export function PriceCalculator({ locale = "nl", onQuote }: { locale?: "nl" | "en"; onQuote: (event: MouseEvent<HTMLButtonElement>, configuration: CalculatorQuoteConfig) => void }) {
+  // False in SSR and the first client render; true only after handlers commit.
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
   const [mode, setMode] = useState<Mode>("business");
   const [people, setPeople] = useState(10);
   const [squareMetres, setSquareMetres] = useState(120);
@@ -57,7 +60,8 @@ export function PriceCalculator({ locale = "nl", onQuote }: { locale?: "nl" | "e
         {minimumApplied && <p className={styles.minimumNotice}>{en ? "Minimum rate applies" : "minimumtarief van toepassing"}</p>}
       </div>
       <p className={styles.deliveryPromise}><strong>{en ? "One request, two deliveries." : "Eén aanvraag, twee leveringen."}</strong> {en ? "Download the PDF directly and receive the same document by email." : "Download de PDF direct en ontvang hetzelfde document per e-mail."}</p>
-      <button type="button" className={`${styles.quoteButton} ${styles.decisionPrimary}`} onClick={(event) => onQuote(event, quoteConfiguration)}>{decision.dominantAction}<span aria-hidden="true">↓</span></button>
+      <button type="button" data-quote-trigger data-ready={ready ? "true" : "false"} disabled={!ready} aria-busy={!ready} aria-label={ready ? undefined : (en ? "Preparing indication form…" : "Indicatieformulier laden…")} className={`${styles.quoteButton} ${styles.decisionPrimary}`} onClick={(event) => onQuote(event, quoteConfiguration)}><span className={styles.quoteLabel}><span style={{ visibility: ready ? "visible" : "hidden" }}>{decision.dominantAction}</span>{!ready && <span className={styles.quoteLoading}>{en ? "Loading…" : "Laden…"}</span>}</span><span aria-hidden="true">↓</span></button>
+      <noscript><p>{en ? "The PDF form needs JavaScript. Contact us to discuss your indication:" : "Het PDF-formulier heeft JavaScript nodig. Neem contact op voor uw indicatie:"} <a href="mailto:info@aiow.io">info@aiow.io</a></p></noscript>
       <details className={`${styles.decisionSummary} ${styles.calculatorDetails}`}>
         <summary>{en ? "View advice, package and boundaries" : "Bekijk advies, pakket en grenzen"}</summary>
         <h3>{en ? <>Recommended starting point: <strong>{decision.recommendation}</strong></> : <>Aanbevolen startpunt: <strong>{decision.recommendation}</strong></>}</h3>
