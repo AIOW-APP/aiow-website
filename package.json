@@ -31,7 +31,7 @@
     "postprocessing": "^6.39.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sharp": "0.35.0",
+    "sharp": "0.35.4",
     "tailwind-merge": "^2.6.1",
     "three": "^0.184.0"
   },
@@ -52,6 +52,6 @@
     "brace-expansion": "5.0.9",
     "nanoid": "3.3.18",
     "postcss": "8.5.23",
-    "sharp": "0.35.0"
+    "sharp": "0.35.4"
   }
 }
